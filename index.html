@@ -712,7 +712,7 @@ function processRanking(input){
       if(headerRow===-1){toast('Format tidak dikenali');return;}
       const headers=rows[headerRow].map(h=>String(h).toLowerCase().trim());
       const idx=kws=>headers.findIndex(h=>kws.some(k=>h.includes(k)));
-      const iCreator=idx(['creator name']),iShop=idx(['shop name']),iGMV=idx(['affiliate gmv']),iVTGMV=idx(['affiliate video gmv']),iLiveGMV=idx(['affiliate live gmv']),iOrders=idx(['orders']),iViews=idx(['video views']),iLiveViews=idx(['live views']),iComm=idx(['estimated affiliate partner commission']);
+      const iCreator=idx(['creator name']),iShop=idx(['shop name']),iGMV=idx(['creator-attributed gmv','affiliate gmv']),iVTGMV=idx(['affiliate video-attributed gmv','affiliate video gmv','video gmv']),iLiveGMV=idx(['creator live-attributed gmv','affiliate live gmv','live gmv']),iOrders=idx(['creator-attributed orders','orders']),iViews=idx(['video views']),iLiveViews=idx(['live views']),iComm=idx(['estimated affiliate partner commission']);
       rankingDataAll=[];const brands=new Set();
       for(let i=headerRow+1;i<rows.length;i++){
         const row=rows[i],creator=String(row[iCreator]||'').trim();
