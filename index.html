@@ -786,15 +786,15 @@ async function initApp(){
   },15000);
   try{
     loadingText.textContent='Memuat produk...';
-    const {data:p,error:e1}=await sb.from('products').select('*').order('createdat',{ascending:false});
+    const {data:p,error:e1}=await sb.from('products').select('*');
     if(e1)throw e1;
     products=p||[];
     loadingText.textContent='Memuat campaign...';
-    const {data:c,error:e2}=await sb.from('campaigns').select('*').order('createdat',{ascending:false});
+    const {data:c,error:e2}=await sb.from('campaigns').select('*');
     if(e2)throw e2;
     campaigns=c||[];
     loadingText.textContent='Memuat VT logs...';
-    const {data:v,error:e3}=await sb.from('vtlogs').select('*').order('createdat',{ascending:false});
+    const {data:v,error:e3}=await sb.from('vtlogs').select('*');
     if(e3)throw e3;
     vtLogs=v||[];
     clearTimeout(safetyTimer);
