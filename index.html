@@ -367,7 +367,7 @@ tr:hover td{background:var(--pink-pale)}
       </div>
     </div>
     <div class="table-scroll">
-      <table><thead><tr><th>Rank</th><th>Creator</th><th>Brand</th><th>Poin Performa</th><th>Orders</th><th>Jenis</th></tr></thead>
+      <table><thead><tr><th>Rank</th><th>Creator</th><th>Brand</th><th>GMV Total</th><th>GMV Live</th><th>GMV Video</th><th>Orders</th><th>Jenis</th></tr></thead>
       <tbody id="ranking-tbody"></tbody></table>
     </div>
   </div>
@@ -746,7 +746,6 @@ function filterRanking(){
   const brand=document.getElementById('f-brand-rank').value;
   const content=document.getElementById('f-content-rank').value;
   rankingData=rankingDataAll.filter(d=>{
-    if(d.gmv<=0)return false;
     if(search&&!d.creator.toLowerCase().includes(search))return false;
     if(brand&&d.shop!==brand)return false;
     if(content&&d.contentType!==content)return false;
@@ -756,35 +755,19 @@ function filterRanking(){
 function renderRanking(){
   const tbody=document.getElementById('ranking-tbody');
   if(!rankingData.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-text)">Tidak ada data.</td></tr>';return;}
-  // Filter out GMV = 0
-  const filtered=rankingData.filter(d=>d.gmv>0);
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--gray-text)">Tidak ada data.</td></tr>';return;}
-  const maxGMV=filtered[0].gmv||1;
-  const n=filtered.length;
-  // Top 10 normal order (highest first), bottom 10 sorted ascending (smallest first, no 0)
-  const top10=filtered.slice(0,Math.min(10,n));
-  const bottom10=[...filtered].slice(Math.max(0,n-10)).reverse(); // smallest first
-  // Remove overlap if n<=20
-  const showBottom=n>10?bottom10:[];
-  const middleRows=n>20?filtered.slice(10,n-10):[];
-  const allRows=[
-    ...top10.map((d,i)=>({...d,rank:i+1,section:'top'})),
-    ...middleRows.map((d,i)=>({...d,rank:10+i+1,section:'mid'})),
-    ...showBottom.map((d,i)=>({...d,rank:n-showBottom.length+i+1,section:'bot'}))
-  ];
-  tbody.innerHTML=allRows.map((d)=>{
-    const isTop=d.section==='top',isBot=d.section==='bot';
+  const n=rankingData.length;
+  tbody.innerHTML=rankingData.map((d,i)=>{
+    const rank=i+1,isTop=i<10,isBot=i>=n-10&&n>10;
     const rowClass=isTop?'rank-top':isBot?'rank-bottom':'';
-    const rankIcon=d.rank===1?'🥇':d.rank===2?'🥈':d.rank===3?'🥉':d.rank;
-    // Points: 1000 for #1, proportional for others
-    const points=Math.round(d.gmv/maxGMV*1000);
-    const barPct=Math.round(d.gmv/maxGMV*100);
+    const rankIcon=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
     const ct=d.liveGMV>d.vtGMV?'<span class="badge badge-active">Live</span>':'<span class="badge badge-cat">Video</span>';
     return`<tr class="${rowClass}">
       <td style="font-weight:700;font-size:15px">${rankIcon}</td>
       <td><strong>${d.creator}</strong></td>
       <td style="color:var(--gray-text);font-size:12px">${d.shop}</td>
-      <td><strong>${points} pts</strong><div style="height:4px;background:var(--gray);border-radius:2px;margin-top:3px;width:80px"><div style="height:100%;border-radius:2px;background:${isTop?'var(--pink)':isBot?'var(--red)':'var(--gray-text)'};width:${barPct}%"></div></div></td>
+      <td><strong>${fRp(d.gmv)}</strong></td>
+      <td style="color:var(--teal)">${fRp(d.liveGMV)}</td>
+      <td style="color:var(--blue)">${fRp(d.vtGMV)}</td>
       <td>${d.orders.toLocaleString('id-ID')}</td>
       <td>${ct}</td>
     </tr>`;
@@ -803,15 +786,15 @@ async function initApp(){
   },15000);
   try{
     loadingText.textContent='Memuat produk...';
-    const {data:p,error:e1}=await sb.from('products').select('*');
+    const {data:p,error:e1}=await sb.from('products').select('*').order('createdat',{ascending:false});
     if(e1)throw e1;
     products=p||[];
     loadingText.textContent='Memuat campaign...';
-    const {data:c,error:e2}=await sb.from('campaigns').select('*');
+    const {data:c,error:e2}=await sb.from('campaigns').select('*').order('createdat',{ascending:false});
     if(e2)throw e2;
     campaigns=c||[];
     loadingText.textContent='Memuat VT logs...';
-    const {data:v,error:e3}=await sb.from('vtlogs').select('*');
+    const {data:v,error:e3}=await sb.from('vtlogs').select('*').order('createdat',{ascending:false});
     if(e3)throw e3;
     vtLogs=v||[];
     clearTimeout(safetyTimer);
