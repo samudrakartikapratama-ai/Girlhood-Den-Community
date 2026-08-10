@@ -195,7 +195,7 @@ tr:hover td{background:var(--pink-pale)}
     <div class="login-sub">Masukkan PIN untuk akses internal</div>
     <input class="login-input" type="password" id="pin-input" placeholder="••••" maxlength="6" onkeydown="if(event.key==='Enter')checkPin()">
     <div class="login-err" id="pin-err">PIN salah. Coba lagi.</div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;font-size:15px" onclick="checkPin()">🔐 Masuk sebagai Internal</button>
+    <button class="btn btn-primary" id="pin-submit-btn" style="width:100%;justify-content:center;margin-bottom:10px;font-size:15px" onclick="checkPin()">🔐 Masuk sebagai Internal</button>
     <button class="btn btn-secondary" style="width:100%;justify-content:center;font-size:15px" onclick="enterPublic()">👀 Lihat sebagai Creator</button>
   </div>
 </div>
@@ -379,15 +379,18 @@ tr:hover td{background:var(--pink-pale)}
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
-const SB_HEADERS = {
-  'apikey': SUPABASE_KEY,
-  'Authorization': 'Bearer ' + SUPABASE_KEY,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=minimal'
-};
+let internalAccessToken = null; // set only after a real PIN check against verify-internal-pin
+function sbHeaders(){
+  return {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (internalAccessToken || SUPABASE_KEY),
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal'
+  };
+}
 async function sbSelect(table, cols='*'){
   const url = SUPABASE_URL+'/rest/v1/'+table+'?select='+encodeURIComponent(cols);
-  const r = await fetch(url, {headers: SB_HEADERS});
+  const r = await fetch(url, {headers: sbHeaders()});
   if(!r.ok) throw new Error('HTTP '+r.status+' on '+table);
   return await r.json();
 }
@@ -409,7 +412,7 @@ async function sbSelectAll(table, cols='*', orderCol='uid'){
   let from=0;
   while(true){
     const url = SUPABASE_URL+'/rest/v1/'+table+'?select='+encodeURIComponent(cols)+'&order='+encodeURIComponent(orderCol)+'.asc';
-    const r = await fetch(url, {headers: Object.assign({}, SB_HEADERS, {
+    const r = await fetch(url, {headers: Object.assign({}, sbHeaders(), {
       'Range': from+'-'+(from+requestSize-1),
       'Prefer': 'count=exact'
     })});
@@ -428,13 +431,13 @@ async function sbSelectAll(table, cols='*', orderCol='uid'){
 }
 async function sbInsertRow(table, data){
   const r = await fetch(SUPABASE_URL+'/rest/v1/'+table, {
-    method:'POST', headers: SB_HEADERS, body: JSON.stringify(data)
+    method:'POST', headers: sbHeaders(), body: JSON.stringify(data)
   });
   return r.ok;
 }
 async function sbDeleteRow(table, col, val){
   const r = await fetch(SUPABASE_URL+'/rest/v1/'+table+'?'+col+'=eq.'+encodeURIComponent(val), {
-    method:'DELETE', headers: SB_HEADERS
+    method:'DELETE', headers: sbHeaders()
   });
   return r.ok;
 }
@@ -471,34 +474,56 @@ async function uploadImageToStorage(dataUrl, prefix){
     return null;
   }
 }
-const PIN = '1725';
 let products = [], campaigns = [], vtLogs = [];
 let rankingDataAll = [], rankingData = [];
 let pendingDeleteType = '', pendingDeleteId = '';
 let isInternal = false;
 
-// AUTH
-function checkPin(){
-  if(document.getElementById('pin-input').value===PIN){
+// AUTH — PIN is checked server-side by the verify-internal-pin edge function, which
+// (like brand-login / creator-login) issues a real Supabase Auth session. That session's
+// access_token is what actually unlocks write access via RLS (is_internal()) — the PIN
+// screen alone grants nothing on its own anymore.
+async function checkPin(){
+  const pinInput = document.getElementById('pin-input');
+  const pin = pinInput.value;
+  const errEl = document.getElementById('pin-err');
+  const btn = document.getElementById('pin-submit-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Memeriksa...'; }
+  try{
+    const res = await fetch(SUPABASE_URL + '/functions/v1/verify-internal-pin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ pin })
+    });
+    const result = await res.json();
+    if(!result.valid){
+      errEl.textContent = result.error || 'PIN salah. Coba lagi.';
+      errEl.style.display='block';
+      pinInput.value='';
+      setTimeout(()=>errEl.style.display='none',3000);
+      return;
+    }
+    internalAccessToken = result.session.access_token;
     isInternal=true;document.body.classList.add('internal-mode');
     document.getElementById('login-overlay').style.display='none';
     document.getElementById('mode-badge').textContent='🔐 Internal';
     document.getElementById('mode-badge').className='mode-badge mode-internal';
     toast('Selamat datang, Internal! 🎉');
-  } else {
-    document.getElementById('pin-err').style.display='block';
-    document.getElementById('pin-input').value='';
-    setTimeout(()=>document.getElementById('pin-err').style.display='none',2000);
+  }catch(e){
+    errEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
+    errEl.style.display='block';
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '🔐 Masuk sebagai Internal'; }
   }
 }
 function enterPublic(){
-  isInternal=false;document.body.classList.remove('internal-mode');
+  isInternal=false;internalAccessToken=null;document.body.classList.remove('internal-mode');
   document.getElementById('login-overlay').style.display='none';
   document.getElementById('mode-badge').textContent='👤 View Only';
   document.getElementById('mode-badge').className='mode-badge mode-public';
 }
 function toggleMode(){
-  if(isInternal){isInternal=false;document.body.classList.remove('internal-mode');document.getElementById('mode-badge').textContent='👤 View Only';document.getElementById('mode-badge').className='mode-badge mode-public';toast('Beralih ke mode View Only');}
+  if(isInternal){isInternal=false;internalAccessToken=null;document.body.classList.remove('internal-mode');document.getElementById('mode-badge').textContent='👤 View Only';document.getElementById('mode-badge').className='mode-badge mode-public';toast('Beralih ke mode View Only');}
   else{document.getElementById('login-overlay').style.display='flex';document.getElementById('pin-input').value='';}
 }
 
