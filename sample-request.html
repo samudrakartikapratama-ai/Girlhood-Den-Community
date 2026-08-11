@@ -199,7 +199,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card">
     <div class="field"><label>Nama Lengkap</label><input id="reg-nama" placeholder="Nama kamu"></div>
     <div class="field"><label>No WhatsApp</label><input id="reg-nohp" placeholder="08xxxxxxxxxx"></div>
-    <div class="field"><label>Username TikTok</label><input id="reg-tiktok" placeholder="@username"></div>
+    <div class="field"><label>Link Profile TikTok</label><input id="reg-tiktok" placeholder="https://www.tiktok.com/@username" required></div>
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
@@ -527,7 +527,7 @@ function showRegister(){ document.getElementById('m-register').classList.add('op
 async function submitRegistration(){
   const nama = document.getElementById('reg-nama').value.trim();
   const noHp = document.getElementById('reg-nohp').value.trim();
-  const tiktok = document.getElementById('reg-tiktok').value.trim();
+  const tiktokLink = document.getElementById('reg-tiktok').value.trim();
   const level = document.getElementById('reg-level').value;
   const gmvRaw = document.getElementById('reg-gmv').value.replace(/\./g,'').replace(/[^0-9]/g,'');
   const alamat = document.getElementById('reg-alamat').value.trim();
@@ -538,6 +538,10 @@ async function submitRegistration(){
     alert('Nama dan No WhatsApp wajib diisi.');
     return;
   }
+  if(!tiktokLink || !/^https?:\/\/.*tiktok\.com/i.test(tiktokLink)){
+    alert('Link Profile TikTok wajib diisi dan harus link TikTok yang valid (contoh: https://www.tiktok.com/@username).');
+    return;
+  }
 
   const fileInput = document.getElementById('reg-foto-file');
   const file = fileInput.files[0];
@@ -545,6 +549,31 @@ async function submitRegistration(){
   const btn = document.getElementById('reg-submit-btn');
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
+
+  const { data: existing, error: existingError } = await db.from('members')
+    .select('id, status')
+    .eq('no_hp', noHp)
+    .maybeSingle();
+
+  if(existingError){
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pendaftaran';
+    showDbError('cek pendaftaran', existingError);
+    return;
+  }
+
+  if(existing && existing.status === 'pending'){
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pendaftaran';
+    alert('No WhatsApp ini masih menunggu verifikasi dari tim internal. Tunggu ya, jangan daftar dobel.');
+    return;
+  }
+  if(existing && existing.status === 'verified'){
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pendaftaran';
+    alert('No WhatsApp ini sudah terverifikasi. Kalau ini kamu, pakai kode login yang sudah dikasih tim internal. Lupa kode? Hubungi tim internal.');
+    return;
+  }
 
   let fotoUrl = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(noHp);
   if(file){
@@ -560,18 +589,25 @@ async function submitRegistration(){
     btn.textContent = 'Menyimpan data...';
   }
 
-  const { data, error } = await db.from('members').insert({
+  const payload = {
     nama: nama,
     no_hp: noHp,
-    username_tiktok: tiktok,
+    tiktok_profile_link: tiktokLink,
     level: level,
     gmv_30hari: gmvRaw ? Number(gmvRaw) : null,
     alamat: alamat,
     patokan: patokan,
     kode_pos: kodePos,
     foto_selfie_url: fotoUrl,
-    status: 'pending'
-  });
+    status: 'pending',
+    rejection_reason: null
+  };
+
+  // Kalau sebelumnya pernah ditolak, daftar ulang menimpa data lama (bukan bikin baris baru)
+  // supaya nomor WA yang sama tetap bisa dipakai daftar lagi setelah ditolak.
+  const { data, error } = existing
+    ? await db.from('members').update(payload).eq('id', existing.id)
+    : await db.from('members').insert(payload);
 
   btn.disabled = false;
   btn.textContent = 'Kirim Pendaftaran';
@@ -641,7 +677,7 @@ async function loadApprovalRows(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, members(id, nama, no_hp, username_tiktok, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
+    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .order('requested_at', { ascending: false });
 
@@ -680,7 +716,7 @@ async function loadApprovalRows(){
     }
     return '<tr><td><input type="checkbox" class="row-check" data-request-id="'+r.id+'"'+(r.status==='requested'?'':' disabled')+'></td>'
       + '<td>'+(m.nama||'-')+'</td>'
-      + '<td><a class="tiktok-link" href="#">'+(m.username_tiktok||'-')+'</a><br>'+(m.no_hp||'-')+'</td>'
+      + '<td>'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+'<br>'+(m.no_hp||'-')+'</td>'
       + '<td>'+(p.nama_produk||'-')+'</td>'
       + '<td>'+(m.level||'-')+'·'+gmvText+'</td>'
       + '<td style="max-width:100px">'+(m.alamat||'-')+'</td>'
@@ -2147,7 +2183,7 @@ async function loadPendingMembers(){
       + '<div class="card-title">'+m.nama+'</div>'
       + '<table>'
       + '<tr><td>No HP</td><td>'+m.no_hp+'</td></tr>'
-      + '<tr><td>Username</td><td>'+(m.username_tiktok||'-')+'</td></tr>'
+      + '<tr><td>Link Profile TikTok</td><td>'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+'</td></tr>'
       + '<tr><td>Level</td><td>'+(m.level||'-')+'</td></tr>'
       + '<tr><td>GMV 30 Hari</td><td>'+formatRupiah(m.gmv_30hari)+'</td></tr>'
       + '<tr><td>Alamat</td><td>'+(m.alamat||'-')+'</td></tr>'
@@ -2155,7 +2191,14 @@ async function loadPendingMembers(){
       + '<tr><td>Kode Pos</td><td>'+(m.kode_pos||'-')+'</td></tr>'
       + '<tr><td>Foto</td><td><a href="'+m.foto_selfie_url+'" target="_blank">📷 Lihat foto</a></td></tr>'
       + '</table>'
-      + '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="confirmMember(\''+m.id+'\', this)">Konfirmasi</button>'
+      + '<div class="verif-buttons" style="display:flex;gap:8px;margin-top:10px">'
+      + '<button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmMember(\''+m.id+'\', this)">Konfirmasi</button>'
+      + '<button class="btn btn-outline btn-sm" style="flex:1;border-color:var(--red);color:var(--red)" onclick="showRejectMemberNote(this)">Tolak</button>'
+      + '</div>'
+      + '<div class="reject-member-note" style="display:none;margin-top:8px">'
+      + '<textarea class="reject-member-textarea" placeholder="Alasan penolakan (opsional, catatan internal)" style="font-size:11px;width:100%" rows="2"></textarea>'
+      + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="rejectMember(\''+m.id+'\', this)">Kunci: Tolak Pendaftaran</button>'
+      + '</div>'
       + '<div class="code-box result-code" style="display:none"></div>'
       + '<div class="size-note result-note" style="display:none;margin-top:6px">Kode ini yang diberikan manual ke creator (misal via WA) — dipakai buat login.</div>'
       + '</div>';
@@ -2246,6 +2289,51 @@ async function confirmMember(memberId, btn){
   codeBox.textContent = kode;
   codeBox.style.display = 'block';
   note.style.display = 'block';
+}
+function showRejectMemberNote(btn){
+  var card = btn.closest('.card');
+  card.querySelector('.verif-buttons').style.display='none';
+  card.querySelector('.reject-member-note').style.display='block';
+}
+
+async function rejectMember(memberId, btn){
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  const card = btn.closest('.card');
+  const reason = card.querySelector('.reject-member-textarea').value.trim();
+
+  const authHeader = await getInternalAuthHeader();
+  if(!authHeader){
+    btn.disabled = false;
+    btn.textContent = 'Kunci: Tolak Pendaftaran';
+    alert('Sesi internal tidak terdeteksi, login ulang.');
+    return;
+  }
+
+  let result;
+  try {
+    const response = await fetch(SUPABASE_URL + '/functions/v1/internal-reject-member', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+      body: JSON.stringify({ memberId: memberId, reason: reason })
+    });
+    result = await response.json();
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = 'Kunci: Tolak Pendaftaran';
+    alert('Gagal menghubungi server.');
+    return;
+  }
+
+  if(!result.valid){
+    btn.disabled = false;
+    btn.textContent = 'Kunci: Tolak Pendaftaran';
+    alert(result.error || 'Gagal menolak pendaftaran.');
+    return;
+  }
+
+  card.style.opacity = '0.5';
+  card.querySelector('.reject-member-note').innerHTML = '<div class="card-sub" style="color:var(--red);font-weight:700">❌ Pendaftaran ditolak. Creator bisa daftar ulang kalau mau coba lagi.</div>';
 }
 var productBlockCount = 1;
 function addProductBlock(){
