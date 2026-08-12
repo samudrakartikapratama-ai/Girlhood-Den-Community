@@ -199,7 +199,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card">
     <div class="field"><label>Nama Lengkap</label><input id="reg-nama" placeholder="Nama kamu"></div>
     <div class="field"><label>No WhatsApp</label><input id="reg-nohp" placeholder="08xxxxxxxxxx"></div>
-    <div class="field"><label>Link Profile TikTok</label><input id="reg-tiktok" placeholder="https://www.tiktok.com/@username" required></div>
+    <div class="field"><label>Link Profile TikTok</label><input id="reg-tiktok" placeholder="Paste link dari Bagikan > Salin Link, atau ketik @username" required></div>
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
@@ -365,15 +365,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">📊 Dashboard</div>
   <div class="stat-row"><div class="stat-card"><div class="stat-num">142</div><div class="stat-label">Request</div></div><div class="stat-card"><div class="stat-num">98</div><div class="stat-label">Disetujui</div></div><div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Belum Posting</div></div></div>
   <div class="card-title">Pendingan Brand</div>
-  <div class="card" onclick="document.getElementById('brand-drill').style.display='block'" style="cursor:pointer">
-    <div style="display:flex;justify-content:space-between"><b>Glowia Skincare</b><span class="badge badge-amber">5 belum kirim</span></div>
-  </div>
-  <div id="brand-drill" style="display:none" class="card">
-    <div class="card-sub">Rincian per-produk brand ini:</div>
-    <div class="status-item requested"><b>Body Serum</b> — 3 creator belum dikirim</div>
-    <div class="status-item requested"><b>Face Wash</b> — 2 creator belum dikirim</div>
-    <div class="locked-note">Banyak creator beda macet di brand yang sama → kemungkinan brand yang belum kirim, bukan creator.</div>
-  </div>
+  <div class="card-sub">Belum ada data brand pending yang belum kirim.</div>
 </div></div>
 
 <div class="modal-bg" id="m-i2"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i2')">‹ ✕</button>
@@ -391,10 +383,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">🏢 Pendaftaran &amp; Kelola Brand</div>
   <div class="card-title">Brand Terdaftar</div>
   <div id="brand-terdaftar-list"><div class="card-sub">Memuat data...</div></div>
-  <div class="card-title">+ Daftarkan Brand Baru</div>
+  <div class="card-title" id="brand-form-title">+ Daftarkan Brand Baru</div>
   <div class="card">
     <div class="field"><label>Nama Brand</label><input id="newbrand-nama" placeholder="Contoh: Cerahku"></div>
     <div class="field"><label>Komisi (%)</label><input id="newbrand-komisi" placeholder="15"></div>
+    <div class="field"><label>Foto Brand (opsional)</label><input type="file" id="newbrand-logo" accept="image/*"><div class="size-note">Max 1 foto, 1MB</div><div id="newbrand-logo-current" class="size-note"></div></div>
 
     <div id="product-blocks">
       <div class="product-row" data-block="1">
@@ -404,12 +397,14 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
         <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
         <div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>
+        <div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>
       </div>
     </div>
     <button class="btn btn-outline btn-sm" onclick="addProductBlock()" style="margin-bottom:12px">+ Tambah Produk Lagi</button><br>
     <div class="size-note" style="margin-bottom:10px">Brand dengan banyak produk (misal 50 produk) tinggal ulang klik tombol ini — tidak dibatasi jumlahnya. Link Affiliate ini yang nanti creator copy di Cek Status/Hot Product Live.</div>
 
     <button class="btn btn-primary" id="save-brand-btn" onclick="saveBrandRegistration()">Simpan &amp; Generate Kode</button>
+    <button class="btn btn-outline btn-sm" id="cancel-edit-btn" onclick="cancelEditBrand()" style="display:none;margin-top:8px;width:100%">Batal Edit</button>
     <div class="code-box" id="new-code" style="display:none"></div>
   </div>
 </div></div>
@@ -445,8 +440,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-title">+ Tambah Konten Edukasi Baru</div>
   <div class="card">
     <div class="field"><label>Judul</label><input id="eduk-judul" placeholder="Contoh: Tips Konten Beauty"></div>
-    <div class="field"><label>Tipe</label><select id="eduk-tipe"><option value="video">Video</option><option value="pdf">PDF</option></select></div>
-    <div class="field"><label>Link Video atau PDF</label><input id="eduk-link" placeholder="https://... (link video/PDF, upload file belum aktif di versi ini)"></div>
+    <div class="field"><label>Tipe</label><select id="eduk-tipe" onchange="toggleEdukasiFileAccept(this)"><option value="video">Video</option><option value="pdf">PDF</option></select></div>
+    <div class="field"><label>File Video atau PDF</label><input type="file" id="eduk-file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska"><div class="size-note">Video: format MP4/MOV/WEBM/MKV, max 50MB. PDF: format PDF, max 50MB.</div></div>
     <button class="btn btn-primary btn-sm" id="eduk-save-btn" onclick="saveEducationContent()">Simpan Konten</button>
   </div>
 </div></div>
@@ -524,10 +519,18 @@ function playInlineVideo(n){
 }
 function showRegister(){ document.getElementById('m-register').classList.add('open'); }
 
+function normalizeTiktokLink(raw){
+  var v = (raw||'').trim();
+  if(!v) return '';
+  if(/^https?:\/\//i.test(v)) return v;
+  if(/tiktok\.com/i.test(v)) return 'https://' + v.replace(/^\/+/, '');
+  var username = v.replace(/^@+/, '').trim();
+  return username ? 'https://www.tiktok.com/@' + username : '';
+}
 async function submitRegistration(){
   const nama = document.getElementById('reg-nama').value.trim();
   const noHp = document.getElementById('reg-nohp').value.trim();
-  const tiktokLink = document.getElementById('reg-tiktok').value.trim();
+  const tiktokRaw = document.getElementById('reg-tiktok').value.trim();
   const level = document.getElementById('reg-level').value;
   const gmvRaw = document.getElementById('reg-gmv').value.replace(/\./g,'').replace(/[^0-9]/g,'');
   const alamat = document.getElementById('reg-alamat').value.trim();
@@ -538,8 +541,13 @@ async function submitRegistration(){
     alert('Nama dan No WhatsApp wajib diisi.');
     return;
   }
-  if(!tiktokLink || !/^https?:\/\/.*tiktok\.com/i.test(tiktokLink)){
-    alert('Link Profile TikTok wajib diisi dan harus link TikTok yang valid (contoh: https://www.tiktok.com/@username).');
+  if(!tiktokRaw){
+    alert('Link/Username TikTok wajib diisi.');
+    return;
+  }
+  const tiktokLink = normalizeTiktokLink(tiktokRaw);
+  if(!tiktokLink){
+    alert('Isi link atau username TikTok yang valid.');
     return;
   }
 
@@ -588,6 +596,40 @@ async function submitRegistration(){
     fotoUrl = uploadResult.url;
     btn.textContent = 'Menyimpan data...';
   }
+
+  const payload = {
+    nama: nama,
+    no_hp: noHp,
+    tiktok_profile_link: tiktokLink,
+    level: level,
+    gmv_30hari: gmvRaw ? Number(gmvRaw) : null,
+    alamat: alamat,
+    patokan: patokan,
+    kode_pos: kodePos,
+    foto_selfie_url: fotoUrl,
+    status: 'pending',
+    rejection_reason: null
+  };
+
+  const { data, error } = existing
+    ? await db.from('members').update(payload).eq('id', existing.id)
+    : await db.from('members').insert(payload);
+
+  btn.disabled = false;
+  btn.textContent = 'Kirim Pendaftaran';
+
+  if(error){
+    if(error.code === '23505'){
+      alert('No WhatsApp ini sudah pernah daftar. Kalau ini kamu, hubungi tim internal buat cek statusnya.');
+    } else {
+      showDbError('daftar member', error);
+    }
+    return;
+  }
+
+  alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
+  closeModal('m-register');
+}
 
   const payload = {
     nama: nama,
@@ -1766,7 +1808,7 @@ async function loadBrandTerdaftar(){
   const container = document.getElementById('brand-terdaftar-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, brand_products(id)').order('created_at', { ascending: false }).limit(20);
+  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').order('created_at', { ascending: false }).limit(20);
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -1781,15 +1823,31 @@ async function loadBrandTerdaftar(){
 
   container.innerHTML = data.map(function(b){
     const komisi = b.komisi_percent !== null ? b.komisi_percent+'%' : '-';
-    return '<div class="card"><b>'+b.nama_brand+'</b><div class="card-sub">Komisi '+komisi+' · '+(b.brand_products||[]).length+' produk</div></div>';
+    const logoHtml = b.logo_url
+      ? '<img src="'+b.logo_url+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover;margin-right:10px;flex-shrink:0">'
+      : '<div style="width:36px;height:36px;border-radius:8px;background:var(--gray-mid);margin-right:10px;flex-shrink:0"></div>';
+    return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+      + '<div style="display:flex;align-items:center;min-width:0">'+logoHtml+'<div style="min-width:0"><b>'+b.nama_brand+'</b><div class="card-sub">Komisi '+komisi+' · '+(b.brand_products||[]).length+' produk</div></div></div>'
+      + '<button class="btn btn-outline btn-sm" style="flex-shrink:0" onclick="editBrand(\''+b.id+'\')">Edit</button>'
+      + '</div>';
   }).join('') + '<div class="size-note" style="text-align:center;margin-top:6px">Menampilkan 20 brand terbaru. Total ada di menu Kode Brand.</div>';
 }
+
+let editingBrandId = null;
+let editingBrandLogoUrl = null;
+let deletedProductIds = [];
 
 async function saveBrandRegistration(){
   const namaBrand = document.getElementById('newbrand-nama').value.trim();
   const komisiRaw = document.getElementById('newbrand-komisi').value.trim();
+  const logoInput = document.getElementById('newbrand-logo');
+  const logoFile = logoInput.files[0];
 
   if(!namaBrand){ alert('Nama brand wajib diisi.'); return; }
+  if(logoFile && logoFile.size > 1024*1024){
+    alert('Foto brand maksimal 1MB. Pilih file yang lebih kecil.');
+    return;
+  }
 
   const productBlocks = document.querySelectorAll('#product-blocks .product-row');
   const productsToSave = [];
@@ -1797,93 +1855,249 @@ async function saveBrandRegistration(){
     const nama = block.querySelector('.pb-nama').value.trim();
     if(!nama) continue;
     productsToSave.push({
+      id: block.getAttribute('data-product-id') || null,
       nama: nama,
       link: block.querySelector('.pb-link').value.trim(),
       sow: block.querySelector('.pb-sow').value,
+      hot: block.querySelector('.pb-hot').checked,
+      comm: block.querySelector('.pb-comm').checked,
       fotoFiles: block.querySelector('.pb-foto').files,
       videoFiles: block.querySelector('.pb-video').files
     });
   }
 
-  if(productsToSave.length === 0){
+  if(productsToSave.length === 0 && !editingBrandId){
     if(!confirm('Belum ada produk diisi. Simpan brand tanpa produk dulu?')) return;
   }
 
   const btn = document.getElementById('save-brand-btn');
   btn.disabled = true;
-  btn.textContent = 'Menyimpan brand...';
+  btn.textContent = editingBrandId ? 'Menyimpan perubahan...' : 'Menyimpan brand...';
 
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ';
-  function randCode(n){ let s=''; for(let i=0;i<n;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
-  const kodeLogin = namaBrand.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,10) + '-' + randCode(4);
+  let brandId = editingBrandId;
+  let kodeLogin = null;
+  let logoUrl = editingBrandLogoUrl;
 
-  const { data: brandData, error: brandError } = await db.from('brands').insert({
-    nama_brand: namaBrand,
-    komisi_percent: komisiRaw ? Number(komisiRaw) : null,
-    kode_login: kodeLogin
-  }).select('id').single();
+  if(logoFile){
+    btn.textContent = 'Upload foto brand...';
+    const logoResult = await uploadFileToStorage('brand-logos', logoFile, (namaBrand||'brand').replace(/[^a-zA-Z0-9]/g,'').slice(0,20));
+    if(logoResult.error){
+      btn.disabled = false;
+      btn.textContent = editingBrandId ? 'Simpan Perubahan' : 'Simpan & Generate Kode';
+      showDbError('upload foto brand', logoResult.error);
+      return;
+    }
+    logoUrl = logoResult.url;
+  }
 
-  if(brandError){
-    btn.disabled = false;
-    btn.textContent = 'Simpan & Generate Kode';
-    showDbError('simpan brand', brandError);
-    return;
+  if(editingBrandId){
+    const { error: updateErr } = await db.from('brands').update({
+      nama_brand: namaBrand,
+      komisi_percent: komisiRaw ? Number(komisiRaw) : null,
+      logo_url: logoUrl
+    }).eq('id', editingBrandId);
+    if(updateErr){
+      btn.disabled = false;
+      btn.textContent = 'Simpan Perubahan';
+      showDbError('update brand', updateErr);
+      return;
+    }
+  } else {
+    const chars='ABCDEFGHJKLMNPQRSTUVWXYZ';
+    function randCode(n){ let s=''; for(let i=0;i<n;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+    kodeLogin = namaBrand.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,10) + '-' + randCode(4);
+
+    const { data: brandData, error: brandError } = await db.from('brands').insert({
+      nama_brand: namaBrand,
+      komisi_percent: komisiRaw ? Number(komisiRaw) : null,
+      kode_login: kodeLogin,
+      logo_url: logoUrl
+    }).select('id').single();
+
+    if(brandError){
+      btn.disabled = false;
+      btn.textContent = 'Simpan & Generate Kode';
+      showDbError('simpan brand', brandError);
+      return;
+    }
+    brandId = brandData.id;
+  }
+
+  for(const pid of deletedProductIds){
+    await db.from('brand_products').delete().eq('id', pid);
   }
 
   for(let i=0; i<productsToSave.length; i++){
     const p = productsToSave[i];
-    btn.textContent = 'Upload produk '+(i+1)+'/'+productsToSave.length+'...';
+    btn.textContent = (editingBrandId?'Menyimpan':'Upload') + ' produk '+(i+1)+'/'+productsToSave.length+'...';
 
-    const fotoUrls = [];
-    for(const file of p.fotoFiles){
-      const result = await uploadFileToStorage('product-images', file, kodeLogin);
-      if(!result.error) fotoUrls.push(result.url);
+    let fotoUrls = null;
+    if(p.fotoFiles.length > 0){
+      fotoUrls = [];
+      for(const file of p.fotoFiles){
+        const result = await uploadFileToStorage('product-images', file, (kodeLogin || brandId));
+        if(!result.error) fotoUrls.push(result.url);
+      }
     }
-    const videoUrls = [];
-    for(const file of p.videoFiles){
-      const result = await uploadFileToStorage('video-referensi', file, kodeLogin);
-      if(!result.error) videoUrls.push(result.url);
+    let videoUrls = null;
+    if(p.videoFiles.length > 0){
+      videoUrls = [];
+      for(const file of p.videoFiles){
+        const result = await uploadFileToStorage('video-referensi', file, (kodeLogin || brandId));
+        if(!result.error) videoUrls.push(result.url);
+      }
     }
 
-    await db.from('brand_products').insert({
-      brand_id: brandData.id,
+    const payload = {
       nama_produk: p.nama,
       link_affiliate: p.link,
       tipe_sow: p.sow,
-      foto_urls: fotoUrls,
-      video_referensi_urls: videoUrls
-    });
+      tag_hot: p.hot,
+      tag_high_commission: p.comm
+    };
+    if(fotoUrls !== null) payload.foto_urls = fotoUrls;
+    if(videoUrls !== null) payload.video_referensi_urls = videoUrls;
+
+    if(p.id){
+      await db.from('brand_products').update(payload).eq('id', p.id);
+    } else {
+      payload.brand_id = brandId;
+      if(fotoUrls === null) payload.foto_urls = [];
+      if(videoUrls === null) payload.video_referensi_urls = [];
+      await db.from('brand_products').insert(payload);
+    }
   }
 
   btn.disabled = false;
-  btn.textContent = 'Simpan & Generate Kode';
 
-  document.getElementById('new-code').textContent = kodeLogin;
-  document.getElementById('new-code').style.display = 'block';
-
-  document.getElementById('newbrand-nama').value = '';
-  document.getElementById('newbrand-komisi').value = '';
-  document.getElementById('product-blocks').innerHTML = document.getElementById('product-blocks').children[0].outerHTML;
-  productBlockCount = 1;
+  if(editingBrandId){
+    btn.textContent = 'Simpan Perubahan';
+    alert('Perubahan brand tersimpan.');
+    cancelEditBrand();
+  } else {
+    btn.textContent = 'Simpan & Generate Kode';
+    document.getElementById('new-code').textContent = kodeLogin;
+    document.getElementById('new-code').style.display = 'block';
+    document.getElementById('newbrand-nama').value = '';
+    document.getElementById('newbrand-komisi').value = '';
+    document.getElementById('newbrand-logo').value = '';
+    document.getElementById('newbrand-logo-current').textContent = '';
+    document.getElementById('product-blocks').innerHTML = '';
+    productBlockCount = 0;
+    addProductBlock();
+  }
 
   await loadBrandTerdaftar();
 }
 
+async function editBrand(brandId){
+  const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url').eq('id', brandId).single();
+  if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
+  const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tag_hot, tag_high_commission, foto_urls, video_referensi_urls').eq('brand_id', brandId).order('created_at', { ascending: true });
+  if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
+
+  editingBrandId = brand.id;
+  editingBrandLogoUrl = brand.logo_url || null;
+  deletedProductIds = [];
+
+  document.getElementById('brand-form-title').textContent = '✏️ Edit Brand: ' + brand.nama_brand;
+  document.getElementById('newbrand-nama').value = brand.nama_brand;
+  document.getElementById('newbrand-komisi').value = brand.komisi_percent !== null ? brand.komisi_percent : '';
+  document.getElementById('newbrand-logo').value = '';
+  document.getElementById('newbrand-logo-current').textContent = brand.logo_url ? 'Foto brand sudah ada. Upload file baru cuma kalau mau ganti.' : '';
+
+  const container = document.getElementById('product-blocks');
+  container.innerHTML = '';
+  productBlockCount = 0;
+  (products||[]).forEach(function(p){
+    productBlockCount++;
+    const block = document.createElement('div');
+    block.className = 'product-row';
+    block.setAttribute('data-product-id', p.id);
+    block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">'+(p.nama_produk||'Produk')+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'
+      + '<div class="field"><label>Nama Produk</label><input class="pb-nama" value="'+(p.nama_produk||'').replace(/"/g,'&quot;')+'"></div>'
+      + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
+      + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Sudah ada '+((p.foto_urls||[]).length)+' foto. Upload baru cuma kalau mau ganti. Max 3 foto, 5MB/foto</div></div>'
+      + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
+      + '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Sudah ada '+((p.video_referensi_urls||[]).length)+' video. Upload baru cuma kalau mau ganti. Max 3 video, 1 menit &amp; 5MB/video</div></div>'
+      + '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"'+(p.tag_hot?' checked':'')+'> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"'+(p.tag_high_commission?' checked':'')+'> 💰 High Commission</label></div>';
+    container.appendChild(block);
+  });
+  if(productBlockCount === 0){
+    addProductBlock();
+  }
+
+  document.getElementById('save-brand-btn').textContent = 'Simpan Perubahan';
+  document.getElementById('cancel-edit-btn').style.display = 'block';
+  document.getElementById('new-code').style.display = 'none';
+  document.getElementById('brand-form-title').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function cancelEditBrand(){
+  editingBrandId = null;
+  editingBrandLogoUrl = null;
+  deletedProductIds = [];
+  document.getElementById('brand-form-title').textContent = '+ Daftarkan Brand Baru';
+  document.getElementById('newbrand-nama').value = '';
+  document.getElementById('newbrand-komisi').value = '';
+  document.getElementById('newbrand-logo').value = '';
+  document.getElementById('newbrand-logo-current').textContent = '';
+  document.getElementById('product-blocks').innerHTML = '';
+  productBlockCount = 0;
+  addProductBlock();
+  document.getElementById('save-brand-btn').textContent = 'Simpan & Generate Kode';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+}
+
+function removeProductBlock(link){
+  const block = link.closest('.product-row');
+  const pid = block.getAttribute('data-product-id');
+  if(pid) deletedProductIds.push(pid);
+  block.remove();
+}
+
+function toggleEdukasiFileAccept(sel){
+  var fileInput = document.getElementById('eduk-file');
+  fileInput.accept = sel.value === 'pdf' ? 'application/pdf' : 'video/mp4,video/quicktime,video/webm,video/x-matroska';
+}
 async function saveEducationContent(){
   const judul = document.getElementById('eduk-judul').value.trim();
   const tipe = document.getElementById('eduk-tipe').value;
-  const link = document.getElementById('eduk-link').value.trim();
+  const fileInput = document.getElementById('eduk-file');
+  const file = fileInput.files[0];
 
-  if(!judul || !link){ alert('Judul dan link wajib diisi.'); return; }
+  if(!judul || !file){ alert('Judul dan file wajib diisi.'); return; }
+
+  if(tipe === 'pdf' && file.type !== 'application/pdf'){
+    alert('Untuk tipe PDF, file harus format PDF.');
+    return;
+  }
+  if(tipe === 'video' && file.type.indexOf('video/') !== 0){
+    alert('Untuk tipe Video, file harus format video (MP4/MOV/WEBM/MKV).');
+    return;
+  }
+  if(file.size > 50*1024*1024){
+    alert('File maksimal 50MB.');
+    return;
+  }
 
   const btn = document.getElementById('eduk-save-btn');
   btn.disabled = true;
-  btn.textContent = 'Menyimpan...';
+  btn.textContent = 'Mengupload...';
 
+  const uploadResult = await uploadFileToStorage('education-content', file, tipe);
+  if(uploadResult.error){
+    btn.disabled = false;
+    btn.textContent = 'Simpan Konten';
+    showDbError('upload konten edukasi', uploadResult.error);
+    return;
+  }
+
+  btn.textContent = 'Menyimpan...';
   const { error } = await db.from('education_content').insert({
     judul: judul,
     tipe: tipe,
-    file_url: link
+    file_url: uploadResult.url
   });
 
   btn.disabled = false;
@@ -1895,7 +2109,7 @@ async function saveEducationContent(){
   }
 
   document.getElementById('eduk-judul').value = '';
-  document.getElementById('eduk-link').value = '';
+  fileInput.value = '';
   alert('Konten tersimpan, langsung tampil di menu Edukasi Creator.');
   await loadEducationManage();
 }
@@ -2341,12 +2555,13 @@ function addProductBlock(){
   var container = document.getElementById('product-blocks');
   var block = document.createElement('div');
   block.className = 'product-row';
-  block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk '+productBlockCount+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="this.closest(\'.product-row\').remove();return false;">Hapus</a></div>'+
+  block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk '+productBlockCount+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'+
     '<div class="field"><label>Nama Produk</label><input class="pb-nama" placeholder="Nama produk"></div>'+
     '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>'+
     '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>'+
     '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>'+
-    '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>';
+    '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>'+
+    '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>';
   container.appendChild(block);
 }
 function filterNotif(sel){
