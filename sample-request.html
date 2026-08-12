@@ -630,42 +630,6 @@ async function submitRegistration(){
   alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   closeModal('m-register');
 }
-
-  const payload = {
-    nama: nama,
-    no_hp: noHp,
-    tiktok_profile_link: tiktokLink,
-    level: level,
-    gmv_30hari: gmvRaw ? Number(gmvRaw) : null,
-    alamat: alamat,
-    patokan: patokan,
-    kode_pos: kodePos,
-    foto_selfie_url: fotoUrl,
-    status: 'pending',
-    rejection_reason: null
-  };
-
-  // Kalau sebelumnya pernah ditolak, daftar ulang menimpa data lama (bukan bikin baris baru)
-  // supaya nomor WA yang sama tetap bisa dipakai daftar lagi setelah ditolak.
-  const { data, error } = existing
-    ? await db.from('members').update(payload).eq('id', existing.id)
-    : await db.from('members').insert(payload);
-
-  btn.disabled = false;
-  btn.textContent = 'Kirim Pendaftaran';
-
-  if(error){
-    if(error.code === '23505'){
-      alert('No WhatsApp ini sudah pernah daftar. Kalau ini kamu, hubungi tim internal buat cek statusnya.');
-    } else {
-      showDbError('daftar member', error);
-    }
-    return;
-  }
-
-  alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
-  closeModal('m-register');
-}
 async function checkFreezeStatus(){
   if(!currentSession.memberId) return;
 
