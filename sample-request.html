@@ -94,7 +94,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(232,24,90,0.3)}
 .carousel-dot.active{background:var(--pink)}
 
-.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-right:5px}
+.tag{display:inline-block;padding:6px 14px;border-radius:8px;font-size:14px;font-weight:800;margin-right:6px;margin-top:4px}
 .tag-hot{background:#FFE4D6;color:#C4520A}
 .tag-comm{background:var(--teal-light);color:#116B4F}
 .deadline-note{font-size:11px;color:var(--red);font-weight:600}
@@ -394,6 +394,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk 1</b></div>
         <div class="field"><label>Nama Produk</label><input class="pb-nama" placeholder="Sunscreen Stick"></div>
         <div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>
+        <div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
         <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
         <div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>
@@ -1371,6 +1372,9 @@ async function openBrandDetail(brandId, brandName){
   container.innerHTML = data.map(function(p){
     let tagHtml = '';
     if(p.tag_hot) tagHtml += '<span class="tag tag-hot">🔥 Hot Product</span>';
+    const hargaText = p.harga ? 'Rp' + Number(p.harga).toLocaleString('id-ID') : '-';
+    const komisiText = p.komisi_percent !== null && p.komisi_percent !== undefined ? p.komisi_percent+'%' : '-';
+    const infoHtml = '<div style="display:flex;gap:10px;margin:6px 0;font-size:13px;font-weight:700;color:var(--dark)"><span>💵 '+hargaText+'</span><span>•</span><span>Komisi '+komisiText+'</span></div>';
     if(p.tag_high_commission) tagHtml += '<span class="tag tag-comm">💰 High Commission</span>';
 
     const fotos = p.foto_urls || [];
@@ -1393,6 +1397,7 @@ async function openBrandDetail(brandId, brandName){
       + fotoHtml
       + '<div class="card-title">'+p.nama_produk+'</div>'
       + tagHtml
+      + infoHtml
       + '<div class="card-sub" style="margin-top:6px">Tenggat setelah approve: <span class="deadline-note">H+5</span></div>'
       + videoHtml
       + '<div class="field" style="margin-top:8px"><label>Tipe SOW</label>'
@@ -1917,8 +1922,9 @@ async function saveBrandRegistration(){
       nama_produk: p.nama,
       link_affiliate: p.link,
       tipe_sow: p.sow,
-      tag_hot: p.hot,
-      tag_high_commission: p.comm
+      tag_high_commission: p.comm,
+      harga: p.harga ? Number(p.harga) : null,
+      komisi_percent: p.komisi ? Number(p.komisi) : null
     };
     if(fotoUrls !== null) payload.foto_urls = fotoUrls;
     if(videoUrls !== null) payload.video_referensi_urls = videoUrls;
@@ -1958,7 +1964,7 @@ async function saveBrandRegistration(){
 async function editBrand(brandId){
   const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url').eq('id', brandId).single();
   if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
-  const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tag_hot, tag_high_commission, foto_urls, video_referensi_urls').eq('brand_id', brandId).order('created_at', { ascending: true });
+    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent').eq('brand_id', brandId).order('created_at', { ascending: true });
   if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
 
   editingBrandId = brand.id;
@@ -1982,6 +1988,9 @@ async function editBrand(brandId){
     block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">'+(p.nama_produk||'Produk')+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'
       + '<div class="field"><label>Nama Produk</label><input class="pb-nama" value="'+(p.nama_produk||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
+      + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
+      harga: block.querySelector('.pb-harga').value.trim(),
+      komisi: block.querySelector('.pb-komisi').value.trim(),
       + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Sudah ada '+((p.foto_urls||[]).length)+' foto. Upload baru cuma kalau mau ganti. Max 3 foto, 5MB/foto</div></div>'
       + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
       + '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Sudah ada '+((p.video_referensi_urls||[]).length)+' video. Upload baru cuma kalau mau ganti. Max 3 video, 1 menit &amp; 5MB/video</div></div>'
@@ -2523,6 +2532,7 @@ function addProductBlock(){
   block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk '+productBlockCount+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'+
     '<div class="field"><label>Nama Produk</label><input class="pb-nama" placeholder="Nama produk"></div>'+
     '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>'+
+    '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>'+
     '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>'+
     '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>'+
     '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>'+
