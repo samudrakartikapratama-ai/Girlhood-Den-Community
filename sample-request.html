@@ -1405,7 +1405,8 @@ async function openBrandDetail(brandId, brandName){
       + '<div class="field"><label>Jadwal Live (3 sesi, min. 2 jam/sesi) — Brand &amp; Internal bisa lihat ini</label>'
       + '<div class="field-row"><input class="live-s1" placeholder="Sesi 1 - jam"><input class="live-s2" placeholder="Sesi 2 - jam"></div>'
       + '<input class="live-s3" placeholder="Sesi 3 - jam" style="margin-top:8px"></div></div>'
-      + '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
+            + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
++ '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
 }
