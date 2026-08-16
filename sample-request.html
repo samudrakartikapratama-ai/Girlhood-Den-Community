@@ -1831,6 +1831,8 @@ async function saveBrandRegistration(){
       sow: block.querySelector('.pb-sow').value,
       hot: block.querySelector('.pb-hot').checked,
       comm: block.querySelector('.pb-comm').checked,
+      harga: block.querySelector('.pb-harga').value.trim(),
+      komisi: block.querySelector('.pb-komisi').value.trim(),
       fotoFiles: block.querySelector('.pb-foto').files,
       videoFiles: block.querySelector('.pb-video').files
     });
@@ -1989,9 +1991,7 @@ async function editBrand(brandId){
       + '<div class="field"><label>Nama Produk</label><input class="pb-nama" value="'+(p.nama_produk||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
-      harga: block.querySelector('.pb-harga').value.trim(),
-      komisi: block.querySelector('.pb-komisi').value.trim(),
-      + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Sudah ada '+((p.foto_urls||[]).length)+' foto. Upload baru cuma kalau mau ganti. Max 3 foto, 5MB/foto</div></div>'
+            + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Sudah ada '+((p.foto_urls||[]).length)+' foto. Upload baru cuma kalau mau ganti. Max 3 foto, 5MB/foto</div></div>'
       + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
       + '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Sudah ada '+((p.video_referensi_urls||[]).length)+' video. Upload baru cuma kalau mau ganti. Max 3 video, 1 menit &amp; 5MB/video</div></div>'
       + '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"'+(p.tag_hot?' checked':'')+'> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"'+(p.tag_high_commission?' checked':'')+'> 💰 High Commission</label></div>';
