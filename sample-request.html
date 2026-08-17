@@ -189,6 +189,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i9'); loadCreatorCodes();"><div class="icon-emoji">🪄</div><div class="icon-label">Kode Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
   </div>
 </div>
 
@@ -464,6 +465,19 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <table id="notif-table">
     <tr><th>Kategori</th><th>Brand</th><th>Creator</th><th>Produk</th><th>Detail</th><th>Waktu</th></tr>
     <tbody id="notif-rows"><tr><td colspan="6" class="card-sub">Memuat data...</td></tr></tbody>
+  </table>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:900px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
+  <div class="modal-title">📇 Database Creator</div>
+  <div class="field" style="margin-bottom:10px"><input id="creatordb-search" placeholder="🔍 Cari nama, no HP, atau kode login..." oninput="filterCreatorDatabase(this.value)"></div>
+  <div class="field-row" style="margin-bottom:10px"><select id="creatordb-filter" onchange="filterCreatorDatabase(document.getElementById('creatordb-search').value)"><option value="all">Semua Status</option><option value="verified">Terverifikasi</option><option value="pending">Pending</option><option value="rejected">Ditolak</option></select></div>
+  <div class="size-note" id="creatordb-count" style="margin-bottom:8px">Memuat data...</div>
+  <div style="overflow-x:auto">
+  <table id="creatordb-table">
+    <tr><th>Nama</th><th>No HP</th><th>Link TikTok</th><th>Level</th><th>GMV 30 Hari</th><th>Status</th><th>Kode Login</th></tr>
+    <tbody id="creatordb-rows"><tr><td colspan="7" class="card-sub">Memuat data...</td></tr></tbody>
   </table>
   </div>
 </div></div>
@@ -2394,7 +2408,63 @@ async function loadPendingMembers(){
 }
 
 async function loadCreatorCodes(){
-  const container = document.getElementById('creator-codes-list');
+  let __creatorDbCache = [];
+async function loadCreatorDatabase(){
+  const countEl = document.getElementById('creatordb-count');
+  const rowsEl = document.getElementById('creatordb-rows');
+  countEl.textContent = 'Memuat data...';
+  rowsEl.innerHTML = '<tr><td colspan="7" class="card-sub">Memuat data...</td></tr>';
+
+  const { data, error } = await db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login').order('created_at', { ascending: false });
+
+  if(error){
+    countEl.textContent = '';
+    rowsEl.innerHTML = '<tr><td colspan="7" class="card-sub" style="color:var(--red)">Gagal memuat data.</td></tr>';
+    showDbError('memuat database creator', error);
+    return;
+  }
+
+  __creatorDbCache = data || [];
+  renderCreatorDatabase(__creatorDbCache);
+}
+
+function renderCreatorDatabase(list){
+  const countEl = document.getElementById('creatordb-count');
+  const rowsEl = document.getElementById('creatordb-rows');
+  countEl.textContent = 'Menampilkan ' + list.length + ' dari ' + __creatorDbCache.length + ' creator';
+
+  if(list.length === 0){
+    rowsEl.innerHTML = '<tr><td colspan="7" class="card-sub">Tidak ada creator yang cocok.</td></tr>';
+    return;
+  }
+
+  const statusLabel = { pending: 'Pending', verified: 'Terverifikasi', rejected: 'Ditolak' };
+  rowsEl.innerHTML = list.map(function(m){
+    const linkCell = m.tiktok_profile_link ? '<a href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-';
+    const gmvText = m.gmv_30hari ? 'Rp'+Number(m.gmv_30hari).toLocaleString('id-ID') : '-';
+    return '<tr>'
+      + '<td>'+(m.nama||'-')+'</td>'
+      + '<td>'+(m.no_hp||'-')+'</td>'
+      + '<td>'+linkCell+'</td>'
+      + '<td>'+(m.level||'-')+'</td>'
+      + '<td>'+gmvText+'</td>'
+      + '<td>'+(statusLabel[m.status]||m.status||'-')+'</td>'
+      + '<td>'+(m.kode_login||'-')+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function filterCreatorDatabase(keyword){
+  const statusFilter = document.getElementById('creatordb-filter').value;
+  const kw = (keyword||'').toLowerCase().trim();
+  const filtered = __creatorDbCache.filter(function(m){
+    const matchStatus = statusFilter === 'all' || m.status === statusFilter;
+    const matchKw = !kw || (m.nama||'').toLowerCase().includes(kw) || (m.no_hp||'').toLowerCase().includes(kw) || (m.kode_login||'').toLowerCase().includes(kw);
+    return matchStatus && matchKw;
+  });
+  renderCreatorDatabase(filtered);
+}
+const container = document.getElementById('creator-codes-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
   const authHeader = await getInternalAuthHeader();
