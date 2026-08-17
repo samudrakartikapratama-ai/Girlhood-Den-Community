@@ -2407,8 +2407,7 @@ async function loadPendingMembers(){
   }).join('');
 }
 
-async function loadCreatorCodes(){
-  let __creatorDbCache = [];
+let __creatorDbCache = [];
 async function loadCreatorDatabase(){
   const countEl = document.getElementById('creatordb-count');
   const rowsEl = document.getElementById('creatordb-rows');
@@ -2464,6 +2463,9 @@ function filterCreatorDatabase(keyword){
   });
   renderCreatorDatabase(filtered);
 }
+
+async function loadCreatorCodes(){
+
 const container = document.getElementById('creator-codes-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
