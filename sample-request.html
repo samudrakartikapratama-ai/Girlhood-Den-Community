@@ -226,7 +226,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="quota-label">Kuota Brand Kamu</div>
     <div class="quota-num" id="quota-num">-</div>
     <div class="quota-dots" id="quota-dots"></div>
-    <div class="quota-label">Kuota yang bisa kamu ambil dalam 1 kali permintaan: <b>3 Brand</b>, tiap Brand maksimal <b>2 SKU Satuan</b> atau <b>1 SKU Bundling/Paket</b> 🎉</div>
+    <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
 
   <div id="c2-brandlist">
@@ -1574,8 +1574,8 @@ async function openBrandDetail(brandId, brandName){
       + '</select></div>'
       + '<div class="live-schedule-block" style="display:none">'
       + '<div class="field"><label>Jadwal Live (3 sesi, min. 2 jam/sesi) — Brand &amp; Internal bisa lihat ini</label>'
-      + '<div class="field-row"><input class="live-s1" placeholder="Sesi 1 - jam"><input class="live-s2" placeholder="Sesi 2 - jam"></div>'
-      + '<input class="live-s3" placeholder="Sesi 3 - jam" style="margin-top:8px"></div></div>'
+            + '<div class="field-row"><input type="datetime-local" class="live-s1" min="'+getMinLiveDateTime()+'"><input type="datetime-local" class="live-s2" min="'+getMinLiveDateTime()+'"></div>'
+      + '<input type="datetime-local" class="live-s3" min="'+getMinLiveDateTime()+'" style="margin-top:8px"></div></div>'
             + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
 + '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
@@ -1617,6 +1617,13 @@ async function requestSample(productId, btn){
     }
     jadwalLive = { sesi1: s1, sesi2: s2, sesi3: s3 };
   }
+  const { data: prodBrand } = await db.from('brand_products').select('brand_id').eq('id', productId).single();
+  const targetBrandId = prodBrand ? prodBrand.brand_id : null;
+  const activeBrandIds = await getActiveBrandIds();
+  if(activeBrandIds && targetBrandId && !activeBrandIds.has(targetBrandId) && activeBrandIds.size >= 3){
+    alert('Kuota kamu udah penuh (maks 3 brand aktif). Selesaikan salah satu tugas dulu sebelum ambil brand baru.');
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
@@ -1647,28 +1654,55 @@ async function requestSample(productId, btn){
   btn.disabled = true;
   loadMyQuota();
 }
+function getMinLiveDateTime(){
+  const d = new Date(Date.now() + 7*24*60*60*1000);
+  const pad = function(n){ return String(n).padStart(2,'0'); };
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+
+async function getActiveBrandIds(){
+  const { data, error } = await db.from('sample_requests')
+    .select('id, status, tipe_sow_dipilih, brand_product_id, brand_products(brand_id)')
+    .eq('member_id', currentSession.memberId)
+    .in('status', ['requested','approved']);
+
+  if(error) return null;
+
+  const approvedVtIds = (data||[]).filter(function(r){ return r.status==='approved' && r.tipe_sow_dipilih==='VT'; }).map(function(r){ return r.id; });
+
+  let vtCounts = {};
+  if(approvedVtIds.length > 0){
+    const { data: reports } = await db.from('vt_reports').select('sample_request_id').in('sample_request_id', approvedVtIds);
+    (reports||[]).forEach(function(r){ vtCounts[r.sample_request_id] = (vtCounts[r.sample_request_id]||0) + 1; });
+  }
+
+  const activeBrandIds = new Set();
+  (data||[]).forEach(function(r){
+    const bId = r.brand_products ? r.brand_products.brand_id : null;
+    if(!bId) return;
+    if(r.status === 'requested'){ activeBrandIds.add(bId); return; }
+    if(r.status === 'approved'){
+      if(r.tipe_sow_dipilih === 'LIVE') return;
+      if(r.tipe_sow_dipilih === 'VT'){
+        const count = vtCounts[r.id] || 0;
+        if(count >= 3) return;
+        activeBrandIds.add(bId);
+        return;
+      }
+      activeBrandIds.add(bId);
+    }
+  });
+
+  return activeBrandIds;
+}
+
 async function loadMyQuota(){
   const numEl = document.getElementById('quota-num');
   const dotsEl = document.getElementById('quota-dots');
   if(!currentSession.memberId){ numEl.textContent = '-'; return; }
 
-  const { data, error } = await db.from('sample_requests')
-    .select('status, tipe_sow_dipilih, brand_product_id, brand_products(brand_id)')
-    .eq('member_id', currentSession.memberId)
-    .in('status', ['requested','approved']);
-
-  if(error){ numEl.textContent = '-'; return; }
-
-  // Sebuah brand dianggap "selesai" (nggak makan kuota lagi) kalau approved DAN
-  // (Live -> otomatis selesai) ATAU (VT/VT_LIVE -> nanti dicek jumlah VT-nya via query terpisah, disederhanakan di sini)
-  const activeBrandIds = new Set();
-  (data||[]).forEach(function(r){
-    const bId = r.brand_products ? r.brand_products.brand_id : null;
-    if(!bId) return;
-    if(r.status === 'requested') activeBrandIds.add(bId);
-    else if(r.status === 'approved' && r.tipe_sow_dipilih !== 'LIVE') activeBrandIds.add(bId);
-    // approved + LIVE dianggap langsung selesai, nggak masuk hitungan aktif (sesuai definisi di trigger)
-  });
+  const activeBrandIds = await getActiveBrandIds();
+  if(!activeBrandIds){ numEl.textContent = '-'; return; }
 
   const used = activeBrandIds.size;
   const sisa = Math.max(0, 3 - used);
@@ -1680,8 +1714,10 @@ async function loadMyQuota(){
 }
 
 function toggleLive(sel){
-  var show = (sel.value === 'live' || sel.value === 'vtlive');
-  document.getElementById('live-schedule').style.display = show ? 'block' : 'none';
+  var show = (sel.value === 'LIVE' || sel.value === 'VT_LIVE');
+  var card = sel.closest('.card');
+  var block = card ? card.querySelector('.live-schedule-block') : null;
+  if(block) block.style.display = show ? 'block' : 'none';
 }
 var slideIdx = 0;
 function slideCarousel(dir){
