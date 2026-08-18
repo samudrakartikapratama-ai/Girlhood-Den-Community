@@ -424,10 +424,14 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-i5"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i5')">‹ ✕</button>
   <div class="modal-title">🔥 Kelola Hot Product Live</div>
   <div class="card">
-    <div class="field"><label>Nama Produk</label><input id="hp-nama" placeholder="Glow Serum"></div>
-    <div class="field"><label>Brand</label><select id="hp-brand"><option value="">Memuat brand...</option></select></div>
-    <div class="field"><label>Link</label><input id="hp-link" placeholder="https://..."></div>
-    <button class="btn btn-primary btn-sm" id="hp-add-btn" onclick="addHotProduct()">Tambah</button>
+    <div class="field"><label>Brand</label><select id="hp-brand" onchange="populateHpProductSelect(this.value)"><option value="">Memuat brand...</option></select></div>
+    <div class="field"><label>Produk</label><select id="hp-product"><option value="">Pilih brand dulu</option></select></div>
+    <div class="field"><label>Link Affiliate</label><input id="hp-link" placeholder="https://..."></div>
+    <div class="field" id="hp-ranking-row" style="display:none"><label>Ranking (1-15)</label><input type="number" id="hp-ranking" min="1" max="15"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" id="hp-add-btn" onclick="saveHotProduct()">Tambah</button>
+      <button class="btn btn-outline btn-sm" id="hp-cancel-edit-btn" style="display:none" onclick="cancelEditHotProduct()">Batal Edit</button>
+    </div>
   </div>
   <div id="hp-manage-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
@@ -1242,6 +1246,8 @@ function filterKodeBrand(query){
   renderKodeBrand(allBrandsForKode.filter(function(b){ return b.nama_brand.toLowerCase().indexOf(query) !== -1; }));
 }
 
+let editingHotProductId = null;
+
 async function populateHpBrandSelect(){
   const select = document.getElementById('hp-brand');
   select.innerHTML = '<option value="">Memuat brand...</option>';
@@ -1250,19 +1256,105 @@ async function populateHpBrandSelect(){
     select.innerHTML = '<option value="">Gagal memuat</option>';
     return;
   }
-  select.innerHTML = (data||[]).map(function(b){ return '<option value="'+b.id+'">'+b.nama_brand+'</option>'; }).join('');
+  select.innerHTML = '<option value="">Pilih brand...</option>' + (data||[]).map(function(b){ return '<option value="'+b.id+'">'+b.nama_brand+'</option>'; }).join('');
 }
 
-async function addHotProduct(){
-  const nama = document.getElementById('hp-nama').value.trim();
+async function populateHpProductSelect(brandId, selectedId){
+  const select = document.getElementById('hp-product');
+  if(!brandId){
+    select.innerHTML = '<option value="">Pilih brand dulu</option>';
+    return;
+  }
+  select.innerHTML = '<option value="">Memuat produk...</option>';
+  const { data, error } = await db.from('brand_products').select('id, nama_produk, komisi_percent').eq('brand_id', brandId).order('nama_produk', { ascending: true });
+  if(error || !data){
+    select.innerHTML = '<option value="">Gagal memuat produk</option>';
+    return;
+  }
+  select.innerHTML = '<option value="">Pilih produk...</option>' + data.map(function(p){
+    const komisiText = (p.komisi_percent !== null && p.komisi_percent !== undefined) ? p.komisi_percent+'%' : '-';
+    const namaSafe = p.nama_produk.replace(/"/g, '&quot;');
+    return '<option value="'+p.id+'" data-nama="'+namaSafe+'">'+p.nama_produk+' (Komisi '+komisiText+')</option>';
+  }).join('');
+  if(selectedId) select.value = selectedId;
+}
+
+function cancelEditHotProduct(){
+  editingHotProductId = null;
+  document.getElementById('hp-brand').value = '';
+  document.getElementById('hp-product').innerHTML = '<option value="">Pilih brand dulu</option>';
+  document.getElementById('hp-link').value = '';
+  document.getElementById('hp-ranking').value = '';
+  document.getElementById('hp-ranking-row').style.display = 'none';
+  document.getElementById('hp-add-btn').textContent = 'Tambah';
+  document.getElementById('hp-cancel-edit-btn').style.display = 'none';
+}
+
+function startEditHotProduct(btn){
+  const card = btn.closest('[data-hp-id]');
+  editingHotProductId = card.getAttribute('data-hp-id');
+  const brandId = card.getAttribute('data-hp-brand');
+  const productId = card.getAttribute('data-hp-product');
+  document.getElementById('hp-brand').value = brandId;
+  populateHpProductSelect(brandId, productId);
+  document.getElementById('hp-link').value = card.getAttribute('data-hp-link');
+  document.getElementById('hp-ranking').value = card.getAttribute('data-hp-rank');
+  document.getElementById('hp-ranking-row').style.display = '';
+  document.getElementById('hp-add-btn').textContent = 'Simpan Perubahan';
+  document.getElementById('hp-cancel-edit-btn').style.display = '';
+}
+
+async function saveHotProduct(){
   const brandId = document.getElementById('hp-brand').value;
+  const productSelect = document.getElementById('hp-product');
+  const brandProductId = productSelect.value;
+  const selectedOption = productSelect.options[productSelect.selectedIndex];
+  const nama = selectedOption ? selectedOption.getAttribute('data-nama') : '';
   const link = document.getElementById('hp-link').value.trim();
 
-  if(!nama || !brandId){ alert('Nama produk dan brand wajib diisi.'); return; }
+  if(!brandId || !brandProductId){ alert('Brand dan produk wajib dipilih.'); return; }
+  if(!link){ alert('Link affiliate wajib diisi.'); return; }
 
   const btn = document.getElementById('hp-add-btn');
   btn.disabled = true;
   btn.textContent = 'Menyimpan...';
+
+  if(editingHotProductId){
+    const newRanking = parseInt(document.getElementById('hp-ranking').value, 10);
+    if(!newRanking || newRanking < 1 || newRanking > 15){
+      btn.disabled = false;
+      btn.textContent = 'Simpan Perubahan';
+      alert('Ranking harus angka 1-15.');
+      return;
+    }
+
+    const { data: existingRow } = await db.from('hot_products').select('id, ranking').eq('id', editingHotProductId).single();
+    const oldRanking = existingRow ? existingRow.ranking : null;
+
+    if(oldRanking !== newRanking){
+      const { data: conflictRow } = await db.from('hot_products').select('id').eq('ranking', newRanking).neq('id', editingHotProductId).maybeSingle();
+      if(conflictRow && oldRanking !== null){
+        await db.from('hot_products').update({ ranking: oldRanking }).eq('id', conflictRow.id);
+      }
+    }
+
+    const { error } = await db.from('hot_products').update({
+      nama_produk: nama,
+      brand_id: brandId,
+      brand_product_id: brandProductId,
+      link_affiliate: link,
+      ranking: newRanking
+    }).eq('id', editingHotProductId);
+
+    btn.disabled = false;
+    btn.textContent = 'Tambah';
+
+    if(error){ showDbError('simpan perubahan hot product', error); return; }
+
+    cancelEditHotProduct();
+    await loadHotProductsManage();
+    return;
+  }
 
   const { count } = await db.from('hot_products').select('id', { count: 'exact', head: true });
   if((count||0) >= 15){
@@ -1275,6 +1367,7 @@ async function addHotProduct(){
   const { error } = await db.from('hot_products').insert({
     nama_produk: nama,
     brand_id: brandId,
+    brand_product_id: brandProductId,
     link_affiliate: link,
     ranking: (count||0) + 1
   });
@@ -1287,7 +1380,6 @@ async function addHotProduct(){
     return;
   }
 
-  document.getElementById('hp-nama').value = '';
   document.getElementById('hp-link').value = '';
   await loadHotProductsManage();
 }
@@ -1296,7 +1388,7 @@ async function loadHotProductsManage(){
   const container = document.getElementById('hp-manage-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
-  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, ranking, brands(nama_brand)').order('ranking', { ascending: true });
+  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, ranking, brand_id, brand_product_id, brands(nama_brand), brand_products(komisi_percent)').order('ranking', { ascending: true });
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -1310,10 +1402,14 @@ async function loadHotProductsManage(){
   }
 
   container.innerHTML = data.map(function(hp){
-    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<div><b>#'+hp.ranking+' '+hp.nama_produk+'</b><br><span class="card-sub">'+(hp.brands?hp.brands.nama_brand:'-')+'</span></div>'
+    const komisiText = (hp.brand_products && hp.brand_products.komisi_percent !== null && hp.brand_products.komisi_percent !== undefined) ? hp.brand_products.komisi_percent+'%' : '-';
+    const linkSafe = (hp.link_affiliate||'').replace(/"/g, '&quot;');
+    return '<div class="card" data-hp-id="'+hp.id+'" data-hp-brand="'+(hp.brand_id||'')+'" data-hp-product="'+(hp.brand_product_id||'')+'" data-hp-link="'+linkSafe+'" data-hp-rank="'+hp.ranking+'"><div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div><b>#'+hp.ranking+' '+hp.nama_produk+'</b><br><span class="card-sub">'+(hp.brands?hp.brands.nama_brand:'-')+' • Komisi '+komisiText+'</span></div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button class="btn btn-outline btn-sm" onclick="startEditHotProduct(this)">Edit</button>'
       + '<button class="btn btn-outline btn-sm" style="border-color:var(--red);color:var(--red)" onclick="removeHotProduct(\''+hp.id+'\')">Hapus</button>'
-      + '</div></div>';
+      + '</div></div></div>';
   }).join('');
 }
 
