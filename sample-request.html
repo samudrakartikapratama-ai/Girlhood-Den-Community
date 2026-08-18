@@ -159,6 +159,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><div class="icon-emoji">🎬</div><div class="icon-label">Report VT</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
+    <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
   </div>
   <div id="freeze-overlay-note" style="display:none;text-align:center;margin-top:-6px;margin-bottom:14px;color:var(--red);font-weight:700;font-size:12px">🔒 Menu di atas dikunci — ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT.</div>
 </div>
@@ -174,6 +175,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><div class="icon-emoji">📥</div><div class="icon-label">Export &amp; Rekap</div></div>
     <div class="icon-card" onclick="openModal('m-b2')"><div class="icon-emoji">🎥</div><div class="icon-label">Report VT</div></div>
     <div class="icon-card" onclick="openPicBrandModal()"><div class="icon-emoji">🧑‍💼</div><div class="icon-label">Profil PIC</div></div>
+    <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
   </div>
 </div>
 
@@ -306,6 +308,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="edukasi-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-c7"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c7')">‹ ✕</button>
+  <div class="modal-title">🔔 Notifikasi</div>
+  <div class="card-sub">Semua perubahan dari brand & internal soal request kamu, digabung di sini.</div>
+  <div id="c7-notif-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
 <!-- ================= MODALS: BRAND ================= -->
 <div class="modal-bg" id="m-b1"><div class="modal-box" style="max-width:820px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b1')">‹ ✕</button>
   <div class="modal-title">✅ Approval Creator</div>
@@ -316,6 +324,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <tbody id="approval-rows"><tr><td colspan="8" class="card-sub">Memuat data...</td></tr></tbody>
     </table>
   </div>
+</div></div>
   <div class="locked-note">🔒 Begitu Aksi dipilih, jawaban <b>terkunci permanen</b> — tidak bisa diubah lagi. Kalau salah pencet, hubungi Internal buat koreksi manual. Yang "Kirim" otomatis masuk ke menu <b>Pengiriman</b>.</div>
 </div></div>
 
@@ -369,6 +378,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     </div>
     <button class="btn btn-outline btn-sm" onclick="downloadRekapBulanan()">Download Rekap Bulanan</button>
   </div>
+</div></div>
+
+<div class="modal-bg" id="m-b6"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b6')">‹ ✕</button>
+  <div class="modal-title">🔔 Notifikasi</div>
+  <div class="card-sub">Semua perubahan dari tim internal soal produk & campaign kamu, digabung di sini.</div>
+  <div id="b6-notif-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <!-- ================= MODALS: INTERNAL ================= -->
@@ -518,6 +533,102 @@ async function logNotification(kategori, opts){
   } catch(e){
     console.error('gagal catat notifikasi', e);
   }
+}
+
+function notifIcon(kategori){
+  if(kategori === 'status') return '🔄';
+  if(kategori === 'vt') return '🎬';
+  if(kategori === 'request') return '🆕';
+  return '🔔';
+}
+
+function notifTimeAgo(iso){
+  const d = new Date(iso);
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if(diffMin < 1) return 'baru saja';
+  if(diffMin < 60) return diffMin + ' menit lalu';
+  const diffHour = Math.floor(diffMin / 60);
+  if(diffHour < 24) return diffHour + ' jam lalu';
+  const diffDay = Math.floor(diffHour / 24);
+  if(diffDay < 7) return diffDay + ' hari lalu';
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+}
+
+async function loadNotificationsCreator(){
+  const container = document.getElementById('c7-notif-list');
+  if(!currentSession.memberId){ container.innerHTML = '<div class="card-sub">Sesi tidak terdeteksi.</div>'; return; }
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+
+  const { data, error } = await db.from('notifications')
+    .select('id, kategori, brand_id, detail_text, created_at')
+    .eq('member_id', currentSession.memberId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if(error){
+    container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat notifikasi.</div>';
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = '<div class="card-sub">Belum ada notifikasi.</div>';
+    return;
+  }
+
+  const brandIds = Array.from(new Set(data.map(function(n){ return n.brand_id; }).filter(Boolean)));
+  let brandNames = {};
+  if(brandIds.length > 0){
+    const { data: brands } = await db.from('brands').select('id, nama_brand').in('id', brandIds);
+    (brands||[]).forEach(function(b){ brandNames[b.id] = b.nama_brand; });
+  }
+
+  container.innerHTML = data.map(function(n){
+    const brandName = n.brand_id && brandNames[n.brand_id] ? brandNames[n.brand_id] : null;
+    return '<div class="card"><div style="display:flex;gap:8px;align-items:flex-start">'
+      + '<div style="font-size:18px">' + notifIcon(n.kategori) + '</div>'
+      + '<div style="flex:1"><div>' + n.detail_text + (brandName ? ' <span class="card-sub">(' + brandName + ')</span>' : '') + '</div>'
+      + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function loadNotificationsBrand(){
+  const container = document.getElementById('b6-notif-list');
+  if(!currentSession.brandId){ container.innerHTML = '<div class="card-sub">Sesi tidak terdeteksi.</div>'; return; }
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+
+  const { data, error } = await db.from('notifications')
+    .select('id, kategori, member_id, detail_text, created_at')
+    .eq('brand_id', currentSession.brandId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if(error){
+    container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat notifikasi.</div>';
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = '<div class="card-sub">Belum ada notifikasi.</div>';
+    return;
+  }
+
+  const memberIds = Array.from(new Set(data.map(function(n){ return n.member_id; }).filter(Boolean)));
+  let memberNames = {};
+  if(memberIds.length > 0){
+    const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+    (members||[]).forEach(function(m){ memberNames[m.id] = m.nama; });
+  }
+
+  container.innerHTML = data.map(function(n){
+    const memberName = n.member_id && memberNames[n.member_id] ? memberNames[n.member_id] : null;
+    return '<div class="card"><div style="display:flex;gap:8px;align-items:flex-start">'
+      + '<div style="font-size:18px">' + notifIcon(n.kategori) + '</div>'
+      + '<div style="flex:1"><div>' + n.detail_text + (memberName ? ' <span class="card-sub">(' + memberName + ')</span>' : '') + '</div>'
+      + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
+      + '</div></div>';
+  }).join('');
 }
 
 const alertedContexts = new Set();
@@ -1649,6 +1760,13 @@ async function requestSample(productId, btn){
     }
     return;
   }
+
+  await logNotification('request', {
+    brandId: targetBrandId,
+    memberId: currentSession.memberId,
+    sampleRequestId: data && data[0] ? data[0].id : null,
+    detail: 'Creator request sample baru'
+  });
 
   btn.textContent = '✅ Terkirim';
   btn.disabled = true;
