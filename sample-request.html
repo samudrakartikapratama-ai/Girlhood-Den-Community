@@ -173,6 +173,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><div class="icon-emoji">🚚</div><div class="icon-label">Logistik</div></div>
     <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><div class="icon-emoji">📥</div><div class="icon-label">Export &amp; Rekap</div></div>
     <div class="icon-card" onclick="openModal('m-b2')"><div class="icon-emoji">🎥</div><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" onclick="openPicBrandModal()"><div class="icon-emoji">🧑‍💼</div><div class="icon-label">Profil PIC</div></div>
   </div>
 </div>
 
@@ -327,6 +328,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <tr><td>Della Putri</td><td>Toner</td><td><span class="badge badge-amber">Pending (2 sisa)</span></td></tr>
     </table>
   </div>
+</div></div>
+
+<div class="modal-bg" id="m-bpic"><div class="modal-box">
+  <div class="modal-title">🧑‍💼 Data PIC Brand</div>
+  <div class="card-sub" id="picbrand-desc">Wajib diisi supaya tim internal bisa langsung hubungi PIC yang tepat. Kalau PIC berganti, edit lagi data ini di menu "Profil PIC".</div>
+  <div class="field"><label>Nama PIC</label><input id="picbrand-nama" placeholder="Nama lengkap PIC"></div>
+  <div class="field"><label>No WhatsApp PIC</label><input id="picbrand-wa" placeholder="08xxxxxxxxxx"></div>
+  <div class="field"><label>Email PIC</label><input id="picbrand-email" placeholder="nama@email.com"></div>
+  <button class="btn btn-primary" id="picbrand-save-btn" onclick="savePicBrand()">Simpan</button>
 </div></div>
 
 <div class="modal-bg" id="m-b3"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b3')">‹ ✕</button>
@@ -901,6 +911,48 @@ async function submitVtReport(){
   await loadVtReportPage();
   checkFreezeStatus();
 }
+function openPicBrandModal(){
+  const d = currentSession.brandData || {};
+  document.getElementById('picbrand-nama').value = d.pic_nama || '';
+  document.getElementById('picbrand-wa').value = d.pic_whatsapp || '';
+  document.getElementById('picbrand-email').value = d.pic_email || '';
+  openModal('m-bpic');
+}
+
+async function savePicBrand(){
+  const nama = document.getElementById('picbrand-nama').value.trim();
+  const wa = document.getElementById('picbrand-wa').value.trim();
+  const email = document.getElementById('picbrand-email').value.trim();
+  if(!nama || !wa || !email){
+    alert('Nama, No WhatsApp, dan Email PIC wajib diisi semua.');
+    return;
+  }
+
+  const btn = document.getElementById('picbrand-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+
+  const { error } = await db.from('brands').update({
+    pic_nama: nama,
+    pic_whatsapp: wa,
+    pic_email: email
+  }).eq('id', currentSession.brandId);
+
+  btn.disabled = false;
+  btn.textContent = 'Simpan';
+
+  if(error){
+    showDbError('simpan data PIC', error);
+    return;
+  }
+
+  currentSession.brandData.pic_nama = nama;
+  currentSession.brandData.pic_whatsapp = wa;
+  currentSession.brandData.pic_email = email;
+  alert('Data PIC tersimpan.');
+  closeModal('m-bpic');
+}
+
 
 async function logout(){
     if(!confirm('Yakin mau keluar?')) return;
@@ -920,6 +972,10 @@ async function logout(){
     var el = document.getElementById('brand-topbar-name');
     var nama = (currentSession.brandData && currentSession.brandData.nama_brand) ? currentSession.brandData.nama_brand : '-';
     el.textContent = 'Brand: ' + nama;
+    const d = currentSession.brandData || {};
+    if(!d.pic_nama || !d.pic_whatsapp || !d.pic_email){
+      openPicBrandModal();
+    }
   }
 }
 
