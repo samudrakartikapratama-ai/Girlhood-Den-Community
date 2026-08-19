@@ -2265,7 +2265,7 @@ async function saveBrandRegistration(){
         const { error: insertErr } = await db.from('brand_products').insert(payload);
         if(insertErr) saveErrors.push(p.nama + ': ' + insertErr.message);
       }
-    }}
+    }
 
   btn.disabled = false;
 
