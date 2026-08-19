@@ -2813,7 +2813,10 @@ async function loadPendingMembers(){
 
   container.innerHTML = data.map(function(m){
     return '<div class="card" data-member-id="'+m.id+'">'
-      + '<div class="card-title">'+m.nama+'</div>'
+            + '<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">'
+      + '<a href="'+m.foto_selfie_url+'" target="_blank"><img src="'+m.foto_selfie_url+'" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="Foto '+m.nama+'"></a>'
+      + '<div class="card-title" style="margin:0">'+m.nama+'</div>'
+      + '</div>'
       + '<table>'
       + '<tr><td>No HP</td><td>'+m.no_hp+'</td></tr>'
       + '<tr><td>Link Profile TikTok</td><td>'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+'</td></tr>'
@@ -2822,8 +2825,7 @@ async function loadPendingMembers(){
       + '<tr><td>Alamat</td><td>'+(m.alamat||'-')+'</td></tr>'
       + '<tr><td>Patokan</td><td>'+(m.patokan||'-')+'</td></tr>'
       + '<tr><td>Kode Pos</td><td>'+(m.kode_pos||'-')+'</td></tr>'
-      + '<tr><td>Foto</td><td><a href="'+m.foto_selfie_url+'" target="_blank">📷 Lihat foto</a></td></tr>'
-      + '</table>'
+            + '</table>'
       + '<div class="verif-buttons" style="display:flex;gap:8px;margin-top:10px">'
       + '<button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmMember(\''+m.id+'\', this)">Konfirmasi</button>'
       + '<button class="btn btn-outline btn-sm" style="flex:1;border-color:var(--red);color:var(--red)" onclick="showRejectMemberNote(this)">Tolak</button>'
