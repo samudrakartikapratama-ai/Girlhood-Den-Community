@@ -1682,11 +1682,12 @@ async function openBrandDetail(brandId, brandName){
       + '<option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option>'
       + '<option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live saja</option>'
       + '</select></div>'
-      + '<div class="live-schedule-block" style="display:none">'
-      + '<div class="field"><label>Jadwal Live (3 sesi, min. 2 jam/sesi) — Brand &amp; Internal bisa lihat ini</label>'
+            + '<div class="live-schedule-block" style="display:none">'
+      + '<div class="field"><label>Jadwal Live (3 sesi, min. 2 jam/sesi, tanggal beda-beda)</label>'
+      + '<div class="size-note" style="margin-bottom:6px">⏰ Estimasi H+7 dikarenakan mengikuti estimasi pengiriman logistik. Live boleh lebih lama dari jadwal kok — 2 jam itu cuma batas minimum, sesuaikan aja sama ramainya pembeli pas kamu jualan 🛍️</div>'
             + '<div class="field-row"><input type="datetime-local" class="live-s1" min="'+getMinLiveDateTime()+'"><input type="datetime-local" class="live-s2" min="'+getMinLiveDateTime()+'"></div>'
       + '<input type="datetime-local" class="live-s3" min="'+getMinLiveDateTime()+'" style="margin-top:8px"></div></div>'
-            + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
++ '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
 + '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
@@ -1725,6 +1726,15 @@ async function requestSample(productId, btn){
       alert('Isi jadwal Live 3 sesi dulu sebelum request.');
       return;
     }
+      if(new Date(s1).getTime() >= new Date(s2).getTime() || new Date(s2).getTime() >= new Date(s3).getTime()){
+        alert('Jadwal live harus urut maju: Sesi 1 lebih awal dari Sesi 2, Sesi 2 lebih awal dari Sesi 3.');
+        return;
+      }
+      const d1 = s1.slice(0,10), d2 = s2.slice(0,10), d3 = s3.slice(0,10);
+      if(d1===d2 || d2===d3 || d1===d3){
+        alert('Tiap sesi live harus di TANGGAL yang berbeda. Satu tanggal cuma bisa dipakai untuk 1 sesi.');
+        return;
+      }
     jadwalLive = { sesi1: s1, sesi2: s2, sesi3: s3 };
   }
   const { data: prodBrand } = await db.from('brand_products').select('brand_id').eq('id', productId).single();
@@ -1779,13 +1789,13 @@ function getMinLiveDateTime(){
 
 async function getActiveBrandIds(){
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, brand_product_id, brand_products(brand_id)')
+    .select('id, status, tipe_sow_dipilih, jadwal_live, brand_product_id, brand_products(brand_id)')
     .eq('member_id', currentSession.memberId)
     .in('status', ['requested','approved']);
 
   if(error) return null;
 
-  const approvedVtIds = (data||[]).filter(function(r){ return r.status==='approved' && r.tipe_sow_dipilih==='VT'; }).map(function(r){ return r.id; });
+  const approvedVtIds = (data||[]).filter(function(r){ return r.status==='approved' && (r.tipe_sow_dipilih==='VT' || r.tipe_sow_dipilih==='VT_LIVE'); }).map(function(r){ return r.id; });
 
   let vtCounts = {};
   if(approvedVtIds.length > 0){
@@ -1798,17 +1808,28 @@ async function getActiveBrandIds(){
     const bId = r.brand_products ? r.brand_products.brand_id : null;
     if(!bId) return;
     if(r.status === 'requested'){ activeBrandIds.add(bId); return; }
-    if(r.status === 'approved'){
-      if(r.tipe_sow_dipilih === 'LIVE') return;
+        if(r.status === 'approved'){
       if(r.tipe_sow_dipilih === 'VT'){
         const count = vtCounts[r.id] || 0;
         if(count >= 3) return;
         activeBrandIds.add(bId);
         return;
       }
+      const liveDone = r.jadwal_live && r.jadwal_live.sesi3 && new Date(r.jadwal_live.sesi3).getTime() < Date.now();
+      if(r.tipe_sow_dipilih === 'LIVE'){
+        if(liveDone) return;
+        activeBrandIds.add(bId);
+        return;
+      }
+      if(r.tipe_sow_dipilih === 'VT_LIVE'){
+        const count = vtCounts[r.id] || 0;
+        if(count >= 3 && liveDone) return;
+        activeBrandIds.add(bId);
+        return;
+      }
       activeBrandIds.add(bId);
     }
-  });
+});
 
   return activeBrandIds;
 }
