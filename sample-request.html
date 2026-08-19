@@ -2217,67 +2217,83 @@ async function saveBrandRegistration(){
   for(const pid of deletedProductIds){
     await db.from('brand_products').delete().eq('id', pid);
   }
+  let uploadErrors = [];
+  let saveErrors = [];
 
   for(let i=0; i<productsToSave.length; i++){
     const p = productsToSave[i];
     btn.textContent = (editingBrandId?'Menyimpan':'Upload') + ' produk '+(i+1)+'/'+productsToSave.length+'...';
 
     let fotoUrls = null;
-    if(p.fotoFiles.length > 0){
-      fotoUrls = [];
-      for(const file of p.fotoFiles){
-        const result = await uploadFileToStorage('product-images', file, (kodeLogin || brandId));
-        if(!result.error) fotoUrls.push(result.url);
+      if(p.fotoFiles.length > 0){
+        fotoUrls = [];
+        for(const file of p.fotoFiles){
+          const result = await uploadFileToStorage('product-images', file, (kodeLogin || brandId));
+          if(!result.error) fotoUrls.push(result.url);
+          else uploadErrors.push(p.nama + ' (foto): ' + result.error.message);
+        }
       }
-    }
-    let videoUrls = null;
-    if(p.videoFiles.length > 0){
-      videoUrls = [];
-      for(const file of p.videoFiles){
-        const result = await uploadFileToStorage('video-referensi', file, (kodeLogin || brandId));
-        if(!result.error) videoUrls.push(result.url);
+      let videoUrls = null;
+      if(p.videoFiles.length > 0){
+        videoUrls = [];
+        for(const file of p.videoFiles){
+          const result = await uploadFileToStorage('video-referensi', file, (kodeLogin || brandId));
+          if(!result.error) videoUrls.push(result.url);
+          else uploadErrors.push(p.nama + ' (video): ' + result.error.message);
+        }
       }
-    }
 
-    const payload = {
-      nama_produk: p.nama,
-      link_affiliate: p.link,
-      tipe_sow: p.sow,
-      tag_high_commission: p.comm,
-      harga: p.harga ? Number(p.harga) : null,
-      komisi_percent: p.komisi ? Number(p.komisi) : null
-    };
-    if(fotoUrls !== null) payload.foto_urls = fotoUrls;
-    if(videoUrls !== null) payload.video_referensi_urls = videoUrls;
+      const payload = {
+        nama_produk: p.nama,
+        link_affiliate: p.link,
+        tipe_sow: p.sow,
+        tag_hot: p.hot,
+        tag_high_commission: p.comm,
+        harga: p.harga ? Number(p.harga) : null,
+        komisi_percent: p.komisi ? Number(p.komisi) : null
+      };
+      if(fotoUrls !== null) payload.foto_urls = fotoUrls;
+      if(videoUrls !== null) payload.video_referensi_urls = videoUrls;
 
-    if(p.id){
-      await db.from('brand_products').update(payload).eq('id', p.id);
-    } else {
-      payload.brand_id = brandId;
-      if(fotoUrls === null) payload.foto_urls = [];
-      if(videoUrls === null) payload.video_referensi_urls = [];
-      await db.from('brand_products').insert(payload);
-    }
-  }
+      if(p.id){
+        const { error: saveErr } = await db.from('brand_products').update(payload).eq('id', p.id);
+        if(saveErr) saveErrors.push(p.nama + ': ' + saveErr.message);
+      } else {
+        payload.brand_id = brandId;
+        if(fotoUrls === null) payload.foto_urls = [];
+        if(videoUrls === null) payload.video_referensi_urls = [];
+        const { error: insertErr } = await db.from('brand_products').insert(payload);
+        if(insertErr) saveErrors.push(p.nama + ': ' + insertErr.message);
+      }
+    }}
 
   btn.disabled = false;
 
-  if(editingBrandId){
-    btn.textContent = 'Simpan Perubahan';
-    alert('Perubahan brand tersimpan.');
-    cancelEditBrand();
-  } else {
-    btn.textContent = 'Simpan & Generate Kode';
-    document.getElementById('new-code').textContent = kodeLogin;
-    document.getElementById('new-code').style.display = 'block';
-    document.getElementById('newbrand-nama').value = '';
-    document.getElementById('newbrand-komisi').value = '';
-    document.getElementById('newbrand-logo').value = '';
-    document.getElementById('newbrand-logo-current').textContent = '';
-    document.getElementById('product-blocks').innerHTML = '';
-    productBlockCount = 0;
-    addProductBlock();
-  }
+  const hasErrors = uploadErrors.length > 0 || saveErrors.length > 0;
+
+    if(hasErrors){
+      btn.textContent = editingBrandId ? 'Simpan Perubahan' : 'Simpan & Generate Kode';
+      let msg = '⚠️ ADA YANG GAGAL TERSIMPAN:\n\n';
+      if(saveErrors.length > 0) msg += 'Produk gagal simpan:\n- ' + saveErrors.join('\n- ') + '\n\n';
+      if(uploadErrors.length > 0) msg += 'File gagal upload:\n- ' + uploadErrors.join('\n- ') + '\n\n';
+      msg += 'Data yang GAGAL belum masuk ke sistem. Data lain yang berhasil sudah tersimpan. Perbaiki lalu Simpan lagi (form tidak direset).';
+      alert(msg);
+    } else if(editingBrandId){
+      btn.textContent = 'Simpan Perubahan';
+      alert('Perubahan brand tersimpan.');
+      cancelEditBrand();
+    } else {
+      btn.textContent = 'Simpan & Generate Kode';
+      document.getElementById('new-code').textContent = kodeLogin;
+      document.getElementById('new-code').style.display = 'block';
+      document.getElementById('newbrand-nama').value = '';
+      document.getElementById('newbrand-komisi').value = '';
+      document.getElementById('newbrand-logo').value = '';
+      document.getElementById('newbrand-logo-current').textContent = '';
+      document.getElementById('product-blocks').innerHTML = '';
+      productBlockCount = 0;
+      addProductBlock();
+    }
 
   await loadBrandTerdaftar();
 }
