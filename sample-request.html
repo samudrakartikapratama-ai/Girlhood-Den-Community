@@ -176,6 +176,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b2')"><div class="icon-emoji">🎥</div><div class="icon-label">Report VT</div></div>
     <div class="icon-card" onclick="openPicBrandModal()"><div class="icon-emoji">🧑‍💼</div><div class="icon-label">Profil PIC</div></div>
     <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live</div></div>
   </div>
 </div>
 
@@ -193,6 +194,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
+    <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live Creator</div></div>
   </div>
 </div>
 
@@ -385,6 +387,17 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="b6-notif-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-b7"><div class="modal-box" style="max-width:820px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b7')">‹ ✕</button>
+  <div class="modal-title">📅 Upcoming Live</div>
+  <div class="card-sub">Jadwal live creator kamu yang sample-nya sudah kamu konfirmasi terkirim.</div>
+  <div style="overflow-x:auto">
+  <table id="upcoming-live-table-brand">
+    <tr><th>Tanggal &amp; Jam</th><th>Creator</th><th>Produk</th><th>SOW</th></tr>
+    <tbody id="upcoming-live-rows-brand"><tr><td colspan="4" class="card-sub">Memuat data...</td></tr></tbody>
+  </table>
+  </div>
+</div></div>
+
 <!-- ================= MODALS: INTERNAL ================= -->
 <div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
   <div class="modal-title">📊 Dashboard</div>
@@ -510,6 +523,17 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
+<div class="modal-bg" id="m-i11"><div class="modal-box" style="max-width:900px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i11')">‹ ✕</button>
+  <div class="modal-title">📅 Upcoming Live Creator</div>
+  <div class="card-sub">Jadwal live creator yang sample-nya sudah dikonfirmasi terkirim oleh brand.</div>
+  <div style="overflow-x:auto">
+  <table id="upcoming-live-table-internal">
+    <tr><th>Tanggal &amp; Jam</th><th>Creator</th><th>Produk</th><th>Brand</th><th>SOW</th></tr>
+    <tbody id="upcoming-live-rows-internal"><tr><td colspan="5" class="card-sub">Memuat data...</td></tr></tbody>
+  </table>
+  </div>
+</div></div>
+
 <script>
 // ===== KONEKSI SUPABASE =====
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -627,6 +651,71 @@ async function loadNotificationsBrand(){
       + '<div style="flex:1"><div>' + n.detail_text + (memberName ? ' <span class="card-sub">(' + memberName + ')</span>' : '') + '</div>'
       + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
       + '</div></div>';
+  }).join('');
+}
+
+async function loadUpcomingLiveBrand(){
+  const tbody = document.getElementById('upcoming-live-rows-brand');
+  if(!currentSession.brandId){ tbody.innerHTML = '<tr><td colspan="4" class="card-sub">Sesi tidak terdeteksi.</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="4" class="card-sub">Memuat data...</td></tr>';
+
+  const { data, error } = await db.from('sample_requests')
+    .select('id, tipe_sow_dipilih, jadwal_live, members(nama), brand_products!inner(nama_produk, brand_id), logistics!inner(sudah_dikirim)')
+    .in('tipe_sow_dipilih', ['LIVE','VT_LIVE'])
+    .eq('brand_products.brand_id', currentSession.brandId)
+    .eq('logistics.sudah_dikirim', true);
+
+  if(error){ tbody.innerHTML = '<tr><td colspan="4" class="card-sub" style="color:var(--red)">Gagal memuat jadwal.</td></tr>'; return; }
+
+  const rows = [];
+  (data||[]).forEach(function(r){
+    const jl = r.jadwal_live;
+    if(!jl) return;
+    ['sesi1','sesi2','sesi3'].forEach(function(key){
+      if(jl[key]) rows.push({ waktu: jl[key], nama: r.members ? r.members.nama : '-', produk: r.brand_products ? r.brand_products.nama_produk : '-', sow: r.tipe_sow_dipilih });
+    });
+  });
+  rows.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
+
+  if(rows.length === 0){ tbody.innerHTML = '<tr><td colspan="4" class="card-sub">Belum ada jadwal live yang terkonfirmasi kirim.</td></tr>'; return; }
+
+  tbody.innerHTML = rows.map(function(r){
+    const d = new Date(r.waktu);
+    const formatted = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const sowLabel = r.sow === 'VT_LIVE' ? 'VT & Live' : 'Live';
+    return '<tr><td>'+formatted+'</td><td>'+r.nama+'</td><td>'+r.produk+'</td><td>'+sowLabel+'</td></tr>';
+  }).join('');
+}
+
+async function loadUpcomingLiveInternal(){
+  const tbody = document.getElementById('upcoming-live-rows-internal');
+  tbody.innerHTML = '<tr><td colspan="5" class="card-sub">Memuat data...</td></tr>';
+
+  const { data, error } = await db.from('sample_requests')
+    .select('id, tipe_sow_dipilih, jadwal_live, members(nama), brand_products!inner(nama_produk, brands(nama_brand)), logistics!inner(sudah_dikirim)')
+    .in('tipe_sow_dipilih', ['LIVE','VT_LIVE'])
+    .eq('logistics.sudah_dikirim', true);
+
+  if(error){ tbody.innerHTML = '<tr><td colspan="5" class="card-sub" style="color:var(--red)">Gagal memuat jadwal.</td></tr>'; return; }
+
+  const rows = [];
+  (data||[]).forEach(function(r){
+    const jl = r.jadwal_live;
+    if(!jl) return;
+    const brandName = r.brand_products && r.brand_products.brands ? r.brand_products.brands.nama_brand : '-';
+    ['sesi1','sesi2','sesi3'].forEach(function(key){
+      if(jl[key]) rows.push({ waktu: jl[key], nama: r.members ? r.members.nama : '-', produk: r.brand_products ? r.brand_products.nama_produk : '-', brand: brandName, sow: r.tipe_sow_dipilih });
+    });
+  });
+  rows.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
+
+  if(rows.length === 0){ tbody.innerHTML = '<tr><td colspan="5" class="card-sub">Belum ada jadwal live yang terkonfirmasi kirim.</td></tr>'; return; }
+
+  tbody.innerHTML = rows.map(function(r){
+    const d = new Date(r.waktu);
+    const formatted = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const sowLabel = r.sow === 'VT_LIVE' ? 'VT & Live' : 'Live';
+    return '<tr><td>'+formatted+'</td><td>'+r.nama+'</td><td>'+r.produk+'</td><td>'+r.brand+'</td><td>'+sowLabel+'</td></tr>';
   }).join('');
 }
 
