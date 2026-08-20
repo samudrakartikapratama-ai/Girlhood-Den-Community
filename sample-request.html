@@ -420,6 +420,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-i4"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i4')">‹ ✕</button>
   <div class="modal-title">🏢 Pendaftaran &amp; Kelola Brand</div>
   <div class="card-title">Brand Terdaftar</div>
+  <div class="field"><input id="brand-terdaftar-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandTerdaftar(this.value)"></div>
   <div id="brand-terdaftar-list"><div class="card-sub">Memuat data...</div></div>
   <div class="card-title" id="brand-form-title">+ Daftarkan Brand Baru</div>
   <div class="card">
@@ -2215,11 +2216,15 @@ function showWa(){
   document.getElementById('wa-p').style.display='block';
   document.getElementById('wa-t').textContent='"Halo Della, sample kamu sudah dikirim beberapa hari lalu. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏"';
 }
+let allBrandsTerdaftarCache = [];
+
 async function loadBrandTerdaftar(){
   const container = document.getElementById('brand-terdaftar-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const searchInput = document.getElementById('brand-terdaftar-search');
+  if(searchInput) searchInput.value = '';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').order('created_at', { ascending: false }).limit(20);
+  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').order('nama_brand', { ascending: true });
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -2227,12 +2232,24 @@ async function loadBrandTerdaftar(){
     return;
   }
 
-  if(!data || data.length === 0){
+  allBrandsTerdaftarCache = data || [];
+  renderBrandTerdaftarList(allBrandsTerdaftarCache);
+}
+
+function renderBrandTerdaftarList(brands){
+  const container = document.getElementById('brand-terdaftar-list');
+
+  if(!allBrandsTerdaftarCache || allBrandsTerdaftarCache.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada brand terdaftar.</div>';
     return;
   }
 
-  container.innerHTML = data.map(function(b){
+  if(brands.length === 0){
+    container.innerHTML = '<div class="card-sub">Gak ada brand yang cocok dengan pencarian.</div>';
+    return;
+  }
+
+  container.innerHTML = brands.map(function(b){
     const komisi = b.komisi_percent !== null ? b.komisi_percent+'%' : '-';
     const logoHtml = b.logo_url
       ? '<img src="'+b.logo_url+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover;margin-right:10px;flex-shrink:0">'
@@ -2241,7 +2258,16 @@ async function loadBrandTerdaftar(){
       + '<div style="display:flex;align-items:center;min-width:0">'+logoHtml+'<div style="min-width:0"><b>'+b.nama_brand+'</b><div class="card-sub">Komisi '+komisi+' · '+(b.brand_products||[]).length+' produk</div></div></div>'
       + '<button class="btn btn-outline btn-sm" style="flex-shrink:0" onclick="editBrand(\''+b.id+'\')">Edit</button>'
       + '</div>';
-  }).join('') + '<div class="size-note" style="text-align:center;margin-top:6px">Menampilkan 20 brand terbaru. Total ada di menu Kode Brand.</div>';
+  }).join('') + '<div class="size-note" style="text-align:center;margin-top:6px">Menampilkan '+brands.length+' dari '+allBrandsTerdaftarCache.length+' brand.</div>';
+}
+
+function filterBrandTerdaftar(query){
+  query = (query || '').toLowerCase().trim();
+  if(!query){ renderBrandTerdaftarList(allBrandsTerdaftarCache); return; }
+  const filtered = allBrandsTerdaftarCache.filter(function(b){
+    return b.nama_brand.toLowerCase().indexOf(query) !== -1;
+  });
+  renderBrandTerdaftarList(filtered);
 }
 
 let editingBrandId = null;
