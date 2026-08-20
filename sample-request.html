@@ -2309,6 +2309,21 @@ async function saveBrandRegistration(){
     if(!confirm('Belum ada produk diisi. Simpan brand tanpa produk dulu?')) return;
   }
 
+  if(!editingBrandId){
+    function normalizeBrandName(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+    const normalizedNew = normalizeBrandName(namaBrand);
+    const possibleDupes = (allBrandsTerdaftarCache||[]).filter(function(b){
+      return normalizeBrandName(b.nama_brand) === normalizedNew;
+    });
+    if(possibleDupes.length > 0){
+      const listText = possibleDupes.map(function(b){
+        return '- ' + b.nama_brand + ' (' + (b.brand_products||[]).length + ' produk)';
+      }).join('\n');
+      const proceed = confirm('⚠️ Brand dengan nama mirip sudah terdaftar:\n\n' + listText + '\n\nKalau ini brand yang sama, batalkan dan pakai tombol Edit di daftar brand supaya gak dobel. Kalau ini memang brand yang beda, klik OK untuk lanjut daftar baru.');
+      if(!proceed) return;
+    }
+  }
+
   const btn = document.getElementById('save-brand-btn');
   btn.disabled = true;
   btn.textContent = editingBrandId ? 'Menyimpan perubahan...' : 'Menyimpan brand...';
