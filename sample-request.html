@@ -1463,7 +1463,7 @@ let editingHotProductId = null;
 async function populateHpBrandSelect(){
   const select = document.getElementById('hp-brand');
   select.innerHTML = '<option value="">Memuat brand...</option>';
-  const { data, error } = await db.from('brands').select('id, nama_brand').order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand').eq('is_active', true).order('nama_brand', { ascending: true });
   if(error){
     select.innerHTML = '<option value="">Gagal memuat</option>';
     return;
@@ -1662,7 +1662,7 @@ async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, brand_products(id, tag_hot, tag_high_commission)').order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -2224,7 +2224,7 @@ async function loadBrandTerdaftar(){
   const searchInput = document.getElementById('brand-terdaftar-search');
   if(searchInput) searchInput.value = '';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
