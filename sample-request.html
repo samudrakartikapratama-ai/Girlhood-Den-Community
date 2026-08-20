@@ -1378,7 +1378,19 @@ function compressImageFile(file, maxDimension, quality){
   });
 }
 
+function getMinPlausibleFileSize(file){
+  const type = file.type || '';
+  if(type.indexOf('video/') === 0) return 10*1024;
+  if(type.indexOf('image/') === 0) return 2*1024;
+  if(type === 'application/pdf') return 1*1024;
+  return 1*1024;
+}
+
 async function uploadFileToStorage(bucket, file, pathPrefix){
+  const minSize = getMinPlausibleFileSize(file);
+  if(file.size < minSize){
+    return { url: null, error: { message: file.name + ' tampak kosong/rusak (ukuran cuma ' + file.size + ' byte). Biasanya ini terjadi kalau file videonya masih tersimpan di cloud (iCloud/Google Photos) dan belum ke-download penuh ke HP. Buka dulu file-nya di galeri sampai keputar/kebuka penuh, baru upload ulang.' } };
+  }
   const processedFile = await compressImageFile(file, 1600, 0.8);
   const ext = processedFile.name.split('.').pop();
   const fileName = pathPrefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
