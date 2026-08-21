@@ -55,8 +55,6 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 @keyframes popIn{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .modal-close{position:absolute;top:14px;right:16px;background:var(--gray-mid);border:none;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;transition:.15s}
 .modal-close:hover{background:var(--pink);color:#fff;transform:rotate(90deg)}
-.modal-logout{position:absolute;top:14px;left:16px;background:var(--gray-mid);border:none;padding:7px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;color:var(--dark)}
-.modal-logout:hover{background:var(--red-light);color:var(--red)}
 .modal-title{font-size:18px;font-weight:800;margin-bottom:14px;color:var(--pink)}
 
 .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
@@ -199,7 +197,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div>
 
 <!-- ================= MODALS: CREATOR ================= -->
-<div class="modal-bg" id="m-register"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-register')">‹ ✕</button>
+<div class="modal-bg" id="m-register"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-register')">‹ ✕</button>
   <div class="modal-title">📝 Daftar Jadi Member</div>
   <div class="card-sub">Isi data di bawah, tim internal akan verifikasi lalu kasih kode masuk kamu.</div>
   <div class="card">
@@ -218,13 +216,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-c1"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c1')">‹ ✕</button>
+<div class="modal-bg" id="m-c1"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c1')">‹ ✕</button>
   <div class="modal-title">📖 Tutorial</div>
   <div class="freeze-banner">👋 <b>Hai, Member Girlhood Den!</b><br>Kalau masih ada VT/Live yang belum kamu report ke tim kami, semua menu di sistem ini bakal di-freeze dulu ya. Yuk selesaikan dulu produk yang kamu pegang — makin banyak konten yang kamu buat, makin besar peluang kamu dapetin GMV! 🚀✨</div>
   <div class="card"><div class="card-title">Cara Kerja (4 Langkah)</div><div class="card-sub">1. Daftar Member (sekali, sebelum masuk) → 2. Pilih Campaign & Request Sample → 3. Cek Status → 4. Report VT</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-c2"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
+<div class="modal-bg" id="m-c2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
   <div class="modal-title">🛍️ Campaign</div>
   <div class="quota-box">
     <div class="quota-label">Kuota Brand Kamu</div>
@@ -268,7 +266,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-c3"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c3')">‹ ✕</button>
+<div class="modal-bg" id="m-c3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c3')">‹ ✕</button>
   <div class="modal-title">🔍 Cek Status</div>
   <div id="c3-r">
 
@@ -287,7 +285,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-c4"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c4')">‹ ✕</button>
+<div class="modal-bg" id="m-c4"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c4')">‹ ✕</button>
   <div class="modal-title">🎬 Report VT</div>
   <div class="card">
     <div class="field"><label>Brand + Produk</label><select id="vt-product-select"><option value="">Memuat...</option></select></div>
@@ -298,26 +296,26 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card" id="vt-progress-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-c5"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c5')">‹ ✕</button>
+<div class="modal-bg" id="m-c5"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c5')">‹ ✕</button>
   <div class="modal-title">🔥 Hot Product Live</div>
   <div class="card-sub">15 produk terbaik — langsung ambil link, tanpa approval.</div>
   <div id="hp-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-c6"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c6')">‹ ✕</button>
+<div class="modal-bg" id="m-c6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c6')">‹ ✕</button>
   <div class="modal-title">🎓 Edukasi</div>
   <div class="card-sub">Materi dari tim Girlhood Den — video atau PDF buat bantu kamu lebih jago konten.</div>
   <div id="edukasi-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-c7"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-c7')">‹ ✕</button>
+<div class="modal-bg" id="m-c7"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c7')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
   <div class="card-sub">Semua perubahan dari brand & internal soal request kamu, digabung di sini.</div>
   <div id="c7-notif-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <!-- ================= MODALS: BRAND ================= -->
-<div class="modal-bg" id="m-b1"><div class="modal-box" style="max-width:820px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b1')">‹ ✕</button>
+<div class="modal-bg" id="m-b1"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b1')">‹ ✕</button>
   <div class="modal-title">✅ Approval Creator</div>
   <div class="bulk-bar"><span><input type="checkbox" id="pilih-semua" onchange="toggleAll(this)"> Pilih semua</span><span><button class="btn btn-teal btn-sm" onclick="bulkAction('kirim')">Kirim Dicentang</button> <button class="btn btn-outline btn-sm" onclick="bulkAction('tolak')">Tolak Dicentang</button></span></div>
   <div style="overflow-x:auto">
@@ -329,7 +327,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="locked-note">🔒 Begitu Aksi dipilih, jawaban <b>terkunci permanen</b> — tidak bisa diubah lagi. Kalau salah pencet, hubungi Internal buat koreksi manual. Yang "Kirim" otomatis masuk ke menu <b>Pengiriman</b>.</div>
 </div></div>
 
-<div class="modal-bg" id="m-b2"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b2')">‹ ✕</button>
+<div class="modal-bg" id="m-b2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b2')">‹ ✕</button>
   <div class="modal-title">🎥 Report VT</div>
   <div style="overflow-x:auto">
     <table>
@@ -349,19 +347,19 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <button class="btn btn-primary" id="picbrand-save-btn" onclick="savePicBrand()">Simpan</button>
 </div></div>
 
-<div class="modal-bg" id="m-b3"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b3')">‹ ✕</button>
+<div class="modal-bg" id="m-b3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b3')">‹ ✕</button>
   <div class="modal-title">📦 Pengiriman</div>
   <div class="card-sub">Barang yang sudah kamu "Kirim" di Approval. Tentukan tanggal final pengirimannya di sini — konfirmasi barang benar-benar berangkat dilakukan di menu <b>Logistik</b>.</div>
   <div id="pengiriman-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-b5"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b5')">‹ ✕</button>
+<div class="modal-bg" id="m-b5"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b5')">‹ ✕</button>
   <div class="modal-title">🚚 Logistik</div>
   <div class="card-sub">Daftar creator yang sudah dijanjikan pengiriman per tanggal tertentu (dari menu Pengiriman). Centang begitu barang benar-benar sudah dikirim.</div>
   <div id="logistik-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-b4"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b4')">‹ ✕</button>
+<div class="modal-bg" id="m-b4"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b4')">‹ ✕</button>
   <div class="modal-title">📥 Export &amp; Rekap</div>
 
   <div class="card">
@@ -381,13 +379,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-b6"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b6')">‹ ✕</button>
+<div class="modal-bg" id="m-b6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b6')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
   <div class="card-sub">Semua perubahan dari tim internal soal produk & campaign kamu, digabung di sini.</div>
   <div id="b6-notif-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-b7"><div class="modal-box" style="max-width:820px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-b7')">‹ ✕</button>
+<div class="modal-bg" id="m-b7"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b7')">‹ ✕</button>
   <div class="modal-title">📅 Upcoming Live</div>
   <div class="card-sub">Jadwal live creator kamu yang sample-nya sudah kamu konfirmasi terkirim.</div>
   <div style="overflow-x:auto">
@@ -399,25 +397,25 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div></div>
 
 <!-- ================= MODALS: INTERNAL ================= -->
-<div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
+<div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
   <div class="modal-title">📊 Dashboard</div>
   <div class="stat-row"><div class="stat-card"><div class="stat-num">142</div><div class="stat-label">Request</div></div><div class="stat-card"><div class="stat-num">98</div><div class="stat-label">Disetujui</div></div><div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Belum Posting</div></div></div>
   <div class="card-title">Pendingan Brand</div>
   <div class="card-sub">Belum ada data brand pending yang belum kirim.</div>
 </div></div>
 
-<div class="modal-bg" id="m-i2"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i2')">‹ ✕</button>
+<div class="modal-bg" id="m-i2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i2')">‹ ✕</button>
   <div class="modal-title">⏰ Belum Posting</div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>Della Putri</b><br><span class="card-sub">Bloom Cosmetics · telat 4 hari</span></div><a class="btn btn-teal btn-sm" style="text-decoration:none" href="https://wa.me/62813xxxxxxx?text=Halo%20Della%2C%20sample%20kamu%20sudah%20dikirim%20beberapa%20hari%20lalu.%20Masih%20ada%20VT%20yang%20belum%20kamu%20selesaikan%20sesuai%20SOW.%20Yuk%20segera%20lengkapi%20%F0%9F%99%8F" target="_blank">📲 Kirim WA</a></div></div>
   <div class="locked-note">Klik "Kirim WA" langsung buka WhatsApp (app/web) dengan nomor & pesan sudah terisi otomatis — tim tinggal baca sekilas lalu klik kirim di WhatsApp.</div>
 </div></div>
 
-<div class="modal-bg" id="m-i3"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i3')">‹ ✕</button>
+<div class="modal-bg" id="m-i3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i3')">‹ ✕</button>
   <div class="modal-title">🪪 Verifikasi Member</div>
   <div id="pending-members-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-i4"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i4')">‹ ✕</button>
+<div class="modal-bg" id="m-i4"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i4')">‹ ✕</button>
   <div class="modal-title">🏢 Pendaftaran &amp; Kelola Brand</div>
   <div class="card-title">Brand Terdaftar</div>
   <div class="field"><input id="brand-terdaftar-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandTerdaftar(this.value)"></div>
@@ -449,7 +447,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-i5"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i5')">‹ ✕</button>
+<div class="modal-bg" id="m-i5"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i5')">‹ ✕</button>
   <div class="modal-title">🔥 Kelola Hot Product Live</div>
   <div class="card">
     <div class="field"><label>Brand</label><select id="hp-brand" onchange="populateHpProductSelect(this.value)"><option value="">Memuat brand...</option></select></div>
@@ -464,20 +462,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="hp-manage-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-i6"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i6')">‹ ✕</button>
+<div class="modal-bg" id="m-i6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i6')">‹ ✕</button>
   <div class="modal-title">🔑 Daftar Kode Brand</div>
   <div class="field" style="margin-bottom:10px"><input id="kodebrand-search" placeholder="🔍 Cari nama brand..." oninput="filterKodeBrand(this.value)"></div>
   <div id="kodebrand-list" style="max-height:400px;overflow-y:auto"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-i9"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i9')">‹ ✕</button>
+<div class="modal-bg" id="m-i9"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i9')">‹ ✕</button>
   <div class="modal-title">🪄 Kode Creator</div>
   <div class="card-sub">Kode ini otomatis muncul begitu Internal klik "Konfirmasi" di menu Verifikasi Member.</div>
   <div id="creator-codes-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 
-<div class="modal-bg" id="m-i8"><div class="modal-box"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i8')">‹ ✕</button>
+<div class="modal-bg" id="m-i8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i8')">‹ ✕</button>
   <div class="modal-title">🎓 Kelola Edukasi</div>
   <div class="card-title">Konten Terpasang</div>
   <div id="edukasi-manage-list"><div class="card-sub">Memuat data...</div></div>
@@ -490,7 +488,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-i7"><div class="modal-box" style="max-width:700px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i7')">‹ ✕</button>
+<div class="modal-bg" id="m-i7"><div class="modal-box" style="max-width:700px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i7')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
   <div class="card-sub">Semua perubahan digabung di sini, cek manual kapan pun — tidak ada push. Filter per kategori:</div>
   <div class="filter-row">
@@ -511,7 +509,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:900px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
+<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
   <div class="modal-title">📇 Database Creator</div>
   <div class="field" style="margin-bottom:10px"><input id="creatordb-search" placeholder="🔍 Cari nama, no HP, atau kode login..." oninput="filterCreatorDatabase(this.value)"></div>
   <div class="field-row" style="margin-bottom:10px"><select id="creatordb-filter" onchange="filterCreatorDatabase(document.getElementById('creatordb-search').value)"><option value="all">Semua Status</option><option value="verified">Terverifikasi</option><option value="pending">Pending</option><option value="rejected">Ditolak</option></select></div>
@@ -524,7 +522,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="modal-bg" id="m-i11"><div class="modal-box" style="max-width:900px"><button class="modal-logout" onclick="logout()">🚪 Keluar</button><button class="modal-close" title="Kembali" onclick="closeModal('m-i11')">‹ ✕</button>
+<div class="modal-bg" id="m-i11"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i11')">‹ ✕</button>
   <div class="modal-title">📅 Upcoming Live Creator</div>
   <div class="card-sub">Jadwal live creator yang sample-nya sudah dikonfirmasi terkirim oleh brand.</div>
   <div style="overflow-x:auto">
@@ -1636,7 +1634,7 @@ async function loadHotProductsCreator(){
   const container = document.getElementById('hp-creator-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
-  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, brands(nama_brand)').order('ranking', { ascending: true });
+  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, brands(nama_brand), brand_products(foto_urls)').order('ranking', { ascending: true });
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -1650,8 +1648,12 @@ async function loadHotProductsCreator(){
   }
 
   container.innerHTML = data.map(function(hp){
+    const fotos = (hp.brand_products && hp.brand_products.foto_urls) || [];
+    const photoHtml = fotos.length > 0
+      ? '<img src="'+fotos[0]+'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0" alt="'+hp.nama_produk+'">'
+      : '<div style="width:56px;height:56px;border-radius:10px;background:var(--pink-light);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">✨</div>';
     return '<div class="card"><div style="display:flex;gap:12px">'
-      + '<div style="font-size:32px">✨</div>'
+      + photoHtml
       + '<div><b>'+hp.nama_produk+'</b> — '+(hp.brands?hp.brands.nama_brand:'-')+'<br><span class="tag tag-hot">🔥 Hot Product</span><br>'
       + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(hp.link_affiliate||'')+'\');alert(\'Link disalin!\')">Ambil Link</button></div>'
       + '</div></div>';
