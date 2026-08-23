@@ -120,6 +120,16 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .badge-teal{background:var(--teal-light);color:#116B4F}
 .badge-amber{background:var(--amber);color:var(--amber-dark)}
 .locked-note{background:var(--gray-mid);border-radius:8px;padding:8px 10px;font-size:10px;color:var(--gray-text);margin-top:6px}
+.flow-timeline{display:flex;align-items:flex-start;gap:2px;padding:16px 4px 6px;overflow-x:auto}
+.flow-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:66px;text-align:center;position:relative}
+.flow-step.up{transform:translateY(-6px)}
+.flow-step.down{transform:translateY(6px)}
+.flow-dot{width:40px;height:40px;border-radius:50%;background:#fff;border:2px solid var(--pink);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 8px -3px rgba(232,24,90,.35);flex-shrink:0}
+.flow-dot.amber{border-color:var(--amber)}
+.flow-dot.teal{border-color:var(--teal)}
+.flow-label{font-size:10px;font-weight:700;margin-top:6px;line-height:1.25;color:var(--dark)}
+.flow-sub{font-size:9px;color:var(--gray-text);margin-top:1px}
+.flow-connector{flex:0 0 18px;height:2px;border-top:2px dashed var(--pink-light);margin-top:20px}
 .appr-group{border:1.5px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
 .appr-group-head{background:var(--pink-pale);padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
 .appr-group-name{font-weight:800;font-size:13.5px;color:var(--dark)}
@@ -286,14 +296,19 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="c3-r">
 
     <div class="card" style="background:var(--pink-pale);border:none">
-      <div class="card-sub" style="margin:0 0 8px;font-weight:700">Alur setelah Approve:</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap">
-        <span class="badge badge-teal">1. Approval</span>
-        <span>→</span>
-        <span class="badge badge-amber">2. Brand Janji Tanggal Kirim</span>
-        <span>→</span>
-        <span class="badge" style="background:var(--gray-mid);color:var(--dark)">3. Logistik Dikonfirmasi</span>
+      <div class="card-sub" style="margin:0 0 2px;font-weight:700">Alur setelah Approve, sampai batas posting:</div>
+      <div class="flow-timeline">
+        <div class="flow-step up"><div class="flow-dot">✅</div><div class="flow-label">Approved</div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step down"><div class="flow-dot amber">📅</div><div class="flow-label">Janji Kirim</div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
+        <div class="flow-connector"></div>
+        <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Batas posting</div></div>
       </div>
+      <div class="card-sub" style="margin-top:2px">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi satu konten sebelum H+13 ya 😊</div>
     </div>
 
     <div id="c3-status-list"><div class="card-sub">Memuat status...</div></div>
@@ -361,6 +376,17 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-b3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b3')">‹ ✕</button>
   <div class="modal-title">📦 Pengiriman</div>
   <div class="card-sub">Barang yang sudah kamu "Kirim" di Approval. Tentukan tanggal final pengirimannya di sini — konfirmasi barang benar-benar berangkat dilakukan di menu <b>Logistik</b>.</div>
+  <div class="card" style="background:var(--pink-pale);border:none;margin-top:10px">
+    <div class="card-sub" style="margin:0 0 2px;font-weight:700">Setelah konfirmasi kirim, creator dapat waktu sampai H+13:</div>
+    <div class="flow-timeline">
+      <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikonfirmasi Kirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Baru boleh ditagih</div></div>
+    </div>
+    <div class="card-sub" style="margin-top:2px">Sebelum H+13, wajar kalau creator belum posting — sabar dulu ya, sistem bakal otomatis kasih tau kalau ada yang beneran lewat batas 😊</div>
+  </div>
   <div id="pengiriman-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
