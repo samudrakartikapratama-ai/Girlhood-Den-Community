@@ -120,6 +120,21 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .badge-teal{background:var(--teal-light);color:#116B4F}
 .badge-amber{background:var(--amber);color:var(--amber-dark)}
 .locked-note{background:var(--gray-mid);border-radius:8px;padding:8px 10px;font-size:10px;color:var(--gray-text);margin-top:6px}
+.appr-group{border:1.5px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.appr-group-head{background:var(--pink-pale);padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.appr-group-name{font-weight:800;font-size:13.5px;color:var(--dark)}
+.appr-group-meta{font-size:11px;color:var(--gray-text)}
+.appr-group-date{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--pink);background:#fff;padding:3px 9px;border-radius:20px}
+.appr-item{padding:11px 14px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.appr-item:first-of-type{border-top:none}
+.appr-item-info{flex:1;min-width:160px}
+.appr-item-name{font-weight:700;font-size:12.5px}
+.sow-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px}
+.sow-badge.vt{background:var(--teal-light);color:var(--teal)}
+.sow-badge.vt_live{background:#FDF0D5;color:#8A5A00}
+.sow-badge.live{background:var(--pink-pale);color:var(--pink)}
+.pieces-reco{font-size:10px;color:#8A5A00;background:#FDF0D5;border-radius:8px;padding:5px 8px;margin-top:6px;max-width:230px}
+.pieces-input{width:70px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--gray-mid);font-size:12px;margin-top:6px}
 .code-box{background:var(--pink-pale);border:1px dashed var(--pink);border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:700;color:var(--pink);margin-top:6px}
 .word-count{font-size:10px;color:var(--gray-text);text-align:right;margin-top:3px}
 .word-count.over{color:var(--red);font-weight:700}
@@ -317,13 +332,9 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <!-- ================= MODALS: BRAND ================= -->
 <div class="modal-bg" id="m-b1"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b1')">‹ ✕</button>
   <div class="modal-title">✅ Approval Creator</div>
+  <div class="field" style="margin-bottom:10px"><input type="text" id="approval-search" placeholder="🔍 Cari nama creator..." oninput="filterApprovalGroups(this.value)" style="width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--gray-mid);font-size:13px"></div>
   <div class="bulk-bar"><span><input type="checkbox" id="pilih-semua" onchange="toggleAll(this)"> Pilih semua</span><span><button class="btn btn-teal btn-sm" onclick="bulkAction('kirim')">Kirim Dicentang</button> <button class="btn btn-outline btn-sm" onclick="bulkAction('tolak')">Tolak Dicentang</button></span></div>
-  <div style="overflow-x:auto">
-    <table>
-      <tr><th></th><th>Nama</th><th>TikTok/HP</th><th>Produk</th><th>Level/GMV</th><th>Alamat</th><th>Dibuat</th><th>Aksi</th></tr>
-      <tbody id="approval-rows"><tr><td colspan="8" class="card-sub">Memuat data...</td></tr></tbody>
-    </table>
-  </div>
+  <div id="approval-rows"><div class="card-sub">Memuat data...</div></div>
   <div class="locked-note">🔒 Begitu Aksi dipilih, jawaban <b>terkunci permanen</b> — tidak bisa diubah lagi. Kalau salah pencet, hubungi Internal buat koreksi manual. Yang "Kirim" otomatis masuk ke menu <b>Pengiriman</b>.</div>
 </div></div>
 
@@ -900,62 +911,109 @@ function formatTanggalSingkat(iso){
   return new Date(iso).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
 }
 
+const SOW_BADGE = {
+  VT: '<span class="sow-badge vt">VT (3 video)</span>',
+  VT_LIVE: '<span class="sow-badge vt_live">VT &amp; Live</span>',
+  LIVE: '<span class="sow-badge live">Live saja</span>'
+};
+const PIECES_RECO = '💡 Rekomendasi: kirim <b>&gt;1 pieces</b> untuk creator VT+Live/Live, biar produknya tetap ada buat etalase pas dia jualan — nggak abis kepake konten doang.';
+
 async function loadApprovalRows(){
-  const tbody = document.getElementById('approval-rows');
-  tbody.innerHTML = '<tr><td colspan="8" class="card-sub">Memuat data...</td></tr>';
+  const container = document.getElementById('approval-rows');
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
   if(!currentSession.brandId){
-    tbody.innerHTML = '<tr><td colspan="8" class="card-sub">Sesi brand tidak terdeteksi.</td></tr>';
+    container.innerHTML = '<div class="card-sub">Sesi brand tidak terdeteksi.</div>';
     return;
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
+    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .order('requested_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = '<tr><td colspan="8" class="card-sub" style="color:var(--red)">Gagal memuat data.</td></tr>';
+    container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
     showDbError('memuat approval', error);
     return;
   }
 
   if(!data || data.length === 0){
-    tbody.innerHTML = '<tr><td colspan="8" class="card-sub">Belum ada request sample masuk.</td></tr>';
+    container.innerHTML = '<div class="card-sub">Belum ada request sample masuk.</div>';
     return;
   }
 
-  tbody.innerHTML = data.map(function(r){
+  // Group per creator per hari (member_id + tanggal lokal), urutan grup terbaru dulu.
+  const groups = {};
+  const groupOrder = [];
+  data.forEach(function(r){
     const m = r.members || {};
-    const p = r.brand_products || {};
-    const gmvText = m.gmv_30hari ? (Math.round(m.gmv_30hari/1000000)) + 'jt' : '-';
-    let aksiCell;
-    if(r.status === 'requested'){
-      aksiCell = '<div class="aksi-buttons">'
-        + '<button class="btn btn-teal btn-sm" onclick="lockAksi(\''+r.id+'\', this,\'kirim\')" style="width:100%;margin-bottom:5px">✅ Kirim</button>'
-        + '<button class="btn btn-outline btn-sm" style="width:100%;border-color:var(--red);color:var(--red)" onclick="showRejectNote(this)">❌ Ditolak</button>'
-        + '</div>'
-        + '<div class="reject-note" style="display:none;margin-top:6px;width:220px">'
-        + '<select class="reject-template" style="font-size:11px;width:100%"><option>Yuk gaspol GMV-nya dulu, kejar sampai minimal Rp1 juta! 🚀</option><option>Coba tampilin wajah cantik kamu lebih banyak di konten ya ✨</option><option>Fokus dulu yuk di satu kategori favorit kamu 💄</option><option>Yuk tingkatin lagi engagement organik (like/komen/share asli) 🤝</option></select>'
-        + '<textarea class="reject-textarea" placeholder="Catatan internal (creator tidak bisa lihat, max 250 kata)" style="font-size:11px;margin-top:4px;width:100%" rows="2" oninput="countWords(this)"></textarea>'
-        + '<div class="word-count">0 / 250 kata</div>'
-        + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="lockAksi(\''+r.id+'\', this,\'tolak\')">Kunci Jawaban: Ditolak</button>'
-        + '</div>'
-        + '<div class="aksi-locked" style="display:none"></div>';
-    } else {
-      const label = r.status === 'approved' ? '✅ Terkunci: Kirim' : '❌ Terkunci: Ditolak';
-      const color = r.status === 'approved' ? 'var(--teal)' : 'var(--red)';
-      aksiCell = '<div class="aksi-locked" style="display:block"><div style="color:'+color+';font-weight:800;font-size:12px">'+label+'</div><a href="#" style="font-size:10px;color:var(--gray-text)" onclick="alert(\'Hubungi tim internal untuk koreksi\');return false;">Salah pencet? Hubungi Internal</a></div>';
+    const dateKey = new Date(r.requested_at).toLocaleDateString('en-CA'); // YYYY-MM-DD lokal
+    const groupKey = (m.id || 'unknown') + '_' + dateKey;
+    if(!groups[groupKey]){
+      groups[groupKey] = { member: m, dateKey: dateKey, items: [] };
+      groupOrder.push(groupKey);
     }
-    return '<tr><td><input type="checkbox" class="row-check" data-request-id="'+r.id+'"'+(r.status==='requested'?'':' disabled')+'></td>'
-      + '<td>'+(m.nama||'-')+'</td>'
-      + '<td>'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+'<br>'+(m.no_hp||'-')+'</td>'
-      + '<td>'+(p.nama_produk||'-')+'</td>'
-      + '<td>'+(m.level||'-')+'·'+gmvText+'</td>'
-      + '<td style="max-width:100px">'+(m.alamat||'-')+'</td>'
-      + '<td>'+formatTanggalSingkat(r.requested_at)+'</td>'
-      + '<td style="min-width:150px" class="aksi-cell">'+aksiCell+'</td></tr>';
+    groups[groupKey].items.push(r);
+  });
+
+  container.innerHTML = groupOrder.map(function(groupKey){
+    const g = groups[groupKey];
+    const m = g.member;
+    const gmvText = m.gmv_30hari ? (Math.round(m.gmv_30hari/1000000)) + 'jt' : '-';
+    const tanggalLabel = new Date(g.dateKey+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+
+    const itemsHtml = g.items.map(function(r){
+      const p = r.brand_products || {};
+      let aksiCell;
+      const showPiecesReco = (r.tipe_sow_dipilih === 'VT_LIVE' || r.tipe_sow_dipilih === 'LIVE');
+      if(r.status === 'requested'){
+        aksiCell = '<div class="aksi-buttons">'
+          + '<div><label style="font-size:10px;color:var(--gray-text)">Jumlah Pieces</label><br><input type="number" min="1" class="pieces-input" placeholder="cth: 2"></div>'
+          + (showPiecesReco ? '<div class="pieces-reco">'+PIECES_RECO+'</div>' : '')
+          + '<button class="btn btn-teal btn-sm" onclick="lockAksi(\''+r.id+'\', this,\'kirim\')" style="width:100%;margin-top:6px">✅ Kirim</button>'
+          + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="showRejectNote(this)">❌ Ditolak</button>'
+          + '</div>'
+          + '<div class="reject-note" style="display:none;margin-top:6px;width:220px">'
+          + '<select class="reject-template" style="font-size:11px;width:100%"><option>Yuk gaspol GMV-nya dulu, kejar sampai minimal Rp1 juta! 🚀</option><option>Coba tampilin wajah cantik kamu lebih banyak di konten ya ✨</option><option>Fokus dulu yuk di satu kategori favorit kamu 💄</option><option>Yuk tingkatin lagi engagement organik (like/komen/share asli) 🤝</option></select>'
+          + '<textarea class="reject-textarea" placeholder="Catatan internal (creator tidak bisa lihat, max 250 kata)" style="font-size:11px;margin-top:4px;width:100%" rows="2" oninput="countWords(this)"></textarea>'
+          + '<div class="word-count">0 / 250 kata</div>'
+          + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="lockAksi(\''+r.id+'\', this,\'tolak\')">Kunci Jawaban: Ditolak</button>'
+          + '</div>'
+          + '<div class="aksi-locked" style="display:none"></div>';
+      } else {
+        const label = r.status === 'approved' ? '✅ Terkunci: Kirim'+(r.jumlah_pieces?' ('+r.jumlah_pieces+' pcs)':'') : '❌ Terkunci: Ditolak';
+        const color = r.status === 'approved' ? 'var(--teal)' : 'var(--red)';
+        aksiCell = '<div class="aksi-locked" style="display:block"><div style="color:'+color+';font-weight:800;font-size:12px">'+label+'</div><a href="#" style="font-size:10px;color:var(--gray-text)" onclick="alert(\'Hubungi tim internal untuk koreksi\');return false;">Salah pencet? Hubungi Internal</a></div>';
+      }
+      return '<div class="appr-item" data-request-id="'+r.id+'">'
+        + '<input type="checkbox" class="row-check" data-request-id="'+r.id+'" style="margin-top:3px"'+(r.status==='requested'?'':' disabled')+'>'
+        + '<div class="appr-item-info">'
+          + '<div class="appr-item-name">'+(p.nama_produk||'-')+'</div>'
+          + (SOW_BADGE[r.tipe_sow_dipilih] || '')
+        + '</div>'
+        + '<div class="aksi-cell" style="min-width:170px">'+aksiCell+'</div>'
+        + '</div>';
+    }).join('');
+
+    return '<div class="appr-group" data-search-name="'+(m.nama||'').toLowerCase()+'">'
+      + '<div class="appr-group-head">'
+        + '<div><div class="appr-group-name">'+(m.nama||'-')+'</div>'
+        + '<div class="appr-group-meta">'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+' · '+(m.no_hp||'-')+' · '+(m.level||'-')+'·'+gmvText+'</div>'
+        + '<div class="appr-group-meta">📍 '+(m.alamat||'-')+'</div></div>'
+        + '<div class="appr-group-date">🗓️ '+tanggalLabel+'</div>'
+      + '</div>'
+      + itemsHtml
+      + '</div>';
   }).join('');
+}
+
+function filterApprovalGroups(query){
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('#approval-rows .appr-group').forEach(function(el){
+    const name = el.getAttribute('data-search-name') || '';
+    el.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+  });
 }
 
 const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
@@ -970,7 +1028,7 @@ async function loadCekStatus(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim)')
+    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at)')
     .eq('member_id', currentSession.memberId)
     .order('requested_at', { ascending: false });
 
@@ -986,6 +1044,18 @@ async function loadCekStatus(){
   }
 
   const sowLabel = { VT: '3 VT', VT_LIVE: '3 VT + Live', LIVE: 'Live' };
+
+  // Anchor H+10/H+3 dihitung dari konfirmasi kirim PERTAMA per brand (bukan per produk).
+  const brandAnchor = {};
+  data.forEach(function(r){
+    const bId = r.brand_products ? r.brand_products.brand_id : null;
+    const confirmedAt = r.logistics && r.logistics.sudah_dikirim && r.logistics.confirmed_at ? r.logistics.confirmed_at : null;
+    if(bId && confirmedAt){
+      if(!brandAnchor[bId] || new Date(confirmedAt) < new Date(brandAnchor[bId])){
+        brandAnchor[bId] = confirmedAt;
+      }
+    }
+  });
 
   container.innerHTML = data.map(function(r){
     const p = r.brand_products || {};
@@ -1007,12 +1077,27 @@ async function loadCekStatus(){
     const sudahFinalKirim = r.shipments && r.shipments.finalized_at;
 
     if(sudahDikirim){
+      const anchor = brandAnchor[p.brand_id];
+      let deadlineHtml = '';
+      if(anchor){
+        const anchorDate = new Date(anchor);
+        const h10 = new Date(anchorDate); h10.setDate(h10.getDate()+10);
+        const h13 = new Date(anchorDate); h13.setDate(h13.getDate()+13);
+        const fmt = function(d){ return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); };
+        deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
+          + '⏳ Estimasi sampai: <b>'+fmt(h10)+'</b> (H+10, bisa maju/mundur tergantung lokasi)<br>'
+          + '📮 Batas posting semua produk dari brand ini: <b>'+fmt(h13)+'</b> (H+3 setelah estimasi sampai)<br>'
+          + '<span style="color:var(--gray-text)">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi 1 konten sebelum tanggal ini.</span>'
+          + '</div>';
+      }
       return '<div class="status-item shipping">'
         + '<div style="font-weight:800;color:var(--teal);margin-bottom:2px">Sudah dikirim, cek tas online kamu ya 📦</div>'
         + namaLengkap
         + '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
         + '<b>Riwayat:</b><br>✅ Di-approve<br>📦 Janji kirim: '+new Date(r.shipments.tanggal_janji_kirim).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+'<br>🚚 Status Logistik: <b style="color:var(--teal)">sudah dikonfirmasi dikirim</b>'
-        + '</div></div>';
+        + '</div>'
+        + deadlineHtml
+        + '</div>';
     }
 
     if(sudahFinalKirim){
@@ -1759,8 +1844,21 @@ async function openBrandDetail(brandId, brandName){
 
     const fotos = p.foto_urls || [];
     let fotoHtml = '';
-    if(fotos.length > 0){
-      fotoHtml = '<img src="'+fotos[0]+'" style="width:100%;border-radius:10px;max-height:180px;object-fit:cover;margin-bottom:8px" alt="'+p.nama_produk+'">';
+    if(fotos.length === 1){
+      fotoHtml = '<div style="width:100%;height:220px;border-radius:10px;background:var(--pink-pale);margin-bottom:8px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="'+fotos[0]+'" style="max-width:100%;max-height:100%;object-fit:contain" alt="'+p.nama_produk+'"></div>';
+    } else if(fotos.length > 1){
+      const slidesHtml = fotos.map(function(f,i){
+        return '<div class="pf-slide'+(i===0?' active':'')+'" style="display:'+(i===0?'flex':'none')+';align-items:center;justify-content:center;width:100%;height:100%"><img src="'+f+'" style="max-width:100%;max-height:100%;object-fit:contain" alt="'+p.nama_produk+'"></div>';
+      }).join('');
+      const dotsHtml = fotos.map(function(f,i){
+        return '<span class="pf-dot'+(i===0?' active':'')+'" style="width:6px;height:6px;border-radius:50%;background:'+(i===0?'var(--pink)':'rgba(232,24,90,0.3)')+'"></span>';
+      }).join('');
+      fotoHtml = '<div class="product-foto-carousel" style="position:relative;width:100%;height:220px;border-radius:10px;background:var(--pink-pale);margin-bottom:8px;overflow:hidden">'
+        + slidesHtml
+        + '<button type="button" onclick="pfNav(this,-1)" style="position:absolute;top:50%;left:8px;transform:translateY(-50%);background:rgba(255,255,255,0.85);border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px">‹</button>'
+        + '<button type="button" onclick="pfNav(this,1)" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:rgba(255,255,255,0.85);border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px">›</button>'
+        + '<div class="pf-dots" style="position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:center;gap:5px">'+dotsHtml+'</div>'
+        + '</div>';
     }
 
     const videos = p.video_referensi_urls || [];
@@ -1795,6 +1893,23 @@ async function openBrandDetail(brandId, brandName){
 + '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
+}
+
+function pfNav(btn, dir){
+  const wrap = btn.closest('.product-foto-carousel');
+  const slides = wrap.querySelectorAll('.pf-slide');
+  const dots = wrap.querySelectorAll('.pf-dot');
+  let current = 0;
+  slides.forEach(function(s,i){ if(s.classList.contains('active')) current = i; });
+  const next = (current + dir + slides.length) % slides.length;
+  slides[current].style.display = 'none';
+  slides[current].classList.remove('active');
+  slides[next].style.display = 'flex';
+  slides[next].classList.add('active');
+  dots[current].style.background = 'rgba(232,24,90,0.3)';
+  dots[current].classList.remove('active');
+  dots[next].style.background = 'var(--pink)';
+  dots[next].classList.add('active');
 }
 
 function playInlineVideoReal(thumbEl, videoUrl){
@@ -1981,6 +2096,7 @@ async function lockAksi(requestId, btn, choice){
   const cell = btn.closest('.aksi-cell');
   let rejectionTemplate = null;
   let rejectionNote = null;
+  let jumlahPieces = null;
 
   if(choice === 'tolak'){
     const templateSelect = cell.querySelector('.reject-template');
@@ -1994,11 +2110,23 @@ async function lockAksi(requestId, btn, choice){
     }
   }
 
+  if(choice === 'kirim'){
+    const piecesInput = cell.querySelector('.pieces-input');
+    const rawVal = piecesInput ? piecesInput.value.trim() : '';
+    if(!rawVal || Number(rawVal) < 1){
+      alert('Isi dulu jumlah pieces yang mau dikirim (minimal 1) ya.');
+      return;
+    }
+    jumlahPieces = Number(rawVal);
+  }
+
   btn.disabled = true;
 
   const newStatus = choice === 'kirim' ? 'approved' : 'rejected';
+  const updatePayload = { status: newStatus, rejection_template: rejectionTemplate, rejection_internal_note: rejectionNote, decided_at: new Date().toISOString() };
+  if(choice === 'kirim') updatePayload.jumlah_pieces = jumlahPieces;
   const { data, error } = await db.from('sample_requests')
-    .update({ status: newStatus, rejection_template: rejectionTemplate, rejection_internal_note: rejectionNote, decided_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq('id', requestId)
     .select('member_id')
     .single();
@@ -2016,7 +2144,7 @@ async function lockAksi(requestId, btn, choice){
     detail: choice === 'kirim' ? 'Requested → Kirim' : 'Requested → Ditolak'
   });
 
-  const label = choice==='kirim' ? '✅ Terkunci: Kirim' : '❌ Terkunci: Ditolak';
+  const label = choice==='kirim' ? '✅ Terkunci: Kirim'+(jumlahPieces?' ('+jumlahPieces+' pcs)':'') : '❌ Terkunci: Ditolak';
   const color = choice==='kirim' ? 'var(--teal)' : 'var(--red)';
   cell.querySelector('.aksi-buttons').style.display='none';
   const rn = cell.querySelector('.reject-note');
@@ -2039,11 +2167,21 @@ async function bulkAction(choice){
     alert('Tolak massal butuh alasan per orang — centang satu-satu dan pilih Ditolak per baris ya, biar catatannya presisi.');
     return;
   }
+  const missingPieces = Array.from(checked).filter(function(cb){
+    const item = cb.closest('.appr-item');
+    const input = item ? item.querySelector('.pieces-input') : null;
+    return !input || !input.value.trim() || Number(input.value) < 1;
+  });
+  if(missingPieces.length > 0){
+    alert('Ada '+missingPieces.length+' item yang belum diisi jumlah pieces-nya. Isi dulu semua sebelum kirim massal ya.');
+    return;
+  }
+
   if(!confirm('Kirim (approve) '+checked.length+' request sekaligus?')) return;
 
   for(const cb of checked){
     const requestId = cb.getAttribute('data-request-id');
-    const btn = cb.closest('tr').querySelector('.aksi-buttons .btn-teal');
+    const btn = cb.closest('.appr-item').querySelector('.aksi-buttons .btn-teal');
     if(btn) await lockAksi(requestId, btn, 'kirim');
   }
 }
@@ -2199,12 +2337,36 @@ async function confirmLogistik(requestId, btn){
     return;
   }
 
-  const { data: srData } = await db.from('sample_requests').select('member_id').eq('id', requestId).single();
+  const { data: srData } = await db.from('sample_requests').select('member_id, brand_products(brand_id)').eq('id', requestId).single();
+  const memberId = srData ? srData.member_id : null;
+  const brandIdForAnchor = srData && srData.brand_products ? srData.brand_products.brand_id : currentSession.brandId;
+
+  // Cari konfirmasi kirim PERTAMA dari brand ini ke creator ini (anchor H+10/H+13), termasuk yang barusan disimpan.
+  let deadlineNote = '';
+  if(memberId && brandIdForAnchor){
+    const { data: anchorRows } = await db.from('sample_requests')
+      .select('logistics(confirmed_at), brand_products!inner(brand_id)')
+      .eq('member_id', memberId)
+      .eq('brand_products.brand_id', brandIdForAnchor)
+      .eq('status', 'approved');
+    const confirmedDates = (anchorRows||[])
+      .map(function(r){ return r.logistics ? r.logistics.confirmed_at : null; })
+      .filter(Boolean)
+      .map(function(d){ return new Date(d); });
+    if(confirmedDates.length > 0){
+      const anchor = new Date(Math.min.apply(null, confirmedDates));
+      const h10 = new Date(anchor); h10.setDate(h10.getDate()+10);
+      const h13 = new Date(anchor); h13.setDate(h13.getDate()+13);
+      const fmt = function(d){ return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); };
+      deadlineNote = ' | Estimasi sampai H+10: '+fmt(h10)+' | Batas posting (H+3 dari estimasi sampai): '+fmt(h13);
+    }
+  }
+
   await logNotification('status', {
     brandId: currentSession.brandId,
-    memberId: srData ? srData.member_id : null,
+    memberId: memberId,
     sampleRequestId: requestId,
-    detail: 'Kirim → Sudah Dikirim (Logistik)'
+    detail: 'Kirim → Sudah Dikirim (Logistik)'+deadlineNote
   });
 
   const banner = document.getElementById('brand-notif-banner');
