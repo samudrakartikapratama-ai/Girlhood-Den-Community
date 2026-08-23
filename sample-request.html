@@ -129,7 +129,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .flow-dot.teal{border-color:var(--teal)}
 .flow-label{font-size:10px;font-weight:700;margin-top:6px;line-height:1.25;color:var(--dark)}
 .flow-sub{font-size:9px;color:var(--gray-text);margin-top:1px}
-.flow-connector{flex:0 0 18px;height:2px;border-top:2px dashed var(--pink-light);margin-top:20px}
+.flow-connector{flex:0 0 26px;height:2px;border-top:2px dashed var(--pink-light);margin-top:20px;position:relative}
+.flow-connector-label{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--pink);white-space:nowrap}
 .appr-group{border:1.5px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
 .appr-group-head{background:var(--pink-pale);padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
 .appr-group-name{font-weight:800;font-size:13.5px;color:var(--dark)}
@@ -305,10 +306,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
         <div class="flow-connector"></div>
         <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
-        <div class="flow-connector"></div>
-        <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Batas posting</div></div>
+        <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
+        <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Batas lengkapin SOW</div></div>
       </div>
-      <div class="card-sub" style="margin-top:2px">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi satu konten sebelum H+13 ya 😊</div>
+      <div class="card-sub" style="margin-top:2px">Dari barang estimasi sampai (H+10), kamu dikasih waktu <b>3 hari</b> (jadi H+13) buat selesain SOW (VT/Live) — nggak dihitung dari tanggal Approve ya. Kalau ada produk lain dari brand yang sama, boleh dirapel jadi satu konten sebelum H+13 😊</div>
     </div>
 
     <div id="c3-status-list"><div class="card-sub">Memuat status...</div></div>
@@ -382,10 +383,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikonfirmasi Kirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
       <div class="flow-connector"></div>
       <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
-      <div class="flow-connector"></div>
+      <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
       <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Baru boleh ditagih</div></div>
     </div>
-    <div class="card-sub" style="margin-top:2px">Sebelum H+13, wajar kalau creator belum posting — sabar dulu ya, sistem bakal otomatis kasih tau kalau ada yang beneran lewat batas 😊</div>
+    <div class="card-sub" style="margin-top:2px">Dari estimasi barang sampai (H+10), creator dikasih waktu <b>3 hari</b> buat selesain SOW (jadi total H+13). Sebelum H+13, wajar kalau creator belum posting — sabar dulu ya, sistem bakal otomatis kasih tau kalau ada yang beneran lewat batas 😊</div>
   </div>
   <div id="pengiriman-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
