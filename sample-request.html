@@ -150,6 +150,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .sow-badge.live{background:var(--pink-pale);color:var(--pink)}
 .pieces-reco{font-size:10px;color:#8A5A00;background:#FDF0D5;border-radius:8px;padding:5px 8px;margin-top:6px;max-width:230px}
 .pieces-input{width:70px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--gray-mid);font-size:12px;margin-top:6px}
+.video-player-bg{display:none;position:fixed;inset:0;background:rgba(10,6,8,0.92);z-index:500;align-items:center;justify-content:center;padding:14px}
+.video-player-bg.open{display:flex;animation:fadeIn .2s ease}
+.video-player-box{width:100%;max-width:720px;position:relative}
+.video-player-close{position:absolute;top:-38px;right:0;background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer}
+.video-player-title{color:#fff;font-size:13px;font-weight:700;margin-bottom:8px;padding-right:40px}
+.video-player-wrap{position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9}
+.video-player-wrap video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.video-player-endcard{display:none;position:absolute;inset:0;background:rgba(0,0,0,.78);flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.video-player-endcard.show{display:flex}
 .code-box{background:var(--pink-pale);border:1px dashed var(--pink);border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:700;color:var(--pink);margin-top:6px}
 .word-count{font-size:10px;color:var(--gray-text);text-align:right;margin-top:3px}
 .word-count.over{color:var(--red);font-weight:700}
@@ -345,6 +354,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Materi dari tim Girlhood Den — video atau PDF buat bantu kamu lebih jago konten.</div>
   <div id="edukasi-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<div class="video-player-bg" id="video-player-bg" onclick="if(event.target===this) closeVideoPlayer()">
+  <div class="video-player-box">
+    <button class="video-player-close" onclick="closeVideoPlayer()">✕</button>
+    <div class="video-player-title" id="video-player-title"></div>
+    <div class="video-player-wrap">
+      <video id="video-player-el" controls playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture="false"></video>
+      <div class="video-player-endcard" id="video-player-endcard">
+        <button class="btn btn-primary" onclick="replayVideo()">🔁 Tonton Lagi</button>
+        <button class="btn btn-outline" style="color:#fff;border-color:#fff" onclick="closeVideoPlayer()">✕ Keluar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal-bg" id="m-c7"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c7')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
@@ -1450,6 +1473,62 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showFlowPopup(role){document.getElementById('flow-popup-'+role).classList.add('open');}
 function closeFlowPopup(role){document.getElementById('flow-popup-'+role).classList.remove('open');}
+
+function openVideoPlayer(url, title){
+  const bg = document.getElementById('video-player-bg');
+  const vid = document.getElementById('video-player-el');
+  const endcard = document.getElementById('video-player-endcard');
+  document.getElementById('video-player-title').textContent = title || '';
+  endcard.classList.remove('show');
+  vid.src = url;
+  bg.classList.add('open');
+  vid.play().catch(function(){});
+}
+
+function closeVideoPlayer(){
+  const bg = document.getElementById('video-player-bg');
+  const vid = document.getElementById('video-player-el');
+  vid.pause();
+  vid.removeAttribute('src');
+  vid.load();
+  bg.classList.remove('open');
+  document.getElementById('video-player-endcard').classList.remove('show');
+}
+
+function replayVideo(){
+  const vid = document.getElementById('video-player-el');
+  document.getElementById('video-player-endcard').classList.remove('show');
+  vid.currentTime = 0;
+  vid.play().catch(function(){});
+}
+
+async function downloadEduVideo(url, title, btn){
+  const originalText = btn.textContent;
+  btn.textContent = 'Menyiapkan...';
+  btn.disabled = true;
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('fetch failed');
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = (title || 'video') + '.mp4';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch(e){
+    window.open(url, '_blank');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('video-player-el').addEventListener('ended', function(){
+  document.getElementById('video-player-endcard').classList.add('show');
+});
 function fmtGMV(i){var v=i.value.replace(/\D/g,'');i.value=v?parseInt(v).toLocaleString('id-ID'):'';}
 function previewSelfie(input){
   const file = input.files[0];
@@ -2840,9 +2919,13 @@ async function loadEducationCreator(){
 
   container.innerHTML = data.map(function(e){
     if(e.tipe === 'video'){
+      const safeTitle = (e.judul||'').replace(/'/g,"\\'");
       return '<div class="card"><div class="card-title">'+e.judul+'</div>'
-        + '<a href="'+e.file_url+'" target="_blank" style="text-decoration:none"><div style="background:var(--dark);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;margin-top:6px">▶️</div></a>'
-        + '<div class="card-sub" style="margin-top:6px">Video</div></div>';
+        + '<div style="background:var(--dark);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;margin-top:6px;cursor:pointer" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\')">▶️</div>'
+        + '<div style="display:flex;gap:8px;margin-top:8px">'
+        + '<button class="btn btn-teal btn-sm" style="flex:1" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\')">▶️ Tonton</button>'
+        + '<button class="btn btn-outline btn-sm" style="flex:1" onclick="downloadEduVideo(\''+e.file_url+'\', \''+safeTitle+'\', this)">⬇️ Unduh</button>'
+        + '</div></div>';
     }
     return '<div class="card"><div class="card-title">'+e.judul+'</div>'
       + '<a href="'+e.file_url+'" target="_blank" style="text-decoration:none;color:inherit"><div style="background:var(--pink-pale);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;margin-top:6px"><span style="font-size:24px">📄</span><span>Lihat PDF</span></div></a></div>';
