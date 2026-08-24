@@ -159,6 +159,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .video-player-wrap video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
 .video-player-endcard{display:none;position:absolute;inset:0;background:rgba(0,0,0,.78);flex-direction:column;align-items:center;justify-content:center;gap:10px}
 .video-player-endcard.show{display:flex}
+.delivery-cam-bg{display:none;position:fixed;inset:0;background:rgba(10,6,8,0.94);z-index:500;align-items:center;justify-content:center;padding:14px}
+.delivery-cam-bg.open{display:flex;animation:fadeIn .2s ease}
+.delivery-cam-box{width:100%;max-width:420px;position:relative}
+.delivery-cam-frame{position:relative;width:100%;aspect-ratio:3/4;background:#000;border-radius:14px;overflow:hidden;border:3px solid var(--pink)}
+.delivery-cam-frame video,.delivery-cam-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.delivery-cam-actions{display:flex;gap:8px;margin-top:12px}
+.delivery-cam-actions button{flex:1}
 .code-box{background:var(--pink-pale);border:1px dashed var(--pink);border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:700;color:var(--pink);margin-top:6px}
 .word-count{font-size:10px;color:var(--gray-text);text-align:right;margin-top:3px}
 .word-count.over{color:var(--red);font-weight:700}
@@ -309,6 +316,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">🔍 Cek Status</div>
   <div id="c3-r">
 
+    <div id="delivery-prompts"></div>
     <div id="c3-status-list"><div class="card-sub">Memuat status...</div></div>
   </div>
 </div></div>
@@ -322,13 +330,29 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="flow-connector"></div>
       <div class="flow-step down"><div class="flow-dot amber">📅</div><div class="flow-label">Janji Kirim</div></div>
       <div class="flow-connector"></div>
-      <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
+      <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikirim</div></div>
       <div class="flow-connector"></div>
-      <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
+      <div class="flow-step down"><div class="flow-dot amber">🤳</div><div class="flow-label">Kamu Konfirmasi Terima</div><div class="flow-sub">Titik hitungan mulai</div></div>
       <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
-      <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Batas lengkapin SOW</div></div>
+      <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+3</div><div class="flow-sub">Batas lengkapin SOW</div></div>
     </div>
-    <div class="card-sub" style="margin-top:2px">Dari barang estimasi sampai (H+10), kamu dikasih waktu <b>3 hari</b> (jadi H+13) buat selesain SOW (VT/Live) — nggak dihitung dari tanggal Approve ya. Kalau ada produk lain dari brand yang sama, boleh dirapel jadi satu konten sebelum H+13 😊</div>
+    <div class="card-sub" style="margin-top:2px">Titik hitungannya bukan pas dikirim, tapi pas <b>kamu konfirmasi barang udah sampai</b> (foto selfie + produk di Cek Status). Dari situ kamu dikasih waktu <b>3 hari</b> buat selesain SOW (VT/Live). Kalau ada produk lain dari brand yang sama, cukup 1x konfirmasi buat semuanya 😊</div>
+  </div>
+</div>
+
+<div class="delivery-cam-bg" id="delivery-cam-bg" onclick="if(event.target===this) closeDeliveryCam()">
+  <div class="delivery-cam-box">
+    <button class="video-player-close" onclick="closeDeliveryCam()">✕</button>
+    <div class="video-player-title" id="delivery-cam-title"></div>
+    <div class="delivery-cam-frame">
+      <video id="delivery-cam-video" autoplay playsinline muted></video>
+      <img id="delivery-cam-preview" style="display:none">
+      <canvas id="delivery-cam-canvas" style="display:none"></canvas>
+    </div>
+    <div class="card-sub" style="color:#eee;margin-top:8px">Selfie kamu + produk yang udah di-unboxing ya — bingkai Girlhood Den bakal nempel otomatis 🌸</div>
+    <div class="delivery-cam-actions" id="delivery-cam-actions">
+      <button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>
+    </div>
   </div>
 </div>
 
@@ -413,15 +437,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="flow-popup-bg" id="flow-popup-b" onclick="if(event.target===this) closeFlowPopup('b')">
   <div class="flow-popup-box">
     <button class="flow-popup-close" onclick="closeFlowPopup('b')">✕</button>
-    <div class="card-sub" style="margin:0 0 2px;font-weight:700">Setelah konfirmasi kirim, creator dapat waktu sampai H+13:</div>
+    <div class="card-sub" style="margin:0 0 2px;font-weight:700">Creator dapat waktu 3 hari sejak konfirmasi terima:</div>
     <div class="flow-timeline">
-      <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikonfirmasi Kirim</div><div class="flow-sub">Titik hitungan mulai</div></div>
+      <div class="flow-step up"><div class="flow-dot teal">📦</div><div class="flow-label">Dikirim</div></div>
       <div class="flow-connector"></div>
-      <div class="flow-step down"><div class="flow-dot amber">⏳</div><div class="flow-label">H+10</div><div class="flow-sub">Estimasi sampai</div></div>
+      <div class="flow-step down"><div class="flow-dot amber">🤳</div><div class="flow-label">Creator Konfirmasi Terima</div><div class="flow-sub">Titik hitungan mulai</div></div>
       <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
-      <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+13</div><div class="flow-sub">Baru boleh ditagih</div></div>
+      <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+3</div><div class="flow-sub">Baru boleh ditagih</div></div>
     </div>
-    <div class="card-sub" style="margin-top:2px">Dari estimasi barang sampai (H+10), creator dikasih waktu <b>3 hari</b> buat selesain SOW (jadi total H+13). Sebelum H+13, wajar kalau creator belum posting — sabar dulu ya, sistem bakal otomatis kasih tau kalau ada yang beneran lewat batas 😊</div>
+    <div class="card-sub" style="margin-top:2px">Creator wajib selfie + produk (upload di app) begitu barang beneran sampai — dari situ kamu bakal dapat notif otomatis. Sebelum ada konfirmasi ini, wajar kalau belum ada laporan SOW — barangnya kemungkinan emang belum sampai 😊</div>
   </div>
 </div>
 
@@ -1083,6 +1107,7 @@ const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 async function loadCekStatus(){
   const container = document.getElementById('c3-status-list');
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
+  loadDeliveryPrompts();
 
   if(!currentSession.memberId){
     container.innerHTML = '<div class="card-sub">Sesi login tidak terdeteksi.</div>';
@@ -1107,15 +1132,14 @@ async function loadCekStatus(){
 
   const sowLabel = { VT: '3 VT', VT_LIVE: '3 VT + Live', LIVE: 'Live' };
 
-  // Anchor H+10/H+3 dihitung dari konfirmasi kirim PERTAMA per brand (bukan per produk).
+  // Anchor batas SOW (H+3) dihitung dari KONFIRMASI TERIMA creator PERTAMA per brand (bukan estimasi kirim lagi).
+  const { data: confirmations } = await db.from('delivery_confirmations')
+    .select('brand_id, confirmed_at')
+    .eq('member_id', currentSession.memberId);
   const brandAnchor = {};
-  data.forEach(function(r){
-    const bId = r.brand_products ? r.brand_products.brand_id : null;
-    const confirmedAt = r.logistics && r.logistics.sudah_dikirim && r.logistics.confirmed_at ? r.logistics.confirmed_at : null;
-    if(bId && confirmedAt){
-      if(!brandAnchor[bId] || new Date(confirmedAt) < new Date(brandAnchor[bId])){
-        brandAnchor[bId] = confirmedAt;
-      }
+  (confirmations||[]).forEach(function(c){
+    if(!brandAnchor[c.brand_id] || new Date(c.confirmed_at) < new Date(brandAnchor[c.brand_id])){
+      brandAnchor[c.brand_id] = c.confirmed_at;
     }
   });
 
@@ -1143,13 +1167,16 @@ async function loadCekStatus(){
       let deadlineHtml = '';
       if(anchor){
         const anchorDate = new Date(anchor);
-        const h10 = new Date(anchorDate); h10.setDate(h10.getDate()+10);
-        const h13 = new Date(anchorDate); h13.setDate(h13.getDate()+13);
+        const h3 = new Date(anchorDate); h3.setDate(h3.getDate()+3);
         const fmt = function(d){ return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); };
         deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
-          + '⏳ Estimasi sampai: <b>'+fmt(h10)+'</b> (H+10, bisa maju/mundur tergantung lokasi)<br>'
-          + '📮 Batas posting semua produk dari brand ini: <b>'+fmt(h13)+'</b> (H+3 setelah estimasi sampai)<br>'
+          + '🤳 Kamu konfirmasi terima: <b>'+fmt(anchorDate)+'</b><br>'
+          + '📮 Batas posting semua produk dari brand ini: <b>'+fmt(h3)+'</b> (H+3 dari konfirmasi terima)<br>'
           + '<span style="color:var(--gray-text)">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi 1 konten sebelum tanggal ini.</span>'
+          + '</div>';
+      } else {
+        deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--amber-dark);padding-top:6px;color:var(--amber-dark)">'
+          + '⚠️ Belum ada konfirmasi terima buat brand ini. Cek notifikasi di atas buat konfirmasi barangnya udah sampai ya, biar batas waktu SOW-nya mulai kehitung.'
           + '</div>';
       }
       return '<div class="status-item shipping">'
@@ -1175,6 +1202,174 @@ async function loadCekStatus(){
       + '<div style="font-weight:800;color:var(--teal);margin-bottom:2px">Yeay di Approve 🥳</div>'
       + namaLengkap+'<div class="card-sub">SOW:</div><div class="sow-big">'+(sowLabel[r.tipe_sow_dipilih]||'-')+'</div></div>';
   }).join('');
+}
+
+async function loadDeliveryPrompts(){
+  const container = document.getElementById('delivery-prompts');
+  if(!container || !currentSession.memberId){ if(container) container.innerHTML=''; return; }
+
+  const { data, error } = await db.from('sample_requests')
+    .select('brand_products!inner(brand_id, brands(nama_brand)), logistics!inner(sudah_dikirim, confirmed_at)')
+    .eq('member_id', currentSession.memberId)
+    .eq('status', 'approved')
+    .eq('logistics.sudah_dikirim', true);
+
+  if(error || !data){ container.innerHTML = ''; return; }
+
+  const { data: confirmations } = await db.from('delivery_confirmations')
+    .select('brand_id, confirmed_at')
+    .eq('member_id', currentSession.memberId);
+  const lastConfirmByBrand = {};
+  (confirmations||[]).forEach(function(c){
+    if(!lastConfirmByBrand[c.brand_id] || new Date(c.confirmed_at) > new Date(lastConfirmByBrand[c.brand_id])){
+      lastConfirmByBrand[c.brand_id] = c.confirmed_at;
+    }
+  });
+
+  // Brand butuh prompt kalau ada kiriman yang confirmed_at-nya LEBIH BARU dari konfirmasi terima terakhir (atau belum pernah konfirmasi sama sekali).
+  const pending = {};
+  data.forEach(function(r){
+    const bp = r.brand_products;
+    if(!bp || !bp.brand_id) return;
+    const shippedAt = r.logistics.confirmed_at;
+    const lastConfirm = lastConfirmByBrand[bp.brand_id];
+    if(!lastConfirm || new Date(shippedAt) > new Date(lastConfirm)){
+      pending[bp.brand_id] = bp.brands ? bp.brands.nama_brand : '-';
+    }
+  });
+
+  const brandIds = Object.keys(pending);
+  if(brandIds.length === 0){ container.innerHTML = ''; return; }
+
+  container.innerHTML = brandIds.map(function(bId){
+    return '<div class="card" style="background:var(--pink-pale);border:none;border:1.5px solid var(--pink)">'
+      + '<div style="font-weight:800;color:var(--pink)">📦 Barang dari '+pending[bId]+' udah sampai?</div>'
+      + '<div class="card-sub" style="margin:4px 0 8px">Konfirmasi biar batas waktu SOW kamu mulai kehitung yang bener (bukan tebakan lagi).</div>'
+      + '<button class="btn btn-primary btn-sm" onclick="openDeliveryCam(\''+bId+'\', \''+pending[bId].replace(/'/g,"\\'")+'\')">🤳 Konfirmasi Sekarang</button>'
+      + '</div>';
+  }).join('');
+}
+
+let deliveryCamStream = null;
+let deliveryCamContext = { brandId: null, brandName: null };
+
+async function openDeliveryCam(brandId, brandName){
+  deliveryCamContext = { brandId: brandId, brandName: brandName };
+  document.getElementById('delivery-cam-title').textContent = 'Konfirmasi Terima — ' + brandName;
+  document.getElementById('delivery-cam-video').style.display = 'block';
+  document.getElementById('delivery-cam-preview').style.display = 'none';
+  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>';
+  document.getElementById('delivery-cam-bg').classList.add('open');
+  try{
+    deliveryCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    document.getElementById('delivery-cam-video').srcObject = deliveryCamStream;
+  } catch(e){
+    alert('Nggak bisa akses kamera. Pastikan kamu udah kasih izin kamera buat browser ini ya.');
+    closeDeliveryCam();
+  }
+}
+
+function closeDeliveryCam(){
+  if(deliveryCamStream){ deliveryCamStream.getTracks().forEach(function(t){ t.stop(); }); deliveryCamStream = null; }
+  document.getElementById('delivery-cam-bg').classList.remove('open');
+}
+
+function capturePhoto(){
+  const video = document.getElementById('delivery-cam-video');
+  const canvas = document.getElementById('delivery-cam-canvas');
+  canvas.width = video.videoWidth || 720;
+  canvas.height = video.videoHeight || 960;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Bingkai Girlhood Den (teks — tinggal diganti logo asli belakangan)
+  const barH = Math.max(46, canvas.height * 0.08);
+  ctx.fillStyle = 'rgba(232,24,90,0.9)';
+  ctx.fillRect(0, 0, canvas.width, barH);
+  ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold ' + Math.round(barH*0.38) + 'px sans-serif';
+  ctx.fillText('🌸 Girlhood Den', canvas.width/2, barH/2);
+  ctx.font = Math.round(barH*0.3) + 'px sans-serif';
+  ctx.fillText((deliveryCamContext.brandName||'') + ' — Barang Diterima', canvas.width/2, canvas.height - barH/2);
+
+  const preview = document.getElementById('delivery-cam-preview');
+  preview.src = canvas.toDataURL('image/jpeg', 0.9);
+  preview.style.display = 'block';
+  video.style.display = 'none';
+
+  document.getElementById('delivery-cam-actions').innerHTML =
+    '<button class="btn btn-outline btn-sm" onclick="retakePhoto()">🔁 Ambil Ulang</button>'
+    + '<button class="btn btn-primary btn-sm" onclick="submitDeliveryPhoto(this)">✅ Kirim</button>';
+}
+
+function retakePhoto(){
+  document.getElementById('delivery-cam-video').style.display = 'block';
+  document.getElementById('delivery-cam-preview').style.display = 'none';
+  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>';
+}
+
+async function sha256Hex(blob){
+  const buf = await blob.arrayBuffer();
+  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hashBuf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+async function submitDeliveryPhoto(btn){
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Mengirim...';
+
+  try{
+    const canvas = document.getElementById('delivery-cam-canvas');
+    const blob = await new Promise(function(resolve){ canvas.toBlob(resolve, 'image/jpeg', 0.9); });
+    if(!blob) throw new Error('Gagal ambil foto, coba lagi.');
+
+    const hash = await sha256Hex(blob);
+    const { data: dup } = await db.from('delivery_confirmations').select('id').eq('photo_hash', hash).limit(1);
+    if(dup && dup.length > 0){
+      alert('Foto ini kedeteksi sama persis dengan foto yang pernah disubmit. Ambil foto baru ya (jangan pakai foto lama dari galeri).');
+      btn.disabled = false; btn.textContent = originalText;
+      return;
+    }
+
+    const fileName = 'delivery-' + currentSession.memberId + '-' + Date.now() + '.jpg';
+    const file = new File([blob], fileName, { type: 'image/jpeg' });
+    const uploadResult = await uploadFileToStorage('delivery-confirmations', file, currentSession.memberId);
+    if(uploadResult.error){
+      alert('Gagal upload foto: ' + uploadResult.error.message);
+      btn.disabled = false; btn.textContent = originalText;
+      return;
+    }
+
+    const { error: insertError } = await db.from('delivery_confirmations').insert({
+      member_id: currentSession.memberId,
+      brand_id: deliveryCamContext.brandId,
+      foto_url: uploadResult.url,
+      photo_hash: hash
+    });
+    if(insertError){
+      showDbError('konfirmasi terima', insertError);
+      btn.disabled = false; btn.textContent = originalText;
+      return;
+    }
+
+    await logNotification('status', {
+      brandId: deliveryCamContext.brandId,
+      memberId: currentSession.memberId,
+      detail: (currentSession.memberData ? currentSession.memberData.nama : 'Creator') + ' konfirmasi barang sudah diterima — batas SOW mulai kehitung (H+3 dari sekarang).'
+    });
+
+    closeDeliveryCam();
+    alert('Konfirmasi terima berhasil! Batas waktu SOW kamu sekarang mulai kehitung 🎉');
+    loadDeliveryPrompts();
+    loadCekStatus();
+  } catch(e){
+    alert('Terjadi kendala: ' + e.message);
+    btn.disabled = false; btn.textContent = originalText;
+  }
 }
 
 async function loadVtReportPage(){
@@ -1996,7 +2191,7 @@ async function openBrandDetail(brandId, brandName){
       + '<div class="card-title">'+p.nama_produk+'</div>'
       + tagHtml
       + infoHtml
-      + '<div class="card-sub" style="margin-top:6px">Wajib Upload setelah H+5 barang sampai ya😎</div>'
+      + '<div class="card-sub" style="margin-top:6px">Wajib upload laporan setelah kamu konfirmasi "Barang Sudah Sampai" di menu Cek Status ya 😎</div>'
       + videoHtml
       + '<div class="field" style="margin-top:8px"><label>Tipe SOW</label>'
       + '<select class="sow-select" onchange="toggleLive(this)">'
