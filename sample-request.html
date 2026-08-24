@@ -1298,7 +1298,7 @@ async function loadJadwalLivePrompts(){
       + '<div class="card-sub" style="margin:4px 0 8px">Barang udah kamu terima — jadwalin 3 sesi live-nya (min. 2 jam/sesi, tanggal beda-beda). Ini nge-cover semua produk dari brand ini sekaligus.</div>'
       + '<div class="field-row"><input type="datetime-local" class="jl-s1" min="'+minDt+'"><input type="datetime-local" class="jl-s2" min="'+minDt+'"></div>'
       + '<input type="datetime-local" class="jl-s3" min="'+minDt+'" style="margin-top:8px;width:100%">'
-      + '<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" data-request-ids="'+g.requestIds.join(',')+'" onclick="saveJadwalLive(this)">✅ Simpan Jadwal</button>'
+      + '<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" data-brand-id="'+bId+'" data-request-ids="'+g.requestIds.join(',')+'" onclick="saveJadwalLive(this)">✅ Simpan Jadwal</button>'
       + '</div>';
   }).join('');
 }
@@ -1323,6 +1323,7 @@ async function saveJadwalLive(btn){
   }
 
   const requestIds = btn.dataset.requestIds.split(',');
+  const brandId = btn.dataset.brandId;
   btn.disabled = true;
   const originalText = btn.textContent;
   btn.textContent = 'Menyimpan...';
@@ -1333,6 +1334,13 @@ async function saveJadwalLive(btn){
     btn.disabled = false; btn.textContent = originalText;
     return;
   }
+
+  const fmtNotif = function(d){ return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short'}); };
+  await logNotification('status', {
+    brandId: brandId,
+    memberId: currentSession.memberId,
+    detail: (currentSession.memberData ? currentSession.memberData.nama : 'Creator') + ' udah jadwalin Live: '+fmtNotif(s1)+', '+fmtNotif(s2)+', '+fmtNotif(s3)
+  });
 
   alert('Jadwal live tersimpan! 🎉');
   loadJadwalLivePrompts();
@@ -2723,34 +2731,12 @@ async function confirmLogistik(requestId, btn){
 
   const { data: srData } = await db.from('sample_requests').select('member_id, brand_products(brand_id)').eq('id', requestId).single();
   const memberId = srData ? srData.member_id : null;
-  const brandIdForAnchor = srData && srData.brand_products ? srData.brand_products.brand_id : currentSession.brandId;
-
-  // Cari konfirmasi kirim PERTAMA dari brand ini ke creator ini (anchor H+10/H+13), termasuk yang barusan disimpan.
-  let deadlineNote = '';
-  if(memberId && brandIdForAnchor){
-    const { data: anchorRows } = await db.from('sample_requests')
-      .select('logistics(confirmed_at), brand_products!inner(brand_id)')
-      .eq('member_id', memberId)
-      .eq('brand_products.brand_id', brandIdForAnchor)
-      .eq('status', 'approved');
-    const confirmedDates = (anchorRows||[])
-      .map(function(r){ return r.logistics ? r.logistics.confirmed_at : null; })
-      .filter(Boolean)
-      .map(function(d){ return new Date(d); });
-    if(confirmedDates.length > 0){
-      const anchor = new Date(Math.min.apply(null, confirmedDates));
-      const h10 = new Date(anchor); h10.setDate(h10.getDate()+10);
-      const h13 = new Date(anchor); h13.setDate(h13.getDate()+13);
-      const fmt = function(d){ return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); };
-      deadlineNote = ' | Estimasi sampai H+10: '+fmt(h10)+' | Batas posting (H+3 dari estimasi sampai): '+fmt(h13);
-    }
-  }
 
   await logNotification('status', {
     brandId: currentSession.brandId,
     memberId: memberId,
     sampleRequestId: requestId,
-    detail: 'Kirim → Sudah Dikirim (Logistik)'+deadlineNote
+    detail: 'Kirim → Sudah Dikirim (Logistik). Batas SOW (H+3) baru mulai kehitung setelah creator konfirmasi barang beneran diterima.'
   });
 
   const banner = document.getElementById('brand-notif-banner');
