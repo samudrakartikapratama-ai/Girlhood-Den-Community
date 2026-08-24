@@ -317,6 +317,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="c3-r">
 
     <div id="delivery-prompts"></div>
+    <div id="jadwal-live-prompts"></div>
     <div id="c3-status-list"><div class="card-sub">Memuat status...</div></div>
   </div>
 </div></div>
@@ -771,11 +772,12 @@ async function loadUpcomingLiveBrand(){
       if(jl[key]) rows.push({ waktu: jl[key], nama: r.members ? r.members.nama : '-', produk: r.brand_products ? r.brand_products.nama_produk : '-', sow: r.tipe_sow_dipilih });
     });
   });
-  rows.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
+  const upcoming = rows.filter(function(r){ return new Date(r.waktu).getTime() >= Date.now(); });
+  upcoming.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
 
-  if(rows.length === 0){ tbody.innerHTML = '<tr><td colspan="4" class="card-sub">Belum ada jadwal live yang terkonfirmasi kirim.</td></tr>'; return; }
+  if(upcoming.length === 0){ tbody.innerHTML = '<tr><td colspan="4" class="card-sub">Belum ada jadwal live yang akan datang.</td></tr>'; return; }
 
-  tbody.innerHTML = rows.map(function(r){
+  tbody.innerHTML = upcoming.map(function(r){
     const d = new Date(r.waktu);
     const formatted = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
     const sowLabel = r.sow === 'VT_LIVE' ? 'VT & Live' : 'Live';
@@ -803,11 +805,12 @@ async function loadUpcomingLiveInternal(){
       if(jl[key]) rows.push({ waktu: jl[key], nama: r.members ? r.members.nama : '-', produk: r.brand_products ? r.brand_products.nama_produk : '-', brand: brandName, sow: r.tipe_sow_dipilih });
     });
   });
-  rows.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
+  const upcoming = rows.filter(function(r){ return new Date(r.waktu).getTime() >= Date.now(); });
+  upcoming.sort(function(a,b){ return new Date(a.waktu) - new Date(b.waktu); });
 
-  if(rows.length === 0){ tbody.innerHTML = '<tr><td colspan="5" class="card-sub">Belum ada jadwal live yang terkonfirmasi kirim.</td></tr>'; return; }
+  if(upcoming.length === 0){ tbody.innerHTML = '<tr><td colspan="5" class="card-sub">Belum ada jadwal live yang akan datang.</td></tr>'; return; }
 
-  tbody.innerHTML = rows.map(function(r){
+  tbody.innerHTML = upcoming.map(function(r){
     const d = new Date(r.waktu);
     const formatted = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
     const sowLabel = r.sow === 'VT_LIVE' ? 'VT & Live' : 'Live';
@@ -1108,6 +1111,7 @@ async function loadCekStatus(){
   const container = document.getElementById('c3-status-list');
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
   loadDeliveryPrompts();
+  loadJadwalLivePrompts();
 
   if(!currentSession.memberId){
     container.innerHTML = '<div class="card-sub">Sesi login tidak terdeteksi.</div>';
@@ -1248,6 +1252,91 @@ async function loadDeliveryPrompts(){
       + '<button class="btn btn-primary btn-sm" onclick="openDeliveryCam(\''+bId+'\', \''+pending[bId].replace(/'/g,"\\'")+'\')">🤳 Konfirmasi Sekarang</button>'
       + '</div>';
   }).join('');
+}
+
+async function loadJadwalLivePrompts(){
+  const container = document.getElementById('jadwal-live-prompts');
+  if(!container || !currentSession.memberId){ if(container) container.innerHTML=''; return; }
+
+  const { data, error } = await db.from('sample_requests')
+    .select('id, tipe_sow_dipilih, jadwal_live, brand_products!inner(brand_id, brands(nama_brand))')
+    .eq('member_id', currentSession.memberId)
+    .eq('status', 'approved')
+    .in('tipe_sow_dipilih', ['LIVE','VT_LIVE'])
+    .is('jadwal_live', null);
+
+  if(error || !data || data.length === 0){ container.innerHTML = ''; return; }
+
+  const { data: confirmations } = await db.from('delivery_confirmations')
+    .select('brand_id, confirmed_at')
+    .eq('member_id', currentSession.memberId);
+  const confirmedBrands = {};
+  (confirmations||[]).forEach(function(c){
+    if(!confirmedBrands[c.brand_id] || new Date(c.confirmed_at) > new Date(confirmedBrands[c.brand_id])){
+      confirmedBrands[c.brand_id] = c.confirmed_at;
+    }
+  });
+
+  const groups = {};
+  data.forEach(function(r){
+    const bp = r.brand_products;
+    if(!bp || !confirmedBrands[bp.brand_id]) return; // belum konfirmasi terima, belum boleh jadwalin dulu
+    if(!groups[bp.brand_id]){
+      groups[bp.brand_id] = { brandName: bp.brands ? bp.brands.nama_brand : '-', confirmedAt: confirmedBrands[bp.brand_id], requestIds: [] };
+    }
+    groups[bp.brand_id].requestIds.push(r.id);
+  });
+
+  const brandIds = Object.keys(groups);
+  if(brandIds.length === 0){ container.innerHTML = ''; return; }
+
+  container.innerHTML = brandIds.map(function(bId){
+    const g = groups[bId];
+    const minDt = getMinLiveDateTime(g.confirmedAt);
+    return '<div class="card" style="background:var(--pink-pale);border:1.5px solid var(--amber)">'
+      + '<div style="font-weight:800;color:var(--amber-dark)">🎥 Jadwalin Live buat '+g.brandName+'</div>'
+      + '<div class="card-sub" style="margin:4px 0 8px">Barang udah kamu terima — jadwalin 3 sesi live-nya (min. 2 jam/sesi, tanggal beda-beda). Ini nge-cover semua produk dari brand ini sekaligus.</div>'
+      + '<div class="field-row"><input type="datetime-local" class="jl-s1" min="'+minDt+'"><input type="datetime-local" class="jl-s2" min="'+minDt+'"></div>'
+      + '<input type="datetime-local" class="jl-s3" min="'+minDt+'" style="margin-top:8px;width:100%">'
+      + '<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" data-request-ids="'+g.requestIds.join(',')+'" onclick="saveJadwalLive(this)">✅ Simpan Jadwal</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function saveJadwalLive(btn){
+  const card = btn.closest('.card');
+  const s1 = card.querySelector('.jl-s1').value.trim();
+  const s2 = card.querySelector('.jl-s2').value.trim();
+  const s3 = card.querySelector('.jl-s3').value.trim();
+  if(!s1 || !s2 || !s3){
+    alert('Isi jadwal Live 3 sesi dulu ya.');
+    return;
+  }
+  if(new Date(s1).getTime() >= new Date(s2).getTime() || new Date(s2).getTime() >= new Date(s3).getTime()){
+    alert('Jadwal live harus urut maju: Sesi 1 lebih awal dari Sesi 2, Sesi 2 lebih awal dari Sesi 3.');
+    return;
+  }
+  const d1 = s1.slice(0,10), d2 = s2.slice(0,10), d3 = s3.slice(0,10);
+  if(d1===d2 || d2===d3 || d1===d3){
+    alert('Tiap sesi live harus di TANGGAL yang berbeda. Satu tanggal cuma bisa dipakai untuk 1 sesi.');
+    return;
+  }
+
+  const requestIds = btn.dataset.requestIds.split(',');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Menyimpan...';
+
+  const { error } = await db.from('sample_requests').update({ jadwal_live: { sesi1: s1, sesi2: s2, sesi3: s3 } }).in('id', requestIds);
+  if(error){
+    showDbError('simpan jadwal live', error);
+    btn.disabled = false; btn.textContent = originalText;
+    return;
+  }
+
+  alert('Jadwal live tersimpan! 🎉');
+  loadJadwalLivePrompts();
+  loadMyQuota();
 }
 
 let deliveryCamStream = null;
@@ -2199,11 +2288,7 @@ async function openBrandDetail(brandId, brandName){
       + '<option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option>'
       + '<option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live saja</option>'
       + '</select></div>'
-            + '<div class="live-schedule-block" style="display:none">'
-      + '<div class="field"><label>Jadwal Live (3 sesi, min. 2 jam/sesi, tanggal beda-beda)</label>'
-      + '<div class="size-note" style="margin-bottom:6px">⏰ Estimasi H+7 dikarenakan mengikuti estimasi pengiriman logistik. Live boleh lebih lama dari jadwal kok — 2 jam itu cuma batas minimum, sesuaikan aja sama ramainya pembeli pas kamu jualan 🛍️</div>'
-            + '<div class="field-row"><input type="datetime-local" class="live-s1" min="'+getMinLiveDateTime()+'"><input type="datetime-local" class="live-s2" min="'+getMinLiveDateTime()+'"></div>'
-      + '<input type="datetime-local" class="live-s3" min="'+getMinLiveDateTime()+'" style="margin-top:8px"></div></div>'
+      + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
 + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
 + '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
@@ -2251,26 +2336,9 @@ async function requestSample(productId, btn){
   const sowSelect = card.querySelector('.sow-select');
   const tipeSow = sowSelect.value;
 
-  let jadwalLive = null;
-  if(tipeSow === 'LIVE' || tipeSow === 'VT_LIVE'){
-    const s1 = card.querySelector('.live-s1').value.trim();
-    const s2 = card.querySelector('.live-s2').value.trim();
-    const s3 = card.querySelector('.live-s3').value.trim();
-    if(!s1 || !s2 || !s3){
-      alert('Isi jadwal Live 3 sesi dulu sebelum request.');
-      return;
-    }
-      if(new Date(s1).getTime() >= new Date(s2).getTime() || new Date(s2).getTime() >= new Date(s3).getTime()){
-        alert('Jadwal live harus urut maju: Sesi 1 lebih awal dari Sesi 2, Sesi 2 lebih awal dari Sesi 3.');
-        return;
-      }
-      const d1 = s1.slice(0,10), d2 = s2.slice(0,10), d3 = s3.slice(0,10);
-      if(d1===d2 || d2===d3 || d1===d3){
-        alert('Tiap sesi live harus di TANGGAL yang berbeda. Satu tanggal cuma bisa dipakai untuk 1 sesi.');
-        return;
-      }
-    jadwalLive = { sesi1: s1, sesi2: s2, sesi3: s3 };
-  }
+  // Jadwal live nggak diisi di sini lagi — baru diisi setelah creator konfirmasi barang sampai (menu Cek Status).
+  const jadwalLive = null;
+
   const { data: prodBrand } = await db.from('brand_products').select('brand_id').eq('id', productId).single();
   const targetBrandId = prodBrand ? prodBrand.brand_id : null;
   const activeBrandIds = await getActiveBrandIds();
@@ -2315,8 +2383,9 @@ async function requestSample(productId, btn){
   btn.disabled = true;
   loadMyQuota();
 }
-function getMinLiveDateTime(){
-  const d = new Date(Date.now() + 7*24*60*60*1000);
+function getMinLiveDateTime(fromDate){
+  const base = fromDate ? new Date(fromDate) : new Date();
+  const d = new Date(base.getTime() + 1*24*60*60*1000);
   const pad = function(n){ return String(n).padStart(2,'0'); };
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
 }
@@ -2388,7 +2457,7 @@ async function loadMyQuota(){
 function toggleLive(sel){
   var show = (sel.value === 'LIVE' || sel.value === 'VT_LIVE');
   var card = sel.closest('.card');
-  var block = card ? card.querySelector('.live-schedule-block') : null;
+  var block = card ? card.querySelector('.live-schedule-note') : null;
   if(block) block.style.display = show ? 'block' : 'none';
 }
 var slideIdx = 0;
@@ -3215,7 +3284,7 @@ async function downloadRekapBulanan(){
   if(!currentSession.brandId){ alert('Sesi brand tidak terdeteksi.'); return; }
 
   const { data, error } = await db.from('sample_requests')
-    .select('decided_at, tipe_sow_dipilih, members(nama, no_hp), brand_products!inner(nama_produk, brand_id), shipments(tanggal_janji_kirim), logistics(sudah_dikirim, nomor_resi), vt_reports(id)')
+    .select('member_id, decided_at, tipe_sow_dipilih, members(nama, no_hp), brand_products!inner(nama_produk, brand_id), shipments(tanggal_janji_kirim), logistics(sudah_dikirim, nomor_resi), vt_reports(id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .gte('decided_at', startDate)
@@ -3223,6 +3292,16 @@ async function downloadRekapBulanan(){
 
   if(error){ showDbError('download rekap bulanan', error); return; }
   if(!data || data.length === 0){ alert('Tidak ada data di rentang tanggal ini.'); return; }
+
+  const { data: confirmations } = await db.from('delivery_confirmations')
+    .select('member_id, confirmed_at')
+    .eq('brand_id', currentSession.brandId);
+  const confirmByMember = {};
+  (confirmations||[]).forEach(function(c){
+    if(!confirmByMember[c.member_id] || new Date(c.confirmed_at) < new Date(confirmByMember[c.member_id])){
+      confirmByMember[c.member_id] = c.confirmed_at;
+    }
+  });
 
   const rows = data.map(function(r){
     const m = r.members || {};
@@ -3233,11 +3312,12 @@ async function downloadRekapBulanan(){
     const vtCount = (r.vt_reports || []).length;
     const required = VT_REQUIRED[r.tipe_sow_dipilih] || 0;
     const statusVt = required === 0 ? 'N/A (Live)' : (vtCount + '/' + required);
-    return [m.nama||'-', m.no_hp||'-', bp.nama_produk||'-', r.decided_at ? r.decided_at.slice(0,10) : '', janjiKirim||'-', sudahKirim?'Sudah dikirim':'Belum', resi, statusVt];
+    const diterima = confirmByMember[r.member_id];
+    return [m.nama||'-', m.no_hp||'-', bp.nama_produk||'-', r.decided_at ? r.decided_at.slice(0,10) : '', janjiKirim||'-', sudahKirim?'Sudah dikirim':'Belum', resi, statusVt, diterima ? diterima.slice(0,10) : 'Belum konfirmasi'];
   });
 
   downloadCsv('Rekap-Bulanan-'+startDate+'-sd-'+endDate+'.csv',
-    ['Nama Creator','No WhatsApp','Produk','Tanggal Approved','Tanggal Janji Kirim','Tanggal Aktual Dikirim','Nomor Resi','Status Report VT'],
+    ['Nama Creator','No WhatsApp','Produk','Tanggal Approved','Tanggal Janji Kirim','Tanggal Aktual Dikirim','Nomor Resi','Status Report VT','Tanggal Diterima Creator'],
     rows);
 }
 
