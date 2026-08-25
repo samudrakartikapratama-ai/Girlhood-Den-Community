@@ -45,6 +45,79 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .icon-card:hover .icon-emoji{transform:scale(1.15) rotate(-6deg)}
 .icon-label{font-size:15px;font-weight:800}
 .icon-badge{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;animation:badgePulse 1.4s infinite}
+
+/* ===== POIN FEATURE ===== */
+:root{ --gold:#F4B73F; --gold-dark:#B8781E; }
+@keyframes poinFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-5px) rotate(-4deg)}}
+@keyframes poinSparkle{0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 0 rgba(255,255,255,0))}50%{transform:scale(1.15) rotate(8deg);filter:drop-shadow(0 0 6px rgba(244,183,63,.8))}}
+@keyframes poinGlow{0%,100%{box-shadow:0 6px 14px rgba(0,0,0,.15)}50%{box-shadow:0 6px 14px rgba(0,0,0,.15),0 0 20px rgba(244,183,63,.6)}}
+.poin-hero{background:linear-gradient(135deg,var(--dark),#6b2c63);border-radius:20px;padding:18px 20px;color:#fff;position:relative;margin-bottom:16px;overflow:hidden}
+.poin-hero .ph-star{position:absolute;top:14px;right:16px;font-size:22px;animation:poinSparkle 2.2s ease-in-out infinite}
+.poin-hero .ph-num{font-size:32px;font-weight:800;margin-top:4px}
+.poin-hero .ph-lbl{font-size:11px;color:var(--pink-light);font-weight:700;letter-spacing:.03em}
+.poin-hero .ph-streak{font-size:11px;color:rgba(255,255,255,.7);margin-top:6px}
+.poin-activity-row{display:flex;align-items:center;gap:10px;background:var(--gray);border-radius:14px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border)}
+.poin-activity-row .pa-ic{width:34px;height:34px;border-radius:10px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;animation:poinFloat 3s ease-in-out infinite}
+.poin-activity-row .pa-main{flex:1;min-width:0}
+.poin-activity-row .pa-main .t{font-size:12.5px;font-weight:700;color:var(--dark)}
+.poin-activity-row .pa-main .s{font-size:10.5px;color:var(--gray-text)}
+.poin-activity-row .pa-pts{font-weight:800;font-size:13px}
+.poin-activity-row .pa-pts.pos{color:var(--teal)}
+.poin-activity-row .pa-pts.neg{color:var(--red)}
+.poin-redeem-wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:8px 0}
+.poin-bubble{border-radius:50%;background:linear-gradient(160deg,#fff,var(--pink-pale));border:2px solid var(--pink-light);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 8px 18px rgba(232,24,90,.15);cursor:pointer;transition:.2s;padding:8px}
+.poin-bubble:hover{transform:translateY(-3px)}
+.poin-bubble img{width:38px;height:38px;object-fit:cover;border-radius:50%;margin-bottom:2px}
+.poin-bubble .pb-emoji{font-size:26px;animation:poinFloat 2.8s ease-in-out infinite}
+.poin-bubble .pb-name{font-size:10.5px;font-weight:700;color:var(--dark);margin-top:2px;line-height:1.15}
+.poin-bubble .pb-cost{font-size:10.5px;font-weight:800;color:var(--pink);margin-top:1px}
+.poin-podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:16px 4px 6px}
+.pp-slot{display:flex;flex-direction:column;align-items:center;width:30%}
+.pp-avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;margin-bottom:6px;border:3px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,.18);animation:poinFloat 3.2s ease-in-out infinite}
+.pp-slot.gold .pp-avatar{width:62px;height:62px;font-size:26px;background:linear-gradient(160deg,#ffe9a8,var(--gold));animation:poinFloat 3.2s ease-in-out infinite,poinGlow 2s ease-in-out infinite}
+.pp-slot.silver .pp-avatar{background:linear-gradient(160deg,#f2f2f2,#c9c9c9)}
+.pp-slot.bronze .pp-avatar{background:linear-gradient(160deg,#f0c9a3,#d69662)}
+.pp-crown{position:absolute;top:-16px;font-size:16px;animation:poinSparkle 2.2s ease-in-out infinite}
+.pp-name{font-size:10.5px;font-weight:800;color:var(--dark);text-align:center;line-height:1.2}
+.pp-gmv{font-size:9px;color:var(--gray-text);margin-top:1px}
+.pp-pts{margin-top:4px;font-size:10px;font-weight:800;color:#fff;padding:3px 8px;border-radius:999px}
+.pp-slot.gold .pp-pts{background:var(--gold);color:#4a3200}
+.pp-slot.silver .pp-pts{background:#b9b9b9;color:#2b2b2b}
+.pp-slot.bronze .pp-pts{background:#c17a45;color:#3a2200}
+.pp-slot.gold{order:2}.pp-slot.silver{order:1}.pp-slot.bronze{order:3}
+.poin-week-lbl{text-align:center;font-size:11px;font-weight:700;color:var(--dark);margin-bottom:2px}
+.poin-week-lbl .sub{display:block;font-size:9.5px;color:var(--gray-text);font-weight:600}
+.poin-rule-group{margin-bottom:14px}
+.poin-rule-group .prg-label{font-size:10.5px;font-weight:800;color:#fff;background:var(--dark);display:inline-block;padding:4px 11px;border-radius:999px;margin-bottom:8px}
+.poin-rule-item{display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid var(--border);padding:8px 10px;border-radius:12px;font-size:12px;margin-bottom:6px}
+.poin-rule-item .pri-ic{width:26px;height:26px;border-radius:8px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.poin-rule-item .pri-t{flex:1;color:var(--dark)}
+.poin-rule-item .pri-t span{color:var(--gray-text);font-weight:500;font-size:10px}
+.poin-rule-item .pri-p{font-weight:800;color:#fff;background:var(--pink);padding:3px 9px;border-radius:999px;font-size:11.5px;white-space:nowrap}
+.poin-rule-item .pri-p.neg{background:var(--red)}
+.poin-int-tabs{display:flex;gap:6px;margin-bottom:14px}
+.poin-int-tabs button{flex:1;background:var(--gray);border:1px solid var(--border);color:var(--gray-text);font-size:11px;font-weight:700;padding:9px 4px;border-radius:10px;cursor:pointer}
+.poin-int-tabs button.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.poin-int-panel{display:none}
+.poin-int-panel.active{display:block}
+.poin-int-row{background:var(--white);border:1px solid var(--border);border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.poin-int-row .pir-main{flex:1;min-width:0}
+.poin-int-row .pir-main .t{font-size:12.5px;font-weight:700;color:var(--dark)}
+.poin-int-row .pir-main .s{font-size:10px;color:var(--gray-text)}
+.poin-int-row .pir-pts{font-weight:800;font-size:12px;color:var(--pink);background:var(--pink-pale);padding:4px 9px;border-radius:8px;white-space:nowrap}
+.poin-int-row .pir-pts.neg{color:var(--red);background:var(--red-light)}
+.poin-reward-card{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:13px;padding:9px;margin-bottom:8px}
+.poin-reward-card .prc-thumb{width:42px;height:42px;border-radius:10px;background:linear-gradient(160deg,var(--pink-pale),var(--pink-light));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
+.poin-reward-card .prc-thumb img{width:100%;height:100%;object-fit:cover}
+.poin-reward-card .prc-main{flex:1;min-width:0}
+.poin-reward-card .prc-main .t{font-size:12px;font-weight:700;color:var(--dark)}
+.poin-reward-card .prc-main .s{font-size:9.5px;color:var(--gray-text)}
+.poin-reward-card .prc-cost{font-weight:800;color:var(--pink);font-size:12px;white-space:nowrap}
+.poin-status-chip{font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.poin-status-chip.pending{background:var(--amber);color:var(--amber-dark)}
+.poin-status-chip.approved{background:var(--teal-light);color:var(--teal)}
+.poin-status-chip.sent{background:var(--teal-light);color:var(--teal)}
+.poin-status-chip.rejected{background:var(--red-light);color:var(--red)}
 @keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
 /* ===== MODAL/POPUP ===== */
@@ -204,6 +277,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
   </div>
   <div id="freeze-overlay-note" style="display:none;text-align:center;margin-top:-6px;margin-bottom:14px;color:var(--red);font-weight:700;font-size:12px">🔒 Menu di atas dikunci — ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT.</div>
 </div>
@@ -235,6 +309,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i5'); loadHotProductsManage(); populateHpBrandSelect();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" onclick="openModal('m-i6'); loadKodeBrand();"><div class="icon-emoji">🔑</div><div class="icon-label">Kode Brand</div></div>
     <div class="icon-card" onclick="openModal('m-i9'); loadCreatorCodes();"><div class="icon-emoji">🪄</div><div class="icon-label">Kode Creator</div></div>
+    <div class="icon-card" onclick="openModal('m-i12'); loadKelolaPoin();"><div class="icon-emoji">⭐</div><div class="icon-label">Kelola Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
@@ -398,6 +473,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">🔔 Notifikasi</div>
   <div class="card-sub">Semua perubahan dari brand & internal soal request kamu, digabung di sini.</div>
   <div id="c7-notif-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c8')">‹ ✕</button>
+  <div class="modal-title">⭐ Poin Kamu</div>
+  <div id="c8-poin-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <!-- ================= MODALS: BRAND ================= -->
@@ -570,6 +650,61 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Kode ini otomatis muncul begitu Internal klik "Konfirmasi" di menu Verifikasi Member.</div>
   <div id="creator-codes-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<div class="modal-bg" id="m-i12"><div class="modal-box" style="max-width:640px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i12')">‹ ✕</button>
+  <div class="modal-title">⭐ Kelola Poin</div>
+  <div class="poin-int-tabs">
+    <button class="active" onclick="switchPoinIntTab('kegiatan')">Kegiatan Poin</button>
+    <button onclick="switchPoinIntTab('hadiah')">Hadiah</button>
+    <button onclick="switchPoinIntTab('gmv')">GMV Mingguan</button>
+    <button onclick="switchPoinIntTab('redeem')">Penukaran</button>
+  </div>
+
+  <div class="poin-int-panel active" id="poin-int-kegiatan">
+    <div id="poin-kegiatan-list"><div class="card-sub">Memuat data...</div></div>
+  </div>
+
+  <div class="poin-int-panel" id="poin-int-hadiah">
+    <div id="poin-hadiah-list"><div class="card-sub">Memuat data...</div></div>
+    <div class="card-sub" style="margin-top:12px;font-weight:700">+ Tambah Hadiah Baru</div>
+    <div class="field-row"><input id="new-reward-nama" placeholder="Nama hadiah"></div>
+    <div class="field-row"><input id="new-reward-foto" placeholder="URL foto (opsional)"></div>
+    <div class="field-row">
+      <input id="new-reward-poin" type="number" placeholder="Poin dibutuhkan">
+      <input id="new-reward-stok" type="number" placeholder="Stok (opsional)">
+    </div>
+    <div class="field-row">
+      <input id="new-reward-dari" type="date" placeholder="Berlaku dari">
+      <input id="new-reward-sampai" type="date" placeholder="Berlaku sampai">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="createRewardInternal()">Tambah Hadiah</button>
+  </div>
+
+  <div class="poin-int-panel" id="poin-int-gmv">
+    <div class="card-sub">Input pemenang GMV tertinggi minggu ini (periode Jumat–Minggu berjalan).</div>
+    <div id="gmv-winner-form-1" class="field-row"><select class="gmv-winner-select"><option value="">🥇 Juara 1 (50 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
+    <div id="gmv-winner-form-2" class="field-row"><select class="gmv-winner-select"><option value="">🥈 Juara 2 (30 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
+    <div id="gmv-winner-form-3" class="field-row"><select class="gmv-winner-select"><option value="">🥉 Juara 3 (15 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitWeeklyWinners()">Simpan Pemenang Minggu Ini</button>
+    <div class="card-sub" style="margin-top:14px;font-weight:700">Berikan Poin Manual (SOW, Report VT, Event, Pelanggaran)</div>
+    <div class="field-row"><select id="manual-award-member"><option value="">Pilih creator...</option></select></div>
+    <div class="field-row">
+      <select id="manual-award-kategori">
+        <option value="sow_tuntas">Tuntas SOW 3 Brand (+25)</option>
+        <option value="report_vt">Report VT/Live Melebihi SOW (+10)</option>
+        <option value="event_post">Posting Saat Event (+5)</option>
+        <option value="pelanggaran_ingkar">Ingkar Janji Posting (-50)</option>
+      </select>
+    </div>
+    <div class="field-row"><input id="manual-award-note" placeholder="Catatan (opsional, misal nama brand/event)"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="submitManualAward()">Berikan Poin</button>
+  </div>
+
+  <div class="poin-int-panel" id="poin-int-redeem">
+    <div id="poin-redeem-list"><div class="card-sub">Memuat data...</div></div>
+  </div>
+</div></div>
+
 
 
 <div class="modal-bg" id="m-i8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i8')">‹ ✕</button>
@@ -1709,6 +1844,13 @@ async function loginCreator(){
     currentSession.memberData = result.member;
     enterApp('creator');
     checkFreezeStatus();
+
+    // Checkin harian otomatis (poin buka aplikasi + streak login)
+    fetch(SUPABASE_URL + '/functions/v1/creator-checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': await getInternalAuthHeader() },
+      body: '{}'
+    }).catch(function(){});
   } catch(e){
     btn.disabled = false;
     btn.textContent = 'Masuk';
@@ -3651,6 +3793,311 @@ function filterNotif(sel){
   document.querySelectorAll('#notif-table tr[data-cat]').forEach(function(row){
     row.style.display = (val==='all' || row.getAttribute('data-cat')===val) ? '' : 'none';
   });
+}
+
+/* ================= POIN: CREATOR ================= */
+const POIN_KATEGORI_ICON = {
+  verifikasi:'🪪', sow_tuntas:'📦', report_vt:'🎥', event_post:'🎉',
+  buka_aplikasi:'📲', login_streak:'🔥', pelanggaran_ingkar:'⚠️',
+  gmv_juara1:'🥇', gmv_juara2:'🥈', gmv_juara3:'🥉', redeem_hadiah:'🎁', refund_redeem:'↩️'
+};
+function poinIcon(kategori){ return POIN_KATEGORI_ICON[kategori] || '⭐'; }
+
+async function loadPoinCreator(){
+  const el = document.getElementById('c8-poin-content');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const [summaryRes, rewardsRes] = await Promise.all([
+      fetch(SUPABASE_URL + '/functions/v1/creator-points-summary', { method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body:'{}' }),
+      fetch(SUPABASE_URL + '/functions/v1/creator-list-rewards', { method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body:'{}' })
+    ]);
+    const summary = await summaryRes.json();
+    const rewardsData = await rewardsRes.json();
+
+    if(!summary.valid){ el.innerHTML = '<div class="card-sub">'+(summary.error||'Gagal memuat poin.')+'</div>'; return; }
+
+    let html = '';
+    html += '<div class="poin-hero"><div class="ph-star">⭐</div><div class="ph-lbl">POIN BULAN INI</div><div class="ph-num">'+summary.totalBulanIni+'</div>';
+    html += '<div class="ph-streak">🔥 Streak login: '+summary.streak+' hari berturut-turut</div></div>';
+
+    html += '<div class="card-sub" style="font-weight:700;margin-top:6px">Aktivitas Terbaru</div>';
+    if(!summary.recent || summary.recent.length===0){
+      html += '<div class="card-sub">Belum ada aktivitas poin.</div>';
+    } else {
+      summary.recent.slice(0,8).forEach(function(r){
+        const pos = r.poin >= 0;
+        html += '<div class="poin-activity-row"><div class="pa-ic">'+poinIcon(r.kategori)+'</div>'+
+          '<div class="pa-main"><div class="t">'+(r.deskripsi||r.kategori)+'</div><div class="s">'+new Date(r.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'})+'</div></div>'+
+          '<div class="pa-pts '+(pos?'pos':'neg')+'">'+(pos?'+':'')+r.poin+'</div></div>';
+      });
+    }
+
+    if(summary.winners && summary.winners.length){
+      html += '<div class="card-sub" style="font-weight:700;margin-top:16px">🏆 Top 3 GMV Minggu Ini</div>';
+      html += '<div class="poin-week-lbl">Periode mulai '+summary.weekStart+'<span class="sub">Reset otomatis tiap Senin</span></div>';
+      const byRank = {}; summary.winners.forEach(function(w){ byRank[w.peringkat]=w; });
+      html += '<div class="poin-podium">';
+      [{r:2,cls:'silver',ic:'🥈'},{r:1,cls:'gold',ic:'🥇'},{r:3,cls:'bronze',ic:'🥉'}].forEach(function(slot){
+        const w = byRank[slot.r];
+        if(!w) return;
+        html += '<div class="pp-slot '+slot.cls+'">'+(slot.r===1?'<div class="pp-crown">👑</div>':'')+
+          '<div class="pp-avatar">'+slot.ic+'</div>'+
+          '<div class="pp-name">'+(w.members?w.members.nama:'-')+'</div>'+
+          '<div class="pp-gmv">Rp'+Number(w.gmv_amount||0).toLocaleString('id-ID')+'</div>'+
+          '<div class="pp-pts">+'+w.poin_awarded+'</div></div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">Tukar Poin — Hadiah</div>';
+    if(!rewardsData.rewards || rewardsData.rewards.length===0){
+      html += '<div class="card-sub">Belum ada hadiah tersedia saat ini.</div>';
+    } else {
+      html += '<div class="poin-redeem-wrap">';
+      rewardsData.rewards.forEach(function(r){
+        const cukup = rewardsData.saldo >= r.poin_dibutuhkan;
+        html += '<div class="poin-bubble" style="opacity:'+(cukup?'1':'.5')+'" onclick="redeemHadiahCreator(\''+r.id+'\', '+cukup+')">'+
+          (r.foto_url ? '<img src="'+r.foto_url+'">' : '<div class="pb-emoji">🎁</div>')+
+          '<div class="pb-name">'+r.nama+'</div><div class="pb-cost">'+r.poin_dibutuhkan+' pts</div></div>';
+      });
+      html += '</div>';
+      html += '<div class="card-sub" style="text-align:center;margin-top:6px">Saldo poin kamu: <b>'+rewardsData.saldo+'</b></div>';
+    }
+
+    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">Daftar Semua Poin</div><div id="poin-rules-list"><div class="card-sub">Memuat...</div></div>';
+
+    el.innerHTML = html;
+
+    // Muat daftar aturan poin (baca langsung, RLS mengizinkan semua yang login)
+    const { data: rules } = await db.from('point_rules').select('*').eq('is_active', true).order('urutan');
+    const rulesEl = document.getElementById('poin-rules-list');
+    if(rulesEl && rules){
+      let rHtml = '';
+      rules.forEach(function(rule){
+        const neg = rule.poin < 0;
+        rHtml += '<div class="poin-rule-item"><div class="pri-ic">'+poinIcon(rule.kategori)+'</div>'+
+          '<div class="pri-t">'+rule.nama+(rule.deskripsi?' <span>('+rule.deskripsi+')</span>':'')+'</div>'+
+          '<div class="pri-p'+(neg?' neg':'')+'">'+(neg?'':'+')+rule.poin+'</div></div>';
+      });
+      rulesEl.innerHTML = rHtml;
+    }
+  } catch(e){
+    el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>';
+  }
+}
+
+async function redeemHadiahCreator(rewardId, cukup){
+  if(!cukup){ alert('Poin kamu belum cukup untuk hadiah ini.'); return; }
+  if(!confirm('Yakin mau tukar poin untuk hadiah ini?')) return;
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-redeem-reward', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({rewardId})
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menukar poin.'); return; }
+    alert('Berhasil! Penukaran hadiah kamu sedang diproses tim internal.');
+    loadPoinCreator();
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+/* ================= POIN: INTERNAL ================= */
+function switchPoinIntTab(tab){
+  document.querySelectorAll('.poin-int-tabs button').forEach(function(b){ b.classList.remove('active'); });
+  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.poin-int-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('poin-int-'+tab).classList.add('active');
+}
+
+async function loadKelolaPoin(){
+  await loadPoinKegiatanList();
+  await loadPoinHadiahList();
+  await loadPoinMemberDropdowns();
+  await loadPoinRedeemList();
+}
+
+async function loadPoinKegiatanList(){
+  const el = document.getElementById('poin-kegiatan-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-point-rules', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
+    });
+    const j = await res.json();
+    if(!j.valid){ el.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    let html = '';
+    j.rules.forEach(function(r){
+      const neg = r.poin < 0;
+      html += '<div class="poin-int-row"><div class="pir-main"><div class="t">'+r.nama+'</div><div class="s">'+(r.deskripsi||'')+(r.is_active?'':' · nonaktif')+'</div></div>'+
+        '<div class="pir-pts'+(neg?' neg':'')+'">'+(neg?'':'+')+r.poin+'</div>'+
+        '<div class="icon-card" style="padding:6px 10px;border-radius:8px;cursor:pointer" onclick="togglePointRuleActive(\''+r.id+'\', '+(!r.is_active)+')" title="Aktif/Nonaktifkan">'+(r.is_active?'🟢':'⚪')+'</div></div>';
+    });
+    el.innerHTML = html || '<div class="card-sub">Belum ada kegiatan poin.</div>';
+  } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+}
+
+async function togglePointRuleActive(id, newActive){
+  const auth = await getInternalAuthHeader();
+  await fetch(SUPABASE_URL + '/functions/v1/internal-manage-point-rules', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({action:'update', id, is_active:newActive})
+  });
+  loadPoinKegiatanList();
+}
+
+async function loadPoinHadiahList(){
+  const el = document.getElementById('poin-hadiah-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
+    });
+    const j = await res.json();
+    if(!j.valid){ el.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    let html = '';
+    j.rewards.forEach(function(r){
+      const berlaku = (r.berlaku_dari||'—')+' s/d '+(r.berlaku_sampai||'—');
+      html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.foto_url?'<img src="'+r.foto_url+'">':'🎁')+'</div>'+
+        '<div class="prc-main"><div class="t">'+r.nama+(r.is_active?'':' (nonaktif)')+'</div><div class="s">Stok: '+(r.stok===null?'∞':r.stok)+' · '+berlaku+'</div></div>'+
+        '<div class="prc-cost">'+r.poin_dibutuhkan+' pts</div>'+
+        '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="deleteRewardInternal(\''+r.id+'\')" title="Hapus">🗑</div></div>';
+    });
+    el.innerHTML = html || '<div class="card-sub">Belum ada hadiah.</div>';
+  } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+}
+
+async function createRewardInternal(){
+  const nama = document.getElementById('new-reward-nama').value.trim();
+  const foto_url = document.getElementById('new-reward-foto').value.trim();
+  const poin_dibutuhkan = parseInt(document.getElementById('new-reward-poin').value, 10);
+  const stokVal = document.getElementById('new-reward-stok').value.trim();
+  const berlaku_dari = document.getElementById('new-reward-dari').value;
+  const berlaku_sampai = document.getElementById('new-reward-sampai').value;
+  if(!nama || !poin_dibutuhkan){ alert('Nama dan poin dibutuhkan wajib diisi.'); return; }
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'create', nama, foto_url: foto_url||null, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menambah hadiah.'); return; }
+    document.getElementById('new-reward-nama').value='';
+    document.getElementById('new-reward-foto').value='';
+    document.getElementById('new-reward-poin').value='';
+    document.getElementById('new-reward-stok').value='';
+    document.getElementById('new-reward-dari').value='';
+    document.getElementById('new-reward-sampai').value='';
+    loadPoinHadiahList();
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+async function deleteRewardInternal(id){
+  if(!confirm('Hapus hadiah ini?')) return;
+  const auth = await getInternalAuthHeader();
+  await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({action:'delete', id})
+  });
+  loadPoinHadiahList();
+}
+
+async function loadPoinMemberDropdowns(){
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-award-points', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_members'})
+    });
+    const j = await res.json();
+    if(!j.valid) return;
+    let opts = '<option value="">Pilih creator...</option>';
+    j.members.forEach(function(m){ opts += '<option value="'+m.id+'">'+m.nama+'</option>'; });
+    document.getElementById('manual-award-member').innerHTML = opts;
+    document.querySelectorAll('.gmv-winner-select').forEach(function(sel){
+      const placeholder = sel.querySelector('option').textContent;
+      sel.innerHTML = '<option value="">'+placeholder+'</option>' + j.members.map(function(m){ return '<option value="'+m.id+'">'+m.nama+'</option>'; }).join('');
+    });
+  } catch(e){}
+}
+
+async function submitManualAward(){
+  const memberId = document.getElementById('manual-award-member').value;
+  const kategori = document.getElementById('manual-award-kategori').value;
+  const note = document.getElementById('manual-award-note').value.trim();
+  if(!memberId){ alert('Pilih creator dulu.'); return; }
+  const poinMap = { sow_tuntas:25, report_vt:10, event_post:5, pelanggaran_ingkar:-50 };
+  const namaMap = { sow_tuntas:'Tuntas SOW 3 Brand', report_vt:'Report VT/Live Melebihi SOW', event_post:'Posting Saat Event', pelanggaran_ingkar:'Ingkar Janji Posting' };
+  const poin = poinMap[kategori];
+  const deskripsi = namaMap[kategori] + (note ? ' — '+note : '');
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-award-points', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'award', memberId, kategori, poin, deskripsi })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal memberi poin.'); return; }
+    alert('Poin berhasil diberikan.');
+    document.getElementById('manual-award-note').value = '';
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+async function submitWeeklyWinners(){
+  const winners = [];
+  for(let rank=1; rank<=3; rank++){
+    const form = document.getElementById('gmv-winner-form-'+rank);
+    const sel = form.querySelector('.gmv-winner-select');
+    const amt = form.querySelector('.gmv-winner-amount');
+    if(sel.value){ winners.push({ memberId: sel.value, peringkat: rank, gmvAmount: amt.value ? parseFloat(amt.value) : null }); }
+  }
+  if(winners.length===0){ alert('Pilih minimal 1 pemenang.'); return; }
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-award-points', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'set_weekly_winners', winners })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan pemenang.'); return; }
+    alert('Pemenang minggu ini berhasil disimpan.');
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+async function loadPoinRedeemList(){
+  const el = document.getElementById('poin-redeem-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-redemptions', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
+    });
+    const j = await res.json();
+    if(!j.valid){ el.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    let html = '';
+    (j.redemptions||[]).forEach(function(r){
+      html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.rewards&&r.rewards.foto_url?'<img src="'+r.rewards.foto_url+'">':'🎁')+'</div>'+
+        '<div class="prc-main"><div class="t">'+(r.members?r.members.nama:'-')+' — '+(r.rewards?r.rewards.nama:'-')+'</div>'+
+        '<div class="s">'+r.poin_terpakai+' poin · '+new Date(r.created_at).toLocaleDateString('id-ID')+'</div></div>'+
+        '<select onchange="updateRedemptionStatus(\''+r.id+'\', this.value)" style="width:auto;padding:6px 8px;font-size:11px">'+
+        ['pending','approved','sent','rejected'].map(function(s){ return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>'; }).join('')+
+        '</select></div>';
+    });
+    el.innerHTML = html || '<div class="card-sub">Belum ada penukaran hadiah.</div>';
+  } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+}
+
+async function updateRedemptionStatus(id, status){
+  const auth = await getInternalAuthHeader();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-redemptions', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({action:'update_status', id, status})
+  });
+  const j = await res.json();
+  if(!j.valid){ alert(j.error || 'Gagal update status.'); }
+  loadPoinRedeemList();
 }
 </script>
 </body>
