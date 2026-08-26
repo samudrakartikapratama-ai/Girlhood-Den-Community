@@ -805,6 +805,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <option value="hotlive">Perpindahan Ranking Hot Live</option>
       <option value="resi">📦 Nomor Resi</option>
       <option value="konfirmasi_terima">🤳 Bukti Konfirmasi Terima</option>
+      <option value="poin">⭐ Perubahan Poin, Hadiah &amp; Pelanggaran</option>
+      <option value="upcoming_live">📅 Upcoming Live Creator</option>
     </select>
   </div>
   <div style="overflow-x:auto">
@@ -1564,7 +1566,7 @@ async function saveJadwalLive(btn){
   }
 
   const fmtNotif = function(d){ return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short'}); };
-  await logNotification('status', {
+  await logNotification('upcoming_live', {
     brandId: brandId,
     memberId: currentSession.memberId,
     detail: (currentSession.memberData ? currentSession.memberData.nama : 'Creator') + ' udah jadwalin Live: '+fmtNotif(s1)+', '+fmtNotif(s2)+', '+fmtNotif(s3)
@@ -3754,7 +3756,9 @@ async function loadNotifications(){
     reqbaru: '<span class="badge badge-teal">Req Baru</span>',
     hotlive: '<span class="badge badge-amber">Hot Live</span>',
     resi: '<span class="badge" style="background:var(--teal-light);color:var(--teal)">📦 Resi</span>',
-    konfirmasi_terima: '<span class="badge" style="background:var(--pink-pale);color:var(--pink)">🤳 Bukti Terima</span>'
+    konfirmasi_terima: '<span class="badge" style="background:var(--pink-pale);color:var(--pink)">🤳 Bukti Terima</span>',
+    poin: '<span class="badge" style="background:var(--gold,#FDE9B8);color:#8a5a00">⭐ Poin</span>',
+    upcoming_live: '<span class="badge" style="background:var(--pink-pale);color:var(--pink)">📅 Upcoming Live</span>'
   };
 
   tbody.innerHTML = allRows.map(function(r){
