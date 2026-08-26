@@ -373,6 +373,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i6'); loadKodeBrand();"><div class="icon-emoji">🔑</div><div class="icon-label">Kode Brand</div></div>
     <div class="icon-card" onclick="openModal('m-i9'); loadCreatorCodes();"><div class="icon-emoji">🪄</div><div class="icon-label">Kode Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i12'); loadKelolaPoin();"><div class="icon-emoji">⭐</div><div class="icon-label">Kelola Poin</div></div>
+    <div class="icon-card" onclick="openModal('m-i13'); loadKelolaBanner();"><div class="icon-emoji">🖼️</div><div class="icon-label">Kelola Banner</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
@@ -769,7 +770,14 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-
+<div class="modal-bg" id="m-i13"><div class="modal-box" style="max-width:560px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i13')">‹ ✕</button>
+  <div class="modal-title">🖼️ Kelola Banner</div>
+  <div class="card-sub">Banner ini muncul di halaman utama semua orang (Creator, Brand, Internal) — auto-geser tiap 3 detik kalau ada lebih dari 1. Format JPEG/PNG, ukuran 1200×400px (rasio 3:1) biar hasilnya rapi, maks 5MB.</div>
+  <div id="banner-kelola-list" style="margin-top:12px"><div class="card-sub">Memuat data...</div></div>
+  <div class="card-sub" style="margin-top:14px;font-weight:700">+ Tambah Banner Baru</div>
+  <div class="field"><input type="file" id="new-banner-file" accept="image/jpeg,image/png"></div>
+  <button class="btn btn-primary" style="width:100%" onclick="uploadNewBanner()">Upload Banner</button>
+</div></div>
 
 <div class="modal-bg" id="m-i8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i8')">‹ ✕</button>
   <div class="modal-title">🎓 Kelola Edukasi</div>
@@ -1842,6 +1850,7 @@ async function logout(){
   function enterApp(role){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-'+role).classList.add('active');
+  loadHeroBanners();
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
     var nama = (currentSession.brandData && currentSession.brandData.nama_brand) ? currentSession.brandData.nama_brand : '-';
@@ -2133,6 +2142,22 @@ async function uploadFileToStorage(bucket, file, pathPrefix){
   const { data, error } = await db.storage.from(bucket).upload(fileName, processedFile, { cacheControl: '3600', upsert: false });
   if(error) return { url: null, error: error };
   const { data: publicUrlData } = db.storage.from(bucket).getPublicUrl(fileName);
+  return { url: publicUrlData.publicUrl, error: null };
+}
+
+// Upload banner TANPA kompresi/resize — resolusi asli dipertahankan penuh, cuma dibatasi tipe & ukuran file
+async function uploadBannerFileRaw(file){
+  if(!['image/jpeg','image/png'].includes(file.type)){
+    return { url: null, error: { message: 'Format harus JPEG atau PNG.' } };
+  }
+  if(file.size > 5*1024*1024){
+    return { url: null, error: { message: 'Ukuran file maksimal 5MB. File kamu: ' + (file.size/1024/1024).toFixed(1) + 'MB.' } };
+  }
+  const ext = file.type === 'image/png' ? 'png' : 'jpg';
+  const fileName = 'banner-' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  const { error } = await db.storage.from('promo-banners').upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+  if(error) return { url: null, error: error };
+  const { data: publicUrlData } = db.storage.from('promo-banners').getPublicUrl(fileName);
   return { url: publicUrlData.publicUrl, error: null };
 }
 function daftar(){
@@ -4233,6 +4258,121 @@ async function updateRedemptionStatus(id, status){
   }
   document.querySelectorAll('.icon-card').forEach(attachTilt);
 })();
+
+/* ================= KELOLA BANNER (Internal) ================= */
+async function loadKelolaBanner(){
+  const container = document.getElementById('banner-kelola-list');
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data, error } = await db.from('promo_banners').select('*').order('urutan', { ascending: true });
+  if(error){
+    container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat banner.</div>';
+    return;
+  }
+  if(!data || data.length === 0){
+    container.innerHTML = '<div class="card-sub">Belum ada banner.</div>';
+    return;
+  }
+  container.innerHTML = data.map(function(b){
+    return '<div class="poin-reward-card"><div class="prc-thumb" style="width:70px;height:auto;aspect-ratio:3/1"><img src="'+b.gambar_url+'" style="width:100%;height:100%;object-fit:cover"></div>'
+      + '<div class="prc-main"><div class="t">Urutan '+b.urutan+(b.is_active?'':' (nonaktif)')+'</div><div class="s">Ditambahkan '+new Date(b.created_at).toLocaleDateString('id-ID')+'</div></div>'
+      + '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="toggleBannerActive(\''+b.id+'\', '+(!b.is_active)+')" title="Aktif/Nonaktifkan">'+(b.is_active?'🟢':'⚪')+'</div>'
+      + '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="deleteBanner(\''+b.id+'\')" title="Hapus">🗑</div></div>';
+  }).join('');
+}
+
+async function uploadNewBanner(){
+  const fileInput = document.getElementById('new-banner-file');
+  const file = fileInput.files[0];
+  if(!file){ alert('Pilih file dulu.'); return; }
+
+  const result = await uploadBannerFileRaw(file);
+  if(result.error){ alert(result.error.message); return; }
+
+  const { data: existing } = await db.from('promo_banners').select('urutan').order('urutan', { ascending: false }).limit(1);
+  const nextUrutan = existing && existing.length > 0 ? existing[0].urutan + 1 : 1;
+
+  const { error: insertErr } = await db.from('promo_banners').insert({ gambar_url: result.url, urutan: nextUrutan, is_active: true });
+  if(insertErr){ alert('Gagal simpan banner: ' + insertErr.message); return; }
+
+  fileInput.value = '';
+  loadKelolaBanner();
+}
+
+async function toggleBannerActive(id, newActive){
+  await db.from('promo_banners').update({ is_active: newActive }).eq('id', id);
+  loadKelolaBanner();
+}
+
+async function deleteBanner(id){
+  if(!confirm('Hapus banner ini?')) return;
+  await db.from('promo_banners').delete().eq('id', id);
+  loadKelolaBanner();
+}
+
+/* ================= CAROUSEL BANNER (Creator/Brand/Internal) ================= */
+async function loadHeroBanners(){
+  const { data } = await db.from('promo_banners').select('gambar_url').eq('is_active', true).order('urutan', { ascending: true });
+  const slides = (data || []).map(function(b){ return b.gambar_url; });
+  document.querySelectorAll('.hero-banner-wrap').forEach(function(wrap){
+    if(slides.length === 0){ wrap.innerHTML = ''; return; }
+    if(slides.length === 1){
+      wrap.innerHTML = '<img src="'+slides[0]+'" alt="Banner">';
+      return;
+    }
+    const track = document.createElement('div');
+    track.style.cssText = 'display:flex;overflow:hidden;border-radius:16px;box-shadow:0 8px 20px rgba(74,43,71,.18)';
+    const inner = document.createElement('div');
+    inner.style.cssText = 'display:flex;width:100%;transition:transform .45s cubic-bezier(.22,.61,.36,1)';
+    slides.forEach(function(url){
+      const slide = document.createElement('div');
+      slide.style.cssText = 'min-width:100%';
+      slide.innerHTML = '<img src="'+url+'" style="width:100%;display:block" alt="Banner">';
+      inner.appendChild(slide);
+    });
+    track.appendChild(inner);
+    const dotsWrap = document.createElement('div');
+    dotsWrap.style.cssText = 'display:flex;gap:4px;justify-content:center;margin-top:8px';
+    slides.forEach(function(_, i){
+      const dot = document.createElement('div');
+      dot.style.cssText = 'width:'+(i===0?'16px':'5px')+';height:5px;border-radius:3px;background:'+(i===0?'var(--pink)':'rgba(232,24,90,.3)')+';transition:.2s;cursor:pointer';
+      dot.onclick = function(){ idx = i; update(true); resetTimer(); };
+      dotsWrap.appendChild(dot);
+    });
+    wrap.innerHTML = '';
+    wrap.appendChild(track);
+    wrap.appendChild(dotsWrap);
+
+    let idx = 0;
+    function update(animated){
+      inner.style.transition = animated ? 'transform .45s cubic-bezier(.22,.61,.36,1)' : 'none';
+      inner.style.transform = 'translateX(-'+(idx*100)+'%)';
+      Array.from(dotsWrap.children).forEach(function(d,i){
+        d.style.width = i===idx ? '16px' : '5px';
+        d.style.background = i===idx ? 'var(--pink)' : 'rgba(232,24,90,.3)';
+      });
+    }
+    function next(){ idx = (idx+1) % slides.length; update(true); }
+    let timer = setInterval(next, 3000);
+    function resetTimer(){ clearInterval(timer); timer = setInterval(next, 3000); }
+
+    let startX=0, currentX=0, dragging=false;
+    track.addEventListener('touchstart', function(e){ dragging=true; startX=e.touches[0].clientX; currentX=0; clearInterval(timer); }, {passive:true});
+    track.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      currentX = e.touches[0].clientX - startX;
+      inner.style.transition = 'none';
+      inner.style.transform = 'translateX(calc(-'+(idx*100)+'% + '+currentX+'px))';
+    }, {passive:true});
+    track.addEventListener('touchend', function(){
+      dragging=false;
+      if(currentX < -50 && idx < slides.length-1) idx++;
+      else if(currentX > 50 && idx > 0) idx--;
+      update(true);
+      resetTimer();
+    });
+  });
+}
+
 </script>
 </body>
 </html>
