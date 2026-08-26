@@ -723,6 +723,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <button onclick="switchPoinIntTab('hadiah')">Hadiah</button>
     <button onclick="switchPoinIntTab('gmv')">GMV Mingguan</button>
     <button onclick="switchPoinIntTab('redeem')">Penukaran</button>
+    <button onclick="switchPoinIntTab('pelanggaran')">⚠️ Pelanggaran</button>
   </div>
 
   <div class="poin-int-panel active" id="poin-int-kegiatan">
@@ -751,22 +752,18 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div id="gmv-winner-form-2" class="field-row"><select class="gmv-winner-select"><option value="">🥈 Juara 2 (30 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
     <div id="gmv-winner-form-3" class="field-row"><select class="gmv-winner-select"><option value="">🥉 Juara 3 (15 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
     <button class="btn btn-primary" style="width:100%" id="gmv-submit-btn" onclick="submitWeeklyWinners()">Simpan Pemenang Minggu Ini</button>
-    <div class="card-sub" style="margin-top:14px;font-weight:700">Berikan Poin Manual (SOW, Report VT, Event, Pelanggaran)</div>
-    <div class="field-row"><select id="manual-award-member"><option value="">Pilih creator...</option></select></div>
-    <div class="field-row">
-      <select id="manual-award-kategori">
-        <option value="sow_tuntas">Tuntas SOW 3 Brand (+25)</option>
-        <option value="report_vt">Report VT/Live Melebihi SOW (+10)</option>
-        <option value="event_post">Posting Saat Event (+5)</option>
-        <option value="pelanggaran_ingkar">Ingkar Janji Posting (-50)</option>
-      </select>
-    </div>
-    <div class="field-row"><input id="manual-award-note" placeholder="Catatan (opsional, misal nama brand/event)"></div>
-    <button class="btn btn-primary" style="width:100%" onclick="submitManualAward()">Berikan Poin</button>
+    <div class="card-sub" style="margin-top:14px;font-weight:700">Status Otomatisasi Poin</div>
+    <div class="card-sub">Tuntas SOW, Report VT lebih, dan Posting Event sekarang otomatis kehitung sistem — nggak perlu diinput manual lagi. Pelanggaran ada di tab ⚠️ Pelanggaran (butuh konfirmasi 1x klik). GMV Mingguan tetap input manual di atas.</div>
+    <select id="manual-award-member" style="display:none"><option value="">Pilih creator...</option></select>
   </div>
 
   <div class="poin-int-panel" id="poin-int-redeem">
     <div id="poin-redeem-list"><div class="card-sub">Memuat data...</div></div>
+  </div>
+
+  <div class="poin-int-panel" id="poin-int-pelanggaran">
+    <div class="card-sub">Creator yang udah lewat H+3 dari konfirmasi terima tapi belum tuntas SOW-nya. Pastikan udah cek WhatsApp personal ke creator dulu sebelum konfirmasi pelanggaran (siapa tau ada alasan/udah izin telat).</div>
+    <div id="poin-pelanggaran-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
   </div>
 </div></div>
 
@@ -868,6 +865,7 @@ function notifIcon(kategori){
   if(kategori === 'vt') return '🎬';
   if(kategori === 'request') return '🆕';
   if(kategori === 'urgent') return '⚠️';
+  if(kategori === 'poin') return '⭐';
   return '🔔';
 }
 
@@ -1769,16 +1767,26 @@ async function submitVtReport(){
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
 
-  const { data, error } = await db.from('vt_reports').insert({
-    sample_request_id: requestId,
-    video_url: videoUrl
-  }).select('id, sample_requests(member_id, brand_products(nama_produk))').single();
+  let result;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-submit-vt-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ requestId, videoUrl })
+    });
+    result = await res.json();
+  } catch(e){
+    btn.disabled = false; btn.textContent = 'Submit VT';
+    alert('Gagal menghubungi server.');
+    return;
+  }
 
   btn.disabled = false;
   btn.textContent = 'Submit VT';
 
-  if(error){
-    showDbError('submit VT', error);
+  if(!result.valid){
+    alert(result.error || 'Gagal submit VT.');
     return;
   }
 
@@ -1789,7 +1797,11 @@ async function submitVtReport(){
   });
 
   linkInput.value = '';
-  alert('VT berhasil disubmit!');
+  let successMsg = 'VT berhasil disubmit!';
+  if(result.bonuses && result.bonuses.length > 0){
+    successMsg += '\n\n🎉 ' + result.bonuses.join('\n🎉 ');
+  }
+  alert(successMsg);
   await loadVtReportPage();
   checkFreezeStatus();
 }
@@ -4046,6 +4058,7 @@ function switchPoinIntTab(tab){
   event.currentTarget.classList.add('active');
   document.querySelectorAll('.poin-int-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('poin-int-'+tab).classList.add('active');
+  if(tab === 'pelanggaran') loadPelanggaranList();
 }
 
 async function loadKelolaPoin(){
@@ -4054,6 +4067,48 @@ async function loadKelolaPoin(){
   await loadPoinMemberDropdowns();
   await loadPoinRedeemList();
   await loadGmvWeekStatus();
+  await loadPelanggaranList();
+}
+
+async function loadPelanggaranList(){
+  const container = document.getElementById('poin-pelanggaran-list');
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-violations', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_pending'})
+    });
+    const j = await res.json();
+    if(!j.valid){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat data.')+'</div>'; return; }
+    if(!j.rows || j.rows.length === 0){ container.innerHTML = '<div class="card-sub">Nggak ada yang perlu direview saat ini 🎉</div>'; return; }
+
+    container.innerHTML = j.rows.map(function(r){
+      const deadlineFmt = new Date(r.deadline).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+      return '<div class="card" style="background:var(--red-light);border-color:var(--red);margin-bottom:8px">'
+        + '<b>'+r.creatorName+'</b> — '+r.brandName+' ('+r.produkName+')'
+        + '<div class="card-sub">VT: '+r.vtProgress+' · Batas H+3: '+deadlineFmt+' (sudah lewat)</div>'
+        + '<div style="display:flex;gap:8px;margin-top:8px">'
+        + '<button class="btn btn-outline btn-sm" style="flex:1" onclick="decidePelanggaran(\''+r.memberId+'\',\''+r.brandId+'\',\''+r.periodStart+'\',\'dismiss\',this)">Ada Alasan, Jangan Potong</button>'
+        + '<button class="btn btn-primary btn-sm" style="flex:1;background:var(--red)" onclick="decidePelanggaran(\''+r.memberId+'\',\''+r.brandId+'\',\''+r.periodStart+'\',\'confirm\',this)">Konfirmasi Pelanggaran (-50)</button>'
+        + '</div></div>';
+    }).join('');
+  } catch(e){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+async function decidePelanggaran(memberId, brandId, periodStart, action, btn){
+  const card = btn.closest('.card');
+  card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+  btn.textContent = 'Menyimpan...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-violations', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action, memberId, brandId, periodStart })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
+    loadPelanggaranList();
+  } catch(e){ alert('Gagal menghubungi server.'); }
 }
 
 async function loadGmvWeekStatus(){
@@ -4196,28 +4251,6 @@ async function loadPoinMemberDropdowns(){
       sel.innerHTML = '<option value="">'+placeholder+'</option>' + j.members.map(function(m){ return '<option value="'+m.id+'">'+m.nama+'</option>'; }).join('');
     });
   } catch(e){}
-}
-
-async function submitManualAward(){
-  const memberId = document.getElementById('manual-award-member').value;
-  const kategori = document.getElementById('manual-award-kategori').value;
-  const note = document.getElementById('manual-award-note').value.trim();
-  if(!memberId){ alert('Pilih creator dulu.'); return; }
-  const poinMap = { sow_tuntas:25, report_vt:10, event_post:5, pelanggaran_ingkar:-50 };
-  const namaMap = { sow_tuntas:'Tuntas SOW 3 Brand', report_vt:'Report VT/Live Melebihi SOW', event_post:'Posting Saat Event', pelanggaran_ingkar:'Ingkar Janji Posting' };
-  const poin = poinMap[kategori];
-  const deskripsi = namaMap[kategori] + (note ? ' — '+note : '');
-  try {
-    const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-award-points', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'award', memberId, kategori, poin, deskripsi })
-    });
-    const j = await res.json();
-    if(!j.valid){ alert(j.error || 'Gagal memberi poin.'); return; }
-    alert('Poin berhasil diberikan.');
-    document.getElementById('manual-award-note').value = '';
-  } catch(e){ alert('Gagal menghubungi server.'); }
 }
 
 async function submitWeeklyWinners(){
