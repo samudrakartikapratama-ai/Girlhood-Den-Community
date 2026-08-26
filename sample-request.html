@@ -733,7 +733,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div id="poin-hadiah-list"><div class="card-sub">Memuat data...</div></div>
     <div class="card-sub" style="margin-top:12px;font-weight:700">+ Tambah Hadiah Baru</div>
     <div class="field-row"><input id="new-reward-nama" placeholder="Nama hadiah"></div>
-    <div class="field-row"><input id="new-reward-foto" placeholder="URL foto (opsional)"></div>
+    <div class="field-row"><input type="file" id="new-reward-foto" accept="image/jpeg,image/png"></div>
     <div class="field-row">
       <input id="new-reward-poin" type="number" placeholder="Poin dibutuhkan">
       <input id="new-reward-stok" type="number" placeholder="Stok (opsional)">
@@ -746,11 +746,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 
   <div class="poin-int-panel" id="poin-int-gmv">
-    <div class="card-sub">Input pemenang GMV tertinggi minggu ini (periode Jumat–Minggu berjalan).</div>
+    <div id="gmv-week-status" class="card-sub">Memuat status minggu ini...</div>
     <div id="gmv-winner-form-1" class="field-row"><select class="gmv-winner-select"><option value="">🥇 Juara 1 (50 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
     <div id="gmv-winner-form-2" class="field-row"><select class="gmv-winner-select"><option value="">🥈 Juara 2 (30 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
     <div id="gmv-winner-form-3" class="field-row"><select class="gmv-winner-select"><option value="">🥉 Juara 3 (15 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
-    <button class="btn btn-primary" style="width:100%" onclick="submitWeeklyWinners()">Simpan Pemenang Minggu Ini</button>
+    <button class="btn btn-primary" style="width:100%" id="gmv-submit-btn" onclick="submitWeeklyWinners()">Simpan Pemenang Minggu Ini</button>
     <div class="card-sub" style="margin-top:14px;font-weight:700">Berikan Poin Manual (SOW, Report VT, Event, Pelanggaran)</div>
     <div class="field-row"><select id="manual-award-member"><option value="">Pilih creator...</option></select></div>
     <div class="field-row">
@@ -4053,6 +4053,32 @@ async function loadKelolaPoin(){
   await loadPoinHadiahList();
   await loadPoinMemberDropdowns();
   await loadPoinRedeemList();
+  await loadGmvWeekStatus();
+}
+
+async function loadGmvWeekStatus(){
+  const el = document.getElementById('gmv-week-status');
+  const btn = document.getElementById('gmv-submit-btn');
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-award-points', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'get_week_status'})
+    });
+    const j = await res.json();
+    if(!j.valid){ el.textContent = 'Gagal cek status minggu ini.'; return; }
+
+    document.querySelectorAll('#poin-int-gmv .gmv-winner-select, #poin-int-gmv .gmv-winner-amount').forEach(function(input){ input.disabled = !!j.locked; });
+    btn.disabled = !!j.locked;
+
+    if(j.locked){
+      const list = j.winners.map(function(w){ return '#'+w.peringkat+' '+(w.members?w.members.nama:'-')+(w.gmv_amount?' (Rp'+Number(w.gmv_amount).toLocaleString('id-ID')+')':''); }).join(' · ');
+      el.innerHTML = '🔒 Pemenang minggu ini (mulai '+j.weekStart+') sudah dikunci: '+list+'. Form kebuka lagi otomatis pas minggu depan.';
+      btn.textContent = 'Terkunci — Sudah Diisi Minggu Ini';
+    } else {
+      el.textContent = 'Input pemenang GMV tertinggi minggu ini (periode mulai '+j.weekStart+', Jumat–Minggu).';
+      btn.textContent = 'Simpan Pemenang Minggu Ini';
+    }
+  } catch(e){ el.textContent = 'Gagal menghubungi server.'; }
 }
 
 async function loadPoinKegiatanList(){
@@ -4109,22 +4135,33 @@ async function loadPoinHadiahList(){
 
 async function createRewardInternal(){
   const nama = document.getElementById('new-reward-nama').value.trim();
-  const foto_url = document.getElementById('new-reward-foto').value.trim();
+  const fotoInput = document.getElementById('new-reward-foto');
+  const fotoFile = fotoInput.files[0];
   const poin_dibutuhkan = parseInt(document.getElementById('new-reward-poin').value, 10);
   const stokVal = document.getElementById('new-reward-stok').value.trim();
   const berlaku_dari = document.getElementById('new-reward-dari').value;
   const berlaku_sampai = document.getElementById('new-reward-sampai').value;
   if(!nama || !poin_dibutuhkan){ alert('Nama dan poin dibutuhkan wajib diisi.'); return; }
+
+  let foto_url = null;
+  if(fotoFile){
+    if(!['image/jpeg','image/png'].includes(fotoFile.type)){ alert('Foto harus JPEG atau PNG.'); return; }
+    if(fotoFile.size > 5*1024*1024){ alert('Ukuran foto maksimal 5MB.'); return; }
+    const upResult = await uploadFileToStorage('product-images', fotoFile, 'reward');
+    if(upResult.error){ alert('Gagal upload foto: ' + upResult.error.message); return; }
+    foto_url = upResult.url;
+  }
+
   try {
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'create', nama, foto_url: foto_url||null, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null })
+      body: JSON.stringify({ action:'create', nama, foto_url, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null })
     });
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Gagal menambah hadiah.'); return; }
     document.getElementById('new-reward-nama').value='';
-    document.getElementById('new-reward-foto').value='';
+    fotoInput.value='';
     document.getElementById('new-reward-poin').value='';
     document.getElementById('new-reward-stok').value='';
     document.getElementById('new-reward-dari').value='';
@@ -4201,6 +4238,7 @@ async function submitWeeklyWinners(){
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Gagal menyimpan pemenang.'); return; }
     alert('Pemenang minggu ini berhasil disimpan.');
+    loadGmvWeekStatus();
   } catch(e){ alert('Gagal menghubungi server.'); }
 }
 
