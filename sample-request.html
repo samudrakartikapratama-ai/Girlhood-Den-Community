@@ -1798,7 +1798,7 @@ async function submitVtReport(){
   await logNotification('vt', {
     memberId: currentSession.memberId,
     sampleRequestId: requestId,
-    detail: 'Submit VT'
+    detail: 'Submit VT: ' + videoUrl
   });
 
   linkInput.value = '';
@@ -3762,9 +3762,11 @@ async function loadNotifications(){
   };
 
   tbody.innerHTML = allRows.map(function(r){
-    let detailHtml = r.detail;
+    let detailHtml = r.detail.replace(/(https?:\/\/[^\s<]+)/g, function(url){
+      return '<a href="'+url+'" target="_blank" style="color:var(--pink);font-weight:700">▶ Lihat Link</a>';
+    });
     if(r.fotoUrl){
-      detailHtml = r.detail + '<br><a href="'+r.fotoUrl+'" target="_blank"><img src="'+r.fotoUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:4px;border:1px solid var(--border)"></a>'
+      detailHtml = detailHtml + '<br><a href="'+r.fotoUrl+'" target="_blank"><img src="'+r.fotoUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:4px;border:1px solid var(--border)"></a>'
         + '<br><a href="'+r.fotoUrl+'" download target="_blank" style="font-size:11px;color:var(--pink);font-weight:700">⬇️ Download Foto</a>';
     }
     return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
