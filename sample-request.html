@@ -352,7 +352,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"><div class="icon-emoji">📦</div><div class="icon-label">Pengiriman</div></div>
     <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><div class="icon-emoji">🚚</div><div class="icon-label">Logistik</div></div>
     <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><div class="icon-emoji">📥</div><div class="icon-label">Export &amp; Rekap</div></div>
-    <div class="icon-card" onclick="openModal('m-b2')"><div class="icon-emoji">🎥</div><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" onclick="openModal('m-b2'); loadReportVtBrand();"><div class="icon-emoji">🎥</div><div class="icon-label">Report VT</div></div>
     <div class="icon-card" onclick="openPicBrandModal()"><div class="icon-emoji">🧑‍💼</div><div class="icon-label">Profil PIC</div></div>
     <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live</div></div>
@@ -365,8 +365,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
-    <div class="icon-card" onclick="openModal('m-i1')"><div class="icon-emoji">📊</div><div class="icon-label">Dashboard</div></div>
-    <div class="icon-card" onclick="openModal('m-i2')"><div class="icon-emoji">⏰</div><div class="icon-label">Belum Posting</div></div>
+    <div class="icon-card" onclick="openModal('m-i1'); loadDashboardInternal();"><div class="icon-emoji">📊</div><div class="icon-label">Dashboard</div></div>
+    <div class="icon-card" onclick="openModal('m-i2'); loadBelumPosting();"><div class="icon-emoji">⏰</div><div class="icon-label">Belum Posting</div></div>
     <div class="icon-card" onclick="openModal('m-i3'); loadPendingMembers();"><div class="icon-emoji">🪪</div><div class="icon-label">Verifikasi Member</div></div>
     <div class="icon-card" onclick="openModal('m-i4'); loadBrandTerdaftar();"><div class="icon-emoji">🏢</div><div class="icon-label">Daftar Brand</div></div>
     <div class="icon-card" onclick="openModal('m-i5'); loadHotProductsManage(); populateHpBrandSelect();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
@@ -559,8 +559,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div style="overflow-x:auto">
     <table>
       <tr><th>Nama</th><th>Produk</th><th>Status</th></tr>
-      <tr><td>Rara Amelia</td><td>Body Serum</td><td><span class="badge badge-teal">Done</span><br><a class="tiktok-link" href="#" style="font-size:11px">▶ Lihat video</a></td></tr>
-      <tr><td>Della Putri</td><td>Toner</td><td><span class="badge badge-amber">Pending (2 sisa)</span></td></tr>
+      <tbody id="report-vt-brand-rows"><tr><td colspan="3" class="card-sub">Memuat data...</td></tr></tbody>
     </table>
   </div>
 </div></div>
@@ -641,14 +640,18 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <!-- ================= MODALS: INTERNAL ================= -->
 <div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
   <div class="modal-title">📊 Dashboard</div>
-  <div class="stat-row"><div class="stat-card"><div class="stat-num">142</div><div class="stat-label">Request</div></div><div class="stat-card"><div class="stat-num">98</div><div class="stat-label">Disetujui</div></div><div class="stat-card"><div class="stat-num">21</div><div class="stat-label">Belum Posting</div></div></div>
-  <div class="card-title">Pendingan Brand</div>
-  <div class="card-sub">Belum ada data brand pending yang belum kirim.</div>
+  <div class="stat-row" id="dashboard-stat-row">
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Request</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Disetujui</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Belum Posting</div></div>
+  </div>
+  <div class="card-title">Pendingan Brand (belum diputuskan)</div>
+  <div id="dashboard-pending-brands"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-i2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i2')">‹ ✕</button>
   <div class="modal-title">⏰ Belum Posting</div>
-  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>Della Putri</b><br><span class="card-sub">Bloom Cosmetics · telat 4 hari</span></div><a class="btn btn-teal btn-sm" style="text-decoration:none" href="https://wa.me/62813xxxxxxx?text=Halo%20Della%2C%20sample%20kamu%20sudah%20dikirim%20beberapa%20hari%20lalu.%20Masih%20ada%20VT%20yang%20belum%20kamu%20selesaikan%20sesuai%20SOW.%20Yuk%20segera%20lengkapi%20%F0%9F%99%8F" target="_blank">📲 Kirim WA</a></div></div>
+  <div id="belum-posting-list"><div class="card-sub">Memuat data...</div></div>
   <div class="locked-note">Klik "Kirim WA" langsung buka WhatsApp (app/web) dengan nomor & pesan sudah terisi otomatis — tim tinggal baca sekilas lalu klik kirim di WhatsApp.</div>
 </div></div>
 
@@ -2862,6 +2865,104 @@ async function bulkAction(choice){
     if(btn) await lockAksi(requestId, btn, 'kirim');
   }
 }
+async function loadDashboardInternal(){
+  const statRow = document.getElementById('dashboard-stat-row');
+  const pendingEl = document.getElementById('dashboard-pending-brands');
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-dashboard-stats', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body:'{}'
+    });
+    const j = await res.json();
+    if(!j.valid){ statRow.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+
+    statRow.innerHTML = '<div class="stat-card"><div class="stat-num">'+j.totalRequest+'</div><div class="stat-label">Request</div></div>'
+      + '<div class="stat-card"><div class="stat-num">'+j.totalApproved+'</div><div class="stat-label">Disetujui</div></div>'
+      + '<div class="stat-card"><div class="stat-num">'+j.belumPosting+'</div><div class="stat-label">Belum Posting</div></div>';
+
+    if(!j.pendingBrands || j.pendingBrands.length === 0){
+      pendingEl.innerHTML = '<div class="card-sub">Belum ada data brand pending yang belum kirim.</div>';
+    } else {
+      pendingEl.innerHTML = j.pendingBrands.map(function(b){
+        return '<div class="card" style="padding:10px 12px;margin-bottom:6px"><b>'+b.nama+'</b> <span class="card-sub">— '+b.count+' request belum diputuskan</span></div>';
+      }).join('');
+    }
+  } catch(e){ statRow.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+async function loadBelumPosting(){
+  const el = document.getElementById('belum-posting-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-list-belum-posting', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body:'{}'
+    });
+    const j = await res.json();
+    if(!j.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    if(!j.rows || j.rows.length === 0){ el.innerHTML = '<div class="card-sub">Semua creator sudah on-track, nggak ada yang perlu ditagih 🎉</div>'; return; }
+
+    el.innerHTML = j.rows.map(function(r){
+      let subLabel;
+      if(r.telatHari !== null){
+        subLabel = r.brandName + ' · telat ' + r.telatHari + ' hari (VT ' + r.vtProgress + ')';
+      } else if(r.deadline){
+        subLabel = r.brandName + ' · belum lewat H+3 (VT ' + r.vtProgress + ')';
+      } else {
+        subLabel = r.brandName + ' · belum ada konfirmasi terima (VT ' + r.vtProgress + ')';
+      }
+      const waMsg = encodeURIComponent('Halo ' + r.creatorName + ', sample kamu dari ' + r.brandName + ' (' + r.produkName + ') sudah dikirim. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏');
+      const waUrl = r.noHp ? 'https://wa.me/' + r.noHp.replace(/\D/g,'') + '?text=' + waMsg : null;
+      return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        + '<div><b>'+r.creatorName+'</b><br><span class="card-sub">'+subLabel+'</span></div>'
+        + (waUrl ? '<a class="btn btn-teal btn-sm" style="text-decoration:none;flex-shrink:0" href="'+waUrl+'" target="_blank">📲 Kirim WA</a>' : '<span class="card-sub">No HP tidak ada</span>')
+        + '</div></div>';
+    }).join('');
+  } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+async function loadReportVtBrand(){
+  const tbody = document.getElementById('report-vt-brand-rows');
+  tbody.innerHTML = '<tr><td colspan="3" class="card-sub">Memuat data...</td></tr>';
+  if(!currentSession.brandId){ tbody.innerHTML = '<tr><td colspan="3" class="card-sub">Sesi brand tidak terdeteksi.</td></tr>'; return; }
+
+  const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
+
+  const { data, error } = await db.from('sample_requests')
+    .select('id, tipe_sow_dipilih, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at)')
+    .eq('brand_products.brand_id', currentSession.brandId)
+    .eq('status', 'approved')
+    .in('tipe_sow_dipilih', ['VT','VT_LIVE']);
+
+  if(error){
+    tbody.innerHTML = '<tr><td colspan="3" class="card-sub" style="color:var(--red)">Gagal memuat data.</td></tr>';
+    return;
+  }
+  if(!data || data.length === 0){
+    tbody.innerHTML = '<tr><td colspan="3" class="card-sub">Belum ada request VT yang di-approve.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(function(r){
+    const required = VT_REQUIRED[r.tipe_sow_dipilih] || 3;
+    const reports = r.vt_reports || [];
+    const done = reports.length >= required;
+    const sisa = Math.max(0, required - reports.length);
+    const nama = r.members ? r.members.nama : '-';
+    const produk = r.brand_products ? r.brand_products.nama_produk : '-';
+
+    let statusHtml;
+    if(reports.length === 0){
+      statusHtml = '<span class="badge badge-amber">Belum ada VT (0/'+required+')</span>';
+    } else {
+      const linksHtml = reports.map(function(v,i){ return '<a class="tiktok-link" href="'+v.video_url+'" target="_blank" style="font-size:11px;display:block">▶ Video '+(i+1)+'</a>'; }).join('');
+      statusHtml = (done ? '<span class="badge badge-teal">Done ('+reports.length+'/'+required+')</span>' : '<span class="badge badge-amber">Pending ('+sisa+' sisa)</span>') + '<br>' + linksHtml;
+    }
+
+    return '<tr><td>'+nama+'</td><td>'+produk+'</td><td>'+statusHtml+'</td></tr>';
+  }).join('');
+}
+
 async function loadPengiriman(){
   const container = document.getElementById('pengiriman-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
@@ -2923,6 +3024,17 @@ async function finalizeShipDate(requestId, btn){
     btn.textContent = 'Final — Wajib Dikirim Tanggal Ini';
     showDbError('finalisasi tanggal kirim', error);
     return;
+  }
+
+  const { data: srData } = await db.from('sample_requests').select('member_id').eq('id', requestId).single();
+  if(srData){
+    const formattedDate = new Date(dateVal).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    await logNotification('status', {
+      brandId: currentSession.brandId,
+      memberId: srData.member_id,
+      sampleRequestId: requestId,
+      detail: 'Approved → Tanggal final pengiriman ditentukan: ' + formattedDate
+    });
   }
 
   await loadPengiriman();
