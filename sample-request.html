@@ -475,7 +475,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
       <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+3</div><div class="flow-sub">Batas lengkapin SOW</div></div>
     </div>
-    <div class="card-sub" style="margin-top:2px">Titik hitungannya bukan pas dikirim, tapi pas <b>kamu konfirmasi barang udah sampai</b> (foto selfie + produk di Cek Status). Dari situ kamu dikasih waktu <b>3 hari</b> buat selesain SOW (VT/Live). Kalau ada produk lain dari brand yang sama, cukup 1x konfirmasi buat semuanya 😊</div>
+    <div class="card-sub" style="margin-top:2px">Titik hitungannya bukan pas dikirim, tapi pas <b>kamu konfirmasi barang udah sampai</b> — boleh selfie sama produknya, atau kalau nggak mau selfie, foto produknya aja asal <b>nomor resi/label paket kelihatan jelas</b>. Dari situ kamu dikasih waktu <b>3 hari</b> buat selesain SOW (VT/Live). Kalau ada produk lain dari brand yang sama, cukup 1x konfirmasi buat semuanya 😊</div>
   </div>
 </div>
 
@@ -488,9 +488,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <img id="delivery-cam-preview" style="display:none">
       <canvas id="delivery-cam-canvas" style="display:none"></canvas>
     </div>
-    <div class="card-sub" style="color:#eee;margin-top:8px">Selfie kamu + produk yang udah di-unboxing ya — bingkai Girlhood Den bakal nempel otomatis 🌸</div>
+    <div class="card-sub" style="color:#eee;margin-top:8px">Selfie kamu + produk, ATAU kalau nggak mau selfie, foto produknya aja asal <b>nomor resi/label paket kelihatan jelas</b> — bingkai Girlhood Den bakal nempel otomatis 🌸</div>
     <div class="delivery-cam-actions" id="delivery-cam-actions">
       <button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>
+      <button class="btn btn-outline btn-sm" onclick="switchDeliveryCam()">🔄 Ganti Kamera</button>
     </div>
   </div>
 </div>
@@ -589,7 +590,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="flow-connector"><span class="flow-connector-label">+3 hari</span></div>
       <div class="flow-step up"><div class="flow-dot">📮</div><div class="flow-label">H+3</div><div class="flow-sub">Baru boleh ditagih</div></div>
     </div>
-    <div class="card-sub" style="margin-top:2px">Creator wajib selfie + produk (upload di app) begitu barang beneran sampai — dari situ kamu bakal dapat notif otomatis. Sebelum ada konfirmasi ini, wajar kalau belum ada laporan SOW — barangnya kemungkinan emang belum sampai 😊</div>
+    <div class="card-sub" style="margin-top:2px">Creator wajib foto konfirmasi (selfie + produk, atau minimal foto produk dengan resi kelihatan jelas) begitu barang beneran sampai — dari situ kamu bakal dapat notif otomatis. Sebelum ada konfirmasi ini, wajar kalau belum ada laporan SOW — barangnya kemungkinan emang belum sampai 😊</div>
   </div>
 </div>
 
@@ -794,6 +795,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <option value="vt">Report VT</option>
       <option value="reqbaru">Permintaan Req Sample Baru</option>
       <option value="hotlive">Perpindahan Ranking Hot Live</option>
+      <option value="resi">📦 Nomor Resi</option>
+      <option value="konfirmasi_terima">🤳 Bukti Konfirmasi Terima</option>
     </select>
   </div>
   <div style="overflow-x:auto">
@@ -889,22 +892,39 @@ async function loadNotificationsCreator(){
     return;
   }
 
-  if(!data || data.length === 0){
+  // Ambil info resi (kalau brand sudah input) buat sample request milik creator ini
+  const { data: resiSource } = await db.from('sample_requests')
+    .select('id, decided_at, brand_products(nama_produk, brands(nama_brand)), logistics(sudah_dikirim, nomor_resi, confirmed_at)')
+    .eq('member_id', currentSession.memberId)
+    .eq('status', 'approved');
+  const resiItems = (resiSource||[]).filter(function(r){ return r.logistics && r.logistics.sudah_dikirim && r.logistics.nomor_resi; })
+    .map(function(r){
+      return {
+        kategori: 'resi',
+        detail_text: '📦 Nomor resi ' + (r.brand_products?.nama_produk||'-') + ' (' + (r.brand_products?.brands?.nama_brand||'-') + '): <b>' + r.logistics.nomor_resi + '</b>',
+        brand_id: null,
+        created_at: r.logistics.confirmed_at || r.decided_at
+      };
+    });
+
+  const allData = (data||[]).concat(resiItems).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+
+  if(!allData || allData.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada notifikasi.</div>';
     return;
   }
 
-  const brandIds = Array.from(new Set(data.map(function(n){ return n.brand_id; }).filter(Boolean)));
+  const brandIds = Array.from(new Set(allData.map(function(n){ return n.brand_id; }).filter(Boolean)));
   let brandNames = {};
   if(brandIds.length > 0){
     const { data: brands } = await db.from('brands').select('id, nama_brand').in('id', brandIds);
     (brands||[]).forEach(function(b){ brandNames[b.id] = b.nama_brand; });
   }
 
-  container.innerHTML = data.map(function(n){
+  container.innerHTML = allData.map(function(n){
     const brandName = n.brand_id && brandNames[n.brand_id] ? brandNames[n.brand_id] : null;
     return '<div class="card"><div style="display:flex;gap:8px;align-items:flex-start">'
-      + '<div style="font-size:18px">' + notifIcon(n.kategori) + '</div>'
+      + '<div style="font-size:18px">' + (n.kategori==='resi' ? '📦' : notifIcon(n.kategori)) + '</div>'
       + '<div style="flex:1"><div>' + n.detail_text + (brandName ? ' <span class="card-sub">(' + brandName + ')</span>' : '') + '</div>'
       + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
       + '</div></div>';
@@ -1317,7 +1337,7 @@ async function loadCekStatus(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at)')
+    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at, nomor_resi)')
     .eq('member_id', currentSession.memberId)
     .order('requested_at', { ascending: false });
 
@@ -1386,6 +1406,7 @@ async function loadCekStatus(){
         + namaLengkap
         + '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
         + '<b>Riwayat:</b><br>✅ Di-approve<br>📦 Janji kirim: '+new Date(r.shipments.tanggal_janji_kirim).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+'<br>🚚 Status Logistik: <b style="color:var(--teal)">sudah dikonfirmasi dikirim</b>'
+        + (r.logistics.nomor_resi ? '<br>🔖 Nomor Resi: <b>'+r.logistics.nomor_resi+'</b>' : '')
         + '</div>'
         + deadlineHtml
         + '</div>';
@@ -1547,21 +1568,35 @@ async function saveJadwalLive(btn){
 
 let deliveryCamStream = null;
 let deliveryCamContext = { brandId: null, brandName: null };
+let deliveryCamFacing = 'environment';
 
-async function openDeliveryCam(brandId, brandName){
-  deliveryCamContext = { brandId: brandId, brandName: brandName };
-  document.getElementById('delivery-cam-title').textContent = 'Konfirmasi Terima — ' + brandName;
-  document.getElementById('delivery-cam-video').style.display = 'block';
-  document.getElementById('delivery-cam-preview').style.display = 'none';
-  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>';
-  document.getElementById('delivery-cam-bg').classList.add('open');
+async function startDeliveryCamStream(){
+  if(deliveryCamStream){ deliveryCamStream.getTracks().forEach(function(t){ t.stop(); }); }
   try{
-    deliveryCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    deliveryCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: deliveryCamFacing }, audio: false });
     document.getElementById('delivery-cam-video').srcObject = deliveryCamStream;
+    return true;
   } catch(e){
     alert('Nggak bisa akses kamera. Pastikan kamu udah kasih izin kamera buat browser ini ya.');
     closeDeliveryCam();
+    return false;
   }
+}
+
+function switchDeliveryCam(){
+  deliveryCamFacing = deliveryCamFacing === 'environment' ? 'user' : 'environment';
+  startDeliveryCamStream();
+}
+
+async function openDeliveryCam(brandId, brandName){
+  deliveryCamContext = { brandId: brandId, brandName: brandName };
+  deliveryCamFacing = 'environment';
+  document.getElementById('delivery-cam-title').textContent = 'Konfirmasi Terima — ' + brandName;
+  document.getElementById('delivery-cam-video').style.display = 'block';
+  document.getElementById('delivery-cam-preview').style.display = 'none';
+  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button><button class="btn btn-outline btn-sm" onclick="switchDeliveryCam()">🔄 Ganti Kamera</button>';
+  document.getElementById('delivery-cam-bg').classList.add('open');
+  await startDeliveryCamStream();
 }
 
 function closeDeliveryCam(){
@@ -1603,7 +1638,7 @@ function capturePhoto(){
 function retakePhoto(){
   document.getElementById('delivery-cam-video').style.display = 'block';
   document.getElementById('delivery-cam-preview').style.display = 'none';
-  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button>';
+  document.getElementById('delivery-cam-actions').innerHTML = '<button class="btn btn-primary" onclick="capturePhoto()">📸 Ambil Foto</button><button class="btn btn-outline btn-sm" onclick="switchDeliveryCam()">🔄 Ganti Kamera</button>';
 }
 
 async function sha256Hex(blob){
@@ -2366,7 +2401,7 @@ async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -2404,9 +2439,12 @@ function renderBrandList(brands){
     if(hasComm) tagText += ' · 💰 High Commission';
     const initial = b.nama_brand.charAt(0).toUpperCase();
     const color = colors[i % colors.length];
-    return '<div class="card brand-list-item" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\')">'
+    const avatarHtml = b.logo_url
+      ? '<img src="'+b.logo_url+'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0">'
+      : '<div style="width:44px;height:44px;border-radius:12px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">'+initial+'</div>';
+    return '<div class="card brand-list-item" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
       + '<div style="display:flex;align-items:center;gap:12px;cursor:pointer">'
-      + '<div style="width:44px;height:44px;border-radius:12px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">'+initial+'</div>'
+      + avatarHtml
       + '<div style="flex:1"><b>'+b.nama_brand+'</b><div class="card-sub" style="margin:0">'+products.length+' produk tersedia'+tagText+'</div></div>'
       + '<div>›</div></div></div>';
   }).join('');
@@ -2428,11 +2466,16 @@ function filterBrandList(query){
   renderBrandList(filtered);
 }
 
-async function openBrandDetail(brandId, brandName){
+async function openBrandDetail(brandId, brandName, logoUrl){
   document.getElementById('c2-brandlist').style.display='none';
   document.getElementById('c2-products').style.display='block';
   document.getElementById('brand-detail-name').textContent = brandName;
-  document.getElementById('brand-detail-avatar').textContent = brandName.charAt(0).toUpperCase();
+  const avatarEl = document.getElementById('brand-detail-avatar');
+  if(logoUrl){
+    avatarEl.innerHTML = '<img src="'+logoUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">';
+  } else {
+    avatarEl.textContent = brandName.charAt(0).toUpperCase();
+  }
   currentBrandDetail = brandId;
 
   const container = document.getElementById('brand-products-list');
@@ -3154,8 +3197,8 @@ async function saveBrandRegistration(){
         harga: p.harga ? Number(p.harga) : null,
         komisi_percent: p.komisi ? Number(p.komisi) : null
       };
-      if(fotoUrls !== null) payload.foto_urls = fotoUrls;
-      if(videoUrls !== null) payload.video_referensi_urls = videoUrls;
+      if(fotoUrls !== null && fotoUrls.length > 0) payload.foto_urls = fotoUrls;
+      if(videoUrls !== null && videoUrls.length > 0) payload.video_referensi_urls = videoUrls;
 
       if(p.id){
         const { error: saveErr } = await db.from('brand_products').update(payload).eq('id', p.id);
@@ -3560,11 +3603,18 @@ async function loadNotifications(){
     status: '<span class="badge badge-teal">Status</span>',
     vt: '<span class="badge badge-teal">VT</span>',
     reqbaru: '<span class="badge badge-teal">Req Baru</span>',
-    hotlive: '<span class="badge badge-amber">Hot Live</span>'
+    hotlive: '<span class="badge badge-amber">Hot Live</span>',
+    resi: '<span class="badge" style="background:var(--teal-light);color:var(--teal)">📦 Resi</span>',
+    konfirmasi_terima: '<span class="badge" style="background:var(--pink-pale);color:var(--pink)">🤳 Bukti Terima</span>'
   };
 
   tbody.innerHTML = allRows.map(function(r){
-    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+r.detail+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
+    let detailHtml = r.detail;
+    if(r.fotoUrl){
+      detailHtml = r.detail + '<br><a href="'+r.fotoUrl+'" target="_blank"><img src="'+r.fotoUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:4px;border:1px solid var(--border)"></a>'
+        + '<br><a href="'+r.fotoUrl+'" download target="_blank" style="font-size:11px;color:var(--pink);font-weight:700">⬇️ Download Foto</a>';
+    }
+    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
   }).join('');
 }
 
