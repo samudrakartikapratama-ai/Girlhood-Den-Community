@@ -40,19 +40,17 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .hero-banner-wrap{margin-bottom:18px}
 .hero-banner-wrap img{width:100%;display:block;border-radius:16px;box-shadow:0 8px 20px rgba(74,43,71,.18)}
 .icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px;margin-bottom:24px}
-.icon-card{background:var(--white);border:2px solid var(--border);border-radius:22px;padding:32px 16px;text-align:center;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;position:relative;box-shadow:0 6px 16px rgba(74,43,71,.08);transform-style:preserve-3d;perspective:500px}
+.icon-card{background:var(--white);border:2px solid var(--border);border-radius:22px;padding:32px 16px;text-align:center;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;position:relative;box-shadow:0 6px 16px rgba(74,43,71,.08);transform-style:preserve-3d}
 .icon-card:hover{transform:translateY(-6px) scale(1.05);border-color:var(--pink);box-shadow:0 14px 26px rgba(232,24,90,.22)}
 .icon-card:active{transform:translateY(-2px) scale(.98)}
 .icon-emoji{font-size:52px;margin-bottom:12px;display:inline-block;transition:transform .2s;animation:iconFloatIdle 3.4s ease-in-out infinite}
-.icon-img-custom{width:44px;height:auto;margin:0 auto 12px;display:block;transition:transform .2s}
+.icon-img-custom{width:44px;height:auto;margin:0 auto 12px;display:block;transition:transform .2s;animation:iconFloatBob 3.4s ease-in-out infinite}
 .icon-card:hover .icon-img-custom{transform:scale(1.15) rotate(-6deg)}
-.icon-img-spin{width:44px;height:auto;margin:0 auto 12px;display:block;animation:iconSpin360 4s linear infinite, iconFloatBob 3.4s ease-in-out infinite}
-@keyframes iconSpin360{from{rotate:y 0deg}to{rotate:y 360deg}}
-@keyframes iconFloatBob{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes iconFloatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .icon-card:hover .icon-emoji{transform:scale(1.18) rotate(-6deg)}
-.icon-card:nth-child(3n+1) .icon-emoji{animation-delay:0s}
-.icon-card:nth-child(3n+2) .icon-emoji{animation-delay:.5s}
-.icon-card:nth-child(3n+3) .icon-emoji{animation-delay:1s}
+.icon-card:nth-child(3n+1) .icon-emoji,.icon-card:nth-child(3n+1) .icon-img-custom{animation-delay:0s}
+.icon-card:nth-child(3n+2) .icon-emoji,.icon-card:nth-child(3n+2) .icon-img-custom{animation-delay:.5s}
+.icon-card:nth-child(3n+3) .icon-emoji,.icon-card:nth-child(3n+3) .icon-img-custom{animation-delay:1s}
 @keyframes iconFloatIdle{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(-3deg)}}
 .icon-label{font-size:15px;font-weight:800}
 .icon-badge{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;animation:badgePulse 1.4s infinite}
@@ -266,7 +264,6 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .icon-card{padding:22px 8px;border-radius:16px}
   .icon-card .icon-emoji{font-size:26px}
   .icon-card .icon-img-custom{width:22px;margin-bottom:8px}
-  .icon-card .icon-img-spin{width:22px;margin-bottom:8px}
   .icon-card .icon-label{font-size:11.5px}
   .modal-box{padding:16px;border-radius:16px;max-height:92vh}
   .modal-title{font-size:16px}
@@ -294,7 +291,6 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .icon-card{padding:52px 24px;cursor:pointer;border-radius:26px}
   .icon-card .icon-emoji{font-size:46px;margin-bottom:16px}
   .icon-card .icon-img-custom{width:38px;margin-bottom:16px}
-  .icon-card .icon-img-spin{width:38px;margin-bottom:16px}
   .icon-card .icon-label{font-size:16px}
   .login-box{max-width:420px;padding:44px 36px}
   .modal-box{max-width:640px;padding:30px}
@@ -350,13 +346,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
-    <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
+    <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card freeze-target" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><div class="icon-emoji">🛍️</div><div class="icon-label">Campaign</div></div>
     <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
-    <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
-    <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
   </div>
   <div id="freeze-overlay-note" style="display:none;text-align:center;margin-top:-6px;margin-bottom:14px;color:var(--red);font-weight:700;font-size:12px">🔒 Menu di atas dikunci — ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT.</div>
@@ -370,12 +366,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" alt="Approval"><div class="icon-label">Approval</div></div>
-    <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/pengiriman.png" alt="Pengiriman"><div class="icon-label">Pengiriman</div></div>
-    <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/logistik.png" alt="Logistik"><div class="icon-label">Logistik</div></div>
-    <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/export_rekap.png" alt="Export & Rekap"><div class="icon-label">Export &amp; Rekap</div></div>
-    <div class="icon-card" onclick="openModal('m-b2'); loadReportVtBrand();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
-    <div class="icon-card" onclick="openPicBrandModal()"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/profilpic.png" alt="Profil PIC"><div class="icon-label">Profil PIC</div></div>
-    <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/pengiriman.png" alt="Pengiriman"><div class="icon-label">Pengiriman</div></div>
+    <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/logistik.png" alt="Logistik"><div class="icon-label">Logistik</div></div>
+    <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/export_rekap.png" alt="Export & Rekap"><div class="icon-label">Export &amp; Rekap</div></div>
+    <div class="icon-card" onclick="openModal('m-b2'); loadReportVtBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" onclick="openPicBrandModal()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/profilpic.png" alt="Profil PIC"><div class="icon-label">Profil PIC</div></div>
+    <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live</div></div>
     <div class="icon-card" onclick="openModal('m-b8'); loadCatchupMeetings('brand');"><div class="icon-emoji">🤝</div><div class="icon-label">Catch Up Meeting</div></div>
   </div>
@@ -397,7 +393,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i12'); loadKelolaPoin();"><div class="icon-emoji">⭐</div><div class="icon-label">Kelola Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i13'); loadKelolaBanner();"><div class="icon-emoji">🖼️</div><div class="icon-label">Kelola Banner</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
-    <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><img class="icon-img-spin" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
+    <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><div class="icon-emoji">🤝</div><div class="icon-label">Catch Up Meeting</div></div>
