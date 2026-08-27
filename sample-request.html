@@ -4712,15 +4712,18 @@ async function loadCatchupMeetings(role){
     method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_catchup_meetings'})
   });
   const j = await res.json();
-  if(!j.valid){ listEl.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>'; return; }
-  if(!j.meetings || j.meetings.length === 0){ listEl.innerHTML = '<div class="card-sub">Belum ada meeting terjadwal.</div>'; return; }
-
-  listEl.innerHTML = j.meetings.map(function(m){
-    const brandName = m.brands ? m.brands.nama_brand : '-';
-    return '<div class="card"><b>' + m.event_label + '</b>' + (role==='internal' ? ' — ' + brandName : '')
-      + '<div class="card-sub">' + m.proposed_date + ' jam ' + m.proposed_time + '</div>'
-      + '<a href="' + m.meet_link + '" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;margin-top:6px">🎥 Join Meeting</a></div>';
-  }).join('');
+  if(!j.valid){
+    listEl.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
+  } else if(!j.meetings || j.meetings.length === 0){
+    listEl.innerHTML = '<div class="card-sub">Belum ada meeting terjadwal.</div>';
+  } else {
+    listEl.innerHTML = j.meetings.map(function(m){
+      const brandName = m.brands ? m.brands.nama_brand : '-';
+      return '<div class="card"><b>' + m.event_label + '</b>' + (role==='internal' ? ' — ' + brandName : '')
+        + '<div class="card-sub">' + m.proposed_date + ' jam ' + m.proposed_time + '</div>'
+        + '<a href="' + m.meet_link + '" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;margin-top:6px">🎥 Join Meeting</a></div>';
+    }).join('');
+  }
 
   if(role === 'internal'){
     const pendingEl = document.getElementById('catchup-pending-internal');
