@@ -300,10 +300,22 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .app{max-width:1240px}
   .icon-grid{grid-template-columns:repeat(4,1fr)}
 }
+
+.catchup-popup-bg{display:none;position:fixed;inset:0;background:rgba(74,43,71,.55);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.catchup-popup-bg.open{display:flex}
+.catchup-popup-box{background:#fff;border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.catchup-popup-box .cp-emoji{font-size:36px;text-align:center;margin-bottom:8px}
+.catchup-popup-box .cp-title{font-weight:800;font-size:17px;text-align:center;color:var(--dark);margin-bottom:6px}
+.catchup-popup-box .cp-body{font-size:13.5px;color:var(--gray-text);text-align:center;margin-bottom:18px;line-height:1.5}
+.catchup-popup-box .cp-btns{display:flex;flex-direction:column;gap:8px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
+
+<div class="catchup-popup-bg" id="catchup-popup-bg">
+  <div class="catchup-popup-box" id="catchup-popup-box"></div>
+</div>
 
 <div class="login-overlay" id="login-screen">
   <div class="login-box">
@@ -356,6 +368,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openPicBrandModal()"><div class="icon-emoji">🧑‍💼</div><div class="icon-label">Profil PIC</div></div>
     <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live</div></div>
+    <div class="icon-card" onclick="openModal('m-b8'); loadCatchupMeetings('brand');"><div class="icon-emoji">🤝</div><div class="icon-label">Catch Up Meeting</div></div>
   </div>
 </div>
 
@@ -378,6 +391,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><div class="icon-emoji">🔔</div><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><div class="icon-emoji">📅</div><div class="icon-label">Upcoming Live Creator</div></div>
+    <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><div class="icon-emoji">🤝</div><div class="icon-label">Catch Up Meeting</div></div>
   </div>
 </div>
 
@@ -637,6 +651,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
+<div class="modal-bg" id="m-b8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b8')">‹ ✕</button>
+  <div class="modal-title">🤝 Catch Up Meeting</div>
+  <div class="card-sub">Jadwal diskusi yang sudah dikonfirmasi antara kamu dan tim kami.</div>
+  <div id="catchup-list-brand" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
 <!-- ================= MODALS: INTERNAL ================= -->
 <div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
   <div class="modal-title">📊 Dashboard</div>
@@ -839,6 +859,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <tbody id="upcoming-live-rows-internal"><tr><td colspan="5" class="card-sub">Memuat data...</td></tr></tbody>
   </table>
   </div>
+</div></div>
+
+<div class="modal-bg" id="m-i14"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i14')">‹ ✕</button>
+  <div class="modal-title">🤝 Catch Up Meeting</div>
+  <div class="card-sub">Permintaan meeting yang butuh kamu terima & generate link, plus semua meeting yang sudah dikonfirmasi.</div>
+  <div class="card-title" style="margin-top:10px">Perlu Aksi Kamu</div>
+  <div id="catchup-pending-internal"><div class="card-sub">Memuat data...</div></div>
+  <div class="card-title" style="margin-top:14px">Sudah Dikonfirmasi</div>
+  <div id="catchup-list-internal"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -1868,6 +1897,9 @@ async function logout(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-'+role).classList.add('active');
   loadHeroBanners();
+  if(role === 'brand' || role === 'internal'){
+    setTimeout(function(){ checkCatchupPopup(role); }, 800);
+  }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
     var nama = (currentSession.brandData && currentSession.brandData.nama_brand) ? currentSession.brandData.nama_brand : '-';
@@ -3157,7 +3189,7 @@ async function loadBrandTerdaftar(){
   const searchInput = document.getElementById('brand-terdaftar-search');
   if(searchInput) searchInput.value = '';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, brand_products(id)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, is_priority, brand_products(id)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -3189,8 +3221,10 @@ function renderBrandTerdaftarList(brands){
       : '<div style="width:36px;height:36px;border-radius:8px;background:var(--gray-mid);margin-right:10px;flex-shrink:0"></div>';
     return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
       + '<div style="display:flex;align-items:center;min-width:0">'+logoHtml+'<div style="min-width:0"><b>'+b.nama_brand+'</b><div class="card-sub">Komisi '+komisi+' · '+(b.brand_products||[]).length+' produk</div></div></div>'
-      + '<button class="btn btn-outline btn-sm" style="flex-shrink:0" onclick="editBrand(\''+b.id+'\')">Edit</button>'
-      + '</div>';
+      + '<div style="display:flex;gap:6px;flex-shrink:0">'
+      + '<button class="btn btn-outline btn-sm" title="Prioritas Catch Up Meeting" onclick="togglePriorityBrand(\''+b.id+'\', '+(!b.is_priority)+')">'+(b.is_priority?'⭐':'☆')+'</button>'
+      + '<button class="btn btn-outline btn-sm" onclick="editBrand(\''+b.id+'\')">Edit</button>'
+      + '</div></div>';
   }).join('') + '<div class="size-note" style="text-align:center;margin-top:6px">Menampilkan '+brands.length+' dari '+allBrandsTerdaftarCache.length+' brand.</div>';
 }
 
@@ -4560,6 +4594,179 @@ async function loadHeroBanners(){
       resetTimer();
     });
   });
+}
+
+/* ================= CATCH UP MEETING SYSTEM ================= */
+
+async function checkCatchupPopup(role){
+  try {
+    let auth;
+    if(role === 'brand') auth = 'Bearer ' + (await db.auth.getSession()).data.session.access_token;
+    else auth = await getInternalAuthHeader();
+
+    const action = role === 'brand' ? 'get_brand_popup' : 'get_internal_popup';
+    const res = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action})
+    });
+    const j = await res.json();
+    if(!j.valid) return;
+
+    if(role === 'brand' && j.popup){
+      showCatchupPopup(role, j.popup);
+    } else if(role === 'internal' && j.popups && j.popups.length > 0){
+      showCatchupPopup(role, j.popups[0]);
+    }
+  } catch(e){ /* diem-diem gagal, jangan ganggu user */ }
+}
+
+function showCatchupPopup(role, data){
+  const bg = document.getElementById('catchup-popup-bg');
+  const box = document.getElementById('catchup-popup-box');
+  const brandName = data.brands ? data.brands.nama_brand : '';
+
+  if(data.status === 'proposed' && data.proposed_by && data.proposed_by !== role){
+    const label = role === 'brand'
+      ? 'Tim kami mengajukan meeting tanggal ' + data.proposed_date + ' jam ' + data.proposed_time + '. Yuk konfirmasi kehadiran kamu.'
+      : brandName + ' mengajukan meeting tanggal ' + data.proposed_date + ' jam ' + data.proposed_time + '. Terima & generate link Meet.';
+    box.innerHTML = '<div class="cp-emoji">🤝</div>'
+      + '<div class="cp-title">' + data.event_label + '</div>'
+      + '<div class="cp-body">' + label + '</div>'
+      + (role === 'internal' ? '<div class="field-row"><input id="cp-meet-link" placeholder="Link Google Meet (contoh: meet.new)"></div>' : '')
+      + '<div class="cp-btns">'
+      + '<button class="btn btn-primary" onclick="acceptCatchup(\'' + role + '\',\'' + data.id + '\')">' + (role === 'internal' ? 'Terima & Generate Link' : 'Terima') + '</button>'
+      + '</div>';
+  } else {
+    const who = role === 'brand' ? 'tim kami' : brandName;
+    box.innerHTML = '<div class="cp-emoji">📅</div>'
+      + '<div class="cp-title">' + data.event_label + '</div>'
+      + '<div class="cp-body">Sudah mendekati ' + data.event_label + ' — yuk catch up dan discuss dengan ' + who + '</div>'
+      + '<div class="cp-btns">'
+      + '<button class="btn btn-primary" onclick="startCatchupSchedule(\'' + role + '\',\'' + data.id + '\')">Catch Up Now</button>'
+      + '<button class="btn btn-outline" onclick="respondCatchup(\'' + role + '\',\'' + data.id + '\',\'maybe_later\')">Maybe Later</button>'
+      + '</div>';
+  }
+
+  bg.classList.add('open');
+}
+
+function startCatchupSchedule(role, id){
+  const box = document.getElementById('catchup-popup-box');
+  const today = new Date().toISOString().slice(0,10);
+  box.innerHTML = '<div class="cp-emoji">🗓️</div>'
+    + '<div class="cp-title">Pilih Tanggal & Jam</div>'
+    + '<div class="field-row"><input type="date" id="cp-date" min="' + today + '"></div>'
+    + '<div class="field-row"><input type="time" id="cp-time"></div>'
+    + '<div class="cp-btns">'
+    + '<button class="btn btn-primary" onclick="submitCatchupSchedule(\'' + role + '\',\'' + id + '\')">Kirim Ajuan</button>'
+    + '</div>';
+}
+
+async function submitCatchupSchedule(role, id){
+  const date = document.getElementById('cp-date').value;
+  const time = document.getElementById('cp-time').value;
+  if(!date || !time){ alert('Isi tanggal dan jam dulu.'); return; }
+  await respondCatchup(role, id, 'propose', date, time);
+  closeCatchupPopup();
+  alert('Ajuan terkirim, tunggu konfirmasi ya.');
+}
+
+async function respondCatchup(role, id, choice, date, time){
+  let auth;
+  if(role === 'brand') auth = 'Bearer ' + (await db.auth.getSession()).data.session.access_token;
+  else auth = await getInternalAuthHeader();
+  const action = role === 'brand' ? 'brand_respond' : 'internal_respond';
+  await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({ action, id, choice, date, time })
+  });
+  if(choice === 'maybe_later') closeCatchupPopup();
+}
+
+async function acceptCatchup(role, id){
+  if(role === 'internal'){
+    const link = document.getElementById('cp-meet-link').value.trim();
+    if(!link){ alert('Isi link Google Meet dulu.'); return; }
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'internal_accept_generate', id, meetLink: link })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal konfirmasi.'); return; }
+  }
+  closeCatchupPopup();
+  alert('Meeting terkonfirmasi! Cek menu Catch Up Meeting.');
+}
+
+function closeCatchupPopup(){
+  document.getElementById('catchup-popup-bg').classList.remove('open');
+}
+
+async function loadCatchupMeetings(role){
+  const listEl = document.getElementById('catchup-list-' + role);
+  let auth;
+  if(role === 'brand') auth = 'Bearer ' + (await db.auth.getSession()).data.session.access_token;
+  else auth = await getInternalAuthHeader();
+
+  const res = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_catchup_meetings'})
+  });
+  const j = await res.json();
+  if(!j.valid){ listEl.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>'; return; }
+  if(!j.meetings || j.meetings.length === 0){ listEl.innerHTML = '<div class="card-sub">Belum ada meeting terjadwal.</div>'; return; }
+
+  listEl.innerHTML = j.meetings.map(function(m){
+    const brandName = m.brands ? m.brands.nama_brand : '-';
+    return '<div class="card"><b>' + m.event_label + '</b>' + (role==='internal' ? ' — ' + brandName : '')
+      + '<div class="card-sub">' + m.proposed_date + ' jam ' + m.proposed_time + '</div>'
+      + '<a href="' + m.meet_link + '" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-block;margin-top:6px">🎥 Join Meeting</a></div>';
+  }).join('');
+
+  if(role === 'internal'){
+    const pendingEl = document.getElementById('catchup-pending-internal');
+    const auth2 = await getInternalAuthHeader();
+    const res2 = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth2}, body: JSON.stringify({action:'get_internal_popup'})
+    });
+    const j2 = await res2.json();
+    if(j2.valid && j2.popups && j2.popups.length > 0){
+      pendingEl.innerHTML = j2.popups.map(function(p){
+        const brandName = p.brands ? p.brands.nama_brand : '-';
+        if(p.status === 'proposed' && p.proposed_by === 'brand'){
+          return '<div class="card" style="background:var(--pink-pale)"><b>' + brandName + '</b> mengajukan ' + p.event_label + ' — ' + p.proposed_date + ' jam ' + p.proposed_time
+            + '<div class="field-row" style="margin-top:6px"><input id="cp-inline-link-' + p.id + '" placeholder="Link Google Meet"></div>'
+            + '<button class="btn btn-primary btn-sm" onclick="acceptCatchupInline(\'' + p.id + '\')">Terima & Generate Link</button></div>';
+        }
+        return '<div class="card"><b>' + brandName + '</b> — ' + p.event_label + ' (menunggu respon)</div>';
+      }).join('');
+    } else {
+      pendingEl.innerHTML = '<div class="card-sub">Tidak ada yang perlu direspon saat ini.</div>';
+    }
+  }
+}
+
+async function acceptCatchupInline(id){
+  const link = document.getElementById('cp-inline-link-' + id).value.trim();
+  if(!link){ alert('Isi link Google Meet dulu.'); return; }
+  const auth = await getInternalAuthHeader();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({ action:'internal_accept_generate', id, meetLink: link })
+  });
+  const j = await res.json();
+  if(!j.valid){ alert(j.error || 'Gagal konfirmasi.'); return; }
+  loadCatchupMeetings('internal');
+}
+
+async function togglePriorityBrand(brandId, setPriority){
+  const auth = await getInternalAuthHeader();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/catchup-meeting', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+    body: JSON.stringify({ action:'toggle_priority', brandId, setPriority })
+  });
+  const j = await res.json();
+  if(!j.valid){ alert(j.error || 'Gagal update.'); return; }
+  loadBrandTerdaftar();
 }
 
 </script>
