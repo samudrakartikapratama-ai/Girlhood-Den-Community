@@ -43,7 +43,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .icon-card{background:var(--white);border:2px solid var(--border);border-radius:22px;padding:32px 16px;text-align:center;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;position:relative;box-shadow:0 6px 16px rgba(74,43,71,.08);transform-style:preserve-3d}
 .icon-card:hover{transform:translateY(-6px) scale(1.05);border-color:var(--pink);box-shadow:0 14px 26px rgba(232,24,90,.22)}
 .icon-card:active{transform:translateY(-2px) scale(.98)}
-.icon-emoji{font-size:52px;margin-bottom:12px;display:inline-block;transition:transform .2s;animation:iconFloatIdle 3.4s ease-in-out infinite}
+.icon-emoji{font-size:36px;height:44px;line-height:44px;margin:0 auto 12px;display:block;transition:transform .2s;animation:iconFloatIdle 3.4s ease-in-out infinite}
 .icon-img-custom{width:44px;height:44px;object-fit:contain;margin:0 auto 12px;display:block;transition:transform .2s;animation:iconFloatBob 3.4s ease-in-out infinite}
 .icon-card:hover .icon-img-custom{transform:scale(1.15) rotate(-6deg)}
 @keyframes iconFloatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -262,7 +262,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .app{padding:14px 12px 50px}
   .icon-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   .icon-card{padding:22px 8px;border-radius:16px}
-  .icon-card .icon-emoji{font-size:26px}
+  .icon-card .icon-emoji{font-size:18px;height:22px;line-height:22px;margin-bottom:8px}
   .icon-card .icon-img-custom{width:22px;height:22px;margin-bottom:8px}
   .icon-card .icon-label{font-size:11.5px}
   .modal-box{padding:16px;border-radius:16px;max-height:92vh}
@@ -289,7 +289,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .app{max-width:1080px;padding:32px 32px 70px}
   .icon-grid{grid-template-columns:repeat(3,1fr);gap:28px}
   .icon-card{padding:52px 24px;cursor:pointer;border-radius:26px}
-  .icon-card .icon-emoji{font-size:46px;margin-bottom:16px}
+  .icon-card .icon-emoji{font-size:30px;height:38px;line-height:38px;margin-bottom:16px}
   .icon-card .icon-img-custom{width:38px;height:38px;margin-bottom:16px}
   .icon-card .icon-label{font-size:16px}
   .login-box{max-width:420px;padding:44px 36px}
@@ -347,7 +347,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
-    <div class="icon-card freeze-target" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><div class="icon-emoji">🛍️</div><div class="icon-label">Campaign</div></div>
+    <div class="icon-card freeze-target" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
