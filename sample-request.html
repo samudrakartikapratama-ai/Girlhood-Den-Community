@@ -360,7 +360,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
-    <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();"><div class="icon-emoji">✅</div><div class="icon-label">Approval</div></div>
+    <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" style="width:28px;height:auto;display:block;margin:0 auto 8px" alt="Approval"><div class="icon-label">Approval</div></div>
     <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"><div class="icon-emoji">📦</div><div class="icon-label">Pengiriman</div></div>
     <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><div class="icon-emoji">🚚</div><div class="icon-label">Logistik</div></div>
     <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><div class="icon-emoji">📥</div><div class="icon-label">Export &amp; Rekap</div></div>
@@ -561,7 +561,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <!-- ================= MODALS: BRAND ================= -->
 <div class="modal-bg" id="m-b1"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b1')">‹ ✕</button>
-  <div class="modal-title">✅ Approval Creator</div>
+  <div class="modal-title"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" style="width:22px;height:auto;vertical-align:middle;margin-right:4px" alt="Approval"> Approval Creator</div>
   <div class="field" style="margin-bottom:10px"><input type="text" id="approval-search" placeholder="🔍 Cari nama creator..." oninput="filterApprovalGroups(this.value)" style="width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--gray-mid);font-size:13px"></div>
   <div class="bulk-bar"><span><input type="checkbox" id="pilih-semua" onchange="toggleAll(this)"> Pilih semua</span><span><button class="btn btn-teal btn-sm" onclick="bulkAction('kirim')">Kirim Dicentang</button> <button class="btn btn-outline btn-sm" onclick="bulkAction('tolak')">Tolak Dicentang</button></span></div>
   <div id="approval-rows"><div class="card-sub">Memuat data...</div></div>
