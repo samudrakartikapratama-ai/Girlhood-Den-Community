@@ -347,7 +347,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
-    <div class="icon-card freeze-target" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
+    <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
@@ -397,6 +397,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live Creator"><div class="icon-label">Upcoming Live Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
+    <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Verifikasi Produk</div></div>
   </div>
 </div>
 
@@ -434,6 +435,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="quota-dots" id="quota-dots"></div>
     <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
+
+  <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="openSelfReportModal()">📸 Udah Punya Produknya? Ajukan di Sini</button>
 
   <div id="c2-brandlist">
     <div class="field" style="margin-bottom:10px">
@@ -662,6 +665,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="catchup-list-brand" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-c9"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c9')">‹ ✕</button>
+  <div class="modal-title">📸 Udah Punya Produknya?</div>
+  <div class="card-sub">Buat kamu yang udah pegang produknya (dari brand langsung, beli sendiri, dll) dan mau pakai link Girlhood buat posting. Internal bakal cek cepat, abis di-approve langsung bisa Report VT & dapet poin.</div>
+  <div class="field" style="margin-top:10px"><label>Pilih Brand</label><select id="sr-brand-select" onchange="loadSelfReportProducts()"><option value="">Memuat brand...</option></select></div>
+  <div class="field"><label>Pilih Produk</label><select id="sr-product-select"><option value="">Pilih brand dulu</option></select></div>
+  <div class="field"><label>Foto Bukti (produk di tangan/meja kamu)</label><input type="file" id="sr-foto" accept="image/*"></div>
+  <button class="btn btn-primary" style="width:100%" onclick="submitSelfReport()">Ajukan</button>
+</div></div>
+
 <!-- ================= MODALS: INTERNAL ================= -->
 <div class="modal-bg" id="m-i1"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i1')">‹ ✕</button>
   <div class="modal-title">📊 Dashboard</div>
@@ -704,6 +716,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
         <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
+        <div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan">Satuan (max 2 SKU per brand)</option><option value="bundling">Bundling (habiskan kuota brand ini)</option></select></div>
         <div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>
         <div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>
       </div>
@@ -873,6 +886,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="catchup-pending-internal"><div class="card-sub">Memuat data...</div></div>
   <div class="card-title" style="margin-top:14px">Sudah Dikonfirmasi</div>
   <div id="catchup-list-internal"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-i15"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i15')">‹ ✕</button>
+  <div class="modal-title">📸 Verifikasi "Sudah Punya Produk"</div>
+  <div class="card-sub">Creator ngaku udah pegang produknya sendiri (bukan dari sistem). Cek fotonya, approve kalau valid — begitu di-approve langsung kebuka buat Report VT & poin.</div>
+  <div id="selfreport-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -1220,6 +1239,8 @@ async function submitRegistration(){
   alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   closeModal('m-register');
 }
+let isSampleRequestFrozen = false;
+
 async function checkFreezeStatus(){
   if(!currentSession.memberId) return;
 
@@ -1242,6 +1263,8 @@ async function checkFreezeStatus(){
     return new Date(r.decided_at) < fiveDaysAgo;
   });
 
+  isSampleRequestFrozen = isFrozen;
+
   document.querySelectorAll('.freeze-target').forEach(function(el){
     if(isFrozen){
       el.style.opacity = '0.4';
@@ -1249,6 +1272,17 @@ async function checkFreezeStatus(){
     } else {
       el.style.opacity = '';
       el.style.pointerEvents = '';
+    }
+  });
+  document.querySelectorAll('.request-sample-btn').forEach(function(btn){
+    if(isFrozen){
+      btn.disabled = true;
+      btn.title = 'Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru.';
+      btn.style.opacity = '0.4';
+    } else {
+      btn.disabled = false;
+      btn.title = '';
+      btn.style.opacity = '';
     }
   });
   document.getElementById('freeze-overlay-note').style.display = isFrozen ? 'block' : 'none';
@@ -1902,6 +1936,7 @@ async function logout(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-'+role).classList.add('active');
   loadHeroBanners();
+  subscribeRealtimeNotif(role);
   if(role === 'brand' || role === 'internal'){
     setTimeout(function(){ checkCatchupPopup(role); }, 800);
   }
@@ -2625,7 +2660,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '</select></div>'
       + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
 + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
-+ '<button class="btn btn-teal btn-sm" onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
++ '<button class="btn btn-teal btn-sm request-sample-btn" '+(isSampleRequestFrozen?'disabled style="opacity:.4" title="Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru."':'')+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
 }
@@ -3188,6 +3223,31 @@ function showWa(){
 }
 let allBrandsTerdaftarCache = [];
 
+async function copyAllProductLinks(brandId, brandName, btn){
+  const original = btn.textContent;
+  btn.textContent = 'Memuat...';
+  btn.disabled = true;
+
+  const { data, error } = await db.from('brand_products').select('nama_produk, link_affiliate').eq('brand_id', brandId).order('created_at', { ascending: true });
+
+  btn.disabled = false;
+  btn.textContent = original;
+
+  if(error){ alert('Gagal memuat produk.'); return; }
+  if(!data || data.length === 0){ alert('Brand ini belum ada produknya.'); return; }
+
+  const text = brandName + ' — ' + data.length + ' Produk\n\n' + data.map(function(p, i){
+    return (i+1) + '. ' + p.nama_produk + '\n' + (p.link_affiliate || '(link belum diisi)');
+  }).join('\n\n');
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('✅ ' + data.length + ' link produk ' + brandName + ' berhasil disalin, tinggal paste ke chat creator.');
+  } catch(e){
+    alert('Gagal menyalin ke clipboard. Coba lagi.');
+  }
+}
+
 async function loadBrandTerdaftar(){
   const container = document.getElementById('brand-terdaftar-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
@@ -3227,6 +3287,7 @@ function renderBrandTerdaftarList(brands){
     return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
       + '<div style="display:flex;align-items:center;min-width:0">'+logoHtml+'<div style="min-width:0"><b>'+b.nama_brand+'</b><div class="card-sub">Komisi '+komisi+' · '+(b.brand_products||[]).length+' produk</div></div></div>'
       + '<div style="display:flex;gap:6px;flex-shrink:0">'
+      + '<button class="btn btn-outline btn-sm" title="Copy semua link produk brand ini" onclick="copyAllProductLinks(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', this)">📋 Copy All</button>'
       + '<button class="btn btn-outline btn-sm" title="Prioritas Catch Up Meeting" onclick="togglePriorityBrand(\''+b.id+'\', '+(!b.is_priority)+')">'+(b.is_priority?'⭐':'☆')+'</button>'
       + '<button class="btn btn-outline btn-sm" onclick="editBrand(\''+b.id+'\')">Edit</button>'
       + '</div></div>';
@@ -3268,6 +3329,7 @@ async function saveBrandRegistration(){
       nama: nama,
       link: block.querySelector('.pb-link').value.trim(),
       sow: block.querySelector('.pb-sow').value,
+      tipeProduk: block.querySelector('.pb-tipe') ? block.querySelector('.pb-tipe').value : 'satuan',
       hot: block.querySelector('.pb-hot').checked,
       comm: block.querySelector('.pb-comm').checked,
       harga: block.querySelector('.pb-harga').value.trim(),
@@ -3382,6 +3444,7 @@ async function saveBrandRegistration(){
         nama_produk: p.nama,
         link_affiliate: p.link,
         tipe_sow: p.sow,
+        tipe_produk: p.tipeProduk,
         tag_hot: p.hot,
         tag_high_commission: p.comm,
         harga: p.harga ? Number(p.harga) : null,
@@ -3436,7 +3499,7 @@ async function saveBrandRegistration(){
 async function editBrand(brandId){
   const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url').eq('id', brandId).single();
   if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
-    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent').eq('brand_id', brandId).order('created_at', { ascending: true });
+    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent').eq('brand_id', brandId).order('created_at', { ascending: true });
   if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
 
   editingBrandId = brand.id;
@@ -3463,6 +3526,7 @@ async function editBrand(brandId){
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
             + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Sudah ada '+((p.foto_urls||[]).length)+' foto. Upload baru cuma kalau mau ganti. Max 3 foto, 5MB/foto</div></div>'
       + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
+      + '<div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan"'+(p.tipe_produk!=='bundling'?' selected':'')+'>Satuan (max 2 SKU per brand)</option><option value="bundling"'+(p.tipe_produk==='bundling'?' selected':'')+'>Bundling (habiskan kuota brand ini)</option></select></div>'
       + '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Sudah ada '+((p.video_referensi_urls||[]).length)+' video. Upload baru cuma kalau mau ganti. Max 3 video, 1 menit &amp; 5MB/video</div></div>'
       + '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"'+(p.tag_hot?' checked':'')+'> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"'+(p.tag_high_commission?' checked':'')+'> 💰 High Commission</label></div>';
     container.appendChild(block);
@@ -4776,6 +4840,121 @@ async function togglePriorityBrand(brandId, setPriority){
   if(!j.valid){ alert(j.error || 'Gagal update.'); return; }
   loadBrandTerdaftar();
 }
+
+/* ================= SELF REPORT: "SUDAH PUNYA PRODUK" ================= */
+
+async function openSelfReportModal(){
+  openModal('m-c9');
+  const sel = document.getElementById('sr-brand-select');
+  sel.innerHTML = '<option value="">Memuat brand...</option>';
+  const { data, error } = await db.from('brands').select('id, nama_brand').eq('is_active', true).order('nama_brand', { ascending: true });
+  if(error || !data){ sel.innerHTML = '<option value="">Gagal memuat brand</option>'; return; }
+  sel.innerHTML = '<option value="">Pilih brand...</option>' + data.map(function(b){ return '<option value="'+b.id+'">'+b.nama_brand+'</option>'; }).join('');
+}
+
+async function loadSelfReportProducts(){
+  const brandId = document.getElementById('sr-brand-select').value;
+  const prodSel = document.getElementById('sr-product-select');
+  if(!brandId){ prodSel.innerHTML = '<option value="">Pilih brand dulu</option>'; return; }
+  prodSel.innerHTML = '<option value="">Memuat produk...</option>';
+  const { data, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', brandId).order('nama_produk', { ascending: true });
+  if(error || !data || data.length === 0){ prodSel.innerHTML = '<option value="">Brand ini belum ada produk</option>'; return; }
+  prodSel.innerHTML = '<option value="">Pilih produk...</option>' + data.map(function(p){ return '<option value="'+p.id+'">'+p.nama_produk+'</option>'; }).join('');
+}
+
+async function submitSelfReport(){
+  const brandProductId = document.getElementById('sr-product-select').value;
+  const fotoInput = document.getElementById('sr-foto');
+  const file = fotoInput.files[0];
+  if(!brandProductId){ alert('Pilih produk dulu.'); return; }
+  if(!file){ alert('Upload foto bukti dulu.'); return; }
+  if(file.size > 5*1024*1024){ alert('Ukuran foto maksimal 5MB.'); return; }
+
+  const reader = new FileReader();
+  reader.onload = async function(){
+    const base64 = reader.result.split(',')[1];
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+        body: JSON.stringify({ action:'submit', brandProductId, fotoBase64: base64, fotoContentType: file.type })
+      });
+      const j = await res.json();
+      if(!j.valid){ alert(j.error || 'Gagal mengajukan.'); return; }
+      alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
+      closeModal('m-c9');
+    } catch(e){ alert('Gagal menghubungi server.'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadSelfReportPending(){
+  const container = document.getElementById('selfreport-list');
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_pending'})
+    });
+    const j = await res.json();
+    if(!j.valid){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    if(!j.rows || j.rows.length === 0){ container.innerHTML = '<div class="card-sub">Nggak ada pengajuan yang perlu direview 🎉</div>'; return; }
+
+    container.innerHTML = j.rows.map(function(r){
+      const brandName = r.brand_products?.brands?.nama_brand || '-';
+      const produkName = r.brand_products?.nama_produk || '-';
+      const creatorName = r.members?.nama || '-';
+      return '<div class="card"><div style="display:flex;gap:10px">'
+        + '<img src="'+r.foto_bukti_url+'" style="width:70px;height:70px;object-fit:cover;border-radius:10px;flex-shrink:0" onclick="window.open(\''+r.foto_bukti_url+'\',\'_blank\')">'
+        + '<div style="flex:1"><b>'+creatorName+'</b><div class="card-sub">'+brandName+' — '+produkName+'</div></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:8px">'
+        + '<button class="btn btn-outline btn-sm" style="flex:1" onclick="decideSelfReport(\''+r.id+'\',\'reject\',this)">Tolak</button>'
+        + '<button class="btn btn-primary btn-sm" style="flex:1" onclick="decideSelfReport(\''+r.id+'\',\'approve\',this)">Approve</button>'
+        + '</div></div>';
+    }).join('');
+  } catch(e){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+async function decideSelfReport(id, decision, btn){
+  const card = btn.closest('.card');
+  card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'decide', id, decision })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
+    loadSelfReportPending();
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+/* ================= REALTIME NOTIFIKASI ================= */
+let realtimeNotifChannel = null;
+
+function subscribeRealtimeNotif(role){
+  if(realtimeNotifChannel) db.removeChannel(realtimeNotifChannel);
+  realtimeNotifChannel = db.channel('notif-realtime-'+role)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, function(payload){
+      if(role === 'internal'){
+        loadNotifications();
+      } else if(role === 'brand'){
+        if(payload.new.brand_id === currentSession.brandId){
+          const modal = document.getElementById('m-b6');
+          if(modal && modal.classList.contains('open')) loadNotificationsBrand();
+        }
+      } else if(role === 'creator'){
+        if(payload.new.member_id === currentSession.memberId){
+          const modal = document.getElementById('m-c7');
+          if(modal && modal.classList.contains('open')) loadNotificationsCreator();
+        }
+      }
+    })
+    .subscribe();
+}
+
 
 </script>
 </body>
