@@ -1350,6 +1350,16 @@ async function checkFreezeStatus(){
   const confirmMap = {};
   (confirmData||[]).forEach(function(c){ confirmMap[c.brand_id] = c.confirmed_at; });
 
+  // Self-report: nggak pernah ada delivery_confirmations (nggak lewat tahap kirim/terima).
+  // Anchor-nya pakai tanggal self-report itu di-approve internal, karena barang udah di tangan sejak saat itu.
+  const { data: selfReportData } = await db.from('self_reported_products')
+    .select('sample_request_id, decided_at')
+    .eq('member_id', currentSession.memberId)
+    .eq('status', 'approved');
+
+  const selfReportAnchorMap = {};
+  (selfReportData||[]).forEach(function(s){ if(s.sample_request_id) selfReportAnchorMap[s.sample_request_id] = s.decided_at; });
+
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
@@ -1359,9 +1369,9 @@ async function checkFreezeStatus(){
     const done = (r.vt_reports||[]).length;
     if(done >= required) return false;
     const brandId = r.brand_products ? r.brand_products.brand_id : null;
-    const confirmedAt = brandId ? confirmMap[brandId] : null;
-    if(!confirmedAt) return false; // Belum konfirmasi terima barang = H+3 belum mulai, jangan freeze
-    return new Date(confirmedAt) < fiveDaysAgo;
+    const anchor = selfReportAnchorMap[r.id] || (brandId ? confirmMap[brandId] : null);
+    if(!anchor) return false; // Belum konfirmasi terima barang & bukan self-report = H+3 belum mulai, jangan freeze
+    return new Date(anchor) < fiveDaysAgo;
   });
 
   isSampleRequestFrozen = isFrozen;
