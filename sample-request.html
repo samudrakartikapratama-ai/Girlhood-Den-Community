@@ -1337,11 +1337,18 @@ async function checkFreezeStatus(){
   if(!currentSession.memberId) return;
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, decided_at, vt_reports(id)')
+    .select('id, tipe_sow_dipilih, brand_products(brand_id), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
     .eq('status', 'approved');
 
   if(error) return;
+
+  const { data: confirmData } = await db.from('delivery_confirmations')
+    .select('brand_id, confirmed_at')
+    .eq('member_id', currentSession.memberId);
+
+  const confirmMap = {};
+  (confirmData||[]).forEach(function(c){ confirmMap[c.brand_id] = c.confirmed_at; });
 
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -1351,8 +1358,10 @@ async function checkFreezeStatus(){
     const required = 3;
     const done = (r.vt_reports||[]).length;
     if(done >= required) return false;
-    if(!r.decided_at) return false;
-    return new Date(r.decided_at) < fiveDaysAgo;
+    const brandId = r.brand_products ? r.brand_products.brand_id : null;
+    const confirmedAt = brandId ? confirmMap[brandId] : null;
+    if(!confirmedAt) return false; // Belum konfirmasi terima barang = H+3 belum mulai, jangan freeze
+    return new Date(confirmedAt) < fiveDaysAgo;
   });
 
   isSampleRequestFrozen = isFrozen;
@@ -1369,7 +1378,7 @@ async function checkFreezeStatus(){
   document.querySelectorAll('.request-sample-btn').forEach(function(btn){
     if(isFrozen){
       btn.disabled = true;
-      btn.title = 'Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru.';
+      btn.title = 'Ada VT yang belum di-report lewat dari 5 hari sejak barang dikonfirmasi diterima. Selesaikan dulu di Report VT sebelum request produk baru.';
       btn.style.opacity = '0.4';
     } else {
       btn.disabled = false;
