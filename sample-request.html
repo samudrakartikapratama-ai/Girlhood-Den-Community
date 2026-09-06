@@ -879,6 +879,29 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <button class="btn btn-primary" style="width:100%" onclick="createRewardInternal()">Tambah Hadiah</button>
   </div>
 
+  <div class="catchup-popup-bg" id="edit-reward-popup-bg">
+    <div class="catchup-popup-box">
+      <div class="cp-title">✏️ Edit Hadiah</div>
+      <input type="hidden" id="edit-reward-id">
+      <div class="field-row"><input id="edit-reward-nama" placeholder="Nama hadiah"></div>
+      <div class="field-row">
+        <input id="edit-reward-poin" type="number" placeholder="Poin dibutuhkan">
+        <input id="edit-reward-stok" type="number" placeholder="Stok (kosongkan = tak terbatas)">
+      </div>
+      <div class="field-row">
+        <input id="edit-reward-dari" type="date">
+        <input id="edit-reward-sampai" type="date">
+      </div>
+      <div class="field-row" style="align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="edit-reward-aktif" style="width:auto"> Hadiah aktif</label>
+      </div>
+      <div class="cp-btns">
+        <button class="btn btn-primary" onclick="saveEditReward()">Simpan Perubahan</button>
+        <button class="btn btn-outline" onclick="closeEditRewardPopup()">Batal</button>
+      </div>
+    </div>
+  </div>
+
   <div class="poin-int-panel" id="poin-int-gmv">
     <div id="gmv-week-status" class="card-sub">Memuat status minggu ini...</div>
     <div id="gmv-winner-form-1" class="field-row"><select class="gmv-winner-select"><option value="">🥇 Juara 1 (50 poin) — pilih creator</option></select><input type="number" placeholder="GMV (Rp)" class="gmv-winner-amount"></div>
@@ -4514,10 +4537,52 @@ async function loadPoinHadiahList(){
       html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.foto_url?'<img src="'+r.foto_url+'">':'🎁')+'</div>'+
         '<div class="prc-main"><div class="t">'+r.nama+(r.is_active?'':' (nonaktif)')+'</div><div class="s">Stok: '+(r.stok===null?'∞':r.stok)+' · '+berlaku+'</div></div>'+
         '<div class="prc-cost">'+r.poin_dibutuhkan+' pts</div>'+
+        '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick=\'openEditRewardPopup('+JSON.stringify(r)+')\' title="Edit">✏️</div>'+
         '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="deleteRewardInternal(\''+r.id+'\')" title="Hapus">🗑</div></div>';
     });
     el.innerHTML = html || '<div class="card-sub">Belum ada hadiah.</div>';
   } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+}
+
+function openEditRewardPopup(r){
+  document.getElementById('edit-reward-id').value = r.id;
+  document.getElementById('edit-reward-nama').value = r.nama || '';
+  document.getElementById('edit-reward-poin').value = r.poin_dibutuhkan || '';
+  document.getElementById('edit-reward-stok').value = (r.stok === null || r.stok === undefined) ? '' : r.stok;
+  document.getElementById('edit-reward-dari').value = r.berlaku_dari || '';
+  document.getElementById('edit-reward-sampai').value = r.berlaku_sampai || '';
+  document.getElementById('edit-reward-aktif').checked = !!r.is_active;
+  document.getElementById('edit-reward-popup-bg').classList.add('open');
+}
+function closeEditRewardPopup(){
+  document.getElementById('edit-reward-popup-bg').classList.remove('open');
+}
+async function saveEditReward(){
+  const id = document.getElementById('edit-reward-id').value;
+  const nama = document.getElementById('edit-reward-nama').value.trim();
+  const poin_dibutuhkan = parseInt(document.getElementById('edit-reward-poin').value, 10);
+  const stokVal = document.getElementById('edit-reward-stok').value.trim();
+  const berlaku_dari = document.getElementById('edit-reward-dari').value;
+  const berlaku_sampai = document.getElementById('edit-reward-sampai').value;
+  const is_active = document.getElementById('edit-reward-aktif').checked;
+  if(!nama || !poin_dibutuhkan){ alert('Nama dan poin dibutuhkan wajib diisi.'); return; }
+
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({
+        action:'update', id, nama, poin_dibutuhkan,
+        stok: stokVal === '' ? null : parseInt(stokVal, 10),
+        berlaku_dari: berlaku_dari || null, berlaku_sampai: berlaku_sampai || null,
+        is_active
+      })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan perubahan.'); return; }
+    closeEditRewardPopup();
+    loadPoinHadiahList();
+  } catch(e){ alert('Gagal menghubungi server.'); }
 }
 
 async function createRewardInternal(){
