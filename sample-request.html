@@ -387,9 +387,9 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .rp-header h1{font-size:38px;font-weight:800;color:#fff;line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.15);position:relative}
 .rp-header .rp-sub{font-size:18px;font-weight:700;color:var(--gold);margin-top:4px;position:relative}
 .rp-header .rp-tag{font-size:11.5px;color:rgba(255,255,255,.85);margin-top:8px;position:relative}
-.rp-grid{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 10px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rp-grid{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 10px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .rp-card{background:var(--pink-pale);border-radius:14px;padding:10px 8px;text-align:center;border:1.5px solid #fce3ee}
-.rp-card.big{grid-column:span 3;display:flex;align-items:center;gap:12px;text-align:left;padding:12px}
+.rp-card.big{grid-column:span 2;display:flex;align-items:center;gap:14px;text-align:left;padding:14px}
 .rp-card .rp-thumb{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#fff}
 .rp-card .rp-thumb img{width:100%;height:100%;object-fit:cover}
 .rp-card.big .rp-thumb{width:70px;height:70px;flex-shrink:0;aspect-ratio:auto}
@@ -783,7 +783,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="rp-sub" id="rp-bulan-label">Bulan</div>
       <div class="rp-tag">Tukar poin kamu jadi hadiah sebelum kehabisan stok!</div>
     </div>
-    <div class="rp-grid" id="rp-grid"><div class="card-sub" style="grid-column:span 3;text-align:center;color:#fff">Memuat...</div></div>
+    <div class="rp-grid" id="rp-grid"><div class="card-sub" style="grid-column:span 2;text-align:center;color:#fff">Memuat...</div></div>
     <div class="rp-period">
       <div class="rp-period-inner">
         <div class="lbl">MASA BERLAKU PENUKARAN</div>
@@ -4399,8 +4399,9 @@ async function showRewardPopup(){
 
     const rewards = j.rewards.slice(0, 5); // maksimal 5 biar nggak kepanjangan
     const biggest = rewards.reduce(function(max, r){ return r.poin_dibutuhkan > max.poin_dibutuhkan ? r : max; }, rewards[0]);
+    const sortedRewards = [biggest].concat(rewards.filter(function(r){ return r.id !== biggest.id; }));
 
-    document.getElementById('rp-grid').innerHTML = rewards.map(function(r){
+    document.getElementById('rp-grid').innerHTML = sortedRewards.map(function(r){
       const isBig = r.id === biggest.id;
       const fotoHtml = r.foto_url ? '<img src="'+r.foto_url+'">' : '';
       return '<div class="rp-card'+(isBig?' big':'')+'">'
