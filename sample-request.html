@@ -371,6 +371,55 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .sr-bar-hint{font-size:10px;color:var(--gray-text)}
 .sr-foto-row{display:none;padding:0 18px 18px;flex-shrink:0}
 .sr-foto-row input[type=file]{width:100%;font-size:11.5px;margin-bottom:2px}
+
+/* ================= POPUP REWARDS POIN (muncul tiap creator login) ================= */
+.reward-popup-bg{display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9998;align-items:center;justify-content:center;padding:16px}
+.reward-popup-bg.open{display:flex}
+.reward-popup-box{background:linear-gradient(160deg,var(--pink) 0%,#a80d3f 55%,#7a0a30 100%);border-radius:26px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.rp-close-btn{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:none;font-size:15px;color:#fff;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;font-weight:800}
+.rp-header{padding:26px 22px 14px;text-align:center;position:relative;overflow:hidden}
+.rp-header::before{content:'';position:absolute;top:-40px;left:-40px;width:160px;height:160px;background:rgba(255,255,255,.08);border-radius:50%}
+.rp-header::after{content:'';position:absolute;bottom:-60px;right:-30px;width:180px;height:180px;background:rgba(255,255,255,.06);border-radius:50%}
+.rp-brandrow{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;position:relative}
+.rp-brandrow .pill{background:#fff;color:var(--pink);font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px}
+.rp-brandrow .x{color:rgba(255,255,255,.7);font-size:12px;font-weight:800}
+.rp-brandrow .pill2{background:var(--dark);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px}
+.rp-header h1{font-size:38px;font-weight:800;color:#fff;line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.15);position:relative}
+.rp-header .rp-sub{font-size:18px;font-weight:700;color:var(--gold);margin-top:4px;position:relative}
+.rp-header .rp-tag{font-size:11.5px;color:rgba(255,255,255,.85);margin-top:8px;position:relative}
+.rp-grid{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 10px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rp-card{background:var(--pink-pale);border-radius:14px;padding:10px 8px;text-align:center;border:1.5px solid #fce3ee}
+.rp-card.big{grid-column:span 3;display:flex;align-items:center;gap:12px;text-align:left;padding:12px}
+.rp-card .rp-thumb{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#fff}
+.rp-card .rp-thumb img{width:100%;height:100%;object-fit:cover}
+.rp-card.big .rp-thumb{width:70px;height:70px;flex-shrink:0;aspect-ratio:auto}
+.rp-card .rp-name{font-size:10.5px;font-weight:800;color:var(--dark);margin-top:4px;line-height:1.25;min-height:26px}
+.rp-card.big .rp-name{font-size:13px;margin-top:0;min-height:0}
+.rp-card .rp-pts{font-size:15px;font-weight:800;color:var(--pink);margin-top:4px}
+.rp-card.big .rp-pts{font-size:19px}
+.rp-card .rp-pts-lbl{font-size:8.5px;color:var(--gray-text);font-weight:700}
+.rp-card .rp-stok{display:inline-block;margin-top:3px;font-size:8px;font-weight:800;background:var(--teal);color:#fff;padding:1.5px 7px;border-radius:999px}
+.rp-period{background:#fff;padding:0 16px 20px}
+.rp-period-inner{background:var(--dark);border-radius:14px;padding:12px 16px;text-align:center}
+.rp-period-inner .lbl{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.04em}
+.rp-period-inner .dates{color:#fff;font-size:15px;font-weight:800;margin-top:2px}
+.rp-cta{margin:12px 16px 18px;background:var(--pink);color:#fff;font-weight:800;font-size:13.5px;padding:14px;border-radius:12px;border:none;width:calc(100% - 32px);cursor:pointer}
+
+@media (min-width:1024px){
+  .reward-popup-box{max-width:520px}
+  .rp-header h1{font-size:46px}
+  .rp-header .rp-sub{font-size:21px}
+  .rp-grid{padding:22px 20px 12px;gap:12px}
+  .rp-card{padding:12px 10px}
+  .rp-card .rp-name{font-size:11.5px}
+  .rp-card .rp-pts{font-size:16px}
+}
+@media (max-width:380px){
+  .rp-header h1{font-size:32px}
+  .rp-header .rp-sub{font-size:16px}
+  .rp-grid{gap:8px;padding:16px 12px 8px}
+  .rp-card{padding:8px 6px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -724,6 +773,26 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Jadwal diskusi yang sudah dikonfirmasi antara kamu dan tim kami.</div>
   <div id="catchup-list-brand" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<div class="reward-popup-bg" id="reward-popup-bg">
+  <div class="reward-popup-box">
+    <button class="rp-close-btn" onclick="closeRewardPopup()">✕</button>
+    <div class="rp-header">
+      <div class="rp-brandrow"><span class="pill">Girlhood Den</span><span class="x">×</span><span class="pill2">Poin Rewards</span></div>
+      <h1>REWARDS</h1>
+      <div class="rp-sub" id="rp-bulan-label">Bulan</div>
+      <div class="rp-tag">Tukar poin kamu jadi hadiah sebelum kehabisan stok!</div>
+    </div>
+    <div class="rp-grid" id="rp-grid"><div class="card-sub" style="grid-column:span 3;text-align:center;color:#fff">Memuat...</div></div>
+    <div class="rp-period">
+      <div class="rp-period-inner">
+        <div class="lbl">MASA BERLAKU PENUKARAN</div>
+        <div class="dates" id="rp-period-dates">—</div>
+      </div>
+    </div>
+    <button class="rp-cta" onclick="closeRewardPopup(); openModal('m-c8'); showPoinTab && showPoinTab('hadiah');">Lihat & Tukar Poin Sekarang</button>
+  </div>
+</div>
 
 <div class="modal-bg" id="m-c9"><div class="modal-box sr-modal-box" style="padding:0;overflow:hidden">
   <!-- ===== LAYAR A: PILIH BRAND ===== -->
@@ -2073,6 +2142,9 @@ async function logout(){
   subscribeRealtimeNotif(role);
   if(role === 'brand' || role === 'internal'){
     setTimeout(function(){ checkCatchupPopup(role); }, 800);
+  }
+  if(role === 'creator'){
+    setTimeout(function(){ showRewardPopup(); }, 800);
   }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
@@ -4307,6 +4379,45 @@ const POIN_KATEGORI_ICON = {
   gmv_juara1:'🥇', gmv_juara2:'🥈', gmv_juara3:'🥉', redeem_hadiah:'🎁', refund_redeem:'↩️'
 };
 function poinIcon(kategori){ return POIN_KATEGORI_ICON[kategori] || '⭐'; }
+
+const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+async function showRewardPopup(){
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-list-rewards', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body:'{}'
+    });
+    const j = await res.json();
+    if(!j.valid || !j.rewards || j.rewards.length === 0) return; // nggak ada hadiah aktif, jangan munculin popup kosong
+
+    const now = new Date();
+    document.getElementById('rp-bulan-label').textContent = 'Bulan ' + BULAN_ID[now.getMonth()];
+
+    const lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    document.getElementById('rp-period-dates').textContent = '1 — ' + lastDay + ' ' + BULAN_ID[now.getMonth()] + ' ' + now.getFullYear();
+
+    const rewards = j.rewards.slice(0, 5); // maksimal 5 biar nggak kepanjangan
+    const biggest = rewards.reduce(function(max, r){ return r.poin_dibutuhkan > max.poin_dibutuhkan ? r : max; }, rewards[0]);
+
+    document.getElementById('rp-grid').innerHTML = rewards.map(function(r){
+      const isBig = r.id === biggest.id;
+      const fotoHtml = r.foto_url ? '<img src="'+r.foto_url+'">' : '';
+      return '<div class="rp-card'+(isBig?' big':'')+'">'
+        + '<div class="rp-thumb">'+fotoHtml+'</div>'
+        + '<div class="rp-info">'
+        + '<div class="rp-name">'+r.nama+'</div>'
+        + '<div class="rp-pts">'+r.poin_dibutuhkan+' <span class="rp-pts-lbl">POIN</span></div>'
+        + (r.stok !== null ? '<span class="rp-stok">Sisa '+r.stok+'</span>' : '')
+        + '</div></div>';
+    }).join('');
+
+    document.getElementById('reward-popup-bg').classList.add('open');
+  } catch(e){ /* Gagal ambil data, diem-diem aja jangan ganggu login */ }
+}
+function closeRewardPopup(){
+  document.getElementById('reward-popup-bg').classList.remove('open');
+}
 
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
