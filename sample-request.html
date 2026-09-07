@@ -511,7 +511,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i13'); loadKelolaBanner();"><div class="icon-emoji">🖼️</div><div class="icon-label">Kelola Banner</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
-    <div class="icon-card" onclick="openModal('m-i10'); loadCreatorDatabase();"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
+    <div class="icon-card" onclick="openOwnerGate()"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live Creator"><div class="icon-label">Upcoming Live Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Verifikasi Produk</div></div>
@@ -1053,6 +1053,31 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </table>
   </div>
 </div></div>
+
+<div class="catchup-popup-bg" id="owner-gate-popup">
+  <div class="catchup-popup-box">
+    <div class="cp-emoji">🔒</div>
+    <div class="cp-title" id="owner-gate-title">Akses Terbatas</div>
+    <div class="cp-body" id="owner-gate-body">Database Creator cuma bisa dibuka pakai password khusus owner.</div>
+
+    <div id="owner-gate-verify-view">
+      <div class="field-row"><input type="password" id="owner-gate-input" placeholder="Masukkan password owner"></div>
+      <div class="cp-btns">
+        <button class="btn btn-primary" onclick="submitOwnerPassword()">Buka</button>
+        <button class="btn btn-outline" onclick="closeOwnerGate()">Batal</button>
+      </div>
+    </div>
+
+    <div id="owner-gate-setup-view" style="display:none">
+      <div class="field-row"><input type="password" id="owner-gate-new1" placeholder="Buat password baru (min 6 karakter)"></div>
+      <div class="field-row"><input type="password" id="owner-gate-new2" placeholder="Ulangi password baru"></div>
+      <div class="cp-btns">
+        <button class="btn btn-primary" onclick="submitSetupOwnerPassword()">Simpan Password</button>
+        <button class="btn btn-outline" onclick="closeOwnerGate()">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
   <div class="modal-title">📇 Database Creator</div>
@@ -4177,6 +4202,64 @@ async function loadPendingMembers(){
 }
 
 let __creatorDbCache = [];
+async function openOwnerGate(){
+  document.getElementById('owner-gate-input').value = '';
+  document.getElementById('owner-gate-new1').value = '';
+  document.getElementById('owner-gate-new2').value = '';
+  document.getElementById('owner-gate-popup').classList.add('open');
+
+  const auth = await getInternalAuthHeader();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/internal-owner-access', {
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'check_exists'})
+  });
+  const j = await res.json();
+  const hasPassword = j.valid && j.hasPassword;
+
+  document.getElementById('owner-gate-title').textContent = hasPassword ? 'Akses Terbatas' : 'Setup Password Owner';
+  document.getElementById('owner-gate-body').textContent = hasPassword
+    ? 'Database Creator cuma bisa dibuka pakai password khusus owner.'
+    : 'Belum ada password owner yang di-set. Buat password baru dulu sebelum bisa akses Database Creator.';
+  document.getElementById('owner-gate-verify-view').style.display = hasPassword ? '' : 'none';
+  document.getElementById('owner-gate-setup-view').style.display = hasPassword ? 'none' : '';
+}
+function closeOwnerGate(){
+  document.getElementById('owner-gate-popup').classList.remove('open');
+}
+async function submitOwnerPassword(){
+  const password = document.getElementById('owner-gate-input').value;
+  if(!password){ alert('Masukkan password dulu.'); return; }
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-owner-access', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({action:'verify', password})
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Password salah.'); return; }
+    __creatorDbCache = j.members || [];
+    renderCreatorDatabase(__creatorDbCache);
+    closeOwnerGate();
+    openModal('m-i10');
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+async function submitSetupOwnerPassword(){
+  const p1 = document.getElementById('owner-gate-new1').value;
+  const p2 = document.getElementById('owner-gate-new2').value;
+  if(!p1 || p1.length < 6){ alert('Password minimal 6 karakter.'); return; }
+  if(p1 !== p2){ alert('Konfirmasi password nggak sama.'); return; }
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-owner-access', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({action:'set_password', newPassword:p1})
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal simpan password.'); return; }
+    alert('Password owner berhasil dibuat. Simpan baik-baik, cuma kamu yang boleh tau.');
+    closeOwnerGate();
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
 async function loadCreatorDatabase(){
   const countEl = document.getElementById('creatordb-count');
   const rowsEl = document.getElementById('creatordb-rows');
