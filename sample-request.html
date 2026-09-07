@@ -4931,15 +4931,56 @@ async function loadPoinRedeemList(){
     if(!j.valid){ el.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat.')+'</div>'; return; }
     let html = '';
     (j.redemptions||[]).forEach(function(r){
-      html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.rewards&&r.rewards.foto_url?'<img src="'+r.rewards.foto_url+'">':'🎁')+'</div>'+
+      html += '<div class="poin-reward-card" style="flex-wrap:wrap"><div class="prc-thumb">'+(r.rewards&&r.rewards.foto_url?'<img src="'+r.rewards.foto_url+'">':'🎁')+'</div>'+
         '<div class="prc-main"><div class="t">'+(r.members?r.members.nama:'-')+' — '+(r.rewards?r.rewards.nama:'-')+'</div>'+
         '<div class="s">'+r.poin_terpakai+' poin · '+new Date(r.created_at).toLocaleDateString('id-ID')+'</div></div>'+
+        '<button class="btn btn-outline btn-sm" onclick="toggleRedeemHistory(\''+r.id+'\', \''+r.member_id+'\')">📋 Lihat Riwayat</button>'+
         '<select onchange="updateRedemptionStatus(\''+r.id+'\', this.value)" style="width:auto;padding:6px 8px;font-size:11px">'+
         ['pending','approved','sent','rejected'].map(function(s){ return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>'; }).join('')+
-        '</select></div>';
+        '</select>'+
+        '<div id="redeem-history-'+r.id+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"></div>'+
+        '</div>';
     });
     el.innerHTML = html || '<div class="card-sub">Belum ada penukaran hadiah.</div>';
   } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+}
+
+const POIN_KATEGORI_LABEL = {
+  verifikasi:'Lolos Verifikasi', sow_tuntas:'Tuntas SOW 3x Berturut', report_vt:'Report VT Melebihi SOW',
+  event_post:'Posting Saat Event', buka_aplikasi:'Buka Aplikasi Harian', login_streak:'Login 7 Hari Berturut',
+  pelanggaran_ingkar:'Pelanggaran (Ingkar Janji)', gmv_juara1:'Juara 1 GMV Mingguan', gmv_juara2:'Juara 2 GMV Mingguan',
+  gmv_juara3:'Juara 3 GMV Mingguan', redeem_hadiah:'Tukar Hadiah', refund_redeem:'Refund Penukaran'
+};
+
+async function toggleRedeemHistory(redemptionId, memberId){
+  const box = document.getElementById('redeem-history-'+redemptionId);
+  if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
+
+  box.style.display = 'block';
+  box.innerHTML = '<div class="card-sub">Memuat riwayat...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-redemptions', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({action:'history', memberId})
+    });
+    const j = await res.json();
+    if(!j.valid){ box.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat riwayat.')+'</div>'; return; }
+
+    let html = '<div style="font-size:11px;font-weight:800;color:var(--dark);margin-bottom:8px">Total Poin Sepanjang Waktu: '+j.totalPoin+'</div>';
+    if(!j.ledger || j.ledger.length === 0){
+      html += '<div class="card-sub">Belum ada riwayat poin sama sekali — mencurigakan kalau dia bisa tukar hadiah.</div>';
+    } else {
+      j.ledger.forEach(function(l){
+        const label = POIN_KATEGORI_LABEL[l.kategori] || l.kategori;
+        const color = l.poin >= 0 ? 'var(--teal)' : 'var(--red)';
+        html += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:11.5px;border-bottom:1px solid var(--pink-pale)">'+
+          '<span>'+label+(l.deskripsi?' — '+l.deskripsi:'')+'<br><span style="color:var(--gray-text);font-size:10px">'+new Date(l.created_at).toLocaleString('id-ID')+'</span></span>'+
+          '<span style="color:'+color+';font-weight:800;white-space:nowrap;margin-left:8px">'+(l.poin>=0?'+':'')+l.poin+'</span></div>';
+      });
+    }
+    box.innerHTML = html;
+  } catch(e){ box.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
 }
 
 async function updateRedemptionStatus(id, status){
