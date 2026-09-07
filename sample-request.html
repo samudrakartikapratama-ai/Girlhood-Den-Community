@@ -430,6 +430,19 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .rp-card.big .rp-name{font-size:14px}
   .rp-card.big .rp-pts{font-size:19px}
 }
+
+/* ================= OWNER PASSWORD GATE (Database Creator) ================= */
+.og-popup-bg{display:none;position:fixed;inset:0;background:rgba(74,43,71,.65);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.og-popup-bg.open{display:flex}
+.og-box{background:linear-gradient(165deg,var(--pink) 0%,#a80d3f 60%,#7a0a30 100%);border-radius:24px;padding:34px 26px 28px;max-width:360px;width:100%;box-shadow:0 30px 70px rgba(0,0,0,.4);text-align:center}
+.og-icon-wrap{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
+.og-title{font-size:19px;font-weight:800;color:#fff}
+.og-body{font-size:12.5px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.5;margin-bottom:20px}
+.og-input{width:100%;padding:13px 16px;border-radius:12px;border:none;font-size:14px;font-family:inherit;background:rgba(255,255,255,.95);color:var(--dark);outline:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.og-input:focus{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.4)}
+.og-input::placeholder{color:var(--gray-text)}
+.og-btn-primary{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;background:#fff;color:var(--pink);font-weight:800;font-size:14px;cursor:pointer}
+.og-btn-outline{width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -1054,27 +1067,23 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
-<div class="catchup-popup-bg" id="owner-gate-popup">
-  <div class="catchup-popup-box">
-    <div class="cp-emoji">🔒</div>
-    <div class="cp-title" id="owner-gate-title">Akses Terbatas</div>
-    <div class="cp-body" id="owner-gate-body">Database Creator cuma bisa dibuka pakai password khusus owner.</div>
+<div class="og-popup-bg" id="owner-gate-popup">
+  <div class="og-box">
+    <div class="og-icon-wrap">🔒</div>
+    <div class="og-title" id="owner-gate-title">Akses Terbatas</div>
+    <div class="og-body" id="owner-gate-body">Database Creator cuma bisa dibuka pakai password khusus owner.</div>
 
     <div id="owner-gate-verify-view">
-      <div class="field-row"><input type="password" id="owner-gate-input" placeholder="Masukkan password owner"></div>
-      <div class="cp-btns">
-        <button class="btn btn-primary" onclick="submitOwnerPassword()">Buka</button>
-        <button class="btn btn-outline" onclick="closeOwnerGate()">Batal</button>
-      </div>
+      <input type="password" class="og-input" id="owner-gate-input" placeholder="Masukkan password owner">
+      <button class="og-btn-primary" onclick="submitOwnerPassword()">🔓 Buka</button>
+      <button class="og-btn-outline" onclick="closeOwnerGate()">Batal</button>
     </div>
 
     <div id="owner-gate-setup-view" style="display:none">
-      <div class="field-row"><input type="password" id="owner-gate-new1" placeholder="Buat password baru (min 6 karakter)"></div>
-      <div class="field-row"><input type="password" id="owner-gate-new2" placeholder="Ulangi password baru"></div>
-      <div class="cp-btns">
-        <button class="btn btn-primary" onclick="submitSetupOwnerPassword()">Simpan Password</button>
-        <button class="btn btn-outline" onclick="closeOwnerGate()">Batal</button>
-      </div>
+      <input type="password" class="og-input" id="owner-gate-new1" placeholder="Buat password baru (min 6 karakter)">
+      <input type="password" class="og-input" id="owner-gate-new2" placeholder="Ulangi password baru" style="margin-top:10px">
+      <button class="og-btn-primary" onclick="submitSetupOwnerPassword()">Simpan Password</button>
+      <button class="og-btn-outline" onclick="closeOwnerGate()">Batal</button>
     </div>
   </div>
 </div>
