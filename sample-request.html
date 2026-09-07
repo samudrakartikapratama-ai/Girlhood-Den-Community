@@ -4502,6 +4502,7 @@ function poinIcon(kategori){ return POIN_KATEGORI_ICON[kategori] || '⭐'; }
 const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 async function showRewardPopup(){
+  if(POIN_MENU_FROZEN) return;
   try {
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/creator-list-rewards', {
@@ -4540,8 +4541,14 @@ function closeRewardPopup(){
   document.getElementById('reward-popup-bg').classList.remove('open');
 }
 
+const POIN_MENU_FROZEN = true; // FREEZE SEMENTARA - lagi perbaikan sistem poin/VT, jangan lupa balikin ke false setelah selesai
+
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
+  if(POIN_MENU_FROZEN){
+    el.innerHTML = '<div style="text-align:center;padding:30px 16px"><div style="font-size:40px;margin-bottom:10px">🛠️</div><div style="font-weight:800;color:var(--dark);margin-bottom:6px">Menu Poin Lagi Diperbaiki</div><div class="card-sub">Kami lagi perbaiki sistem poin & report VT biar lebih adil buat semua creator. Menu ini bakal aktif lagi secepatnya. Poin kamu aman, nggak hilang.</div></div>';
+    return;
+  }
   el.innerHTML = '<div class="card-sub">Memuat data...</div>';
   try {
     const auth = await getInternalAuthHeader();
