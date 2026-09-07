@@ -377,27 +377,31 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .reward-popup-bg.open{display:flex}
 .reward-popup-box{background:linear-gradient(160deg,var(--pink) 0%,#a80d3f 55%,#7a0a30 100%);border-radius:26px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 30px 70px rgba(0,0,0,.4)}
 .rp-close-btn{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:none;font-size:15px;color:#fff;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;font-weight:800}
-.rp-header{padding:26px 22px 14px;text-align:center;position:relative;overflow:hidden}
+.rp-header{padding:26px 22px 16px;text-align:center;position:relative;overflow:hidden}
 .rp-header::before{content:'';position:absolute;top:-40px;left:-40px;width:160px;height:160px;background:rgba(255,255,255,.08);border-radius:50%}
 .rp-header::after{content:'';position:absolute;bottom:-60px;right:-30px;width:180px;height:180px;background:rgba(255,255,255,.06);border-radius:50%}
 .rp-brandrow{display:flex;align-items:center;justify-content:center;margin-bottom:10px;position:relative}
-.rp-brandrow img{height:48px;width:auto}
-.rp-header h1{font-size:38px;font-weight:800;color:#fff;line-height:.95;text-shadow:0 4px 0 rgba(0,0,0,.15);position:relative}
-.rp-header .rp-sub{font-size:18px;font-weight:700;color:var(--gold);margin-top:4px;position:relative}
+.rp-brandrow img{height:100px;width:auto}
+.rp-header h1{font-size:32px;font-weight:800;color:#fff;line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.15);position:relative;letter-spacing:.02em}
+.rp-header .rp-sub{font-size:16px;font-weight:700;color:var(--gold);margin-top:4px;position:relative}
 .rp-header .rp-tag{font-size:11.5px;color:rgba(255,255,255,.85);margin-top:8px;position:relative}
-.rp-grid{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 10px;margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rp-grid{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 10px;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .rp-card{background:var(--pink-pale);border-radius:14px;padding:10px 8px;text-align:center;border:1.5px solid #fce3ee}
-.rp-card.big{grid-column:span 2;display:flex;align-items:center;gap:14px;text-align:left;padding:14px}
+.rp-card.big{grid-column:span 2;padding:0;overflow:hidden;margin-bottom:2px;text-align:left}
 .rp-card .rp-thumb{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#fff}
 .rp-card .rp-thumb img{width:100%;height:100%;object-fit:cover}
-.rp-card.big .rp-thumb{width:70px;height:70px;flex-shrink:0;aspect-ratio:auto}
+.rp-card.big .rp-thumb{width:100%;aspect-ratio:16/9;border-radius:0;position:relative}
+.rp-card.big .rp-info{padding:12px 14px}
 .rp-card .rp-name{font-size:10.5px;font-weight:800;color:var(--dark);margin-top:4px;line-height:1.25;min-height:26px}
-.rp-card.big .rp-name{font-size:13px;margin-top:0;min-height:0}
+.rp-card.big .rp-name{font-size:16px;margin-top:0;min-height:0}
 .rp-card .rp-pts{font-size:15px;font-weight:800;color:var(--pink);margin-top:4px}
-.rp-card.big .rp-pts{font-size:19px}
+.rp-card.big .rp-pts{font-size:22px;margin-top:4px}
 .rp-card .rp-pts-lbl{font-size:8.5px;color:var(--gray-text);font-weight:700}
+.rp-card.big .rp-pts-lbl{font-size:11px}
 .rp-card .rp-stok{display:inline-block;margin-top:3px;font-size:8px;font-weight:800;background:var(--teal);color:#fff;padding:1.5px 7px;border-radius:999px}
-.rp-period{background:#fff;padding:0 16px 20px}
+.rp-card.big .rp-stok{font-size:9.5px;margin-top:6px;padding:3px 10px}
+.rp-card.big .rp-badge{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:999px}
+.rp-period{background:#fff;padding:14px 16px 20px}
 .rp-period-inner{background:var(--dark);border-radius:14px;padding:12px 16px;text-align:center}
 .rp-period-inner .lbl{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.04em}
 .rp-period-inner .dates{color:#fff;font-size:15px;font-weight:800;margin-top:2px}
@@ -405,18 +409,25 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 @media (min-width:1024px){
   .reward-popup-box{max-width:520px}
-  .rp-header h1{font-size:46px}
-  .rp-header .rp-sub{font-size:21px}
+  .rp-brandrow img{height:115px}
+  .rp-header h1{font-size:38px}
+  .rp-header .rp-sub{font-size:19px}
   .rp-grid{padding:22px 20px 12px;gap:12px}
   .rp-card{padding:12px 10px}
   .rp-card .rp-name{font-size:11.5px}
   .rp-card .rp-pts{font-size:16px}
+  .rp-card.big .rp-name{font-size:18px}
+  .rp-card.big .rp-pts{font-size:24px}
 }
 @media (max-width:380px){
-  .rp-header h1{font-size:32px}
-  .rp-header .rp-sub{font-size:16px}
+  .rp-brandrow img{height:85px}
+  .rp-header h1{font-size:28px}
+  .rp-header .rp-sub{font-size:14px}
   .rp-grid{gap:8px;padding:16px 12px 8px}
   .rp-card{padding:8px 6px}
+  .rp-card.big .rp-info{padding:10px 12px}
+  .rp-card.big .rp-name{font-size:14px}
+  .rp-card.big .rp-pts{font-size:19px}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -4407,8 +4418,9 @@ async function showRewardPopup(){
     document.getElementById('rp-grid').innerHTML = sortedRewards.map(function(r){
       const isBig = r.id === biggest.id;
       const fotoHtml = r.foto_url ? '<img src="'+r.foto_url+'">' : '';
+      const badgeHtml = isBig ? '<div class="rp-badge">🔥 Paling Diminati</div>' : '';
       return '<div class="rp-card'+(isBig?' big':'')+'">'
-        + '<div class="rp-thumb">'+fotoHtml+'</div>'
+        + '<div class="rp-thumb">'+badgeHtml+fotoHtml+'</div>'
         + '<div class="rp-info">'
         + '<div class="rp-name">'+r.nama+'</div>'
         + '<div class="rp-pts">'+r.poin_dibutuhkan+' <span class="rp-pts-lbl">POIN</span></div>'
