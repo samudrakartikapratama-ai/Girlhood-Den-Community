@@ -547,7 +547,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Isi data di bawah, tim internal akan verifikasi lalu kasih kode masuk kamu.</div>
   <div class="card">
     <div class="field"><label>Nama Lengkap</label><input id="reg-nama" placeholder="Nama kamu"></div>
-    <div class="field"><label>No WhatsApp</label><input id="reg-nohp" placeholder="08xxxxxxxxxx"></div>
+    <div class="field"><label>No WhatsApp</label>
+      <div style="display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden">
+        <span style="background:var(--pink-pale);color:var(--dark);font-weight:800;padding:10px 12px;font-size:13px;flex-shrink:0">+62</span>
+        <input id="reg-nohp" placeholder="81234567890" inputmode="numeric" style="border:none;border-radius:0;flex:1" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,13)">
+      </div>
+      <div style="font-size:9.5px;color:var(--gray-text);margin-top:3px">Isi tanpa angka 0 di depan. Contoh: 81234567890</div>
+    </div>
     <div class="field"><label>Link Profile TikTok</label><input id="reg-tiktok" placeholder="Paste link dari Bagikan > Salin Link, atau ketik @username" required></div>
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
@@ -1403,7 +1409,7 @@ function normalizeTiktokLink(raw){
 }
 async function submitRegistration(){
   const nama = document.getElementById('reg-nama').value.trim();
-  const noHp = document.getElementById('reg-nohp').value.trim();
+  const noHpRaw = document.getElementById('reg-nohp').value.trim().replace(/^0+/, '');
   const tiktokRaw = document.getElementById('reg-tiktok').value.trim();
   const level = document.getElementById('reg-level').value;
   const gmvRaw = document.getElementById('reg-gmv').value.replace(/\./g,'').replace(/[^0-9]/g,'');
@@ -1411,10 +1417,15 @@ async function submitRegistration(){
   const patokan = document.getElementById('reg-patokan').value.trim();
   const kodePos = document.getElementById('reg-kodepos').value.trim();
 
-  if(!nama || !noHp){
+  if(!nama || !noHpRaw){
     alert('Nama dan No WhatsApp wajib diisi.');
     return;
   }
+  if(noHpRaw.length < 9 || noHpRaw.length > 13){
+    alert('Nomor WhatsApp kelihatannya belum lengkap/valid. Isi 9-13 digit setelah +62, tanpa angka 0 di depan.');
+    return;
+  }
+  const noHp = '+62' + noHpRaw;
   if(!tiktokRaw){
     alert('Link/Username TikTok wajib diisi.');
     return;
@@ -1458,16 +1469,17 @@ async function submitRegistration(){
   }
 
   let fotoUrl = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(noHp);
+  let fotoGagalUpload = false;
   if(file){
     btn.textContent = 'Mengupload foto...';
     const uploadResult = await uploadFileToStorage('member-selfies', file, noHp);
     if(uploadResult.error){
-      btn.disabled = false;
-      btn.textContent = 'Kirim Pendaftaran';
-      showDbError('upload foto selfie', uploadResult.error);
-      return;
+      // Foto gagal upload (misal koneksi lelet) -- JANGAN batalin seluruh pendaftaran.
+      // Lanjut pakai avatar sementara, kasih tau creator biar dia bisa upload ulang belakangan.
+      fotoGagalUpload = true;
+    } else {
+      fotoUrl = uploadResult.url;
     }
-    fotoUrl = uploadResult.url;
     btn.textContent = 'Menyimpan data...';
   }
 
@@ -1501,7 +1513,11 @@ async function submitRegistration(){
     return;
   }
 
-  alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
+  if(fotoGagalUpload){
+    alert('Pendaftaran kamu TETAP terkirim! Cuma foto selfie-nya gagal ke-upload (mungkin koneksi lagi lelet). Nggak masalah, pendaftaran tetap diproses tim internal. Kalau mau, kamu bisa hubungi tim internal buat kirim ulang fotonya.');
+  } else {
+    alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
+  }
   closeModal('m-register');
 }
 let isSampleRequestFrozen = false;
