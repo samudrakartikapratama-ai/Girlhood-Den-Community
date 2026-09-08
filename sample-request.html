@@ -447,6 +447,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .og-input::placeholder{color:var(--gray-text)}
 .og-btn-primary{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;background:#fff;color:var(--pink);font-weight:800;font-size:14px;cursor:pointer}
 .og-btn-outline{width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
+.mev-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.mev-item.done{opacity:.6}
+.mev-item .num{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.mev-item.done .num{background:#1D9E75}
+.mev-item .title{font-size:12px;color:#fff;font-weight:700;flex:1}
+.mev-item .status{font-size:9.5px;color:rgba(255,255,255,.7)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -678,15 +684,17 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="edukasi-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="video-player-bg" id="video-player-bg" onclick="if(event.target===this) closeVideoPlayer()">
+<div class="video-player-bg" id="video-player-bg" onclick="if(event.target===this && !videoPlayerIsLocked) closeVideoPlayer()">
   <div class="video-player-box">
-    <button class="video-player-close" onclick="closeVideoPlayer()">✕</button>
+    <button class="video-player-close" id="video-player-close-btn" onclick="closeVideoPlayer()">✕</button>
     <div class="video-player-title" id="video-player-title"></div>
     <div class="video-player-wrap">
-      <video id="video-player-el" controls playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture="false"></video>
+      <video id="video-player-el" playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture="false" onended="onVideoPlayerEnded()"></video>
       <div class="video-player-endcard" id="video-player-endcard">
         <button class="btn btn-primary" onclick="replayVideo()">🔁 Tonton Lagi</button>
         <button class="btn btn-outline" style="background:transparent;color:#fff;border-color:#fff" onclick="closeVideoPlayer()">✕ Keluar</button>
+        <button class="btn btn-primary" id="video-player-next-btn" style="display:none" onclick="goToNextMandatoryVideo()">▶️ Lanjut Video Berikutnya</button>
+        <button class="btn btn-primary" id="video-player-finish-btn" style="display:none" onclick="finishMandatoryVideos()">✅ Selesai, Lanjut Pakai Aplikasi</button>
       </div>
     </div>
   </div>
@@ -800,6 +808,17 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Jadwal diskusi yang sudah dikonfirmasi antara kamu dan tim kami.</div>
   <div id="catchup-list-brand" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<div class="og-popup-bg" id="mandatory-edu-popup">
+  <div class="og-box" style="max-width:400px">
+    <div class="og-icon-wrap">🔒</div>
+    <div class="og-title">Wajib Nonton Video Edukasi Dulu</div>
+    <div class="og-body">Ada materi edukasi baru dari tim Girlhood Den. Kamu wajib nonton semua video ini secara berurutan sebelum bisa akses menu lain.</div>
+    <div id="mandatory-edu-list" style="margin-top:16px;text-align:left"></div>
+    <button class="og-btn-primary" id="mandatory-edu-cta" onclick="startMandatoryEducation()">▶️ Mulai Nonton</button>
+    <div style="margin-top:10px;font-size:9.5px;color:rgba(255,255,255,.6)">Menu lain nggak bisa diakses sampai semua video ditonton penuh.</div>
+  </div>
+</div>
 
 <div class="reward-popup-bg" id="reward-popup-bg">
   <div class="reward-popup-box">
@@ -2220,7 +2239,7 @@ async function logout(){
     setTimeout(function(){ checkCatchupPopup(role); }, 800);
   }
   if(role === 'creator'){
-    setTimeout(function(){ showRewardPopup(); }, 800);
+    setTimeout(function(){ checkMandatoryEducation(); }, 800);
   }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
@@ -2386,7 +2405,13 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showFlowPopup(role){document.getElementById('flow-popup-'+role).classList.add('open');}
 function closeFlowPopup(role){document.getElementById('flow-popup-'+role).classList.remove('open');}
 
-function openVideoPlayer(url, title){
+let mandatoryVideoQueue = [];
+let mandatoryVideoIndex = 0;
+let videoPlayerMaxWatched = 0;
+let videoPlayerIsLocked = false;
+let videoPlayerCurrentEduId = null;
+
+function openVideoPlayer(url, title, eduContentId, locked){
   const bg = document.getElementById('video-player-bg');
   const vid = document.getElementById('video-player-el');
   const endcard = document.getElementById('video-player-endcard');
@@ -2395,9 +2420,19 @@ function openVideoPlayer(url, title){
   vid.src = url;
   bg.classList.add('open');
   vid.play().catch(function(){});
+
+  videoPlayerCurrentEduId = eduContentId || null;
+  videoPlayerIsLocked = !!locked;
+  videoPlayerMaxWatched = 0;
+
+  const closeBtn = document.getElementById('video-player-close-btn');
+  closeBtn.style.display = videoPlayerIsLocked ? 'none' : '';
+  vid.controls = !videoPlayerIsLocked;
+  vid.setAttribute('controlsList', videoPlayerIsLocked ? 'nodownload noremoteplayback nofullscreen' : 'nodownload noremoteplayback');
 }
 
 function closeVideoPlayer(){
+  if(videoPlayerIsLocked) return; // Nggak bisa ditutup selama mode wajib aktif
   const bg = document.getElementById('video-player-bg');
   const vid = document.getElementById('video-player-el');
   vid.pause();
@@ -2413,6 +2448,80 @@ function replayVideo(){
   vid.currentTime = 0;
   vid.play().catch(function(){});
 }
+
+async function onVideoPlayerEnded(){
+  const endcard = document.getElementById('video-player-endcard');
+  endcard.classList.add('show');
+
+  const replayBtn = endcard.querySelector('.btn-primary:not(#video-player-next-btn):not(#video-player-finish-btn)');
+  const exitBtn = endcard.querySelector('.btn-outline');
+  document.getElementById('video-player-next-btn').style.display = 'none';
+  document.getElementById('video-player-finish-btn').style.display = 'none';
+
+  if(!videoPlayerIsLocked || !videoPlayerCurrentEduId){
+    if(replayBtn) replayBtn.style.display = '';
+    if(exitBtn) exitBtn.style.display = '';
+    return;
+  }
+
+  if(replayBtn) replayBtn.style.display = 'none';
+  if(exitBtn) exitBtn.style.display = 'none';
+
+  try {
+    const auth = await getInternalAuthHeader();
+    await fetch(SUPABASE_URL + '/functions/v1/creator-education-progress', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({action:'mark_watched', educationContentId: videoPlayerCurrentEduId})
+    });
+  } catch(e){}
+
+  mandatoryVideoIndex++;
+  document.getElementById('video-player-next-btn').style.display = mandatoryVideoIndex < mandatoryVideoQueue.length ? '' : 'none';
+  document.getElementById('video-player-finish-btn').style.display = mandatoryVideoIndex >= mandatoryVideoQueue.length ? '' : 'none';
+}
+
+function goToNextMandatoryVideo(){
+  if(mandatoryVideoIndex >= mandatoryVideoQueue.length) return;
+  const next = mandatoryVideoQueue[mandatoryVideoIndex];
+  openVideoPlayer(next.file_url, next.judul, next.id, true);
+}
+
+function finishMandatoryVideos(){
+  videoPlayerIsLocked = false;
+  const bg = document.getElementById('video-player-bg');
+  const vid = document.getElementById('video-player-el');
+  vid.pause(); vid.removeAttribute('src'); vid.load();
+  bg.classList.remove('open');
+  document.getElementById('video-player-endcard').classList.remove('show');
+  loadEducationCreator();
+  setTimeout(function(){ showRewardPopup(); }, 300);
+}
+
+(function setupVideoAntiSkip(){
+  document.addEventListener('DOMContentLoaded', function(){
+    const vid = document.getElementById('video-player-el');
+    if(!vid) return;
+    vid.addEventListener('timeupdate', function(){
+      if(vid.currentTime > videoPlayerMaxWatched) videoPlayerMaxWatched = vid.currentTime;
+    });
+    vid.addEventListener('seeking', function(){
+      if(videoPlayerIsLocked && vid.currentTime > videoPlayerMaxWatched + 0.5){
+        vid.currentTime = videoPlayerMaxWatched;
+      }
+    });
+    vid.addEventListener('keydown', function(e){
+      if(videoPlayerIsLocked && (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'MediaFastForward')){
+        e.preventDefault();
+      }
+    });
+    document.addEventListener('keydown', function(e){
+      const bg = document.getElementById('video-player-bg');
+      if(videoPlayerIsLocked && bg.classList.contains('open') && (e.key === 'Escape')){
+        e.preventDefault(); e.stopPropagation();
+      }
+    }, true);
+  });
+})();
 
 async function downloadEduVideo(url, title, btn){
   const originalText = btn.textContent;
@@ -3934,6 +4043,41 @@ async function removeEducationContent(id){
   await loadEducationManage();
 }
 
+async function checkMandatoryEducation(){
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-education-progress', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'check_pending'})
+    });
+    const j = await res.json();
+    if(!j.valid || !j.hasPending){
+      setTimeout(function(){ showRewardPopup(); }, 200);
+      return;
+    }
+
+    mandatoryVideoQueue = j.videos.filter(function(v){ return !v.watched; });
+    mandatoryVideoIndex = 0;
+
+    document.getElementById('mandatory-edu-list').innerHTML = j.videos.map(function(v, i){
+      return '<div class="mev-item'+(v.watched?' done':'')+'">'
+        + '<div class="num">'+(v.watched?'✓':(i+1))+'</div>'
+        + '<div class="title">'+(i+1)+'. '+v.judul+'</div>'
+        + '<div class="status">'+(v.watched?'Selesai':'Belum ditonton')+'</div></div>';
+    }).join('');
+
+    document.getElementById('mandatory-edu-popup').classList.add('open');
+  } catch(e){
+    setTimeout(function(){ showRewardPopup(); }, 200);
+  }
+}
+
+function startMandatoryEducation(){
+  document.getElementById('mandatory-edu-popup').classList.remove('open');
+  if(mandatoryVideoQueue.length === 0) return;
+  const first = mandatoryVideoQueue[0];
+  openVideoPlayer(first.file_url, first.judul, first.id, true);
+}
+
 async function loadEducationCreator(){
   const container = document.getElementById('edukasi-creator-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
@@ -3955,11 +4099,9 @@ async function loadEducationCreator(){
     if(e.tipe === 'video'){
       const safeTitle = (e.judul||'').replace(/'/g,"\\'");
       return '<div class="card"><div class="card-title">'+e.judul+'</div>'
-        + '<div style="background:var(--dark);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;margin-top:6px;cursor:pointer" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\')">▶️</div>'
-        + '<div style="display:flex;gap:8px;margin-top:8px">'
-        + '<button class="btn btn-teal btn-sm" style="flex:1" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\')">▶️ Tonton</button>'
-        + '<button class="btn btn-outline btn-sm" style="flex:1" onclick="downloadEduVideo(\''+e.file_url+'\', \''+safeTitle+'\', this)">⬇️ Unduh</button>'
-        + '</div></div>';
+        + '<div style="background:var(--dark);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;margin-top:6px;cursor:pointer" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\', \''+e.id+'\')">▶️</div>'
+        + '<button class="btn btn-teal btn-sm" style="width:100%;margin-top:8px" onclick="openVideoPlayer(\''+e.file_url+'\', \''+safeTitle+'\', \''+e.id+'\')">▶️ Tonton</button>'
+        + '</div>';
     }
     return '<div class="card"><div class="card-title">'+e.judul+'</div>'
       + '<a href="'+e.file_url+'" target="_blank" style="text-decoration:none;color:inherit"><div style="background:var(--pink-pale);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;margin-top:6px"><span style="font-size:24px">📄</span><span>Lihat PDF</span></div></a></div>';
