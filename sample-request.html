@@ -4568,7 +4568,7 @@ function closeRewardPopup(){
   document.getElementById('reward-popup-bg').classList.remove('open');
 }
 
-const POIN_MENU_FROZEN = true; // FREEZE SEMENTARA - lagi perbaikan sistem poin/VT, jangan lupa balikin ke false setelah selesai
+const POIN_MENU_FROZEN = false; // Unfreeze - aturan anti-abuse (duplikat & video lama) udah aktif
 
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
