@@ -560,7 +560,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
     <div class="field"><label>Foto Selfie</label>
       <input type="file" id="reg-foto-file" accept="image/*" onchange="previewSelfie(this)">
-      <div class="size-note">Maksimal file 5MB</div>
+      <div class="size-note">Maksimal file 10MB</div>
       <div class="photo-preview-wrap show" id="pp-wrap"><img class="photo-preview" id="pp-img" src="https://api.dicebear.com/7.x/adventurer/svg?seed=c1"><div class="card-sub">Bingkai Girlhood Den — permanen, tersambung ke No WA</div></div>
     </div>
     <button class="btn btn-primary" id="reg-submit-btn" onclick="submitRegistration()">Kirim Pendaftaran</button>
@@ -1442,6 +1442,10 @@ async function submitRegistration(){
     alert('Foto selfie wajib diisi. Ambil/upload foto kamu dulu ya.');
     return;
   }
+  if(file.size > 10*1024*1024){
+    alert('Ukuran foto maksimal 10MB. File kamu: ' + (file.size/1024/1024).toFixed(1) + 'MB. Coba pilih foto lain atau screenshot yang lebih kecil.');
+    return;
+  }
 
   const btn = document.getElementById('reg-submit-btn');
   btn.disabled = true;
@@ -1475,9 +1479,19 @@ async function submitRegistration(){
   let fotoUrl = null;
   let fotoGagalUpload = false;
   btn.textContent = 'Mengupload foto...';
-  const uploadResult = await uploadFileToStorage('member-selfies', file, noHp);
+
+  let uploadResult = null;
+  for(let attempt = 1; attempt <= 3; attempt++){
+    if(attempt > 1){
+      btn.textContent = 'Mencoba lagi... (' + attempt + '/3)';
+      await new Promise(r => setTimeout(r, 1200));
+    }
+    uploadResult = await uploadFileToStorage('member-selfies', file, noHp);
+    if(!uploadResult.error) break;
+  }
+
   if(uploadResult.error){
-    // Foto gagal upload (misal koneksi lelet) -- JANGAN batalin seluruh pendaftaran.
+    // Udah dicoba 3x tetep gagal (misal sinyal beneran mati) -- JANGAN batalin seluruh pendaftaran.
     // Foto dikosongin dulu (BUKAN avatar palsu), internal bisa minta ulang lewat WA.
     fotoGagalUpload = true;
   } else {
@@ -1516,7 +1530,7 @@ async function submitRegistration(){
   }
 
   if(fotoGagalUpload){
-    alert('Pendaftaran kamu TETAP terkirim! Cuma foto selfie-nya gagal ke-upload (mungkin koneksi lagi lelet). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
+    alert('Pendaftaran kamu TETAP terkirim! Sistem udah coba upload foto selfie kamu 3 kali, tapi tetap gagal (kemungkinan koneksi kamu lagi kurang stabil). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
   } else {
     alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   }
