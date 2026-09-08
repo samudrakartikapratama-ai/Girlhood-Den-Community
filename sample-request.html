@@ -1067,6 +1067,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div></div>
 
+<div class="og-popup-bg" id="vt-reject-popup">
+  <div class="og-box" style="background:linear-gradient(165deg,var(--gold) 0%,#c98d1f 60%,#8f6510 100%)">
+    <div class="og-icon-wrap" id="vt-reject-icon">⚠️</div>
+    <div class="og-title" id="vt-reject-title">Video Nggak Bisa Disubmit</div>
+    <div class="og-body" id="vt-reject-body">-</div>
+    <button class="og-btn-primary" onclick="document.getElementById('vt-reject-popup').classList.remove('open')" style="color:#8f6510">Oke, Aku Ganti Videonya</button>
+  </div>
+</div>
+
 <div class="og-popup-bg" id="owner-gate-popup">
   <div class="og-box">
     <div class="og-icon-wrap">🔒</div>
@@ -2079,6 +2088,20 @@ async function loadVtReportPage(){
   }).join('');
 }
 
+const VT_REJECT_CONTENT = {
+  duplicate: { icon: '🔁', title: 'Video Ini Udah Pernah Dipakai' },
+  old_video: { icon: '📅', title: 'Video Ini Bukan Video Baru' },
+  cant_verify: { icon: '❓', title: 'Link Video Nggak Bisa Diverifikasi' },
+  default: { icon: '⚠️', title: 'Video Nggak Bisa Disubmit' }
+};
+function showVtRejectionPopup(errorType, message){
+  const content = VT_REJECT_CONTENT[errorType] || VT_REJECT_CONTENT.default;
+  document.getElementById('vt-reject-icon').textContent = content.icon;
+  document.getElementById('vt-reject-title').textContent = content.title;
+  document.getElementById('vt-reject-body').textContent = message;
+  document.getElementById('vt-reject-popup').classList.add('open');
+}
+
 async function submitVtReport(){
   const select = document.getElementById('vt-product-select');
   const linkInput = document.getElementById('vt-video-link');
@@ -2090,7 +2113,7 @@ async function submitVtReport(){
 
   const btn = document.getElementById('vt-submit-btn');
   btn.disabled = true;
-  btn.textContent = 'Mengirim...';
+  btn.textContent = '🔍 Memeriksa video kamu...';
 
   let result;
   try {
@@ -2103,7 +2126,7 @@ async function submitVtReport(){
     result = await res.json();
   } catch(e){
     btn.disabled = false; btn.textContent = 'Submit VT';
-    alert('Gagal menghubungi server.');
+    showVtRejectionPopup('default', 'Gagal menghubungi server. Coba lagi ya.');
     return;
   }
 
@@ -2111,7 +2134,7 @@ async function submitVtReport(){
   btn.textContent = 'Submit VT';
 
   if(!result.valid){
-    alert(result.error || 'Gagal submit VT.');
+    showVtRejectionPopup(result.errorType || 'default', result.error || 'Gagal submit VT.');
     return;
   }
 
