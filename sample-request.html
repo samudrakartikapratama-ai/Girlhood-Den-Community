@@ -1438,6 +1438,10 @@ async function submitRegistration(){
 
   const fileInput = document.getElementById('reg-foto-file');
   const file = fileInput.files[0];
+  if(!file){
+    alert('Foto selfie wajib diisi. Ambil/upload foto kamu dulu ya.');
+    return;
+  }
 
   const btn = document.getElementById('reg-submit-btn');
   btn.disabled = true;
@@ -1468,20 +1472,18 @@ async function submitRegistration(){
     return;
   }
 
-  let fotoUrl = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(noHp);
+  let fotoUrl = null;
   let fotoGagalUpload = false;
-  if(file){
-    btn.textContent = 'Mengupload foto...';
-    const uploadResult = await uploadFileToStorage('member-selfies', file, noHp);
-    if(uploadResult.error){
-      // Foto gagal upload (misal koneksi lelet) -- JANGAN batalin seluruh pendaftaran.
-      // Lanjut pakai avatar sementara, kasih tau creator biar dia bisa upload ulang belakangan.
-      fotoGagalUpload = true;
-    } else {
-      fotoUrl = uploadResult.url;
-    }
-    btn.textContent = 'Menyimpan data...';
+  btn.textContent = 'Mengupload foto...';
+  const uploadResult = await uploadFileToStorage('member-selfies', file, noHp);
+  if(uploadResult.error){
+    // Foto gagal upload (misal koneksi lelet) -- JANGAN batalin seluruh pendaftaran.
+    // Foto dikosongin dulu (BUKAN avatar palsu), internal bisa minta ulang lewat WA.
+    fotoGagalUpload = true;
+  } else {
+    fotoUrl = uploadResult.url;
   }
+  btn.textContent = 'Menyimpan data...';
 
   const payload = {
     nama: nama,
@@ -1514,7 +1516,7 @@ async function submitRegistration(){
   }
 
   if(fotoGagalUpload){
-    alert('Pendaftaran kamu TETAP terkirim! Cuma foto selfie-nya gagal ke-upload (mungkin koneksi lagi lelet). Nggak masalah, pendaftaran tetap diproses tim internal. Kalau mau, kamu bisa hubungi tim internal buat kirim ulang fotonya.');
+    alert('Pendaftaran kamu TETAP terkirim! Cuma foto selfie-nya gagal ke-upload (mungkin koneksi lagi lelet). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
   } else {
     alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   }
