@@ -146,6 +146,31 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
 .card-title{font-size:14px;font-weight:700;margin-bottom:4px}
 .card-sub{font-size:12px;color:var(--gray-text);margin-bottom:8px}
+.notif-dot{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #fff}
+.icon-card{position:relative}
+.sr-stage-tab{flex:1;padding:9px;border-radius:9px;font-size:11.5px;font-weight:800;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray-text)}
+.sr-stage-tab.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.sr-card{background:var(--pink-pale);border-radius:14px;padding:14px;margin-bottom:12px}
+.sr-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.sr-card-head .who{font-size:13px;font-weight:800;color:var(--dark)}
+.sr-card-head .prod{font-size:11px;color:var(--pink);font-weight:700;margin-top:2px}
+.sr-card-head .datebadge{background:#fff;color:var(--pink);font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.sr-compare-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.sr-compare-box{text-align:center}
+.sr-compare-box .lbl{font-size:9px;font-weight:800;color:var(--gray-text);margin-bottom:4px}
+.sr-compare-box img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid #fff;cursor:pointer}
+.sr-vt-link-box{background:#fff;border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:11px}
+.sr-vt-link-box a{color:var(--pink);font-weight:800;word-break:break-all}
+.sr-vt-link-box .cutoff{margin-top:5px;font-size:10px;color:var(--gray-text)}
+.sr-vt-link-box .cutoff b{color:var(--red)}
+.sr-btn-row{display:flex;gap:7px}
+.sr-btn{flex:1;padding:9px;border-radius:9px;border:none;font-weight:800;font-size:11px;cursor:pointer}
+.sr-btn-approve{background:var(--teal);color:#fff}
+.sr-btn-reject{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+.sr-reject-panel{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #ddd}
+.sr-reject-panel.show{display:block}
+.sr-reason-opt{display:flex;align-items:flex-start;gap:7px;padding:8px 9px;background:#fdf3f3;border-radius:7px;margin-bottom:5px;font-size:10.5px;cursor:pointer}
+.sr-btn-confirm-reject{width:100%;margin-top:8px;padding:8px;border-radius:9px;border:none;background:var(--red);color:#fff;font-weight:800;font-size:10.5px;cursor:pointer}
 .freeze-banner{background:var(--red-light);border:1.5px solid var(--red);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.5}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:12px;font-weight:700;color:var(--gray-text);margin-bottom:5px}
@@ -537,7 +562,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openOwnerGate()"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live Creator"><div class="icon-label">Upcoming Live Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
-    <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Verifikasi Produk</div></div>
+    <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
   </div>
 </div>
 
@@ -1160,9 +1185,14 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div></div>
 
 <div class="modal-bg" id="m-i15"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i15')">‹ ✕</button>
-  <div class="modal-title">📸 Verifikasi "Sudah Punya Produk"</div>
-  <div class="card-sub">Creator ngaku udah pegang produknya sendiri (bukan dari sistem). Cek fotonya, approve kalau valid — begitu di-approve langsung kebuka buat Report VT & poin.</div>
+  <div class="modal-title">📸 Self Report</div>
+  <div class="card-sub">Semua pengajuan "Sudah Punya Produk" — dua tahap review: foto produk, lalu VT-nya.</div>
+  <div style="display:flex;gap:8px;margin-top:12px;margin-bottom:12px">
+    <button class="sr-stage-tab active" id="sr-tab-foto" onclick="switchSrStage('foto')">1. Verifikasi Foto</button>
+    <button class="sr-stage-tab" id="sr-tab-vt" onclick="switchSrStage('vt')">2. Verifikasi VT</button>
+  </div>
   <div id="selfreport-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
+  <div id="selfreport-vt-list" style="margin-top:10px;display:none"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -1544,7 +1574,8 @@ async function checkFreezeStatus(){
   const { data, error } = await db.from('sample_requests')
     .select('id, tipe_sow_dipilih, brand_products(brand_id), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
-    .eq('status', 'approved');
+    .eq('status', 'approved')
+    .eq('vt_reports.status', 'approved');
 
   if(error) return;
 
@@ -2112,7 +2143,8 @@ async function loadVtReportPage(){
   const { data, error } = await db.from('sample_requests')
     .select('id, tipe_sow_dipilih, brand_products(nama_produk, brands(nama_brand)), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
-    .eq('status', 'approved');
+    .eq('status', 'approved')
+    .eq('vt_reports.status', 'approved');
 
   if(error){
     select.innerHTML = '<option value="">Gagal memuat</option>';
@@ -2269,6 +2301,10 @@ async function logout(){
   subscribeRealtimeNotif(role);
   if(role === 'brand' || role === 'internal'){
     setTimeout(function(){ checkCatchupPopup(role); }, 800);
+  }
+  if(role === 'internal'){
+    checkSelfReportBadge();
+    subscribeSelfReportRealtime();
   }
   if(role === 'creator'){
     setTimeout(function(){ checkMandatoryEducation(); }, 800);
@@ -3195,7 +3231,7 @@ async function getActiveBrandIds(){
 
   let vtCounts = {};
   if(approvedVtIds.length > 0){
-    const { data: reports } = await db.from('vt_reports').select('sample_request_id').in('sample_request_id', approvedVtIds);
+    const { data: reports } = await db.from('vt_reports').select('sample_request_id').in('sample_request_id', approvedVtIds).eq('status', 'approved');
     (reports||[]).forEach(function(r){ vtCounts[r.sample_request_id] = (vtCounts[r.sample_request_id]||0) + 1; });
   }
 
@@ -3429,6 +3465,7 @@ async function loadReportVtBrand(){
     .select('id, tipe_sow_dipilih, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
+    .eq('vt_reports.status', 'approved')
     .in('tipe_sow_dipilih', ['VT','VT_LIVE']);
 
   if(error){
@@ -4231,6 +4268,7 @@ async function downloadRekapBulanan(){
     .select('member_id, decided_at, tipe_sow_dipilih, members(nama, no_hp), brand_products!inner(nama_produk, brand_id), shipments(tanggal_janji_kirim), logistics(sudah_dikirim, nomor_resi), vt_reports(id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
+    .eq('vt_reports.status', 'approved')
     .gte('decided_at', startDate)
     .lte('decided_at', endDate + 'T23:59:59');
 
@@ -5724,6 +5762,14 @@ async function submitSelfReport(){
   reader.readAsDataURL(file);
 }
 
+function switchSrStage(stage){
+  document.getElementById('sr-tab-foto').classList.toggle('active', stage==='foto');
+  document.getElementById('sr-tab-vt').classList.toggle('active', stage==='vt');
+  document.getElementById('selfreport-list').style.display = stage==='foto' ? '' : 'none';
+  document.getElementById('selfreport-vt-list').style.display = stage==='vt' ? '' : 'none';
+  if(stage==='vt') loadSelfReportVtQueue();
+}
+
 async function loadSelfReportPending(){
   const container = document.getElementById('selfreport-list');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
@@ -5734,37 +5780,132 @@ async function loadSelfReportPending(){
     });
     const j = await res.json();
     if(!j.valid){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
-    if(!j.rows || j.rows.length === 0){ container.innerHTML = '<div class="card-sub">Nggak ada pengajuan yang perlu direview 🎉</div>'; return; }
+    if(!j.rows || j.rows.length === 0){ container.innerHTML = '<div class="card-sub">Nggak ada pengajuan foto yang perlu direview 🎉</div>'; return; }
 
     container.innerHTML = j.rows.map(function(r){
       const brandName = r.brand_products?.brands?.nama_brand || '-';
       const produkName = r.brand_products?.nama_produk || '-';
       const creatorName = r.members?.nama || '-';
-      return '<div class="card"><div style="display:flex;gap:10px">'
-        + '<img src="'+r.foto_bukti_url+'" style="width:70px;height:70px;object-fit:cover;border-radius:10px;flex-shrink:0" onclick="window.open(\''+r.foto_bukti_url+'\',\'_blank\')">'
-        + '<div style="flex:1"><b>'+creatorName+'</b><div class="card-sub">'+brandName+' — '+produkName+'</div></div>'
+      const refFoto = (r.brand_products?.foto_urls && r.brand_products.foto_urls[0]) || '';
+      const tgl = new Date(r.created_at).toLocaleString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return '<div class="sr-card" id="sr-foto-card-'+r.id+'">'
+        + '<div class="sr-card-head"><div><div class="who">'+creatorName+'</div><div class="prod">'+brandName+' — '+produkName+'</div></div>'
+        + '<div class="datebadge">Submit: '+tgl+'</div></div>'
+        + '<div class="sr-compare-row">'
+        + '<div class="sr-compare-box"><div class="lbl">FOTO CREATOR</div><img src="'+r.foto_bukti_url+'" onclick="window.open(\''+r.foto_bukti_url+'\',\'_blank\')"></div>'
+        + '<div class="sr-compare-box"><div class="lbl">FOTO REFERENSI CAMPAIGN</div>'+(refFoto?'<img src="'+refFoto+'" onclick="window.open(\''+refFoto+'\',\'_blank\')">':'<div class="card-sub">Nggak ada foto referensi</div>')+'</div>'
         + '</div>'
-        + '<div style="display:flex;gap:8px;margin-top:8px">'
-        + '<button class="btn btn-outline btn-sm" style="flex:1" onclick="decideSelfReport(\''+r.id+'\',\'reject\',this)">Tolak</button>'
-        + '<button class="btn btn-primary btn-sm" style="flex:1" onclick="decideSelfReport(\''+r.id+'\',\'approve\',this)">Approve</button>'
+        + '<div class="sr-btn-row">'
+        + '<button class="sr-btn sr-btn-approve" onclick="decideFotoSelfReport(\''+r.id+'\',\'approve\',null)">✓ Setujui</button>'
+        + '<button class="sr-btn sr-btn-reject" onclick="toggleSrReject(\''+r.id+'\')">✕ Tolak</button>'
+        + '</div>'
+        + '<div class="sr-reject-panel" id="sr-reject-'+r.id+'">'
+        + '<div style="font-size:10.5px;font-weight:800;margin-bottom:6px">Pilih alasan penolakan:</div>'
+        + '<label class="sr-reason-opt"><input type="radio" name="srreason-'+r.id+'" value="produk_tidak_sesuai"> Produk tidak sesuai dengan yang diminta</label>'
+        + '<label class="sr-reason-opt"><input type="radio" name="srreason-'+r.id+'" value="foto_kurang_jelas"> Foto kurang jelas, ulangi fotonya</label>'
+        + '<button class="sr-btn-confirm-reject" onclick="confirmSrFotoReject(\''+r.id+'\')">Kirim Penolakan</button>'
         + '</div></div>';
     }).join('');
   } catch(e){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
 }
 
-async function decideSelfReport(id, decision, btn){
-  const card = btn.closest('.card');
+function toggleSrReject(id){
+  document.getElementById('sr-reject-'+id).classList.toggle('show');
+}
+
+function confirmSrFotoReject(id){
+  const checked = document.querySelector('input[name="srreason-'+id+'"]:checked');
+  if(!checked){ alert('Pilih salah satu alasan dulu.'); return; }
+  decideFotoSelfReport(id, 'reject', checked.value);
+}
+
+async function decideFotoSelfReport(id, decision, reasonKey){
+  const card = document.getElementById('sr-foto-card-'+id);
   card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
   try {
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'decide', id, decision })
+      body: JSON.stringify({ action:'decide', id, decision, reasonKey })
     });
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
     loadSelfReportPending();
   } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+async function loadSelfReportVtQueue(){
+  const container = document.getElementById('selfreport-vt-list');
+  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_pending_vt'})
+    });
+    const j = await res.json();
+    if(!j.valid){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
+    if(!j.rows || j.rows.length === 0){ container.innerHTML = '<div class="card-sub">Nggak ada VT self-report yang perlu direview 🎉</div>'; return; }
+
+    container.innerHTML = j.rows.map(function(r){
+      const tgl = new Date(r.submittedAt).toLocaleString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const cutoffDisplay = new Date(r.cutoffDateStr).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'});
+      return '<div class="sr-card" id="sr-vt-card-'+r.vtId+'">'
+        + '<div class="sr-card-head"><div><div class="who">'+r.creatorName+'</div><div class="prod">'+r.produkName+'</div></div>'
+        + '<div class="datebadge">Submit: '+tgl+'</div></div>'
+        + '<div class="sr-vt-link-box">🔗 <a href="'+r.videoUrl+'" target="_blank">'+r.videoUrl+'</a>'
+        + '<div class="cutoff">Batas maksimal video: <b>H-1 dari pengajuan → '+cutoffDisplay+'</b>. Klik link buat cek tanggal aslinya.</div></div>'
+        + '<div class="sr-btn-row">'
+        + '<button class="sr-btn sr-btn-approve" onclick="decideVtSelfReport(\''+r.vtId+'\',\'approve\')">✓ Setujui + Kasih Poin</button>'
+        + '<button class="sr-btn sr-btn-reject" onclick="toggleSrVtReject(\''+r.vtId+'\')">✕ Tolak</button>'
+        + '</div>'
+        + '<div class="sr-reject-panel" id="sr-vt-reject-'+r.vtId+'">'
+        + '<div style="font-size:10.5px;font-weight:800;margin-bottom:6px">Alasan penolakan (otomatis):</div>'
+        + '<label class="sr-reason-opt"><input type="radio" name="srvtreason-'+r.vtId+'" checked> Upload VT tidak boleh VT yang lama, batas maksimalnya adalah Postingan VT yang di upload tgl '+cutoffDisplay+'.</label>'
+        + '<button class="sr-btn-confirm-reject" onclick="decideVtSelfReport(\''+r.vtId+'\',\'reject\')">Kirim Penolakan</button>'
+        + '</div></div>';
+    }).join('');
+  } catch(e){ container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+function toggleSrVtReject(vtId){
+  document.getElementById('sr-vt-reject-'+vtId).classList.toggle('show');
+}
+
+async function decideVtSelfReport(vtId, decision){
+  const card = document.getElementById('sr-vt-card-'+vtId);
+  card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'decide_vt', vtId, decision })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
+    loadSelfReportVtQueue();
+  } catch(e){ alert('Gagal menghubungi server.'); }
+}
+
+async function checkSelfReportBadge(){
+  try {
+    const auth = await getInternalAuthHeader();
+    const [fotoRes, vtRes] = await Promise.all([
+      fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', { method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_pending'}) }),
+      fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', { method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list_pending_vt'}) })
+    ]);
+    const fotoJ = await fotoRes.json();
+    const vtJ = await vtRes.json();
+    const total = (fotoJ.rows?.length || 0) + (vtJ.rows?.length || 0);
+    const badge = document.getElementById('sr-menu-badge');
+    if(badge) badge.style.display = total > 0 ? 'block' : 'none';
+  } catch(e){}
+}
+
+function subscribeSelfReportRealtime(){
+  db.channel('selfreport-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'self_reported_products' }, function(){ checkSelfReportBadge(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'vt_reports' }, function(){ checkSelfReportBadge(); })
+    .subscribe();
 }
 
 /* ================= REALTIME NOTIFIKASI ================= */
