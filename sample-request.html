@@ -479,6 +479,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .mev-item.done .num{background:#1D9E75}
 .mev-item .title{font-size:12px;color:#fff;font-weight:700;flex:1}
 .mev-item .status{font-size:9.5px;color:rgba(255,255,255,.7)}
+
+.wa-toast{position:fixed;top:-100px;left:12px;right:12px;max-width:420px;margin:0 auto;background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.22);border-left:4px solid var(--teal);z-index:99999;transition:top .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer}
+.wa-toast.show{top:14px}
+.wa-toast-ic{font-size:20px;flex-shrink:0}
+.wa-toast-txt{font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.4}
+.wa-toast-sub{font-size:9.5px;color:var(--gray-text);font-weight:500;margin-top:2px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -515,7 +521,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
-    <div class="icon-card" id="ic-reportvt" onclick="checkVersionNotif(); openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
@@ -605,6 +611,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="quota-label">Kuota Brand Kamu</div>
     <div class="quota-num" id="quota-num">-</div>
     <div class="quota-dots" id="quota-dots"></div>
+    <div class="quota-bar-track" style="height:8px;background:#f0d9e6;border-radius:99px;overflow:hidden;margin:10px 0 4px">
+      <div id="quota-bar-fill" style="height:100%;background:var(--teal);border-radius:99px;width:0%;transition:width .4s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--gray-text)">
+      <span id="quota-bar-used-label">0 terpakai</span><span id="quota-bar-sisa-label">3 tersedia</span>
+    </div>
     <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
 
@@ -2328,6 +2340,7 @@ async function logout(){
   }
   if(role === 'creator'){
     setTimeout(function(){ checkMandatoryEducation(); }, 800);
+    updateReportVtLockState();
   }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
@@ -3289,6 +3302,9 @@ async function getActiveBrandIds(){
 async function loadMyQuota(){
   const numEl = document.getElementById('quota-num');
   const dotsEl = document.getElementById('quota-dots');
+  const barFill = document.getElementById('quota-bar-fill');
+  const usedLabel = document.getElementById('quota-bar-used-label');
+  const sisaLabel = document.getElementById('quota-bar-sisa-label');
   if(!currentSession.memberId){ numEl.textContent = '-'; return; }
 
   const activeBrandIds = await getActiveBrandIds();
@@ -3300,6 +3316,11 @@ async function loadMyQuota(){
   dotsEl.innerHTML = '';
   for(let i=0;i<3;i++){
     dotsEl.innerHTML += '<div class="quota-dot' + (i < sisa ? ' filled' : '') + '"></div>';
+  }
+  if(barFill){
+    barFill.style.width = Math.round((used/3)*100) + '%';
+    usedLabel.textContent = used + ' terpakai';
+    sisaLabel.textContent = sisa + ' tersedia';
   }
 }
 
@@ -4831,6 +4852,31 @@ function closeVersionNotif(){
   document.getElementById('version-notif-popup').style.display = 'none';
 }
 
+function handleReportVtClick(){
+  const card = document.getElementById('ic-reportvt');
+  if(card.classList.contains('locked')){
+    alert('Belum ada produk yang di-approve nih. Ajukan lewat "Sudah Punya Produk" dulu sambil nunggu, atau tunggu brand acc request kamu ya.');
+    return;
+  }
+  checkVersionNotif();
+  openModal('m-c4');
+  loadVtReportPage();
+}
+
+async function updateReportVtLockState(){
+  const card = document.getElementById('ic-reportvt');
+  const lockIcon = document.getElementById('ic-reportvt-lock');
+  if(!card || !currentSession.memberId) return;
+
+  const { data, error } = await db.from('sample_requests')
+    .select('id').eq('member_id', currentSession.memberId).eq('status', 'approved').limit(1);
+
+  const hasApproved = !error && data && data.length > 0;
+  card.classList.toggle('locked', !hasApproved);
+  card.style.opacity = hasApproved ? '1' : '.45';
+  if(lockIcon) lockIcon.style.display = hasApproved ? 'none' : 'flex';
+}
+
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
   if(POIN_MENU_FROZEN){
@@ -5981,10 +6027,27 @@ function subscribeRealtimeNotif(role){
         if(payload.new.member_id === currentSession.memberId){
           const modal = document.getElementById('m-c7');
           if(modal && modal.classList.contains('open')) loadNotificationsCreator();
+          if(payload.new.kategori === 'status'){
+            showWaStyleToast(payload.new.detail_text || 'Ada update baru buat kamu!');
+            updateReportVtLockState();
+          }
         }
       }
     })
     .subscribe();
+}
+
+function showWaStyleToast(text){
+  const el = document.createElement('div');
+  el.className = 'wa-toast';
+  el.innerHTML = '<div class="wa-toast-ic">✅</div><div class="wa-toast-txt">'+text+'<div class="wa-toast-sub">Ketuk buat lihat detail</div></div>';
+  el.onclick = function(){ el.remove(); openModal('m-c7'); loadNotificationsCreator(); };
+  document.body.appendChild(el);
+  requestAnimationFrame(function(){ el.classList.add('show'); });
+  setTimeout(function(){
+    el.classList.remove('show');
+    setTimeout(function(){ el.remove(); }, 400);
+  }, 6000);
 }
 
 
