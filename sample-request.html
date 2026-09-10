@@ -1127,7 +1127,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-i7"><div class="modal-box" style="max-width:700px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i7')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
-  <div class="card-sub">Semua perubahan digabung di sini, cek manual kapan pun — tidak ada push. Filter per kategori:</div>
+  <div class="card-sub">Semua perubahan digabung di sini, cek manual kapan pun — tidak ada push. Pilih bulan buat flashback log lama, lalu filter per kategori:</div>
+  <div class="filter-row" style="gap:8px;flex-wrap:wrap">
+    <select id="notif-month" style="flex:1;min-width:110px"></select>
+    <select id="notif-year" style="flex:1;min-width:90px"></select>
+    <button class="btn btn-primary btn-sm" onclick="loadNotifications()">Tampilkan</button>
+  </div>
   <div class="filter-row">
     <select id="notif-filter" onchange="filterNotif(this)">
       <option value="all">Semua Kategori</option>
@@ -4332,7 +4337,27 @@ function formatWaktuNotif(iso){
   return new Date(iso).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) + ' ' + new Date(iso).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
 }
 
+function populateNotifMonthYear(){
+  const monthSel = document.getElementById('notif-month');
+  const yearSel = document.getElementById('notif-year');
+  if(monthSel.options.length > 0) return; // udah keisi sebelumnya, jangan reset pilihan user
+
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  monthSel.innerHTML = monthNames.map(function(m,i){ return '<option value="'+(i+1)+'">'+m+'</option>'; }).join('');
+
+  const startYear = 2026; // titik nol log — September 2026
+  const nowJakarta = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+  const endYear = nowJakarta.getFullYear() + 1; // future-proof setahun ke depan
+  let yearOpts = '';
+  for(let y = startYear; y <= endYear; y++){ yearOpts += '<option value="'+y+'">'+y+'</option>'; }
+  yearSel.innerHTML = yearOpts;
+
+  monthSel.value = nowJakarta.getMonth() + 1;
+  yearSel.value = nowJakarta.getFullYear();
+}
+
 async function loadNotifications(){
+  populateNotifMonthYear();
   const tbody = document.getElementById('notif-rows');
   tbody.innerHTML = '<tr><td colspan="6" class="card-sub">Memuat data...</td></tr>';
 
@@ -4342,12 +4367,15 @@ async function loadNotifications(){
     return;
   }
 
+  const month = Number(document.getElementById('notif-month').value);
+  const year = Number(document.getElementById('notif-year').value);
+
   let result;
   try {
     const response = await fetch(SUPABASE_URL + '/functions/v1/internal-notifications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-      body: JSON.stringify({})
+      body: JSON.stringify({ month: month, year: year })
     });
     result = await response.json();
   } catch(e){
@@ -4366,7 +4394,7 @@ async function loadNotifications(){
   if(badgeCount > 0){ badge.style.display='flex'; badge.textContent = badgeCount; } else { badge.style.display='none'; }
 
   if(allRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="6" class="card-sub">Belum ada notifikasi.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="card-sub">Belum ada notifikasi di bulan ini.</td></tr>';
     return;
   }
 
@@ -6005,13 +6033,18 @@ function subscribeRealtimeNotif(role){
         if(payload.new.brand_id === currentSession.brandId){
           const modal = document.getElementById('m-b6');
           if(modal && modal.classList.contains('open')) loadNotificationsBrand();
+          showWaStyleToast(payload.new.detail_text || 'Ada aktivitas baru yang perlu ditindaklanjuti.', function(){
+            openModal('m-b6'); loadNotificationsBrand();
+          });
         }
       } else if(role === 'creator'){
         if(payload.new.member_id === currentSession.memberId){
           const modal = document.getElementById('m-c7');
           if(modal && modal.classList.contains('open')) loadNotificationsCreator();
           if(payload.new.kategori === 'status'){
-            showWaStyleToast(payload.new.detail_text || 'Ada update baru buat kamu!');
+            showWaStyleToast(payload.new.detail_text || 'Ada update baru buat kamu!', function(){
+              openModal('m-c7'); loadNotificationsCreator();
+            });
             updateReportVtLockState();
           }
         }
@@ -6020,11 +6053,11 @@ function subscribeRealtimeNotif(role){
     .subscribe();
 }
 
-function showWaStyleToast(text){
+function showWaStyleToast(text, onClick){
   const el = document.createElement('div');
   el.className = 'wa-toast';
   el.innerHTML = '<div class="wa-toast-ic">✅</div><div class="wa-toast-txt">'+text+'<div class="wa-toast-sub">Ketuk buat lihat detail</div></div>';
-  el.onclick = function(){ el.remove(); openModal('m-c7'); loadNotificationsCreator(); };
+  el.onclick = function(){ el.remove(); if(typeof onClick === 'function') onClick(); };
   document.body.appendChild(el);
   requestAnimationFrame(function(){ el.classList.add('show'); });
   setTimeout(function(){
