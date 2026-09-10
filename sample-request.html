@@ -4244,8 +4244,10 @@ function populateRekapDateDefaults(){
   const nowJakarta = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
   const y = nowJakarta.getFullYear();
   const m = nowJakarta.getMonth();
-  const firstDay = new Date(y, m, 1).toISOString().slice(0,10);
-  const lastDay = new Date(y, m + 1, 0).toISOString().slice(0,10);
+  const pad2 = function(n){ return String(n).padStart(2,'0'); };
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const firstDay = y + '-' + pad2(m+1) + '-01';
+  const lastDay = y + '-' + pad2(m+1) + '-' + pad2(daysInMonth);
   startEl.value = firstDay < '2026-09-01' ? '2026-09-01' : firstDay;
   endEl.value = lastDay;
 }
