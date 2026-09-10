@@ -615,7 +615,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div id="quota-bar-fill" style="height:100%;background:var(--teal);border-radius:99px;width:0%;transition:width .4s ease"></div>
     </div>
     <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--gray-text)">
-      <span id="quota-bar-used-label">0 terpakai</span><span id="quota-bar-sisa-label">3 tersedia</span>
+      <span id="quota-bar-sisa-label">3 tersedia</span><span id="quota-bar-used-label">0 terpakai</span>
     </div>
     <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
@@ -3318,7 +3318,7 @@ async function loadMyQuota(){
     dotsEl.innerHTML += '<div class="quota-dot' + (i < sisa ? ' filled' : '') + '"></div>';
   }
   if(barFill){
-    barFill.style.width = Math.round((used/3)*100) + '%';
+    barFill.style.width = Math.round((sisa/3)*100) + '%';
     usedLabel.textContent = used + ' terpakai';
     sisaLabel.textContent = sisa + ' tersedia';
   }
