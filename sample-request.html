@@ -821,10 +821,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 
   <div class="card" style="margin-top:12px">
-    <div class="card-title">📊 Rekap Bulanan — riwayat lengkap 1 bulan</div>
-    <div class="card-sub">Kolom: Nama Creator, No WhatsApp, Produk, Tanggal Approved, Tanggal Janji Kirim, Tanggal Aktual Dikirim (Logistik), Nomor Resi (kalau diisi), Status Report VT</div>
+    <div class="card-title">📊 Rekap Bulanan — riwayat lengkap, siap dipakai buat kirim sample</div>
+    <div class="card-sub">Kolom: Nama Penerima, No WhatsApp, Alamat Lengkap, Patokan, Kode Pos, Produk, Tanggal Approved, Tanggal Janji Kirim, Tanggal Aktual Dikirim, Nomor Resi, Status Report VT, Tanggal Diterima Creator</div>
     <div class="field" style="margin-top:8px"><label>Rentang Tanggal</label>
-      <div class="field-row"><input type="date" id="rekap-start" value="2026-07-01"><input type="date" id="rekap-end" value="2026-07-31"></div>
+      <div class="field-row"><input type="date" id="rekap-start" min="2026-09-01"><input type="date" id="rekap-end" min="2026-09-01"></div>
+      <div class="size-note">Data mulai 1 September 2026. Bisa tarik histori bulan-bulan sebelumnya kapan aja.</div>
     </div>
     <button class="btn btn-outline btn-sm" onclick="downloadRekapBulanan()">Download Rekap Bulanan</button>
   </div>
@@ -4236,7 +4237,21 @@ async function fetchExportHarianData(){
   return { data, error };
 }
 
+function populateRekapDateDefaults(){
+  const startEl = document.getElementById('rekap-start');
+  const endEl = document.getElementById('rekap-end');
+  if(startEl.value) return; // udah keisi (user lagi milih), jangan reset
+  const nowJakarta = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+  const y = nowJakarta.getFullYear();
+  const m = nowJakarta.getMonth();
+  const firstDay = new Date(y, m, 1).toISOString().slice(0,10);
+  const lastDay = new Date(y, m + 1, 0).toISOString().slice(0,10);
+  startEl.value = firstDay < '2026-09-01' ? '2026-09-01' : firstDay;
+  endEl.value = lastDay;
+}
+
 async function loadExportHarian(){
+  populateRekapDateDefaults();
   const container = document.getElementById('export-harian-table');
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
@@ -4294,7 +4309,7 @@ async function downloadRekapBulanan(){
   if(!currentSession.brandId){ alert('Sesi brand tidak terdeteksi.'); return; }
 
   const { data, error } = await db.from('sample_requests')
-    .select('member_id, decided_at, tipe_sow_dipilih, members(nama, no_hp), brand_products!inner(nama_produk, brand_id), shipments(tanggal_janji_kirim), logistics(sudah_dikirim, nomor_resi), vt_reports(id)')
+    .select('member_id, decided_at, tipe_sow_dipilih, members(nama, no_hp, alamat, patokan, kode_pos), brand_products!inner(nama_produk, brand_id), shipments(tanggal_janji_kirim), logistics(sudah_dikirim, nomor_resi), vt_reports(id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved')
@@ -4324,11 +4339,11 @@ async function downloadRekapBulanan(){
     const required = VT_REQUIRED[r.tipe_sow_dipilih] || 0;
     const statusVt = required === 0 ? 'N/A (Live)' : (vtCount + '/' + required);
     const diterima = confirmByMember[r.member_id];
-    return [m.nama||'-', m.no_hp||'-', bp.nama_produk||'-', r.decided_at ? r.decided_at.slice(0,10) : '', janjiKirim||'-', sudahKirim?'Sudah dikirim':'Belum', resi, statusVt, diterima ? diterima.slice(0,10) : 'Belum konfirmasi'];
+    return [m.nama||'-', m.no_hp||'-', m.alamat||'-', m.patokan||'-', m.kode_pos||'-', bp.nama_produk||'-', r.decided_at ? r.decided_at.slice(0,10) : '', janjiKirim||'-', sudahKirim?'Sudah dikirim':'Belum', resi, statusVt, diterima ? diterima.slice(0,10) : 'Belum konfirmasi'];
   });
 
   downloadCsv('Rekap-Bulanan-'+startDate+'-sd-'+endDate+'.csv',
-    ['Nama Creator','No WhatsApp','Produk','Tanggal Approved','Tanggal Janji Kirim','Tanggal Aktual Dikirim','Nomor Resi','Status Report VT','Tanggal Diterima Creator'],
+    ['Nama Penerima','No WhatsApp','Alamat Lengkap','Patokan','Kode Pos','Produk','Tanggal Approved','Tanggal Janji Kirim','Tanggal Aktual Dikirim','Nomor Resi','Status Report VT','Tanggal Diterima Creator'],
     rows);
 }
 
