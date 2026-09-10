@@ -216,6 +216,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .status-item.rejected{background:var(--red-light);border:1px solid var(--red)}
 .status-item.shipping{background:var(--amber);border:1px solid var(--amber-dark)}
 .pending-flag{background:var(--amber);color:var(--amber-dark);font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;display:inline-block;margin-top:3px}
+.btn-mini-copy{display:block;margin-top:6px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--pink);background:#fff;color:var(--pink);font-weight:800;font-size:10px;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th{text-align:left;padding:6px;font-size:9px;text-transform:uppercase;color:var(--gray-text);border-bottom:2px solid var(--gray-mid)}
 td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
@@ -514,7 +515,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
-    <div class="icon-card" id="ic-reportvt" onclick="openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
+    <div class="icon-card" id="ic-reportvt" onclick="checkVersionNotif(); openModal('m-c4'); loadVtReportPage();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
     <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
@@ -839,6 +840,22 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Jadwal diskusi yang sudah dikonfirmasi antara kamu dan tim kami.</div>
   <div id="catchup-list-brand" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<div class="popup-bg" id="version-notif-popup" style="display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:26px;max-width:380px;width:100%;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.4)">
+    <div style="background:linear-gradient(160deg,var(--pink),#a80d3f);padding:28px 24px 20px;text-align:center;position:relative">
+      <div style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px" id="version-notif-badge">V2.2</div>
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px">✨</div>
+      <h1 style="color:#fff;font-size:19px;font-weight:800">Ada yang Baru!</h1>
+      <div style="color:rgba(255,255,255,.85);font-size:11px;margin-top:4px">Alur Self Report & Report VT kita perbarui</div>
+    </div>
+    <div style="padding:20px 22px" id="version-notif-features"></div>
+    <div style="padding:8px 22px 22px">
+      <button onclick="closeVersionNotif()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--pink);color:#fff;font-weight:800;font-size:13.5px;cursor:pointer">Oke, Mengerti</button>
+      <div style="text-align:center;font-size:9.5px;color:var(--gray-text);margin-top:10px">Muncul sekali doang, nggak akan ganggu lagi</div>
+    </div>
+  </div>
+</div>
 
 <div class="og-popup-bg" id="mandatory-edu-popup">
   <div class="og-box" style="max-width:400px">
@@ -2141,7 +2158,7 @@ async function loadVtReportPage(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, brand_products(nama_produk, brands(nama_brand)), vt_reports(id)')
+    .select('id, tipe_sow_dipilih, brand_products(nama_produk, link_affiliate, brands(nama_brand)), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved');
@@ -2171,7 +2188,10 @@ async function loadVtReportPage(){
     const done = (r.vt_reports || []).length;
     const required = VT_REQUIRED[r.tipe_sow_dipilih];
     const flag = done === 0 ? '<div class="pending-flag">⚠️ Belum ada konten</div>' : '';
-    return '<div class="status-item approved"><b>'+(bp.nama_produk||'-')+'</b> · '+done+'/'+required+' VT'+flag+'</div>';
+    const linkBtn = bp.link_affiliate
+      ? '<button class="btn-mini-copy" onclick="copySowLink(\''+encodeURIComponent(bp.link_affiliate)+'\')">📋 Copy Link</button>'
+      : '';
+    return '<div class="status-item approved"><b>'+(bp.nama_produk||'-')+'</b> · '+done+'/'+required+' VT'+flag+linkBtn+'</div>';
   }).join('');
 }
 
@@ -4782,6 +4802,35 @@ function closeRewardPopup(){
 
 const POIN_MENU_FROZEN = false; // Unfreeze - aturan anti-abuse (duplikat & video lama) udah aktif
 
+const CURRENT_APP_VERSION = 'V2.2';
+const VERSION_FEATURES = [
+  {ic:'📸', title:'Alur "Sudah Punya Produk" Lebih Mulus', desc:'Ajukan sambil nunggu brand approve — nggak perlu nunggu diem doang.'},
+  {ic:'📋', title:'Tombol Copy Link di Mana-Mana', desc:'Nggak perlu cari-cari lagi, link affiliate langsung ada di tiap produk.'},
+  {ic:'📊', title:'Progress VT Kelihatan Jelas', desc:'Riwayat berapa kali kamu udah upload buat 1 produk, nggak ilang-ilang.'}
+];
+
+function checkVersionNotif(){
+  if(currentSession.role !== 'creator') return;
+  const seenKey = 'ghd_version_seen_' + (currentSession.memberId || '');
+  const lastSeen = localStorage.getItem(seenKey);
+  if(lastSeen === CURRENT_APP_VERSION) return;
+
+  document.getElementById('version-notif-badge').textContent = CURRENT_APP_VERSION;
+  document.getElementById('version-notif-features').innerHTML = VERSION_FEATURES.map(function(f){
+    return '<div style="display:flex;gap:12px;margin-bottom:18px">'
+      + '<div style="width:38px;height:38px;border-radius:11px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+f.ic+'</div>'
+      + '<div><div style="font-size:12.5px;font-weight:800;color:var(--dark)">'+f.title+'</div><div style="font-size:10.5px;color:var(--gray-text);margin-top:2px;line-height:1.5">'+f.desc+'</div></div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('version-notif-popup').style.display = 'flex';
+}
+
+function closeVersionNotif(){
+  const seenKey = 'ghd_version_seen_' + (currentSession.memberId || '');
+  localStorage.setItem(seenKey, CURRENT_APP_VERSION);
+  document.getElementById('version-notif-popup').style.display = 'none';
+}
+
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
   if(POIN_MENU_FROZEN){
@@ -5656,6 +5705,12 @@ function copySelfReportLink(productId){
   const p = srCurrentProducts.find(x => x.id === productId);
   if(!p || !p.link_affiliate){ alert('Link belum tersedia buat produk ini.'); return; }
   navigator.clipboard.writeText(p.link_affiliate);
+  alert('Link disalin! Tempel ini di keranjang kuning video kamu ya.');
+}
+
+function copySowLink(encodedLink){
+  const link = decodeURIComponent(encodedLink);
+  navigator.clipboard.writeText(link);
   alert('Link disalin! Tempel ini di keranjang kuning video kamu ya.');
 }
 
