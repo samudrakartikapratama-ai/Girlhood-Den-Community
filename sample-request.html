@@ -1510,31 +1510,6 @@ async function submitRegistration(){
   btn.disabled = true;
   btn.textContent = 'Mengirim...';
 
-  const { data: existing, error: existingError } = await db.from('members')
-    .select('id, status')
-    .eq('no_hp', noHp)
-    .maybeSingle();
-
-  if(existingError){
-    btn.disabled = false;
-    btn.textContent = 'Kirim Pendaftaran';
-    showDbError('cek pendaftaran', existingError);
-    return;
-  }
-
-  if(existing && existing.status === 'pending'){
-    btn.disabled = false;
-    btn.textContent = 'Kirim Pendaftaran';
-    alert('No WhatsApp ini masih menunggu verifikasi dari tim internal. Tunggu ya, jangan daftar dobel.');
-    return;
-  }
-  if(existing && existing.status === 'verified'){
-    btn.disabled = false;
-    btn.textContent = 'Kirim Pendaftaran';
-    alert('No WhatsApp ini sudah terverifikasi. Kalau ini kamu, pakai kode login yang sudah dikasih tim internal. Lupa kode? Hubungi tim internal.');
-    return;
-  }
-
   let fotoUrl = null;
   let fotoGagalUpload = false;
   btn.textContent = 'Mengupload foto...';
@@ -1558,53 +1533,36 @@ async function submitRegistration(){
   }
   btn.textContent = 'Menyimpan data...';
 
-  const payload = {
-    nama: nama,
-    no_hp: noHp,
-    tiktok_profile_link: tiktokLink,
-    level: level,
-    gmv_30hari: gmvRaw ? Number(gmvRaw) : null,
-    alamat: alamat,
-    patokan: patokan,
-    kode_pos: kodePos,
-    foto_selfie_url: fotoUrl,
-    status: 'pending',
-    rejection_reason: null
-  };
-
-  const { data, error } = existing
-    ? await db.from('members').update(payload).eq('id', existing.id)
-    : await db.from('members').insert(payload);
-
-  if(error && error.code === '23505'){
-    // Nomor udah kepake di DB tapi query "existing" tadi nggak nangkep (kemungkinan beda format sedikit).
-    // Coba cari ulang & reaktifkan record lama itu jadi pending, jangan dead-end.
-    const { data: retryExisting } = await db.from('members').select('id, status').eq('no_hp', noHp).maybeSingle();
-    if(retryExisting && retryExisting.status !== 'pending' && retryExisting.status !== 'verified'){
-      const retry = await db.from('members').update(payload).eq('id', retryExisting.id);
-      if(!retry.error){
-        btn.disabled = false;
-        btn.textContent = 'Kirim Pendaftaran';
-        if(fotoGagalUpload){
-          alert('Pendaftaran kamu TETAP terkirim! Sistem udah coba upload foto selfie kamu 3 kali, tapi tetap gagal (kemungkinan koneksi kamu lagi kurang stabil). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
-        } else {
-          alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
-        }
-        closeModal('m-register');
-        return;
-      }
-    }
+  let result;
+  try {
+    const response = await fetch(SUPABASE_URL + '/functions/v1/creator-submit-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nama: nama,
+        no_hp: noHp,
+        tiktok_profile_link: tiktokLink,
+        level: level,
+        gmv_30hari: gmvRaw ? Number(gmvRaw) : null,
+        alamat: alamat,
+        patokan: patokan,
+        kode_pos: kodePos,
+        foto_selfie_url: fotoUrl
+      })
+    });
+    result = await response.json();
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pendaftaran';
+    alert('Gagal menghubungi server. Coba lagi ya.');
+    return;
   }
 
   btn.disabled = false;
   btn.textContent = 'Kirim Pendaftaran';
 
-  if(error){
-    if(error.code === '23505'){
-      alert('No WhatsApp ini sudah pernah daftar. Kalau ini kamu, hubungi tim internal buat cek statusnya.');
-    } else {
-      showDbError('daftar member', error);
-    }
+  if(!result.valid){
+    alert(result.error || 'Gagal daftar, coba lagi.');
     return;
   }
 
