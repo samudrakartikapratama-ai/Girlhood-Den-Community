@@ -1131,6 +1131,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Semua perubahan digabung di sini, cek manual kapan pun — tidak ada push. Pilih bulan buat flashback log lama, lalu filter per kategori:</div>
   <div class="filter-row" style="gap:8px;flex-wrap:wrap">
     <select id="notif-month" style="flex:1;min-width:110px"></select>
+    <select id="notif-date" style="flex:1;min-width:90px"></select>
     <select id="notif-year" style="flex:1;min-width:90px"></select>
     <button class="btn btn-primary btn-sm" onclick="loadNotifications()">Tampilkan</button>
   </div>
@@ -4354,6 +4355,18 @@ function formatWaktuNotif(iso){
   return new Date(iso).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) + ' ' + new Date(iso).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
 }
 
+function populateNotifDateOptions(){
+  const dateSel = document.getElementById('notif-date');
+  const month = Number(document.getElementById('notif-month').value);
+  const year = Number(document.getElementById('notif-year').value);
+  const prevVal = dateSel.value;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let opts = '<option value="all">Semua Tanggal</option>';
+  for(let d = 1; d <= daysInMonth; d++){ opts += '<option value="'+d+'">Tgl '+d+'</option>'; }
+  dateSel.innerHTML = opts;
+  dateSel.value = (prevVal && Number(prevVal) <= daysInMonth) ? prevVal : 'all';
+}
+
 function populateNotifMonthYear(){
   const monthSel = document.getElementById('notif-month');
   const yearSel = document.getElementById('notif-year');
@@ -4371,6 +4384,9 @@ function populateNotifMonthYear(){
 
   monthSel.value = nowJakarta.getMonth() + 1;
   yearSel.value = nowJakarta.getFullYear();
+  populateNotifDateOptions();
+  monthSel.onchange = populateNotifDateOptions;
+  yearSel.onchange = populateNotifDateOptions;
 }
 
 async function loadNotifications(){
@@ -4386,13 +4402,15 @@ async function loadNotifications(){
 
   const month = Number(document.getElementById('notif-month').value);
   const year = Number(document.getElementById('notif-year').value);
+  const dateVal = document.getElementById('notif-date').value;
+  const date = (dateVal && dateVal !== 'all') ? Number(dateVal) : null;
 
   let result;
   try {
     const response = await fetch(SUPABASE_URL + '/functions/v1/internal-notifications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
-      body: JSON.stringify({ month: month, year: year })
+      body: JSON.stringify({ month: month, year: year, date: date })
     });
     result = await response.json();
   } catch(e){
