@@ -570,6 +570,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-upcoming-internal" onclick="openModal('m-i11'); loadUpcomingLiveInternal();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live Creator"><div class="icon-label">Upcoming Live Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
+    <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
   </div>
 </div>
 
@@ -1229,6 +1230,31 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
   <div id="selfreport-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
   <div id="selfreport-vt-list" style="margin-top:10px;display:none"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-i16"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i16')">‹ ✕</button>
+  <div class="modal-title">🏆 Leaderboard Poin</div>
+  <div class="card-sub" style="margin-bottom:10px">Ranking dihitung dari poin yang didapat DALAM rentang tanggal ini aja — bukan total poin creator seumur hidup (itu tetap kumulatif, nggak kesentuh).</div>
+  <div class="filter-row" style="gap:8px;flex-wrap:wrap;align-items:end">
+    <div class="field" style="flex:1;min-width:130px"><label>Dari Tanggal</label><input type="date" id="lb-start" min="2026-09-01"></div>
+    <div class="field" style="flex:1;min-width:130px"><label>Sampai Tanggal</label><input type="date" id="lb-end" min="2026-09-01"></div>
+    <button class="btn btn-primary btn-sm" onclick="loadLeaderboard()">Tampilkan</button>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <b style="font-size:13px">🎁 Hadiah Aktif</b>
+    <div id="lb-rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px"><div class="card-sub">Memuat...</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <b style="font-size:13px" id="lb-range-title">Ranking Creator</b>
+    <div style="overflow-x:auto">
+    <table style="margin-top:8px">
+      <tr><th style="width:32px">#</th><th>Creator</th><th style="text-align:right">Poin</th><th>Hadiah Tercapai</th></tr>
+      <tbody id="lb-rows"><tr><td colspan="4" class="card-sub">Memuat data...</td></tr></tbody>
+    </table>
+    </div>
+  </div>
 </div></div>
 
 <script>
@@ -4355,6 +4381,88 @@ function formatWaktuNotif(iso){
   return new Date(iso).toLocaleDateString('id-ID',{day:'numeric',month:'short'}) + ' ' + new Date(iso).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
 }
 
+function populateLeaderboardDefaults(){
+  const startEl = document.getElementById('lb-start');
+  const endEl = document.getElementById('lb-end');
+  if(startEl.value) return; // udah keisi, jangan reset pilihan user
+  const nowJakarta = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+  const y = nowJakarta.getFullYear();
+  const m = nowJakarta.getMonth();
+  const pad2 = function(n){ return String(n).padStart(2,'0'); };
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const firstDay = y + '-' + pad2(m+1) + '-01';
+  const lastDay = y + '-' + pad2(m+1) + '-' + pad2(daysInMonth);
+  startEl.value = firstDay < '2026-09-01' ? '2026-09-01' : firstDay;
+  endEl.value = lastDay;
+}
+
+async function loadLeaderboard(){
+  populateLeaderboardDefaults();
+  const rewardsGrid = document.getElementById('lb-rewards-grid');
+  const rowsBody = document.getElementById('lb-rows');
+  rowsBody.innerHTML = '<tr><td colspan="4" class="card-sub">Memuat data...</td></tr>';
+
+  const authHeader = await getInternalAuthHeader();
+  if(!authHeader){
+    rowsBody.innerHTML = '<tr><td colspan="4" class="card-sub" style="color:var(--red)">Sesi internal tidak terdeteksi, login ulang.</td></tr>';
+    return;
+  }
+
+  const startDate = document.getElementById('lb-start').value;
+  const endDate = document.getElementById('lb-end').value;
+
+  let result;
+  try {
+    const response = await fetch(SUPABASE_URL + '/functions/v1/internal-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+      body: JSON.stringify({ startDate: startDate, endDate: endDate })
+    });
+    result = await response.json();
+  } catch(e){
+    rowsBody.innerHTML = '<tr><td colspan="4" class="card-sub" style="color:var(--red)">Gagal menghubungi server.</td></tr>';
+    return;
+  }
+
+  if(!result.valid){
+    rowsBody.innerHTML = '<tr><td colspan="4" class="card-sub" style="color:var(--red)">'+(result.error||'Gagal memuat leaderboard.')+'</td></tr>';
+    return;
+  }
+
+  const rewards = result.rewards || [];
+  const ranking = result.ranking || [];
+
+  const rangeFmt = function(d){ return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); };
+  document.getElementById('lb-range-title').textContent = 'Ranking Creator — ' + rangeFmt(result.startDate) + ' s.d. ' + rangeFmt(result.endDate);
+
+  rewardsGrid.innerHTML = rewards.length === 0 ? '<div class="card-sub">Belum ada hadiah aktif.</div>' : rewards.map(function(r){
+    const habis = r.stok <= 0;
+    return '<div style="border:1.5px solid var(--border);border-radius:12px;padding:10px;text-align:center;background:var(--pink-pale)">'
+      + '<div style="font-size:11.5px;font-weight:800">'+r.nama+'</div>'
+      + '<div style="font-size:15px;font-weight:900;color:var(--pink)">'+Number(r.poin_dibutuhkan).toLocaleString('id-ID')+'</div>'
+      + '<div style="font-size:9.5px;color:'+(habis?'#c62828':'var(--gray-text)')+';font-weight:'+(habis?'700':'400')+'">'+(habis?'Stok: 0 — Habis':'Stok: '+r.stok)+'</div>'
+      + '</div>';
+  }).join('');
+
+  if(ranking.length === 0){
+    rowsBody.innerHTML = '<tr><td colspan="4" class="card-sub">Belum ada poin masuk di rentang ini.</td></tr>';
+    return;
+  }
+
+  const medals = ['🥇1','🥈2','🥉3'];
+  rowsBody.innerHTML = ranking.map(function(r, i){
+    const tercapai = rewards.filter(function(rw){ return r.poin >= rw.poin_dibutuhkan; })
+      .map(function(rw){ return '<span style="display:inline-block;font-size:9px;background:var(--gold,#FDE9B8);color:#8a5a00;padding:2px 7px;border-radius:999px;margin-right:4px;font-weight:700">'+rw.nama+' ✓</span>'; })
+      .join('') || '—';
+    return '<tr>'
+      + '<td style="font-weight:900">'+(medals[i] || (i+1))+'</td>'
+      + '<td><div style="font-weight:700">'+r.nama+'</div><div style="font-size:10px;color:var(--gray-text)">'+r.kodeLogin+'</div></td>'
+      + '<td style="font-weight:900;color:var(--teal);text-align:right">'+r.poin.toLocaleString('id-ID')+'</td>'
+      + '<td>'+tercapai+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
 function populateNotifDateOptions(){
   const dateSel = document.getElementById('notif-date');
   const month = Number(document.getElementById('notif-month').value);
@@ -6057,6 +6165,7 @@ function subscribeSelfReportRealtime(){
 
 /* ================= REALTIME NOTIFIKASI ================= */
 let realtimeNotifChannel = null;
+let realtimePointsChannel = null;
 
 function subscribeRealtimeNotif(role){
   if(realtimeNotifChannel) db.removeChannel(realtimeNotifChannel);
@@ -6086,6 +6195,18 @@ function subscribeRealtimeNotif(role){
       }
     })
     .subscribe();
+
+  // Listen langsung ke points_ledger -- biar leaderboard update real-time tiap ada poin masuk/keluar,
+  // terlepas dari apakah transaksi itu juga bikin entry di notifications atau enggak.
+  if(role === 'internal'){
+    if(realtimePointsChannel) db.removeChannel(realtimePointsChannel);
+    realtimePointsChannel = db.channel('points-realtime-internal')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'points_ledger' }, function(){
+        const modal = document.getElementById('m-i16');
+        if(modal && modal.classList.contains('open')) loadLeaderboard();
+      })
+      .subscribe();
+  }
 }
 
 function showWaStyleToast(text, onClick){
