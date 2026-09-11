@@ -571,6 +571,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i14'); loadCatchupMeetings('internal');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
     <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
+    <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
   </div>
 </div>
 
@@ -1303,6 +1304,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     </table>
     </div>
   </div>
+</div></div>
+
+<div class="modal-bg" id="m-i17"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i17')">‹ ✕</button>
+  <div class="modal-title">↩️ Revoke Keputusan Brand</div>
+  <div class="card-sub" style="margin-bottom:10px">Daftar laporan "salah pencet" dari brand yang belum ditindaklanjuti. Pilih status yang benar — begitu diproses, hilang dari daftar ini otomatis.</div>
+  <div id="revoke-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -4713,16 +4720,7 @@ async function loadNotifications(){
       detailHtml = detailHtml + '<br><a href="'+r.fotoUrl+'" target="_blank"><img src="'+r.fotoUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:4px;border:1px solid var(--border)"></a>'
         + '<br><a href="'+r.fotoUrl+'" download target="_blank" style="font-size:11px;color:var(--pink);font-weight:700">⬇️ Download Foto</a>';
     }
-    let aksiHtml = '';
-    if(r.sampleRequestId && r.detail && r.detail.indexOf('SALAH PENCET') !== -1){
-      aksiHtml = '<br><div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">'
-        + '<span style="font-size:9.5px;color:var(--gray-text)">Status sekarang: <b>'+(r.requestStatus||'-')+'</b></span><br>'
-        + '<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'approved\',this)">Ubah → Approved</button>'
-        + '<button class="btn btn-sm" style="background:var(--red,#c62828);color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'rejected\',this)">Ubah → Rejected</button>'
-        + '<button class="btn btn-sm" style="background:#fff;border:1px solid var(--border);color:var(--gray-text);font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'requested\',this)">Ubah → Requested</button>'
-        + '</div>';
-    }
-    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+aksiHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
+    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
   }).join('');
 }
 
@@ -5067,13 +5065,51 @@ function addProductBlock(){
     '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>';
   container.appendChild(block);
 }
-async function koreksiApprovalStatus(requestId, statusBaru, btn){
-  if(!confirm('Ubah status request ini jadi "'+statusBaru+'"? Ini langsung berlaku, creator & brand bisa lihat perubahannya.')) return;
-  btn.disabled = true;
-  const { error } = await db.from('sample_requests').update({ status: statusBaru }).eq('id', requestId);
-  if(error){ showDbError('koreksi status approval', error); btn.disabled = false; return; }
-  btn.textContent = '✅ Diubah jadi ' + statusBaru;
-  btn.parentElement.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+async function loadRevokeList(){
+  const el = document.getElementById('revoke-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const auth = await getInternalAuthHeader();
+  let result;
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-revoke-approval', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
+    });
+    result = await res.json();
+  } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; return; }
+
+  if(!result.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(result.error||'Gagal memuat.')+'</div>'; return; }
+  if(!result.rows || result.rows.length === 0){ el.innerHTML = '<div class="card-sub">Nggak ada laporan salah pencet yang nunggu diproses. 🎉</div>'; return; }
+
+  el.innerHTML = result.rows.map(function(r){
+    return '<div class="req-card-int" style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">'
+      + '<div style="font-size:11.5px;color:var(--gray-text)">'+formatWaktuNotif(r.createdAt)+' · '+r.brandName+'</div>'
+      + '<div style="font-weight:700;font-size:12.5px;margin-top:2px">'+r.creatorName+' — '+r.produkName+'</div>'
+      + '<div style="font-size:11px;margin-top:4px">Status sekarang: <b>'+r.statusSekarang+'</b></div>'
+      + '<div style="font-size:10.5px;color:var(--gray-text);margin-top:4px">'+r.detail+'</div>'
+      + '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">'
+      + '<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none" onclick="resolveRevoke(\''+r.notifId+'\',\''+r.sampleRequestId+'\',\'approved\',this)">Jadikan Approved</button>'
+      + '<button class="btn btn-sm" style="background:var(--red,#c62828);color:#fff;border:none" onclick="resolveRevoke(\''+r.notifId+'\',\''+r.sampleRequestId+'\',\'rejected\',this)">Jadikan Rejected</button>'
+      + '<button class="btn btn-sm" style="background:#fff;border:1px solid var(--border);color:var(--gray-text)" onclick="resolveRevoke(\''+r.notifId+'\',\''+r.sampleRequestId+'\',\'requested\',this)">Balik ke Requested</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function resolveRevoke(notifId, sampleRequestId, statusBaru, btn){
+  if(!confirm('Ubah status jadi "'+statusBaru+'"? Creator bakal dikasih notifikasi otomatis.')) return;
+  const card = btn.closest('.req-card-int');
+  card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+  const auth = await getInternalAuthHeader();
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-revoke-approval', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ action:'resolve', notifId, sampleRequestId, statusBaru })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal memproses.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
+    card.style.opacity = '.5';
+    card.innerHTML += '<div style="color:var(--teal);font-weight:700;font-size:11px;margin-top:6px">✅ Selesai diproses — jadi '+statusBaru+'</div>';
+    setTimeout(function(){ loadRevokeList(); }, 800);
+  } catch(e){ alert('Gagal menghubungi server.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); }
 }
 
 function filterNotif(sel){
