@@ -1059,6 +1059,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <button onclick="switchPoinIntTab('hadiah')">Hadiah</button>
     <button onclick="switchPoinIntTab('gmv')">GMV Mingguan</button>
     <button onclick="switchPoinIntTab('redeem')">Penukaran</button>
+    <button onclick="switchPoinIntTab('komisi')">📈 Komisi</button>
     <button onclick="switchPoinIntTab('pelanggaran')">⚠️ Pelanggaran</button>
   </div>
 
@@ -1123,6 +1124,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
   <div class="poin-int-panel" id="poin-int-redeem">
     <div id="poin-redeem-list"><div class="card-sub">Memuat data...</div></div>
+  </div>
+
+  <div class="poin-int-panel" id="poin-int-komisi">
+    <div class="card-sub">Angka komisi baru ini KHUSUS buat creator ini + produk ini doang — creator lain di produk yang sama tetap pakai komisi default.</div>
+    <div id="poin-komisi-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
   </div>
 
   <div class="poin-int-panel" id="poin-int-pelanggaran">
@@ -5289,6 +5295,59 @@ function switchPoinIntTab(tab){
   document.querySelectorAll('.poin-int-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('poin-int-'+tab).classList.add('active');
   if(tab === 'pelanggaran') loadPelanggaranList();
+  if(tab === 'komisi') loadPoinKomisiList();
+}
+
+async function loadPoinKomisiList(){
+  const el = document.getElementById('poin-komisi-list');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const auth = await getInternalAuthHeader();
+  let result;
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-commission-boost', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
+    });
+    result = await res.json();
+  } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; return; }
+
+  if(!result.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(result.error||'Gagal memuat.')+'</div>'; return; }
+  if(!result.rows || result.rows.length === 0){ el.innerHTML = '<div class="card-sub">Belum ada pengajuan kenaikan komisi.</div>'; return; }
+
+  el.innerHTML = result.rows.map(function(r){
+    return '<div class="req-card-int" style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700"><span>'+r.nama+'</span><span>'+r.saldoBulanIni+' poin</span></div>'
+      + '<div style="font-size:11px;color:var(--gray-text);margin-top:2px">'+r.brandName+' — '+r.produkName+'</div>'
+      + '<div class="field-row" style="margin-top:10px">'
+      + '<div class="field" style="flex:1"><label style="font-size:9.5px;font-weight:700;color:var(--gray-text)">Komisi Sekarang</label><input value="'+(r.komisiSekarang!==null?r.komisiSekarang+'%':'-')+'" disabled style="background:var(--gray-mid,#f7f2f4);font-weight:700"></div>'
+      + '<div class="field" style="flex:1"><label style="font-size:9.5px;font-weight:700;color:var(--pink)">Naikkan Jadi</label><input type="number" step="0.1" id="kb-after-'+r.id+'" placeholder="cth: 5" style="border-color:var(--pink);font-weight:700"></div>'
+      + '</div>'
+      + '<div class="field-row"><input type="number" id="kb-poin-'+r.id+'" placeholder="Poin dipotong, cth: 1000" value="1000"></div>'
+      + '<div class="field-row"><button class="btn btn-primary btn-sm" style="flex:1" onclick="decideKomisiBoost(\''+r.id+'\',\'approve\')">Simpan &amp; Kirim ke Creator</button><button class="btn btn-sm" style="background:#fff;border:1px solid var(--border);color:var(--gray-text)" onclick="decideKomisiBoost(\''+r.id+'\',\'reject\')">Tolak</button></div>'
+      + '</div>';
+  }).join('');
+}
+
+async function decideKomisiBoost(requestId, decision){
+  const body = { action:'decide', requestId, decision };
+  if(decision === 'approve'){
+    const komisiAfter = Number(document.getElementById('kb-after-'+requestId).value);
+    const poinDipotong = Number(document.getElementById('kb-poin-'+requestId).value);
+    if(!komisiAfter || !poinDipotong){ alert('Isi komisi baru & poin yang dipotong dulu.'); return; }
+    body.komisiAfter = komisiAfter;
+    body.poinDipotong = poinDipotong;
+    if(!confirm('Naikkan komisi creator ini jadi '+komisiAfter+'%, potong '+poinDipotong+' poin?')) return;
+  } else {
+    if(!confirm('Tolak pengajuan ini?')) return;
+  }
+  const auth = await getInternalAuthHeader();
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-commission-boost', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify(body)
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal memproses.'); return; }
+    loadPoinKomisiList();
+  } catch(e){ alert('Gagal menghubungi server.'); }
 }
 
 async function loadKelolaPoin(){
