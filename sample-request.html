@@ -4713,7 +4713,16 @@ async function loadNotifications(){
       detailHtml = detailHtml + '<br><a href="'+r.fotoUrl+'" target="_blank"><img src="'+r.fotoUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:4px;border:1px solid var(--border)"></a>'
         + '<br><a href="'+r.fotoUrl+'" download target="_blank" style="font-size:11px;color:var(--pink);font-weight:700">⬇️ Download Foto</a>';
     }
-    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
+    let aksiHtml = '';
+    if(r.sampleRequestId && r.detail && r.detail.indexOf('SALAH PENCET') !== -1){
+      aksiHtml = '<br><div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">'
+        + '<span style="font-size:9.5px;color:var(--gray-text)">Status sekarang: <b>'+(r.requestStatus||'-')+'</b></span><br>'
+        + '<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'approved\',this)">Ubah → Approved</button>'
+        + '<button class="btn btn-sm" style="background:var(--red,#c62828);color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'rejected\',this)">Ubah → Rejected</button>'
+        + '<button class="btn btn-sm" style="background:#fff;border:1px solid var(--border);color:var(--gray-text);font-size:10px;padding:4px 8px" onclick="koreksiApprovalStatus(\''+r.sampleRequestId+'\',\'requested\',this)">Ubah → Requested</button>'
+        + '</div>';
+    }
+    return '<tr data-cat="'+r.kategori+'"><td>'+(badgeMap[r.kategori]||r.kategori)+'</td><td>'+r.brandName+'</td><td>'+r.creatorName+'</td><td>'+r.produkName+'</td><td>'+detailHtml+aksiHtml+'</td><td>'+(r.waktu?formatWaktuNotif(r.waktu):'—')+'</td></tr>';
   }).join('');
 }
 
@@ -5058,6 +5067,15 @@ function addProductBlock(){
     '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>';
   container.appendChild(block);
 }
+async function koreksiApprovalStatus(requestId, statusBaru, btn){
+  if(!confirm('Ubah status request ini jadi "'+statusBaru+'"? Ini langsung berlaku, creator & brand bisa lihat perubahannya.')) return;
+  btn.disabled = true;
+  const { error } = await db.from('sample_requests').update({ status: statusBaru }).eq('id', requestId);
+  if(error){ showDbError('koreksi status approval', error); btn.disabled = false; return; }
+  btn.textContent = '✅ Diubah jadi ' + statusBaru;
+  btn.parentElement.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+}
+
 function filterNotif(sel){
   var val = sel.value;
   var visibleCount = 0;
