@@ -1759,7 +1759,16 @@ async function loadApprovalRows(){
     return;
   }
 
-  if(!data || data.length === 0){
+  // Self-report: creator udah punya produknya sendiri & auto-approved sistem, TIDAK PERNAH butuh approval/kirim manual dari brand -- exclude total.
+  const reqIds3 = (data||[]).map(function(r){ return r.id; });
+  let selfReportIds3 = new Set();
+  if(reqIds3.length > 0){
+    const { data: srRows3 } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds3);
+    selfReportIds3 = new Set((srRows3||[]).map(function(r){ return r.sample_request_id; }));
+  }
+  const dataNoSelfReport3 = (data||[]).filter(function(r){ return !selfReportIds3.has(r.id); });
+
+  if(!dataNoSelfReport3 || dataNoSelfReport3.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada request sample masuk.</div>';
     return;
   }
@@ -1767,7 +1776,7 @@ async function loadApprovalRows(){
   // Group per creator per hari (member_id + tanggal lokal), urutan grup terbaru dulu.
   const groups = {};
   const groupOrder = [];
-  data.forEach(function(r){
+  dataNoSelfReport3.forEach(function(r){
     const m = r.members || {};
     const dateKey = new Date(r.requested_at).toLocaleDateString('en-CA'); // YYYY-MM-DD lokal
     const groupKey = (m.id || 'unknown') + '_' + dateKey;
