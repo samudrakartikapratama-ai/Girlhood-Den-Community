@@ -3624,12 +3624,21 @@ async function loadPengiriman(){
     return;
   }
 
-  if(!data || data.length === 0){
+  // Self-report: creator udah PUNYA produknya sendiri, brand nggak perlu kirim apa-apa -- exclude dari daftar ini.
+  const reqIds = (data||[]).map(function(r){ return r.id; });
+  let selfReportIds = new Set();
+  if(reqIds.length > 0){
+    const { data: srRows } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds);
+    selfReportIds = new Set((srRows||[]).map(function(r){ return r.sample_request_id; }));
+  }
+  const dataFiltered = (data||[]).filter(function(r){ return !selfReportIds.has(r.id); });
+
+  if(dataFiltered.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada produk yang di-approve dan siap dikirim.</div>';
     return;
   }
 
-  container.innerHTML = data.map(function(r){
+  container.innerHTML = dataFiltered.map(function(r){
     const m = r.members || {};
     const p = r.brand_products || {};
     const nama = (m.nama||'-') + ' — ' + (p.nama_produk||'-');
@@ -3707,7 +3716,16 @@ async function loadLogistik(){
     return;
   }
 
-  const belumDikirim = (data || []).filter(function(r){ return !r.logistics || !r.logistics.sudah_dikirim; });
+  // Self-report: nggak butuh brand kirim apapun -- exclude, jaga-jaga kalau ada data lama yang salah kesangkut.
+  const reqIds2 = (data||[]).map(function(r){ return r.id; });
+  let selfReportIds2 = new Set();
+  if(reqIds2.length > 0){
+    const { data: srRows2 } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds2);
+    selfReportIds2 = new Set((srRows2||[]).map(function(r){ return r.sample_request_id; }));
+  }
+  const dataNoSelfReport = (data||[]).filter(function(r){ return !selfReportIds2.has(r.id); });
+
+  const belumDikirim = dataNoSelfReport.filter(function(r){ return !r.logistics || !r.logistics.sudah_dikirim; });
 
   if(belumDikirim.length === 0){
     container.innerHTML = '<div class="card-sub">Semua barang yang dijanjikan sudah dikonfirmasi terkirim.</div>';
