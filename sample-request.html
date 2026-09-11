@@ -6104,6 +6104,14 @@ async function pickSelfReportBrand(brandId, brandName){
     .select('id, nama_produk, tipe_produk, foto_urls, link_affiliate, komisi_percent').eq('brand_id', brandId).order('nama_produk', { ascending: true });
   if(error || !products || products.length === 0){ document.getElementById('sr-prod-grid').innerHTML = '<div class="card-sub">Brand ini belum ada produk.</div>'; return; }
 
+  // Terapkan komisi khusus (override) kalau creator ini pernah dapat kenaikan komisi buat produk-produk ini
+  const productIds0 = products.map(p => p.id);
+  const { data: overrides } = await db.from('creator_commission_overrides')
+    .select('brand_product_id, komisi_percent').eq('member_id', currentSession.memberId).in('brand_product_id', productIds0);
+  const overrideMap = {};
+  (overrides||[]).forEach(function(o){ overrideMap[o.brand_product_id] = o.komisi_percent; });
+  products.forEach(function(p){ if(overrideMap[p.id] !== undefined){ p.komisi_percent = overrideMap[p.id]; p.komisiBoosted = true; } });
+
   // Hitung produk paling sering di-request (buat Best Seller), fallback ke urutan biasa kalau belum ada histori
   const productIds = products.map(p => p.id);
   const { data: reqData } = await db.from('sample_requests').select('brand_product_id').in('brand_product_id', productIds);
@@ -6145,7 +6153,7 @@ function renderSelfReportGrid(list){
   document.getElementById('sr-prod-grid').innerHTML = list.map(function(p){
     const img = (p.foto_urls && p.foto_urls[0]) ? p.foto_urls[0] : '';
     const tagHtml = p.tipe_produk === 'bundling' ? '<span class="p-tag bundle">BUNDLING</span>' : '<span class="p-tag satuan">SATUAN</span>';
-    const komisiHtml = p.komisi_percent ? '<span class="p-komisi">Komisi '+p.komisi_percent+'%</span>' : '';
+    const komisiHtml = p.komisi_percent ? '<span class="p-komisi">Komisi '+p.komisi_percent+'%'+(p.komisiBoosted?' 🚀':'')+'</span>' : '';
     const linkBtn = p.link_affiliate
       ? '<button class="p-copy-link-btn" onclick="event.stopPropagation(); copySelfReportLink(\''+p.id+'\')">📋 Copy Link</button>'
       : '<span class="p-no-link">Link belum diisi</span>';
