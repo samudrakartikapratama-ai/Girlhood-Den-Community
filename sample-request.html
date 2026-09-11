@@ -1010,7 +1010,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-title">Brand Terdaftar</div>
   <div class="field"><input id="brand-terdaftar-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandTerdaftar(this.value)"></div>
   <div id="brand-terdaftar-list"><div class="card-sub">Memuat data...</div></div>
-  <div class="card-title" id="brand-form-title">+ Daftarkan Brand Baru</div>
+  <div class="card-title" id="brand-form-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span id="brand-form-title-text">+ Daftarkan Brand Baru</span>
+    <button id="btn-hapus-brand" onclick="hapusBrandInternal()" style="display:none;background:var(--red-light,#fde2e2);color:var(--red,#c62828);border:none;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">🗑️ Hapus Brand Ini</button>
+  </div>
   <div class="card">
     <div class="field"><label>Nama Brand</label><input id="newbrand-nama" placeholder="Contoh: Cerahku"></div>
     <div class="field"><label>Komisi (%)</label><input id="newbrand-komisi" placeholder="15"></div>
@@ -4069,7 +4072,10 @@ async function editBrand(brandId){
   editingBrandLogoUrl = brand.logo_url || null;
   deletedProductIds = [];
 
-  document.getElementById('brand-form-title').textContent = '✏️ Edit Brand: ' + brand.nama_brand;
+  document.getElementById('brand-form-title-text').textContent = '✏️ Edit Brand: ' + brand.nama_brand;
+  document.getElementById('btn-hapus-brand').style.display = 'inline-block';
+  document.getElementById('btn-hapus-brand').setAttribute('data-brand-id', brand.id);
+  document.getElementById('btn-hapus-brand').setAttribute('data-brand-nama', brand.nama_brand);
   document.getElementById('newbrand-nama').value = brand.nama_brand;
   document.getElementById('newbrand-komisi').value = brand.komisi_percent !== null ? brand.komisi_percent : '';
   document.getElementById('newbrand-logo').value = '';
@@ -4104,11 +4110,54 @@ async function editBrand(brandId){
   document.getElementById('brand-form-title').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+async function hapusBrandInternal(){
+  const btn = document.getElementById('btn-hapus-brand');
+  const brandId = btn.getAttribute('data-brand-id');
+  const brandNama = btn.getAttribute('data-brand-nama');
+  if(!brandId) return;
+
+  const konfirmasi = confirm(
+    'Yakin mau hapus brand "' + brandNama + '"?\n\n' +
+    '- Brand & semua produknya bakal HILANG dari semua menu pilih brand (Campaign, Self Report)\n' +
+    '- Semua request AKTIF (belum kelar) ke brand ini bakal dibatalin otomatis, kuota creator LANGSUNG BALIK\n' +
+    '- Semua creator yang kena dampak bakal dapat notifikasi\n' +
+    '- Poin & histori yang UDAH ADA (report VT yang udah di-ACC, dll) TETAP AMAN, nggak kesentuh sama sekali\n\n' +
+    'Ini nggak bisa dibatalin dari sini (hubungi developer kalau butuh diaktifkan lagi). Lanjut?'
+  );
+  if(!konfirmasi) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-delete-brand', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ brandId })
+    });
+    const j = await res.json();
+    btn.disabled = false;
+    btn.textContent = '🗑️ Hapus Brand Ini';
+    if(!j.valid){ alert(j.error || 'Gagal menghapus brand.'); return; }
+
+    alert('Brand "' + j.brandName + '" berhasil dihapus.\n\n'
+      + j.cancelledCount + ' request aktif dibatalin (kuota balik otomatis).\n'
+      + j.notifiedCreators + ' creator dikasih notifikasi.');
+
+    cancelEditBrand();
+    loadBrandTerdaftar();
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = '🗑️ Hapus Brand Ini';
+    alert('Gagal menghubungi server.');
+  }
+}
+
 function cancelEditBrand(){
   editingBrandId = null;
   editingBrandLogoUrl = null;
   deletedProductIds = [];
-  document.getElementById('brand-form-title').textContent = '+ Daftarkan Brand Baru';
+  document.getElementById('brand-form-title-text').textContent = '+ Daftarkan Brand Baru';
+  document.getElementById('btn-hapus-brand').style.display = 'none';
   document.getElementById('newbrand-nama').value = '';
   document.getElementById('newbrand-komisi').value = '';
   document.getElementById('newbrand-logo').value = '';
