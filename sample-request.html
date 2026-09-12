@@ -1013,6 +1013,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="brand-terdaftar-list"><div class="card-sub">Memuat data...</div></div>
   <div class="card-title" id="brand-form-title" style="display:flex;justify-content:space-between;align-items:center">
     <span id="brand-form-title-text">+ Daftarkan Brand Baru</span>
+    <button id="btn-freeze-brand" onclick="freezeBrandInternal()" style="display:none;background:var(--pink-pale);color:var(--pink);border:none;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;margin-right:6px">🧊 Freeze Brand</button>
     <button id="btn-hapus-brand" onclick="hapusBrandInternal()" style="display:none;background:var(--red-light,#fde2e2);color:var(--red,#c62828);border:none;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">🗑️ Hapus Brand Ini</button>
   </div>
   <div class="card">
@@ -3083,7 +3084,7 @@ async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -3124,10 +3125,10 @@ function renderBrandList(brands){
     const avatarHtml = b.logo_url
       ? '<img src="'+b.logo_url+'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0">'
       : '<div style="width:44px;height:44px;border-radius:12px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">'+initial+'</div>';
-    return '<div class="card brand-list-item" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
+    return '<div class="card brand-list-item" style="'+(b.is_frozen?'opacity:.55;filter:grayscale(1)':'')+'" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
       + '<div style="display:flex;align-items:center;gap:12px;cursor:pointer">'
       + avatarHtml
-      + '<div style="flex:1"><b>'+b.nama_brand+'</b><div class="card-sub" style="margin:0">'+products.length+' produk tersedia'+tagText+'</div></div>'
+      + '<div style="flex:1"><b>'+b.nama_brand+'</b><div class="card-sub" style="margin:0">'+products.length+' produk tersedia'+tagText+(b.is_frozen?' · 🧊 Freeze':'')+'</div></div>'
       + '<div>›</div></div></div>';
   }).join('');
   note.textContent = 'Menampilkan ' + brands.length + ' dari ' + allBrandsCache.length + ' brand';
@@ -3163,6 +3164,15 @@ async function openBrandDetail(brandId, brandName, logoUrl){
   const container = document.getElementById('brand-products-list');
   container.innerHTML = '<div class="card-sub">Memuat produk...</div>';
 
+  const { data: brandRow } = await db.from('brands').select('is_frozen').eq('id', brandId).maybeSingle();
+  const brandFrozen = !!(brandRow && brandRow.is_frozen);
+
+  if(brandFrozen){
+    container.innerHTML = '<div class="card-sub" style="background:var(--pink-pale);border-radius:12px;padding:12px;margin-bottom:10px">🧊 Brand ini lagi di-freeze sementara — request sample dimatikan dulu. Kamu tetap bisa lihat & copy link produknya di bawah.</div>';
+  } else {
+    container.innerHTML = '';
+  }
+
   const { data, error } = await db.from('brand_products').select('*').eq('brand_id', brandId).order('created_at', { ascending: true });
 
   if(error){
@@ -3172,11 +3182,11 @@ async function openBrandDetail(brandId, brandName, logoUrl){
   }
 
   if(!data || data.length === 0){
-    container.innerHTML = '<div class="card-sub">Brand ini belum punya produk aktif.</div>';
+    container.innerHTML += '<div class="card-sub">Brand ini belum punya produk aktif.</div>';
     return;
   }
 
-  container.innerHTML = data.map(function(p){
+  container.innerHTML += data.map(function(p){
     let tagHtml = '';
     if(p.tag_hot) tagHtml += '<span class="tag tag-hot">🔥 Hot Product</span>';
     const hargaText = p.harga ? 'Rp' + Number(p.harga).toLocaleString('id-ID') : '-';
@@ -3213,7 +3223,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '<div class="inline-video-wrap-real" style="display:none;margin-top:8px"><video controls style="width:100%;border-radius:10px;max-height:220px"></video></div>';
     }
 
-    return '<div class="card" data-product-id="'+p.id+'">'
+    return '<div class="card" data-product-id="'+p.id+'" style="'+(brandFrozen?'opacity:.5;filter:grayscale(1)':'')+'">'
       + fotoHtml
       + '<div class="card-title">'+p.nama_produk+'</div>'
       + tagHtml
@@ -3227,8 +3237,8 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '<option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live saja</option>'
       + '</select></div>'
       + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
-+ '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
-+ '<button class="btn btn-teal btn-sm request-sample-btn" '+(isSampleRequestFrozen?'disabled style="opacity:.4" title="Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru."':'')+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
++ '<button class="btn btn-outline btn-sm" style="margin-top:6px;filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
++ '<button class="btn btn-teal btn-sm request-sample-btn" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(isSampleRequestFrozen?'disabled style="opacity:.4" title="Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru."':''))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
 }
@@ -4127,7 +4137,7 @@ async function saveBrandRegistration(){
 }
 
 async function editBrand(brandId){
-  const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url').eq('id', brandId).single();
+  const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, is_frozen').eq('id', brandId).single();
   if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
     const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent').eq('brand_id', brandId).order('created_at', { ascending: true });
   if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
@@ -4140,6 +4150,22 @@ async function editBrand(brandId){
   document.getElementById('btn-hapus-brand').style.display = 'inline-block';
   document.getElementById('btn-hapus-brand').setAttribute('data-brand-id', brand.id);
   document.getElementById('btn-hapus-brand').setAttribute('data-brand-nama', brand.nama_brand);
+
+  const freezeBtn = document.getElementById('btn-freeze-brand');
+  freezeBtn.style.display = 'inline-block';
+  freezeBtn.setAttribute('data-brand-id', brand.id);
+  freezeBtn.setAttribute('data-brand-nama', brand.nama_brand);
+  freezeBtn.setAttribute('data-is-frozen', brand.is_frozen ? '1' : '0');
+  if(brand.is_frozen){
+    freezeBtn.textContent = '🔥 Unfreeze Brand';
+    freezeBtn.style.background = 'var(--teal-pale,#e3f6ef)';
+    freezeBtn.style.color = 'var(--teal,#1D9E75)';
+  } else {
+    freezeBtn.textContent = '🧊 Freeze Brand';
+    freezeBtn.style.background = 'var(--pink-pale)';
+    freezeBtn.style.color = 'var(--pink)';
+  }
+
   document.getElementById('newbrand-nama').value = brand.nama_brand;
   document.getElementById('newbrand-komisi').value = brand.komisi_percent !== null ? brand.komisi_percent : '';
   document.getElementById('newbrand-logo').value = '';
@@ -4172,6 +4198,49 @@ async function editBrand(brandId){
   document.getElementById('cancel-edit-btn').style.display = 'block';
   document.getElementById('new-code').style.display = 'none';
   document.getElementById('brand-form-title').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function freezeBrandInternal(){
+  const btn = document.getElementById('btn-freeze-brand');
+  const brandId = btn.getAttribute('data-brand-id');
+  const brandNama = btn.getAttribute('data-brand-nama');
+  const isFrozen = btn.getAttribute('data-is-frozen') === '1';
+  if(!brandId) return;
+
+  const action = isFrozen ? 'unfreeze' : 'freeze';
+  const konfirmasi = isFrozen
+    ? confirm('Unfreeze brand "'+brandNama+'"? Creator bisa request sample ke brand ini lagi seperti biasa.')
+    : confirm('Freeze brand "'+brandNama+'"?\n\n'
+      + '- Semua produknya tampil abu-abu di Campaign, tombol Request Sample dimatikan (Copy Link tetap jalan)\n'
+      + '- Semua request AKTIF (belum kelar) ke brand ini dibatalin, kuota creator LANGSUNG BALIK\n'
+      + '- Self Report ke brand ini TETAP JALAN NORMAL, nggak kena efek\n'
+      + '- Ini SEMENTARA, bisa di-unfreeze lagi kapan pun (beda dari Hapus Brand yang permanen)\n\nLanjut?');
+  if(!konfirmasi) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-freeze-brand', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ brandId, action })
+    });
+    const j = await res.json();
+    btn.disabled = false;
+    if(!j.valid){ alert(j.error || 'Gagal memproses.'); btn.textContent = isFrozen ? '🔥 Unfreeze Brand' : '🧊 Freeze Brand'; return; }
+
+    if(action === 'freeze'){
+      alert('Brand "'+j.brandName+'" berhasil di-freeze.\n\n'+j.cancelledCount+' request aktif dibatalin (kuota balik otomatis).\n'+j.notifiedCreators+' creator dikasih notifikasi.');
+    } else {
+      alert('Brand "'+j.brandName+'" berhasil di-unfreeze. Creator bisa request sample lagi normal.');
+    }
+    cancelEditBrand();
+    loadBrandTerdaftar();
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = isFrozen ? '🔥 Unfreeze Brand' : '🧊 Freeze Brand';
+    alert('Gagal menghubungi server.');
+  }
 }
 
 async function hapusBrandInternal(){
@@ -4222,6 +4291,7 @@ function cancelEditBrand(){
   deletedProductIds = [];
   document.getElementById('brand-form-title-text').textContent = '+ Daftarkan Brand Baru';
   document.getElementById('btn-hapus-brand').style.display = 'none';
+  document.getElementById('btn-freeze-brand').style.display = 'none';
   document.getElementById('newbrand-nama').value = '';
   document.getElementById('newbrand-komisi').value = '';
   document.getElementById('newbrand-logo').value = '';
