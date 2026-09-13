@@ -898,6 +898,16 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div>
 
+<div class="popup-bg" id="creator-frozen-popup" style="display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:22px;padding:28px 22px;text-align:center;max-width:340px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,.2)">
+    <div style="width:56px;height:56px;border-radius:16px;background:#fde2e2;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">😔</div>
+    <h1 style="font-size:16px;color:var(--dark);margin-bottom:8px">Akun Kamu Lagi Dibekukan</h1>
+    <p style="font-size:12px;color:var(--gray-text);line-height:1.6;margin-bottom:18px">Ada pelanggaran yang perlu diselesaikan dulu, jadi sementara kamu belum bisa akses aplikasi. Hubungi tim Girlhood Den buat tau alasan &amp; langkah selanjutnya.</p>
+    <button onclick="window.open('https://wa.me/','_blank')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--pink);color:#fff;font-weight:800;font-size:12.5px;cursor:pointer;margin-bottom:8px">💬 Hubungi Tim Girlhood Den</button>
+    <button onclick="document.getElementById('creator-frozen-popup').style.display='none'" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--gray-text);font-weight:700;font-size:12.5px;cursor:pointer">Tutup</button>
+  </div>
+</div>
+
 <div class="popup-bg" id="monthly-recap-popup" style="display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="max-width:380px;width:100%;border-radius:28px;padding:32px 26px 24px;background:radial-gradient(120% 90% at 20% 0%, rgba(255,255,255,.22), transparent 55%), linear-gradient(155deg, #ec2f74 0%, #c6104b 46%, #7a0a34 100%);box-shadow:0 28px 60px -18px rgba(122,10,52,.55);color:#fff;text-align:center;position:relative">
     <div onclick="closeMonthlyRecap()" style="position:absolute;top:14px;right:16px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">✕</div>
@@ -1245,8 +1255,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="size-note" id="creatordb-count" style="margin-bottom:8px">Memuat data...</div>
   <div style="overflow-x:auto">
   <table id="creatordb-table">
-    <tr><th>Nama</th><th>No HP</th><th>Link TikTok</th><th>Level</th><th>GMV 30 Hari</th><th>Status</th><th>Kode Login</th></tr>
-    <tbody id="creatordb-rows"><tr><td colspan="7" class="card-sub">Memuat data...</td></tr></tbody>
+    <tr><th>Nama</th><th>No HP</th><th>Link TikTok</th><th>Level</th><th>GMV 30 Hari</th><th>Status</th><th>Kode Login</th><th>Freeze</th></tr>
+    <tbody id="creatordb-rows"><tr><td colspan="8" class="card-sub">Memuat data...</td></tr></tbody>
   </table>
   </div>
 </div></div>
@@ -2501,6 +2511,10 @@ async function loginCreator(){
     btn.textContent = 'Masuk';
 
     if(!result.valid){
+      if(result.errorType === 'frozen'){
+        document.getElementById('creator-frozen-popup').style.display = 'flex';
+        return;
+      }
       alert(result.error || 'Kode tidak ditemukan atau belum diverifikasi. Cek lagi kodenya, atau hubungi tim internal.');
       return;
     }
@@ -4938,7 +4952,7 @@ async function loadCreatorDatabase(){
   countEl.textContent = 'Memuat data...';
   rowsEl.innerHTML = '<tr><td colspan="7" class="card-sub">Memuat data...</td></tr>';
 
-  const { data, error } = await db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login').order('created_at', { ascending: false });
+  const { data, error } = await db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login, is_frozen').order('created_at', { ascending: false });
 
   if(error){
     countEl.textContent = '';
@@ -4957,7 +4971,7 @@ function renderCreatorDatabase(list){
   countEl.textContent = 'Menampilkan ' + list.length + ' dari ' + __creatorDbCache.length + ' creator';
 
   if(list.length === 0){
-    rowsEl.innerHTML = '<tr><td colspan="7" class="card-sub">Tidak ada creator yang cocok.</td></tr>';
+    rowsEl.innerHTML = '<tr><td colspan="8" class="card-sub">Tidak ada creator yang cocok.</td></tr>';
     return;
   }
 
@@ -4965,6 +4979,7 @@ function renderCreatorDatabase(list){
   rowsEl.innerHTML = list.map(function(m){
     const linkCell = m.tiktok_profile_link ? '<a href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-';
     const gmvText = m.gmv_30hari ? 'Rp'+Number(m.gmv_30hari).toLocaleString('id-ID') : '-';
+    const freezeBtn = '<button class="btn btn-sm" style="font-size:10px;padding:5px 9px;border:none;font-weight:700;background:'+(m.is_frozen?'var(--teal-pale,#e3f6ef);color:var(--teal,#1D9E75)':'var(--pink-pale);color:var(--pink)')+'" onclick="toggleFreezeCreator(\''+m.id+'\',\''+(m.nama||'-').replace(/'/g,"\\'")+'\','+(m.is_frozen?'true':'false')+',this)">'+(m.is_frozen?'🔥 Unfreeze':'🧊 Freeze')+'</button>';
     return '<tr>'
       + '<td>'+(m.nama||'-')+'</td>'
       + '<td>'+(m.no_hp||'-')+'</td>'
@@ -4973,8 +4988,43 @@ function renderCreatorDatabase(list){
       + '<td>'+gmvText+'</td>'
       + '<td>'+(statusLabel[m.status]||m.status||'-')+'</td>'
       + '<td>'+(m.kode_login||'-')+'</td>'
+      + '<td>'+freezeBtn+'</td>'
       + '</tr>';
   }).join('');
+}
+
+async function toggleFreezeCreator(memberId, nama, isFrozen, btn){
+  const action = isFrozen ? 'unfreeze' : 'freeze';
+  const konfirmasi = isFrozen
+    ? confirm('Unfreeze akun "'+nama+'"? Dia bisa login & akses app lagi seperti biasa.')
+    : confirm('Freeze akun "'+nama+'"?\n\n'
+      + '- Pengajuan yang MASIH nunggu approval langsung dibatalin\n'
+      + '- Yang UDAH di-approve dibiarin selesai dulu (Report VT tetap lancar)\n'
+      + '- Self Report & Request Sample BARU dikunci dari sekarang\n'
+      + '- Begitu kerjaannya kelar semua, lain kali dia coba login/buka app baru bener-bener kekunci total\n\nLanjut?');
+  if(!konfirmasi) return;
+
+  btn.disabled = true;
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-freeze-creator', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ memberId, action })
+    });
+    const j = await res.json();
+    btn.disabled = false;
+    if(!j.valid){ alert(j.error || 'Gagal memproses.'); return; }
+
+    if(action === 'freeze'){
+      alert('Akun "'+j.nama+'" berhasil di-freeze.\n\n'+j.cancelledRequestCount+' pengajuan yang masih nunggu approval dibatalin.\n'+j.cancelledSelfReportCount+' self-report yang masih pending juga dibatalin.');
+    } else {
+      alert('Akun "'+j.nama+'" berhasil di-unfreeze.');
+    }
+    loadCreatorDatabase();
+  } catch(e){
+    btn.disabled = false;
+    alert('Gagal menghubungi server.');
+  }
 }
 
 function filterCreatorDatabase(keyword){
