@@ -1764,6 +1764,7 @@ async function loadApprovalRows(){
   const { data, error } = await db.from('sample_requests')
     .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
+    .in('status', ['requested','approved','rejected'])
     .order('requested_at', { ascending: false });
 
   if(error){
@@ -1935,6 +1936,20 @@ async function loadCekStatus(){
         + '<div style="font-weight:800;color:var(--red);margin-bottom:2px">Coba lagi di momen lain ya 😇</div>'
         + namaLengkap+'<br><span class="card-sub">"'+(r.rejection_template||'Coba lagi ya.')+'"</span></div>';
     }
+
+    if(r.status === 'dibatalkan_creator'){
+      return '<div class="status-item" style="opacity:.6">'+namaLengkap+'<br><span class="card-sub">Kamu batalin sendiri request ini. Kuota udah balik.</span></div>';
+    }
+
+    if(r.status === 'dibatalkan_brand'){
+      return '<div class="status-item" style="opacity:.6">'+namaLengkap+'<br><span class="card-sub">Request ini dibatalin brand. Kuota udah balik.</span></div>';
+    }
+
+    if(r.status === 'kadaluarsa_otomatis'){
+      return '<div class="status-item" style="opacity:.6">'+namaLengkap+'<br><span class="card-sub">Otomatis ditutup karena brand gak respon lewat dari 7 hari. Kuota udah balik, boleh coba lagi.</span></div>';
+    }
+
+    if(r.status !== 'approved') return '';
 
     // status === 'approved'
     const sudahDikirim = r.logistics && r.logistics.sudah_dikirim;
