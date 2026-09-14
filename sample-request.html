@@ -3818,7 +3818,6 @@ async function loadLogistik(){
 
     return '<div class="card" data-request-id="'+r.id+'" style="'+(isOverdue?'background:var(--red-light);border-color:var(--red)':'')+'">'
       + '<div style="display:flex;align-items:flex-start;gap:10px">'
-      + '<input type="checkbox" class="logistik-check" style="margin-top:4px;width:18px;height:18px">'
       + '<div style="flex:1">'
       + '<b>'+nama+'</b><br><span class="card-sub">Janji kirim: '+formatted+'</span>'
       + overdueNote
@@ -3830,11 +3829,6 @@ async function loadLogistik(){
 
 async function confirmLogistik(requestId, btn){
   const card = btn.closest('.card');
-  const cb = card.querySelector('.logistik-check');
-  if(!cb.checked){
-    alert('Centang dulu nama creator-nya sebelum menandai sudah dikirim.');
-    return;
-  }
   const resi = card.querySelector('.resi-input').value.trim();
 
   btn.disabled = true;
