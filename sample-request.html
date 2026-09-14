@@ -5358,12 +5358,22 @@ function closeMonthlyRecap(){
   document.getElementById('monthly-recap-popup').style.display = 'none';
 }
 
-function handleReportVtClick(){
+async function handleReportVtClick(){
   const card = document.getElementById('ic-reportvt');
-  if(card.classList.contains('locked')){
+  // Cek FRESH ke database tiap kali diklik -- jangan cuma percaya status visual (classList),
+  // karena itu di-set async pas app baru kebuka dan bisa aja belum selesai kalau user klik cepat.
+  const { data, error } = await db.from('sample_requests')
+    .select('id').eq('member_id', currentSession.memberId).eq('status', 'approved').limit(1);
+  const hasApproved = !error && data && data.length > 0;
+
+  if(!hasApproved){
+    card.classList.add('locked');
+    card.style.opacity = '.45';
     alert('Belum ada produk yang di-approve nih. Ajukan lewat "Sudah Punya Produk" dulu sambil nunggu, atau tunggu brand acc request kamu ya.');
     return;
   }
+  card.classList.remove('locked');
+  card.style.opacity = '1';
   checkVersionNotif();
   openModal('m-c4');
   loadVtReportPage();
