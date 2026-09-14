@@ -3359,6 +3359,12 @@ async function requestSample(productId, btn){
       alert('Kuota 3 brand kamu masih penuh. Selesaikan dulu brand yang sedang aktif sebelum ambil brand baru.');
     } else if(error.message && error.message.includes('QUOTA_SKU_PENUH')){
       alert('Kuota produk di brand ini sudah penuh (maksimal 2 SKU satuan, atau 1 paket bundling).');
+    } else if(error.message && error.message.includes('VT_NUNGGAK_5_HARI')){
+      alert('Brand ini ada video yang belum kamu posting lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini.');
+    } else if(error.message && error.message.includes('PRODUK_DIFREEZE')){
+      alert('Produk ini lagi di-freeze sementara, request sample dimatikan dulu. Coba lagi nanti ya.');
+    } else if(error.message && error.message.includes('AKUN_DIFREEZE')){
+      alert('Akun kamu lagi dibekukan sementara, nggak bisa request sample. Hubungi tim Girlhood Den buat info lebih lanjut.');
     } else {
       showDbError('request sample', error);
     }
