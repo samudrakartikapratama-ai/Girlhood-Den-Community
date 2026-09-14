@@ -520,14 +520,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
-    <div class="icon-card freeze-target" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
+    <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
-    <div class="icon-card freeze-target" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
-    <div class="icon-card freeze-target" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
+    <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
+    <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
   </div>
-  <div id="freeze-overlay-note" style="display:none;text-align:center;margin-top:-6px;margin-bottom:14px;color:var(--red);font-weight:700;font-size:12px">🔒 Menu di atas dikunci — ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT.</div>
 </div>
 
 <!-- ============ BRAND ============ -->
@@ -610,7 +609,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-c2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
   <div class="modal-title">🛍️ Campaign</div>
   <div class="quota-box">
-    <div class="quota-label">Kuota Brand Kamu</div>
+    <div class="quota-label">Kuota Brand Kamu <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--pink);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Kamu boleh pegang <b>maksimal 3 brand</b> bersamaan. Kalau salah satu brand videonya udah lengkap semua, slot-nya kosong lagi dan bisa diisi brand baru. Kalau ada brand yang videonya belum diposting sampai 5 hari, brand itu doang yang kekunci — brand lain tetap aman.')">!</span></div>
     <div class="quota-num" id="quota-num">-</div>
     <div class="quota-dots" id="quota-dots"></div>
     <div class="quota-bar-track" style="height:8px;background:#f0d9e6;border-radius:99px;overflow:hidden;margin:10px 0 4px">
@@ -660,7 +659,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div></div>
 
 <div class="modal-bg" id="m-c3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c3')">‹ ✕</button>
-  <div class="modal-title">🔍 Cek Status</div>
+  <div class="modal-title">🔍 Cek Status <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Barang sampai → kamu punya <b>3 hari</b> buat posting video biar dapat bonus poin. Lewat 3 hari masih boleh posting, cuma nggak dapat bonus-nya. Tapi kalau sampai <b>5 hari gak posting sama sekali</b>, kamu nggak bisa minta produk baru dari brand itu sampai videonya diposting.')">!</span></div>
   <div id="c3-r">
 
     <div id="delivery-prompts"></div>
@@ -957,7 +956,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="sr-screen active" id="sr-screen-brand">
     <div style="padding:20px 20px 4px;position:relative">
       <button class="modal-close" title="Kembali" onclick="closeModal('m-c9')" style="position:absolute;top:14px;right:16px">‹ ✕</button>
-      <div class="modal-title" style="margin-bottom:2px">📸 Udah Punya Produknya?</div>
+      <div class="modal-title" style="margin-bottom:2px">📸 Udah Punya Produknya? <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Menu ini buat produk yang <b>UDAH kamu punya sendiri</b> — bukan minta dikirim. Kalau produknya belum pernah disetujui, upload foto dulu di sini. Kalau UDAH PERNAH disetujui sebelumnya, langsung aja ke <b>Report VT</b>, nggak usah upload foto lagi.')">!</span></div>
       <div class="card-sub">Pilih brand dulu, abis itu pilih produknya dari foto.</div>
       <input class="sr-search" id="sr-search-input" placeholder="🔍 Cari brand..." oninput="filterSelfReportBrands(this.value)" style="margin-top:10px">
     </div>
@@ -1672,7 +1671,7 @@ async function submitRegistration(){
   }
   closeModal('m-register');
 }
-let isSampleRequestFrozen = false;
+let frozenBrandIds = new Set();
 
 async function checkFreezeStatus(){
   if(!currentSession.memberId) return;
@@ -1705,32 +1704,27 @@ async function checkFreezeStatus(){
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
-  const isFrozen = (data||[]).some(function(r){
-    if(r.tipe_sow_dipilih === 'LIVE') return false; // Live selesai otomatis saat request
+  // Cuma BRAND yang nunggak yang kekunci, bukan semuanya sekaligus.
+  const newFrozenBrandIds = new Set();
+  (data||[]).forEach(function(r){
+    if(r.tipe_sow_dipilih === 'LIVE') return; // Live selesai otomatis saat request
     const required = 3;
     const done = (r.vt_reports||[]).length;
-    if(done >= required) return false;
+    if(done >= required) return;
     const brandId = r.brand_products ? r.brand_products.brand_id : null;
-    const anchor = selfReportAnchorMap[r.id] || (brandId ? confirmMap[brandId] : null);
-    if(!anchor) return false; // Belum konfirmasi terima barang & bukan self-report = H+3 belum mulai, jangan freeze
-    return new Date(anchor) < fiveDaysAgo;
+    if(!brandId) return;
+    const anchor = selfReportAnchorMap[r.id] || confirmMap[brandId];
+    if(!anchor) return; // Belum konfirmasi terima barang & bukan self-report = H+3 belum mulai, jangan freeze
+    if(new Date(anchor) < fiveDaysAgo) newFrozenBrandIds.add(brandId);
   });
 
-  isSampleRequestFrozen = isFrozen;
+  frozenBrandIds = newFrozenBrandIds;
 
-  document.querySelectorAll('.freeze-target').forEach(function(el){
-    if(isFrozen){
-      el.style.opacity = '0.4';
-      el.style.pointerEvents = 'none';
-    } else {
-      el.style.opacity = '';
-      el.style.pointerEvents = '';
-    }
-  });
   document.querySelectorAll('.request-sample-btn').forEach(function(btn){
-    if(isFrozen){
+    const btnBrandId = btn.dataset.brandId;
+    if(btnBrandId && frozenBrandIds.has(btnBrandId)){
       btn.disabled = true;
-      btn.title = 'Ada VT yang belum di-report lewat dari 5 hari sejak barang dikonfirmasi diterima. Selesaikan dulu di Report VT sebelum request produk baru.';
+      btn.title = 'Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini.';
       btn.style.opacity = '0.4';
     } else {
       btn.disabled = false;
@@ -1738,7 +1732,6 @@ async function checkFreezeStatus(){
       btn.style.opacity = '';
     }
   });
-  document.getElementById('freeze-overlay-note').style.display = isFrozen ? 'block' : 'none';
 }
 
 function toggleAll(master){
@@ -1765,6 +1758,8 @@ async function loadApprovalRows(){
     container.innerHTML = '<div class="card-sub">Sesi brand tidak terdeteksi.</div>';
     return;
   }
+
+  try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
     .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
@@ -1866,6 +1861,22 @@ function filterApprovalGroups(query){
 
 const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
+async function cancelMyRequest(requestId, btn){
+  if(!confirm('Yakin mau batalin request ini? Kuota kamu langsung balik.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Membatalkan...';
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-cancel-request', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({ requestId })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal membatalkan.'); btn.disabled=false; btn.textContent='Batalkan Request'; return; }
+    loadCekStatus();
+  } catch(e){ alert('Gagal menghubungi server.'); btn.disabled=false; btn.textContent='Batalkan Request'; }
+}
+
 async function loadCekStatus(){
   const container = document.getElementById('c3-status-list');
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
@@ -1876,6 +1887,8 @@ async function loadCekStatus(){
     container.innerHTML = '<div class="card-sub">Sesi login tidak terdeteksi.</div>';
     return;
   }
+
+  try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
     .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at, nomor_resi)')
@@ -1912,7 +1925,9 @@ async function loadCekStatus(){
     const namaLengkap = '<b>'+(p.nama_produk||'-')+'</b> — '+brandName;
 
     if(r.status === 'requested'){
-      return '<div class="status-item requested">'+namaLengkap+' (Requested)</div>';
+      return '<div class="status-item requested">'+namaLengkap+' (Requested)'
+        + '<div style="margin-top:6px"><button class="btn btn-outline btn-sm" style="font-size:10.5px;padding:5px 10px" onclick="cancelMyRequest(\''+r.id+'\',this)">Batalkan Request</button></div>'
+        + '</div>';
     }
 
     if(r.status === 'rejected'){
@@ -3237,9 +3252,10 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '<div class="inline-video-wrap-real" style="display:none;margin-top:8px"><video controls style="width:100%;border-radius:10px;max-height:220px"></video></div>';
     }
 
-    return '<div class="card" data-product-id="'+p.id+'" style="'+(brandFrozen?'opacity:.5;filter:grayscale(1)':'')+'">'
+    return '<div class="card" data-product-id="'+p.id+'" style="'+(brandFrozen||p.is_frozen?'opacity:.5;filter:grayscale(1)':'')+'">'
       + fotoHtml
       + '<div class="card-title">'+p.nama_produk+'</div>'
+      + (p.is_frozen && !brandFrozen ? '<div class="card-sub" style="background:var(--pink-pale);border-radius:10px;padding:8px 10px;margin:4px 0">🧊 Produk ini lagi di-freeze sementara.</div>' : '')
       + tagHtml
       + infoHtml
       + '<div class="card-sub" style="margin-top:6px">Wajib upload laporan setelah kamu konfirmasi "Barang Sudah Sampai" di menu Cek Status ya 😎</div>'
@@ -3252,7 +3268,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '</select></div>'
       + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
 + '<button class="btn btn-outline btn-sm" style="margin-top:6px;filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
-+ '<button class="btn btn-teal btn-sm request-sample-btn" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(isSampleRequestFrozen?'disabled style="opacity:.4" title="Ada VT yang belum di-report lewat dari 5 hari. Selesaikan dulu di Report VT sebelum request produk baru."':''))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
++ '<button class="btn btn-teal btn-sm request-sample-btn" data-brand-id="'+brandId+'" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(p.is_frozen?'disabled style="opacity:.4" title="Produk ini lagi di-freeze sementara, request sample dimatikan dulu."':(frozenBrandIds.has(brandId)?'disabled style="opacity:.4" title="Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini."':'')))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
 }
@@ -4144,10 +4160,33 @@ async function saveBrandRegistration(){
   await loadBrandTerdaftar();
 }
 
+async function toggleFreezeProduct(productId, nama, isFrozen, link){
+  const action = isFrozen ? 'unfreeze' : 'freeze';
+  if(!confirm((isFrozen ? 'Unfreeze' : 'Freeze') + ' produk "'+nama+'"?' + (isFrozen ? '' : ' Semua request yang masih nunggu approve buat produk ini bakal dibatalin otomatis dan kuota creator-nya balik.'))) return;
+
+  const originalText = link.textContent;
+  link.textContent = 'Memproses...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-freeze-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
+      body: JSON.stringify({ productId, freeze: !isFrozen })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal memproses.'); link.textContent = originalText; return; }
+
+    link.textContent = isFrozen ? '🧊 Freeze' : '🔥 Unfreeze';
+    link.setAttribute('onclick', "toggleFreezeProduct('"+productId+"','"+nama.replace(/'/g,"\\'")+"',"+(!isFrozen)+",this);return false;");
+    if(!isFrozen && j.revokedCount > 0){
+      alert('Produk di-freeze. '+j.revokedCount+' request yang masih nunggu approve udah dibatalin, kuota creator-nya udah balik.');
+    }
+  } catch(e){ alert('Gagal menghubungi server.'); link.textContent = originalText; }
+}
+
 async function editBrand(brandId){
   const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, is_frozen').eq('id', brandId).single();
   if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
-    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent').eq('brand_id', brandId).order('created_at', { ascending: true });
+    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent, is_frozen').eq('brand_id', brandId).order('created_at', { ascending: true });
   if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
 
   editingBrandId = brand.id;
@@ -4187,7 +4226,7 @@ async function editBrand(brandId){
     const block = document.createElement('div');
     block.className = 'product-row';
     block.setAttribute('data-product-id', p.id);
-    block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">'+(p.nama_produk||'Produk')+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'
+    block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12px">'+(p.nama_produk||'Produk')+'</b><div style="display:flex;gap:10px;align-items:center;flex-shrink:0"><a href="#" style="font-size:11px;font-weight:700" onclick="toggleFreezeProduct(\''+p.id+'\',\''+(p.nama_produk||'-').replace(/'/g,"\\'")+'\','+(p.is_frozen?'true':'false')+',this);return false;">'+(p.is_frozen?'🔥 Unfreeze':'🧊 Freeze')+'</a><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div></div>'
       + '<div class="field"><label>Nama Produk</label><input class="pb-nama" value="'+(p.nama_produk||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
@@ -6578,7 +6617,14 @@ async function submitSelfReport(){
         body: JSON.stringify({ action:'submit', brandProductId, fotoBase64: base64, fotoContentType: file.type })
       });
       const j = await res.json();
-      if(!j.valid){ alert(j.error || 'Gagal mengajukan.'); return; }
+      if(!j.valid){
+        if(j.errorType === 'already_approved'){
+          const goVt = confirm((j.error || 'Produk ini udah pernah di-approve.') + '\n\nMau langsung ke Report VT sekarang?');
+          if(goVt){ closeModal('m-c9'); handleReportVtClick(); }
+          return;
+        }
+        alert(j.error || 'Gagal mengajukan.'); return;
+      }
       alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
       closeModal('m-c9');
     } catch(e){ alert('Gagal menghubungi server.'); }
@@ -6791,7 +6837,16 @@ function showWaStyleToast(text, onClick){
   }, 6000);
 }
 
-
+function showSimpleInfo(text){
+  let box = document.getElementById('simple-info-box');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'simple-info-box';
+    box.style.cssText = 'position:fixed;left:16px;right:16px;bottom:20px;max-width:400px;margin:0 auto;background:#2b1730;color:#fff;padding:14px 16px;border-radius:14px;font-size:12.5px;line-height:1.6;z-index:9999;box-shadow:0 15px 40px rgba(0,0,0,.35);display:flex;gap:10px;align-items:flex-start';
+    document.body.appendChild(box);
+  }
+  box.innerHTML = '<span style="flex:1">'+text+'</span><span style="cursor:pointer;font-weight:900;flex-shrink:0" onclick="this.parentElement.remove()">✕</span>';
+}
 </script>
 </body>
 </html>
