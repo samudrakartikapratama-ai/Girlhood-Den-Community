@@ -1898,6 +1898,13 @@ async function loadCancelQuota(){
       cancelQuotaRemaining = j.sisa;
       const el = document.getElementById('cancel-quota-note');
       if(el) el.textContent = '↩️ Jatah batalin request bulan ini: '+j.used+'/'+j.max+' terpakai (sisa '+j.sisa+'x)';
+      if(j.sisa <= 0){
+        document.querySelectorAll('.batalkan-request-btn').forEach(function(btn){
+          btn.disabled = true;
+          btn.textContent = 'Jatah Batal Habis Bulan Ini';
+          btn.style.opacity = '.5';
+        });
+      }
     }
   } catch(e){ /* non-fatal */ }
 }
@@ -1907,7 +1914,6 @@ async function loadCekStatus(){
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
   loadDeliveryPrompts();
   loadJadwalLivePrompts();
-  loadCancelQuota();
 
   if(!currentSession.memberId){
     container.innerHTML = '<div class="card-sub">Sesi login tidak terdeteksi.</div>';
@@ -1952,7 +1958,7 @@ async function loadCekStatus(){
 
     if(r.status === 'requested'){
       return '<div class="status-item requested">'+namaLengkap+' (Requested)'
-        + '<div style="margin-top:6px"><button class="btn btn-outline btn-sm" style="font-size:10.5px;padding:5px 10px" onclick="cancelMyRequest(\''+r.id+'\',this)">Batalkan Request</button></div>'
+        + '<div style="margin-top:6px"><button class="btn btn-outline btn-sm batalkan-request-btn" style="font-size:10.5px;padding:5px 10px" onclick="cancelMyRequest(\''+r.id+'\',this)">Batalkan Request</button></div>'
         + '</div>';
     }
 
@@ -2021,6 +2027,8 @@ async function loadCekStatus(){
       + '<div style="font-weight:800;color:var(--teal);margin-bottom:2px">Yeay di Approve 🥳</div>'
       + namaLengkap+'<div class="card-sub">SOW:</div><div class="sow-big">'+(sowLabel[r.tipe_sow_dipilih]||'-')+'</div></div>';
   }).join('');
+
+  loadCancelQuota();
 }
 
 async function loadDeliveryPrompts(){
