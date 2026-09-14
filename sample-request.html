@@ -660,7 +660,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-c3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c3')">‹ ✕</button>
   <div class="modal-title">🔍 Cek Status <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Barang sampai → kamu punya <b>3 hari</b> buat posting video biar dapat bonus poin. Lewat 3 hari masih boleh posting, cuma nggak dapat bonus-nya. Tapi kalau sampai <b>5 hari gak posting sama sekali</b>, kamu nggak bisa minta produk baru dari brand itu sampai videonya diposting.')">!</span></div>
-  <div id="cancel-quota-note" class="card-sub" style="display:none;margin-top:-4px;margin-bottom:10px;color:var(--gray-text)">↩️ Memuat jatah batalin request...</div>
+  <div id="cancel-quota-note" class="card-sub" style="margin-top:-4px;margin-bottom:10px;color:var(--gray-text)">↩️ Memuat jatah batalin request...</div>
   <div id="c3-r">
 
     <div id="delivery-prompts"></div>
@@ -1865,7 +1865,7 @@ const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
 let cancelQuotaRemaining = null;
 
-const CANCEL_REQUEST_ENABLED = false; // Sengaja dikunci sementara, belum dibuka ke publik -- ganti true buat aktifin lagi.
+const CANCEL_REQUEST_ENABLED = true;
 
 async function cancelMyRequest(requestId, btn){
   const sisaText = (cancelQuotaRemaining !== null) ? ' (sisa jatah kamu bulan ini: '+cancelQuotaRemaining+'x)' : '';
