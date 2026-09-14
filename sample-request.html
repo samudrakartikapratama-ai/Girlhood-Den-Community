@@ -660,6 +660,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-c3"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c3')">‹ ✕</button>
   <div class="modal-title">🔍 Cek Status <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Barang sampai → kamu punya <b>3 hari</b> buat posting video biar dapat bonus poin. Lewat 3 hari masih boleh posting, cuma nggak dapat bonus-nya. Tapi kalau sampai <b>5 hari gak posting sama sekali</b>, kamu nggak bisa minta produk baru dari brand itu sampai videonya diposting.')">!</span></div>
+  <div id="cancel-quota-note" class="card-sub" style="margin-top:-4px;margin-bottom:10px;color:var(--gray-text)">↩️ Memuat jatah batalin request...</div>
   <div id="c3-r">
 
     <div id="delivery-prompts"></div>
@@ -1862,8 +1863,11 @@ function filterApprovalGroups(query){
 
 const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
+let cancelQuotaRemaining = null;
+
 async function cancelMyRequest(requestId, btn){
-  if(!confirm('Yakin mau batalin request ini? Kuota kamu langsung balik.')) return;
+  const sisaText = (cancelQuotaRemaining !== null) ? ' (sisa jatah kamu bulan ini: '+cancelQuotaRemaining+'x)' : '';
+  if(!confirm('Yakin mau batalin request ini?'+sisaText+' Kuota produk kamu langsung balik.')) return;
   btn.disabled = true;
   btn.textContent = 'Membatalkan...';
   try {
@@ -1873,9 +1877,29 @@ async function cancelMyRequest(requestId, btn){
       body: JSON.stringify({ requestId })
     });
     const j = await res.json();
-    if(!j.valid){ alert(j.error || 'Gagal membatalkan.'); btn.disabled=false; btn.textContent='Batalkan Request'; return; }
+    if(!j.valid){
+      if(j.errorType === 'quota_habis'){ alert(j.error); }
+      else { alert(j.error || 'Gagal membatalkan.'); }
+      btn.disabled=false; btn.textContent='Batalkan Request'; return;
+    }
     loadCekStatus();
   } catch(e){ alert('Gagal menghubungi server.'); btn.disabled=false; btn.textContent='Batalkan Request'; }
+}
+
+async function loadCancelQuota(){
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-cancel-request', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({ action:'quota' })
+    });
+    const j = await res.json();
+    if(j.valid){
+      cancelQuotaRemaining = j.sisa;
+      const el = document.getElementById('cancel-quota-note');
+      if(el) el.textContent = '↩️ Jatah batalin request bulan ini: '+j.used+'/'+j.max+' terpakai (sisa '+j.sisa+'x)';
+    }
+  } catch(e){ /* non-fatal */ }
 }
 
 async function loadCekStatus(){
@@ -1883,6 +1907,7 @@ async function loadCekStatus(){
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
   loadDeliveryPrompts();
   loadJadwalLivePrompts();
+  loadCancelQuota();
 
   if(!currentSession.memberId){
     container.innerHTML = '<div class="card-sub">Sesi login tidak terdeteksi.</div>';
