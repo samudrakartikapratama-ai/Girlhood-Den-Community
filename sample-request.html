@@ -487,6 +487,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .wa-toast-sub{font-size:9.5px;color:var(--gray-text);font-weight:500;margin-top:2px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -1395,6 +1396,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="pf-product-picker" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:180px;overflow-y:auto;padding:2px;margin-bottom:14px"><div class="card-sub">Memuat produk...</div></div>
   <div class="card-sub" style="margin-bottom:6px">Creator yang match</div>
   <div id="pf-matches" style="background:var(--gray);border-radius:14px;max-height:220px;overflow-y:auto;padding:10px"><div class="card-sub">Pilih produk dulu.</div></div>
+
+<div class="card-sub" style="margin:14px 0 6px">Minimal budget campaign</div>
+<div style="display:flex;align-items:center;background:#fff;border:1px solid var(--gray-mid);border-radius:10px;padding:0 12px;margin-bottom:14px"><span style="font-size:13px;color:var(--gray-text)">Rp</span><input id="pf-budget" type="number" value="5000000" step="500000" min="0" style="border:none;background:transparent;flex:1;padding:10px 8px;font-size:13px"></div>
+<button id="pf-finish-btn" class="btn btn-primary" style="width:100%" onclick="sendEndorsementProposal()">Send your proposal to our team</button>
+<div id="pf-finish-msg" style="display:none;margin-top:8px;text-align:center;font-size:12px"></div>
 </div>
 
 <div id="pf-creator-only" style="display:none;margin-top:14px">
@@ -1622,6 +1628,8 @@ async function loadPlayfieldVideos(){
 
 let pfSelectedProductId = null;
 let pfSelectedKategori = null;
+let pfSelectedProductName = null;
+let pfLastMatches = [];
 
 function pfInitials(name){ return String(name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
 
@@ -1651,6 +1659,7 @@ async function loadPlayfieldProducts(){
       card.style.borderColor = 'var(--pink)';
       pfSelectedProductId = p.id;
       pfSelectedKategori = p.kategori;
+      pfSelectedProductName = p.nama_produk;
       loadPlayfieldMatches();
     });
     wrap.appendChild(card);
@@ -1714,6 +1723,7 @@ async function loadPlayfieldMatches(){
   }
   const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
   wrap.innerHTML = '';
+  pfLastMatches = members || [];
   (members || []).forEach(function(m){
     const cats = pfTopN(catByMember[m.id], 3).join(', ');
     const brs = pfTopN(brandByMember[m.id] || {}, 3).join(', ');
@@ -1746,6 +1756,57 @@ async function loadPlayfieldCreatorsPlain(){
       + '<div><div style="font-size:13px;font-weight:700">' + (m.nama || '-') + '</div><div style="font-size:11px;color:var(--gray-text)">' + cats + '</div></div>';
     wrap.appendChild(card);
   });
+}
+
+async function sendEndorsementProposal(){
+  if(!pfSelectedProductId){ showToast('Pilih produk dulu ya sebelum kirim proposal.'); return; }
+  const btn = document.getElementById('pf-finish-btn');
+  const msg = document.getElementById('pf-finish-msg');
+  btn.disabled = true;
+  btn.textContent = 'Menyiapkan proposal...';
+  msg.style.display = 'none';
+  try {
+    const brandName = (currentSession.brandData && currentSession.brandData.nama_brand) || 'Brand';
+    const productName = pfSelectedProductName || '-';
+    const budget = Number(document.getElementById('pf-budget').value || 0);
+    const creators = pfLastMatches.map(function(m){ return { nama: m.nama }; });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    pdf.setFontSize(16);
+    pdf.text('Proposal Endorsement - Creator Playfield', 14, 20);
+    pdf.setFontSize(11);
+    pdf.text('Brand: ' + brandName, 14, 35);
+    pdf.text('Produk: ' + productName, 14, 43);
+    pdf.text('Budget campaign: Rp ' + budget.toLocaleString('id-ID'), 14, 51);
+    pdf.text('Creator yang match:', 14, 63);
+    let y = 71;
+    creators.forEach(function(c){ pdf.text('- ' + (c.nama || '-'), 18, y); y += 8; });
+    if(creators.length === 0){ pdf.text('- (belum ada)', 18, y); }
+    const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/send-endorsement-brief', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandName: brandName, productName: productName, budget: budget, creators: creators, pdfBase64: pdfBase64 })
+    });
+    const j = await res.json();
+    if(!j.sent){
+      showToast('Gagal mengirim proposal: ' + (j.error && j.error.message ? j.error.message : 'kendala server') );
+      btn.disabled = false;
+      btn.textContent = 'Send your proposal to our team';
+      return;
+    }
+    msg.style.color = 'var(--teal)';
+    msg.textContent = '\u2713 Proposal terkirim ke tim kami.';
+    msg.style.display = 'block';
+    btn.textContent = 'Send your proposal to our team';
+    btn.disabled = false;
+  } catch(e){
+    showToast('Gagal mengirim proposal, coba lagi ya.');
+    btn.disabled = false;
+    btn.textContent = 'Send your proposal to our team';
+  }
 }
 
 
