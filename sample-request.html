@@ -580,6 +580,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b8'); loadCatchupMeetings('brand');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-b9'); loadTiktokShopStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">TikTok Shop</div></div>
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
+    <div class="icon-card" onclick="openModal('m-b-pk'); loadProductKnowledgeCatalog();"><div style="font-size:28px;line-height:1">📚</div><div class="icon-label">Product Knowledge</div></div>
   </div>
 </div>
 
@@ -1407,6 +1408,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div>
 </div></div>
 
+<div class="modal-bg" id="m-b-pk"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-pk')">‹ ✕</button>
+  <div class="modal-title">📚 Product Knowledge</div>
+  <div class="card-sub">Upload materi produk (PDF/PPTX) biar tim AE dan creator paham produk kamu.</div>
+  <div id="pk-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
+</div></div>
+
 <script>
 // ===== KONEKSI SUPABASE =====
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -1806,6 +1813,101 @@ async function sendEndorsementProposal(){
     btn.textContent = 'Send your proposal to our team';
   }
 }
+
+// ===== PRODUCT KNOWLEDGE =====
+async function uploadDocFileRaw(bucket, file, pathPrefix){
+  const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint'];
+  if(allowed.indexOf(file.type) === -1){
+    return { url: null, error: { message: 'Format harus PDF atau PPTX.' } };
+  }
+  if(file.size > 20*1024*1024){
+    return { url: null, error: { message: 'Ukuran file maksimal 20MB.' } };
+  }
+  const ext = file.name.split('.').pop();
+  const fileName = pathPrefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  const { error } = await db.storage.from(bucket).upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+  if(error) return { url: null, error: error };
+  const { data: publicUrlData } = db.storage.from(bucket).getPublicUrl(fileName);
+  return { url: publicUrlData.publicUrl, error: null };
+}
+
+let pkOpenProductId = null;
+
+async function loadProductKnowledgeCatalog(){
+  const wrap = document.getElementById('pk-catalog');
+  wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).limit(100);
+  if(error || !products || products.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada produk terdaftar.</div>';
+    return;
+  }
+  const productIds = products.map(function(p){ return p.id; });
+  const { data: files } = await db.from('product_knowledge_files').select('id, brand_product_id, file_name, file_url').in('brand_product_id', productIds);
+  const filesByProduct = {};
+  (files || []).forEach(function(f){
+    filesByProduct[f.brand_product_id] = filesByProduct[f.brand_product_id] || [];
+    filesByProduct[f.brand_product_id].push(f);
+  });
+  wrap.innerHTML = '';
+  products.forEach(function(p){
+    const myFiles = filesByProduct[p.id] || [];
+    const done = myFiles.length > 0;
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;overflow:hidden';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px';
+    head.innerHTML = '<div style="flex:1;min-width:0">'
+      + '<p style="margin:0;font-size:13px;font-weight:700">' + (p.nama_produk || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:' + (done ? 'var(--teal)' : 'var(--gray-text)') + '">' + (done ? myFiles.length + ' file terupload' : 'Belum ada file') + '</p>'
+      + '</div>';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm ' + (done ? 'btn-teal' : 'btn-primary');
+    btn.textContent = done ? '✓ Selesai' : 'Isi Product Knowledge';
+    btn.addEventListener('click', function(){ pkOpenProductId = (pkOpenProductId === p.id) ? null : p.id; renderPkRow(row, p, filesByProduct); });
+    head.appendChild(btn);
+    row.appendChild(head);
+    wrap.appendChild(row);
+    row._product = p;
+    row._filesByProduct = filesByProduct;
+  });
+}
+
+function renderPkRow(row, p, filesByProduct){
+  const existing = row.querySelector('.pk-drop-area');
+  if(existing) existing.remove();
+  if(pkOpenProductId !== p.id) return;
+  const myFiles = filesByProduct[p.id] || [];
+  const dropArea = document.createElement('div');
+  dropArea.className = 'pk-drop-area';
+  dropArea.style.cssText = 'border-top:1px solid var(--gray-mid);padding:14px';
+  const inputId = 'pk-file-input-' + p.id;
+  dropArea.innerHTML = '<div style="border:2px dashed var(--gray-mid);border-radius:10px;padding:18px;text-align:center;margin-bottom:10px;cursor:pointer" id="pk-dz-' + p.id + '">'
+    + '<p style="margin:0;font-size:12px;color:var(--dark)">Drag your files or choose files</p>'
+    + '<p style="margin:4px 0 0;font-size:10px;color:var(--gray-text)">PDF atau PPTX</p>'
+    + '</div><input type="file" id="' + inputId + '" accept=".pdf,.pptx,.ppt" style="display:none">'
+    + '<div id="pk-chips-' + p.id + '" style="display:flex;flex-wrap:wrap;gap:6px"></div>';
+  row.appendChild(dropArea);
+  const chipWrap = dropArea.querySelector('#pk-chips-' + p.id);
+  myFiles.forEach(function(f){
+    const chip = document.createElement('span');
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--gray);border-radius:999px;padding:4px 10px;font-size:11px';
+    chip.textContent = f.file_name;
+    chipWrap.appendChild(chip);
+  });
+  const dz = dropArea.querySelector('#pk-dz-' + p.id);
+  const input = dropArea.querySelector('#' + inputId);
+  dz.addEventListener('click', function(){ input.click(); });
+  input.addEventListener('change', async function(){
+    const file = input.files[0];
+    if(!file) return;
+    dz.querySelector('p').textContent = 'Mengupload...';
+    const { url, error } = await uploadDocFileRaw('product-knowledge', file, 'pk-' + p.id);
+    if(error){ showToast('Gagal upload: ' + error.message); dz.querySelector('p').textContent = 'Drag your files or choose files'; return; }
+    await db.from('product_knowledge_files').insert({ brand_product_id: p.id, file_url: url, file_name: file.name });
+    loadProductKnowledgeCatalog();
+  });
+}
+
 
 
 // ===== BADGE MELAYANG (submark Girlhood Den, dekoratif) =====
