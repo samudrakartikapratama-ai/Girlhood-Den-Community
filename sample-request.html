@@ -603,6 +603,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
     <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
+    <div class="icon-card" onclick="openModal('m-i18'); loadAeHunting();"><div class="icon-emoji">🎯</div><div class="icon-label">Hunting Produk (AE)</div></div>
   </div>
 </div>
 
@@ -1373,6 +1374,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="revoke-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-i18"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i18')">‹ ✕</button>
+  <div class="modal-title">🎯 Hunting Produk (AE)</div>
+  <div class="card-sub">Produk trending TikTok Shop, diurutkan dari unit terjual. Tandai "Sudah Join" kalau brand-nya udah berhasil di-onboard.</div>
+  <button class="btn btn-outline btn-sm" style="margin:10px 0" onclick="refreshAeHunting()" id="ae-refresh-btn">🔄 Refresh dari TikTok</button>
+  <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
 <script>
 // ===== KONEKSI SUPABASE =====
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -1478,6 +1486,61 @@ document.addEventListener('DOMContentLoaded', function(){
   renderLiveTicker('live-ticker-creator');
   renderLiveTicker('live-ticker-brand');
 });
+
+async function loadAeHunting(){
+  const wrap = document.getElementById('ae-hunting-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data, error } = await db.from('ae_hunting_products')
+    .select('*')
+    .order('units_sold', { ascending: false })
+    .limit(50);
+  if(error){ wrap.innerHTML = '<div class="card-sub">Gagal memuat: ' + error.message + '</div>'; return; }
+  if(!data || data.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada data. Klik "Refresh dari TikTok" (butuh minimal 1 creator yang sudah terhubung TikTok).</div>';
+    return;
+  }
+  wrap.innerHTML = data.map(function(p){
+    const harga = (p.price_min != null) ? (p.currency || '') + ' ' + p.price_min + (p.price_max && p.price_max !== p.price_min ? ' - ' + p.price_max : '') : '-';
+    return '<div style="display:flex;gap:10px;border-bottom:1px solid var(--gray-mid);padding:10px 0;align-items:center">'
+      + (p.main_image_url ? '<img src="' + p.main_image_url + '" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">' : '<div style="width:48px;height:48px;border-radius:8px;background:var(--gray);flex-shrink:0"></div>')
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (p.title || '-') + '</div>'
+      + '<div class="card-sub" style="margin:2px 0 0">' + (p.shop_name || '-') + ' · ' + (p.units_sold || 0) + ' terjual · ' + harga + '</div>'
+      + '</div>'
+      + '<button class="btn btn-sm ' + (p.is_joined ? 'btn-teal' : 'btn-outline') + '" onclick="toggleAeJoined(\'' + p.id + '\', ' + (p.is_joined ? 'true' : 'false') + ')">' + (p.is_joined ? '✅ Sudah Join' : 'Sudah Join?') + '</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function toggleAeJoined(id, current){
+  const { error } = await db.from('ae_hunting_products').update({
+    is_joined: !current,
+    joined_marked_by: currentSession.role || 'internal',
+    joined_marked_at: new Date().toISOString()
+  }).eq('id', id);
+  if(error){ alert('Gagal update: ' + error.message); return; }
+  loadAeHunting();
+}
+
+async function refreshAeHunting(){
+  const btn = document.getElementById('ae-refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Menarik data dari TikTok...';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/ae-hunting-fetch-products', { method: 'POST' });
+    const j = await res.json();
+    if(!j.ok){
+      alert(j.message || 'Gagal menarik data dari TikTok.');
+    } else {
+      alert('Berhasil: ' + j.upserted + ' produk diperbarui.');
+    }
+  } catch(e){
+    alert('Gagal menghubungi server.');
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 Refresh dari TikTok';
+  loadAeHunting();
+}
 
 
 // ===== BADGE MELAYANG (submark Girlhood Den, dekoratif) =====
