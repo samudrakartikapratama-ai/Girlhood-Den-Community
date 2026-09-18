@@ -1398,6 +1398,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="card-sub" style="margin:14px 0 6px">Minimal budget campaign</div>
 <div style="display:flex;align-items:center;background:#fff;border:1px solid var(--gray-mid);border-radius:10px;padding:0 12px;margin-bottom:14px"><span style="font-size:13px;color:var(--gray-text)">Rp</span><input id="pf-budget" type="number" value="5000000" step="500000" min="0" style="border:none;background:transparent;flex:1;padding:10px 8px;font-size:13px"></div>
+<div class="card-sub" style="margin:0 0 6px">Summary &amp; Objective</div>
+<textarea id="pf-summary" maxlength="10000" placeholder="Ceritain apa yang kamu mau, timeline, objective, komisi produk, dll (maks 10.000 kata)" style="width:100%;min-height:100px;border:1px solid var(--gray-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;margin-bottom:14px;box-sizing:border-box"></textarea>
 <button id="pf-finish-btn" class="btn btn-primary" style="width:100%" onclick="sendEndorsementProposal()">Send your proposal to our team</button>
 <div id="pf-finish-msg" style="display:none;margin-top:8px;text-align:center;font-size:12px"></div>
 </div>
@@ -1774,7 +1776,19 @@ async function sendEndorsementProposal(){
     const brandName = (currentSession.brandData && currentSession.brandData.nama_brand) || 'Brand';
     const productName = pfSelectedProductName || '-';
     const budget = Number(document.getElementById('pf-budget').value || 0);
+    const summary = document.getElementById('pf-summary').value || '';
     const creators = pfLastMatches.map(function(m){ return { nama: m.nama }; });
+
+    const { data: pkFiles } = await db.from('product_knowledge_files').select('file_url, file_name').eq('brand_product_id', pfSelectedProductId);
+    const pkAttachments = [];
+    for (const f of (pkFiles || [])) {
+      try {
+        const fr = await fetch(f.file_url);
+        const blob = await fr.blob();
+        const b64 = await new Promise(function(resolve){ const reader = new FileReader(); reader.onloadend = function(){ resolve(reader.result.split(',')[1]); }; reader.readAsDataURL(blob); });
+        pkAttachments.push({ filename: f.file_name, content: b64 });
+      } catch(e) { /* lewati file yang gagal diambil */ }
+    }
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
@@ -1784,8 +1798,11 @@ async function sendEndorsementProposal(){
     pdf.text('Brand: ' + brandName, 14, 35);
     pdf.text('Produk: ' + productName, 14, 43);
     pdf.text('Budget campaign: Rp ' + budget.toLocaleString('id-ID'), 14, 51);
-    pdf.text('Creator yang match:', 14, 63);
-    let y = 71;
+    pdf.text('Summary & Objective:', 14, 63);
+    const summaryLines = pdf.splitTextToSize(summary || '-', 180);
+    pdf.text(summaryLines, 14, 71);
+    let y = 71 + (summaryLines.length * 7) + 10;
+    pdf.text('Creator yang match:', 14, y - 8);
     creators.forEach(function(c){ pdf.text('- ' + (c.nama || '-'), 18, y); y += 8; });
     if(creators.length === 0){ pdf.text('- (belum ada)', 18, y); }
     const pdfBase64 = pdf.output('datauristring').split(',')[1];
@@ -1793,7 +1810,7 @@ async function sendEndorsementProposal(){
     const res = await fetch(SUPABASE_URL + '/functions/v1/send-endorsement-brief', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandName: brandName, productName: productName, budget: budget, creators: creators, pdfBase64: pdfBase64 })
+      body: JSON.stringify({ brandName: brandName, productName: productName, budget: budget, summary: summary, creators: creators, pdfBase64: pdfBase64, pkAttachments: pkAttachments })
     });
     const j = await res.json();
     if(!j.sent){
