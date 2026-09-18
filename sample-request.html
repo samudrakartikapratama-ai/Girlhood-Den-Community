@@ -522,6 +522,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card" onclick="openModal('m-c-tiktok'); loadCreatorTiktokStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">Hubungkan TikTok</div></div>
+    <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
@@ -577,6 +578,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live"><div class="icon-label">Upcoming Live</div></div>
     <div class="icon-card" onclick="openModal('m-b8'); loadCatchupMeetings('brand');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-b9'); loadTiktokShopStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">TikTok Shop</div></div>
+    <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
   </div>
 </div>
 
@@ -1381,6 +1383,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-playfield"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
+  <div class="modal-title">🎮 Creator Playfield</div>
+  <div class="card-sub">Newest video</div>
+  <div id="playfield-videos" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px;display:flex;gap:8px;margin:8px 0 16px"><div class="card-sub">Memuat video...</div></div>
+  <div class="card-sub">⚠️ Bagian live sekarang, matchmaking produk, dan estimasi ROI masih dalam pengerjaan — belum tersedia di menu ini.</div>
+</div></div>
+
 <script>
 // ===== KONEKSI SUPABASE =====
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -1540,6 +1549,58 @@ async function refreshAeHunting(){
   btn.disabled = false;
   btn.textContent = '🔄 Refresh dari TikTok';
   loadAeHunting();
+}
+
+let tiktokEmbedScriptLoaded = false;
+function ensureTiktokEmbedScript(){
+  if (tiktokEmbedScriptLoaded) return;
+  tiktokEmbedScriptLoaded = true;
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.tiktok.com/embed.js';
+  document.body.appendChild(s);
+}
+
+function openPlayfield(){
+  openModal('m-playfield');
+  loadPlayfieldVideos();
+}
+
+async function loadPlayfieldVideos(){
+  const wrap = document.getElementById('playfield-videos');
+  wrap.innerHTML = '<div class="card-sub">Memuat video...</div>';
+  const { data: reports, error } = await db.from('vt_reports')
+    .select('id, video_url, sample_request_id, submitted_at')
+    .eq('status', 'approved')
+    .order('submitted_at', { ascending: false })
+    .limit(20);
+  if(error || !reports || reports.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada video approved.</div>';
+    return;
+  }
+  const srIds = Array.from(new Set(reports.map(function(r){ return r.sample_request_id; }).filter(Boolean)));
+  let memberBySr = {};
+  if(srIds.length){
+    const { data: srs } = await db.from('sample_requests').select('id, member_id').in('id', srIds);
+    if(srs) srs.forEach(function(s){ memberBySr[s.id] = s.member_id; });
+  }
+  const memberIds = Array.from(new Set(Object.values(memberBySr).filter(Boolean)));
+  let namesByMember = {};
+  if(memberIds.length){
+    const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+    if(members) members.forEach(function(m){ namesByMember[m.id] = m.nama; });
+  }
+  wrap.innerHTML = '';
+  reports.forEach(function(r){
+    const memberId = memberBySr[r.sample_request_id];
+    const nama = namesByMember[memberId] || 'Creator';
+    const card = document.createElement('div');
+    card.style.cssText = 'flex-shrink:0;width:180px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--gray-mid)';
+    card.innerHTML = '<blockquote class="tiktok-embed" cite="' + r.video_url + '" style="max-width:180px;min-width:180px;margin:0"><section></section></blockquote>'
+      + '<div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--dark)">' + nama + '</div>';
+    wrap.appendChild(card);
+  });
+  ensureTiktokEmbedScript();
 }
 
 
