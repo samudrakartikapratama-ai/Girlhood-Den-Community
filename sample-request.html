@@ -1387,7 +1387,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">🎮 Creator Playfield</div>
   <div class="card-sub">Newest video</div>
   <div id="playfield-videos" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px;display:flex;gap:8px;margin:8px 0 16px"><div class="card-sub">Memuat video...</div></div>
-  <div class="card-sub">⚠️ Bagian live sekarang, matchmaking produk, dan estimasi ROI masih dalam pengerjaan — belum tersedia di menu ini.</div>
+  <div class="card-sub">⚠️ Bagian live sekarang masih dalam pengerjaan.</div>
+
+<div id="pf-brand-only" style="display:none;margin-top:14px">
+  <div style="background:var(--pink);border-radius:14px;padding:14px;margin-bottom:14px;color:#fff;font-weight:700;font-size:13px">Interest enough to pay our creator for your campaign?</div>
+  <div class="card-sub" style="margin-bottom:6px">Pilih produk kamu</div>
+  <div id="pf-product-picker" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:180px;overflow-y:auto;padding:2px;margin-bottom:14px"><div class="card-sub">Memuat produk...</div></div>
+  <div class="card-sub" style="margin-bottom:6px">Creator yang match</div>
+  <div id="pf-matches" style="background:var(--gray);border-radius:14px;max-height:220px;overflow-y:auto;padding:10px"><div class="card-sub">Pilih produk dulu.</div></div>
+</div>
+
+<div id="pf-creator-only" style="display:none;margin-top:14px">
+  <div class="card-sub" style="margin-bottom:6px">Creator</div>
+  <div id="pf-creator-list" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px"><div class="card-sub">Memuat...</div></div>
+</div>
 </div></div>
 
 <script>
@@ -1564,6 +1577,10 @@ function ensureTiktokEmbedScript(){
 function openPlayfield(){
   openModal('m-playfield');
   loadPlayfieldVideos();
+  const isBrand = currentSession.role === 'brand';
+  document.getElementById('pf-brand-only').style.display = isBrand ? 'block' : 'none';
+  document.getElementById('pf-creator-only').style.display = isBrand ? 'none' : 'block';
+  if(isBrand){ loadPlayfieldProducts(); } else { loadPlayfieldCreatorsPlain(); }
 }
 
 async function loadPlayfieldVideos(){
@@ -1601,6 +1618,134 @@ async function loadPlayfieldVideos(){
     wrap.appendChild(card);
   });
   ensureTiktokEmbedScript();
+}
+
+let pfSelectedProductId = null;
+let pfSelectedKategori = null;
+
+function pfInitials(name){ return String(name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
+
+async function loadPlayfieldProducts(){
+  const wrap = document.getElementById('pf-product-picker');
+  wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
+  const { data, error } = await db.from('brand_products')
+    .select('id, nama_produk, kategori, foto_urls')
+    .eq('brand_id', currentSession.brandId)
+    .eq('is_frozen', false)
+    .limit(50);
+  if(error || !data || data.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada produk terdaftar.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  data.forEach(function(p, idx){
+    const foto = Array.isArray(p.foto_urls) && p.foto_urls.length ? p.foto_urls[0] : null;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:10px;border:2px solid var(--gray-mid);padding:6px;cursor:pointer';
+    card.dataset.pid = p.id;
+    card.innerHTML = (foto ? '<img src="' + foto + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;margin-bottom:4px">' : '<div style="width:100%;aspect-ratio:1;border-radius:6px;background:var(--gray);margin-bottom:4px"></div>')
+      + '<div style="font-size:11px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (p.nama_produk || '-') + '</div>'
+      + '<div style="font-size:10px;color:var(--gray-text)">' + (p.kategori || '-') + '</div>';
+    card.addEventListener('click', function(){
+      wrap.querySelectorAll('div[data-pid]').forEach(function(c){ c.style.borderColor = 'var(--gray-mid)'; });
+      card.style.borderColor = 'var(--pink)';
+      pfSelectedProductId = p.id;
+      pfSelectedKategori = p.kategori;
+      loadPlayfieldMatches();
+    });
+    wrap.appendChild(card);
+  });
+}
+
+async function pfBuildCreatorCategoryMap(){
+  const { data: reports } = await db.from('vt_reports').select('sample_request_id').eq('status', 'approved');
+  const srIds = Array.from(new Set((reports || []).map(function(r){ return r.sample_request_id; }).filter(Boolean)));
+  if(!srIds.length) return { catByMember: {}, brandByMember: {} };
+  const { data: srs } = await db.from('sample_requests').select('id, member_id, brand_product_id').in('id', srIds);
+  const bpIds = Array.from(new Set((srs || []).map(function(s){ return s.brand_product_id; }).filter(Boolean)));
+  let bpMap = {};
+  if(bpIds.length){
+    const { data: bps } = await db.from('brand_products').select('id, kategori, brand_id').in('id', bpIds);
+    if(bps) bps.forEach(function(b){ bpMap[b.id] = b; });
+  }
+  const brandIds = Array.from(new Set(Object.values(bpMap).map(function(b){ return b.brand_id; }).filter(Boolean)));
+  let brandNameMap = {};
+  if(brandIds.length){
+    const { data: brands } = await db.from('brands').select('id, nama_brand').in('id', brandIds);
+    if(brands) brands.forEach(function(b){ brandNameMap[b.id] = b.nama_brand; });
+  }
+  const catByMember = {};
+  const brandByMember = {};
+  (srs || []).forEach(function(s){
+    if(!s.member_id || !s.brand_product_id) return;
+    const bp = bpMap[s.brand_product_id];
+    if(!bp) return;
+    if(bp.kategori){
+      catByMember[s.member_id] = catByMember[s.member_id] || {};
+      catByMember[s.member_id][bp.kategori] = (catByMember[s.member_id][bp.kategori] || 0) + 1;
+    }
+    if(bp.brand_id){
+      const bname = brandNameMap[bp.brand_id];
+      if(bname){
+        brandByMember[s.member_id] = brandByMember[s.member_id] || {};
+        brandByMember[s.member_id][bname] = (brandByMember[s.member_id][bname] || 0) + 1;
+      }
+    }
+  });
+  return { catByMember: catByMember, brandByMember: brandByMember };
+}
+
+function pfTopN(countMap, n){
+  return Object.keys(countMap || {}).sort(function(a,b){ return countMap[b] - countMap[a]; }).slice(0, n);
+}
+
+async function loadPlayfieldMatches(){
+  const wrap = document.getElementById('pf-matches');
+  if(!pfSelectedProductId){ wrap.innerHTML = '<div class="card-sub">Pilih produk dulu.</div>'; return; }
+  wrap.innerHTML = '<div class="card-sub">Mencari creator yang match...</div>';
+  const { catByMember, brandByMember } = await pfBuildCreatorCategoryMap();
+  const memberIds = Object.keys(catByMember).filter(function(mid){
+    const top3 = pfTopN(catByMember[mid], 3);
+    return top3.indexOf(pfSelectedKategori) !== -1;
+  });
+  if(!memberIds.length){
+    wrap.innerHTML = '<div class="card-sub">Belum ada creator yang match kategori "' + (pfSelectedKategori || '-') + '".</div>';
+    return;
+  }
+  const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+  wrap.innerHTML = '';
+  (members || []).forEach(function(m){
+    const cats = pfTopN(catByMember[m.id], 3).join(', ');
+    const brs = pfTopN(brandByMember[m.id] || {}, 3).join(', ');
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:12px;border:1px solid var(--gray-mid);padding:10px;margin-bottom:8px';
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink)">' + pfInitials(m.nama) + '</div>'
+      + '<div style="font-size:13px;font-weight:700">' + (m.nama || '-') + '</div></div>'
+      + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top kategori: ' + cats + '</div>'
+      + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top brand: ' + brs + '</div>';
+    card.addEventListener('mouseenter', function(){ card.querySelectorAll('.pf-peek').forEach(function(p){ p.style.filter='blur(0px)'; }); });
+    card.addEventListener('mouseleave', function(){ card.querySelectorAll('.pf-peek').forEach(function(p){ p.style.filter='blur(4px)'; }); });
+    wrap.appendChild(card);
+  });
+}
+
+async function loadPlayfieldCreatorsPlain(){
+  const wrap = document.getElementById('pf-creator-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  const { catByMember, brandByMember } = await pfBuildCreatorCategoryMap();
+  const memberIds = Object.keys(catByMember);
+  if(!memberIds.length){ wrap.innerHTML = '<div class="card-sub">Belum ada data.</div>'; return; }
+  const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+  wrap.innerHTML = '';
+  (members || []).forEach(function(m){
+    const cats = pfTopN(catByMember[m.id], 3).join(', ');
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:12px;border:1px solid var(--gray-mid);padding:10px;margin-bottom:8px;display:flex;align-items:center;gap:8px';
+    card.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink)">' + pfInitials(m.nama) + '</div>'
+      + '<div><div style="font-size:13px;font-weight:700">' + (m.nama || '-') + '</div><div style="font-size:11px;color:var(--gray-text)">' + cats + '</div></div>';
+    wrap.appendChild(card);
+  });
 }
 
 
