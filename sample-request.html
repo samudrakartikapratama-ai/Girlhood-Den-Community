@@ -525,12 +525,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-c-tiktok'); loadCreatorTiktokStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">Hubungkan TikTok</div></div>
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
-    <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');" id="tut-c-cekstatus"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
+    <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
-    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();" id="tut-c-poin"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
   </div>
 </div>
 
@@ -1930,8 +1930,8 @@ function renderPkRow(row, p, filesByProduct){
 const TUTORIAL_STEPS = {
   creator: [
     { id: 'ic-campaign', title: 'Campaign', body: 'Semua campaign yang lagi dibuka brand ada di sini. Klik buat lihat detail dan ajukan produk.' },
-    { id: 'tut-c-cekstatus', title: 'Cek status', body: 'Pantau status request kamu di sini, dari diajukan sampai selesai.' },
-    { id: 'tut-c-poin', title: 'Poin', body: 'Poin naik dari aktivitas positif, dan bisa dipotong kalau ingkar janji posting. Riwayatnya ada di sini.' },
+    { id: 'ic-cekstatus', title: 'Cek status', body: 'Pantau status request kamu di sini, dari diajukan sampai selesai.' },
+    { id: 'ic-poin-creator', title: 'Poin', body: 'Poin naik dari aktivitas positif, dan bisa dipotong kalau ingkar janji posting. Riwayatnya ada di sini.' },
   ],
   brand: [
     { id: 'tut-b-approval', title: 'Approval', body: 'Request sample dari creator masuk ke sini. Kamu yang approve atau reject satu-satu.' },
