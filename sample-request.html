@@ -1365,6 +1365,54 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Sesi aktif disimpan di memori (bukan localStorage, sesuai batasan artifact)
 let currentSession = { role: null, memberId: null, memberData: null, brandId: null, brandData: null };
 
+// ===== TOAST CUSTOM (ganti alert() bawaan browser, hasil redesign UI) =====
+function showToast(message){
+  const lower = String(message).toLowerCase();
+  let tone = 'brand';
+  if (/gagal|wajib|tidak bisa|nggak bisa|error|kendala|terlalu banyak|invalid|belum (lengkap|valid)/.test(lower)) tone = 'warn';
+  else if (/berhasil|terkirim|tersimpan|selesai|\u{1F389}/u.test(lower)) tone = 'success';
+  const colors = {
+    brand:   { bg:'#FBEAF0', fg:'#993556', btn:'#E8185A', glyph:'\u2139' },
+    success: { bg:'#E1F5EE', fg:'#0F6E56', btn:'#0F6E56', glyph:'\u2713' },
+    warn:    { bg:'#FAEEDA', fg:'#854F0B', btn:'#854F0B', glyph:'!' },
+  }[tone];
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(74,43,71,.35);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px 20px;max-width:340px;width:100%;text-align:center;transform:scale(0.95);opacity:0;transition:transform 200ms cubic-bezier(0.23,1,0.32,1),opacity 200ms ease-out;">'
+    + '<div style="width:48px;height:48px;border-radius:50%;background:' + colors.bg + ';display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:20px;font-weight:700;color:' + colors.btn + ';">' + colors.glyph + '</div>'
+    + '<p style="margin:0;font-size:14px;color:' + colors.fg + ';line-height:1.5;white-space:pre-line;">' + message + '</p>'
+    + '<button style="margin-top:18px;width:100%;background:' + colors.btn + ';color:#fff;border:none;border-radius:999px;padding:11px;font-size:13px;font-weight:600;transition:transform 160ms cubic-bezier(0.23,1,0.32,1);">Tutup</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  const card = overlay.firstElementChild;
+  requestAnimationFrame(function(){ card.style.transform='scale(1)'; card.style.opacity='1'; });
+  const btn = card.querySelector('button');
+  btn.addEventListener('mousedown', function(){ btn.style.transform='scale(0.97)'; });
+  btn.addEventListener('mouseup', function(){ btn.style.transform='scale(1)'; });
+  function close(){ overlay.remove(); }
+  btn.addEventListener('click', close);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+}
+window.alert = showToast;
+
+// ===== BADGE MELAYANG (submark Girlhood Den, dekoratif) =====
+(function(){
+  const badge = document.createElement('div');
+  badge.id = 'ghd-float-badge';
+  badge.style.cssText = 'position:fixed;bottom:18px;right:16px;width:48px;height:48px;border-radius:50%;background:#E8185A;display:flex;align-items:center;justify-content:center;z-index:9000;box-shadow:0 6px 16px rgba(74,43,71,.25);pointer-events:none;';
+  badge.innerHTML = '<span style="color:#FFF0F6;font-family:Georgia,serif;font-weight:700;font-size:20px;">G</span>';
+  document.addEventListener('DOMContentLoaded', function(){
+    document.body.appendChild(badge);
+    let deg = 0;
+    setInterval(function(){
+      deg = (deg + 0.4) % 360;
+      const bob = Math.sin(deg / 12) * 5;
+      badge.style.transform = 'translateY(' + bob + 'px) rotate(' + deg + 'deg)';
+    }, 30);
+  });
+})();
+
+
 async function logNotification(kategori, opts){
   opts = opts || {};
   try {
