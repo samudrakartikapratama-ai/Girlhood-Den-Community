@@ -2623,7 +2623,6 @@ async function loadTiktokShopStatus(){
     + '<a href="' + authUrl + '" target="_blank" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none">Hubungkan Ulang / Ganti Akun</a>';
 }
 
-function openPicBrandModal(){
 async function loadCreatorTiktokStatus(){
   const wrap = document.getElementById('creator-tiktok-status');
   wrap.innerHTML = '<div class="card-sub">Memuat status...</div>';
@@ -2650,6 +2649,8 @@ async function loadCreatorTiktokStatus(){
     + '</div>'
     + '<a href="' + authUrl + '" target="_blank" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none">Hubungkan Ulang / Ganti Akun</a>';
 }
+
+function openPicBrandModal(){
 
   const d = currentSession.brandData || {};
   document.getElementById('picbrand-nama').value = d.pic_nama || '';
