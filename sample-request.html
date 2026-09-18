@@ -525,12 +525,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-c-tiktok'); loadCreatorTiktokStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">Hubungkan TikTok</div></div>
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
-    <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
+    <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"> id="tut-c-cekstatus"<div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
-    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"> id="tut-c-poin"<div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
   </div>
 </div>
 
@@ -569,8 +569,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <p style="font-size:12px;color:#9A7285;margin:0 0 8px;font-weight:600;">\u26A1 Live trading</p>
 <div id="live-ticker-brand" style="margin-bottom:20px;"></div>
 <div class="icon-grid">
-    <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" alt="Approval"><div class="icon-label">Approval</div></div>
-    <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/pengiriman.png" alt="Pengiriman"><div class="icon-label">Pengiriman</div></div>
+    <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();"> id="tut-b-approval"<img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" alt="Approval"><div class="icon-label">Approval</div></div>
+    <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');"> id="tut-b-pengiriman"<img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/pengiriman.png" alt="Pengiriman"><div class="icon-label">Pengiriman</div></div>
     <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/logistik.png" alt="Logistik"><div class="icon-label">Logistik</div></div>
     <div class="icon-card" onclick="openModal('m-b4'); loadExportHarian();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/export_rekap.png" alt="Export & Rekap"><div class="icon-label">Export &amp; Rekap</div></div>
     <div class="icon-card" onclick="openModal('m-b2'); loadReportVtBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div></div>
@@ -1926,6 +1926,112 @@ function renderPkRow(row, p, filesByProduct){
 }
 
 
+// ===== TUTORIAL SPOTLIGHT =====
+const TUTORIAL_STEPS = {
+  creator: [
+    { id: 'ic-campaign', title: 'Campaign', body: 'Semua campaign yang lagi dibuka brand ada di sini. Klik buat lihat detail dan ajukan produk.' },
+    { id: 'tut-c-cekstatus', title: 'Cek status', body: 'Pantau status request kamu di sini, dari diajukan sampai selesai.' },
+    { id: 'tut-c-poin', title: 'Poin', body: 'Poin naik dari aktivitas positif, dan bisa dipotong kalau ingkar janji posting. Riwayatnya ada di sini.' },
+  ],
+  brand: [
+    { id: 'tut-b-approval', title: 'Approval', body: 'Request sample dari creator masuk ke sini. Kamu yang approve atau reject satu-satu.' },
+    { id: 'tut-b-pengiriman', title: 'Pengiriman', body: 'Setelah approve, catat resi pengiriman produk kamu ke creator di sini.' },
+  ]
+};
+
+let tutStepIdx = 0;
+let tutRole = null;
+
+async function maybeStartCreatorTutorial(){
+  if(!currentSession.memberId){ showRewardPopup(); return; }
+  const { data } = await db.from('members').select('tutorial_completed_at').eq('id', currentSession.memberId).maybeSingle();
+  if(data && data.tutorial_completed_at){ showRewardPopup(); return; }
+  startSpotlightTutorial('creator');
+}
+
+async function maybeStartBrandTutorial(){
+  if(!currentSession.brandId) return;
+  const { data } = await db.from('brands').select('tutorial_completed_at').eq('id', currentSession.brandId).maybeSingle();
+  if(data && data.tutorial_completed_at) return;
+  startSpotlightTutorial('brand');
+}
+
+function startSpotlightTutorial(role){
+  tutRole = role;
+  tutStepIdx = 0;
+  const overlay = document.createElement('div');
+  overlay.id = 'tut-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;';
+  document.body.appendChild(overlay);
+  const tooltip = document.createElement('div');
+  tooltip.id = 'tut-tooltip';
+  tooltip.style.cssText = 'position:fixed;z-index:99999;background:#fff;border-radius:12px;padding:16px;width:260px;box-shadow:0 4px 20px rgba(74,43,71,0.4);opacity:0;transition:opacity 200ms ease-out;';
+  document.body.appendChild(tooltip);
+  renderTutStep();
+}
+
+function renderTutStep(){
+  const steps = TUTORIAL_STEPS[tutRole];
+  const s = steps[tutStepIdx];
+  const el = document.getElementById(s.id);
+  document.querySelectorAll('.tut-highlighted').forEach(function(e){ e.classList.remove('tut-highlighted'); e.style.boxShadow=''; e.style.position=''; e.style.zIndex=''; });
+  if(!el){ finishSpotlightTutorial(); return; }
+  el.classList.add('tut-highlighted');
+  el.style.position = 'relative';
+  el.style.zIndex = '99999';
+  el.style.boxShadow = '0 0 0 3px #E8185A, 0 0 0 2000px rgba(74,43,71,0.75)';
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+  const tooltip = document.getElementById('tut-tooltip');
+  tooltip.style.opacity = '0';
+  tooltip.innerHTML = '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#4A2B47">' + s.title + '</p>'
+    + '<p style="margin:0 0 12px;font-size:12px;color:#6b5566;line-height:1.5">' + s.body + '</p>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between">'
+    + '<span style="font-size:11px;color:#9A7285">' + (tutStepIdx+1) + ' / ' + steps.length + '</span>'
+    + '<div style="display:flex;gap:6px">'
+    + (tutStepIdx > 0 ? '<button onclick="tutBack()" style="padding:4px 10px;font-size:12px;border:1px solid #E8D5DF;background:#fff;border-radius:6px;color:#4A2B47">Back</button>' : '')
+    + '<button onclick="tutNext()" style="padding:4px 10px;font-size:12px;background:#E8185A;color:#fff;border:none;border-radius:6px">' + (tutStepIdx === steps.length-1 ? 'Selesai' : 'Next') + '</button>'
+    + '</div></div>';
+
+  setTimeout(function(){
+    const newRect = el.getBoundingClientRect();
+    let top = newRect.bottom + 12;
+    let left = newRect.left;
+    if(top + 140 > window.innerHeight) top = newRect.top - 150;
+    if(top < 10) top = 10;
+    if(left + 260 > window.innerWidth) left = window.innerWidth - 270;
+    if(left < 10) left = 10;
+    tooltip.style.top = top + 'px';
+    tooltip.style.left = left + 'px';
+    tooltip.style.opacity = '1';
+  }, 350);
+}
+
+function tutNext(){
+  const steps = TUTORIAL_STEPS[tutRole];
+  if(tutStepIdx < steps.length - 1){ tutStepIdx++; renderTutStep(); }
+  else { finishSpotlightTutorial(); }
+}
+function tutBack(){
+  if(tutStepIdx > 0){ tutStepIdx--; renderTutStep(); }
+}
+async function finishSpotlightTutorial(){
+  document.querySelectorAll('.tut-highlighted').forEach(function(e){ e.classList.remove('tut-highlighted'); e.style.boxShadow=''; e.style.position=''; e.style.zIndex=''; });
+  const overlay = document.getElementById('tut-overlay');
+  const tooltip = document.getElementById('tut-tooltip');
+  if(overlay) overlay.remove();
+  if(tooltip) tooltip.remove();
+  const finishedRole = tutRole;
+  if(finishedRole === 'creator' && currentSession.memberId){
+    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
+    showRewardPopup();
+  }
+  if(finishedRole === 'brand' && currentSession.brandId){
+    await db.from('brands').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.brandId);
+  }
+}
+
+
 
 // ===== BADGE MELAYANG (submark Girlhood Den, dekoratif) =====
 (function(){
@@ -3160,6 +3266,9 @@ async function logout(){
   if(role === 'brand' || role === 'internal'){
     setTimeout(function(){ checkCatchupPopup(role); }, 800);
   }
+  if(role === 'brand'){
+    setTimeout(function(){ maybeStartBrandTutorial(); }, 1200);
+  }
   if(role === 'internal'){
     checkSelfReportBadge();
     subscribeSelfReportRealtime();
@@ -3443,7 +3552,7 @@ function finishMandatoryVideos(){
   bg.classList.remove('open');
   document.getElementById('video-player-endcard').classList.remove('show');
   loadEducationCreator();
-  setTimeout(function(){ showRewardPopup(); }, 300);
+  setTimeout(function(){ maybeStartCreatorTutorial(); }, 300);
 }
 
 (function setupVideoAntiSkip(){
@@ -5201,7 +5310,7 @@ async function checkMandatoryEducation(){
     });
     const j = await res.json();
     if(!j.valid || !j.hasPending){
-      setTimeout(function(){ showRewardPopup(); }, 200);
+      setTimeout(function(){ maybeStartCreatorTutorial(); }, 200);
       return;
     }
 
