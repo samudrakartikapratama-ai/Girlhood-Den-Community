@@ -596,6 +596,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" onclick="openModal('m-b-pk'); loadProductKnowledgeCatalog();"><div style="font-size:28px;line-height:1">📚</div><div class="icon-label">Product Knowledge</div></div>
     <div class="icon-card" onclick="openModal('m-b-endorsement'); openEndorsementFlow();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
+    <div class="icon-card" onclick="openModal('m-b-draftreview'); loadBrandDraftReviews();"><div style="font-size:28px;line-height:1">🎬</div><div class="icon-label">Review Draft</div></div>
   </div>
 </div>
 
@@ -622,6 +623,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
     <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
+    <div class="icon-card" onclick="openModal('m-i19'); loadAeEscalatedDrafts();"><div class="icon-emoji">⚖️</div><div class="icon-label">Eskalasi Draft Endorsement</div></div>
     <div class="icon-card" onclick="openModal('m-i18'); loadAeHunting();"><div class="icon-emoji">🎯</div><div class="icon-label">Hunting Produk (AE)</div></div>
   </div>
 </div>
@@ -1411,6 +1413,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-i19"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i19')">‹ ✕</button>
+  <div class="modal-title">⚖️ Eskalasi Draft Endorsement</div>
+  <div class="card-sub">Draft yang kuota revisi brand-nya udah habis tapi masih ditolak. AE yang mutusin final: creator yang salah, atau brand-nya yang kelewatan.</div>
+  <div id="ae-escalated-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
 <div class="modal-bg" id="m-playfield"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
   <div class="modal-title">🎮 Creator Playfield</div>
   <div class="card-sub">Newest video</div>
@@ -1480,6 +1488,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div id="endorsement-selected-list" style="margin-bottom:6px"></div>
     <div id="endorsement-roi-box"></div>
   </div>
+</div></div>
+
+<div class="modal-bg" id="m-b-draftreview"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-draftreview')">‹ ✕</button>
+  <div class="modal-title">🎬 Review Draft Endorsement</div>
+  <div class="card-sub" style="margin-bottom:10px">Draft video mentah dari creator, wajib di-approve sebelum mereka posting & submit link.</div>
+  <div id="b-draftreview-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -2392,6 +2406,13 @@ async function loadCreatorEndorsementJobs(){
   (vtRows || []).forEach(function(v){
     if(v.status === 'approved') doneByJob[v.endorsement_campaign_creator_id] = (doneByJob[v.endorsement_campaign_creator_id] || 0) + 1;
   });
+  const { data: draftRows } = await db.from('endorsement_draft_reviews').select('*').in('campaign_creator_id', jobIds);
+  const draftsByJob = {};
+  (draftRows || []).forEach(function(d){
+    if(!draftsByJob[d.campaign_creator_id]) draftsByJob[d.campaign_creator_id] = {};
+    draftsByJob[d.campaign_creator_id][d.slot_number] = d;
+  });
+
   wrap.innerHTML = '';
   jobs.forEach(function(j){
     const campaign = j.endorsement_campaigns;
@@ -2401,20 +2422,218 @@ async function loadCreatorEndorsementJobs(){
     const done = doneByJob[j.id] || 0;
     const wajib = j.jumlah_vt_wajib || 3;
     const isLocked = campaign && campaign.status === 'locked';
+    const currentSlot = done + 1;
+    const draft = draftsByJob[j.id] && draftsByJob[j.id][currentSlot];
+
     const card = document.createElement('div');
     card.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
-    card.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + namaProduk + '</p>'
-      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">' + namaBrand + ' · Wajib ' + wajib + ' VT · Progress ' + done + '/' + wajib + '</p>'
-      + (!isLocked ? '<p style="margin:0;font-size:11px;color:var(--gray-text)">Campaign belum aktif.</p>' :
-         done >= wajib ? '<p style="margin:0;font-size:12px;font-weight:700;color:var(--teal)">✓ VT kamu udah lengkap buat job ini.</p>' :
-         '<div class="field" style="margin-bottom:8px"><input type="text" placeholder="Link video TikTok..." id="endjob-link-' + j.id + '"></div>'
-         + '<button class="btn btn-primary btn-sm" style="width:100%" id="endjob-submit-' + j.id + '">Submit VT</button>');
-    wrap.appendChild(card);
-    if(isLocked && done < wajib){
-      const btn = card.querySelector('#endjob-submit-' + j.id);
-      if(btn) btn.addEventListener('click', function(){ submitEndorsementVt(j.id, btn); });
+    let bodyHtml = '<p style="margin:0;font-size:13px;font-weight:700">' + namaProduk + '</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">' + namaBrand + ' · Wajib ' + wajib + ' VT · Progress ' + done + '/' + wajib + '</p>';
+
+    if(!isLocked){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">Campaign belum aktif.</p>';
+    } else if(done >= wajib){
+      bodyHtml += '<p style="margin:0;font-size:12px;font-weight:700;color:var(--teal)">✓ VT kamu udah lengkap buat job ini.</p>';
+    } else if(!draft){
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:var(--gray-text)">Video ke-' + currentSlot + ' dari ' + wajib + ' — upload draft mentah dulu (maks. 25MB) buat direview brand sebelum posting.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="file" accept="video/*" id="draft-file-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="draft-submit-' + j.id + '">Upload Draft</button>';
+    } else if(draft.status === 'pending_review'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">⏳ Draft video ke-' + currentSlot + ' lagi direview brand.</p>';
+    } else if(draft.status === 'revision_requested'){
+      const kuotaSisa = draft.max_revisions - draft.revisions_used;
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:#B33">Brand minta revisi' + (draft.brand_note ? ': "' + draft.brand_note + '"' : '.') + ' Sisa kuota revisi: ' + kuotaSisa + '.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="file" accept="video/*" id="draft-file-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="draft-submit-' + j.id + '">Upload Revisi</button>';
+    } else if(draft.status === 'escalated'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">⚠️ Draft ini dieskalasi ke tim internal buat diputus. Tunggu keputusannya ya.</p>';
+    } else if(draft.status === 'rejected_final'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:#B33">Draft video ke-' + currentSlot + ' ditolak final. Hubungi tim kami.</p>';
+    } else if(draft.status === 'approved' && !draft.vt_report_id){
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:var(--teal)">✓ Draft video ke-' + currentSlot + ' udah di-acc brand. Posting videonya ke TikTok, terus submit link di bawah.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="text" placeholder="Link video TikTok..." id="endjob-link-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="endjob-submit-' + j.id + '">Submit VT</button>';
     }
+
+    card.innerHTML = bodyHtml;
+    wrap.appendChild(card);
+
+    const draftBtn = card.querySelector('#draft-submit-' + j.id);
+    if(draftBtn) draftBtn.addEventListener('click', function(){ submitEndorsementDraft(j.id, currentSlot, draftBtn); });
+    const vtBtn = card.querySelector('#endjob-submit-' + j.id);
+    if(vtBtn) vtBtn.addEventListener('click', function(){ submitEndorsementVt(j.id, vtBtn); });
   });
+}
+
+async function submitEndorsementDraft(campaignCreatorId, slotNumber, btn){
+  const input = document.getElementById('draft-file-' + campaignCreatorId);
+  const file = input && input.files[0];
+  if(!file){ showToast('Pilih file video dulu ya.'); return; }
+  const maxBytes = 25 * 1024 * 1024;
+  if(file.size > maxBytes){ showToast('File-nya kegedean, maksimal 25MB ya.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Mengupload...';
+  const { url, error: upErr } = await uploadFileToStorage('endorsement-drafts', file, 'draft-' + campaignCreatorId + '-' + slotNumber);
+  if(upErr){
+    btn.disabled = false; btn.textContent = 'Upload Draft';
+    showToast('Gagal upload: ' + upErr.message);
+    return;
+  }
+  const { data: existing } = await db.from('endorsement_draft_reviews').select('id').eq('campaign_creator_id', campaignCreatorId).eq('slot_number', slotNumber).maybeSingle();
+  let saveError;
+  if(existing){
+    const { error } = await db.from('endorsement_draft_reviews').update({
+      status: 'pending_review', file_url: url, file_size_bytes: file.size, updated_at: new Date().toISOString()
+    }).eq('id', existing.id);
+    saveError = error;
+  } else {
+    const { error } = await db.from('endorsement_draft_reviews').insert({
+      campaign_creator_id: campaignCreatorId, slot_number: slotNumber, status: 'pending_review', file_url: url, file_size_bytes: file.size
+    });
+    saveError = error;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Upload Draft';
+  if(saveError){ showToast('Gagal menyimpan draft.'); return; }
+  await notifyDraftEvent(campaignCreatorId, 'draft_uploaded');
+  showToast('Draft berhasil diupload, tunggu review brand ya.');
+  loadCreatorEndorsementJobs();
+}
+
+// Notifikasi 3 pihak (brand, creator, internal): baris brand_id/member_id masuk ke
+// notifications table yang sudah ada. Feed internal (internal-notifications) sudah
+// membaca SEMUA baris di tabel ini tanpa filter, jadi cukup insert sekali di sini.
+async function notifyDraftEvent(campaignCreatorId, eventType, extra){
+  extra = extra || {};
+  const { data: ctx } = await db.from('endorsement_campaign_creators')
+    .select('member_id, campaign_id, endorsement_campaigns(brand_id, brand_products(nama_produk)), members(nama)')
+    .eq('id', campaignCreatorId).maybeSingle();
+  if(!ctx) return;
+  const brandId = ctx.endorsement_campaigns && ctx.endorsement_campaigns.brand_id;
+  const memberId = ctx.member_id;
+  const namaProduk = (ctx.endorsement_campaigns && ctx.endorsement_campaigns.brand_products && ctx.endorsement_campaigns.brand_products.nama_produk) || '-';
+  const namaCreator = (ctx.members && ctx.members.nama) || '-';
+
+  const messages = {
+    draft_uploaded: { brand: '🎬 Draft video baru dari ' + namaCreator + ' buat produk ' + namaProduk + ', yuk direview.', member: null },
+    draft_revision_requested: { brand: null, member: '✏️ Brand minta revisi draft video kamu buat produk ' + namaProduk + (extra.note ? ': "' + extra.note + '"' : '') + '.' },
+    draft_approved: { brand: null, member: '✅ Draft video kamu buat produk ' + namaProduk + ' di-acc brand! Posting & submit link videonya ya.' },
+    draft_escalated: { brand: '⚠️ Draft video ' + namaCreator + ' (' + namaProduk + ') dieskalasi ke tim internal karena kuota revisi habis.', member: '⚠️ Draft video kamu buat produk ' + namaProduk + ' dieskalasi ke tim kami buat diputus final.' },
+    draft_escalation_resolved: { brand: '📋 Tim internal udah mutusin draft ' + namaCreator + ' (' + namaProduk + '): ' + (extra.decision === 'approved' ? 'disetujui' : 'ditolak final') + '.', member: '📋 Tim kami udah mutusin draft video kamu (' + namaProduk + '): ' + (extra.decision === 'approved' ? 'disetujui, lanjut posting ya!' : 'ditolak final.') }
+  };
+  const m = messages[eventType];
+  if(!m) return;
+  const rows = [];
+  if(m.brand && brandId) rows.push({ kategori: 'endorsement_draft', brand_id: brandId, detail_text: m.brand });
+  if(m.member && memberId) rows.push({ kategori: 'endorsement_draft', member_id: memberId, detail_text: m.member });
+  if(rows.length > 0) await db.from('notifications').insert(rows);
+}
+
+// ===== ENDORSEMENT: brand-side draft review =====
+async function loadBrandDraftReviews(){
+  const wrap = document.getElementById('b-draftreview-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: campaigns } = await db.from('endorsement_campaigns').select('id').eq('brand_id', currentSession.brandId).eq('status', 'locked');
+  const campaignIds = (campaigns || []).map(function(c){ return c.id; });
+  if(campaignIds.length === 0){ wrap.innerHTML = '<div class="card-sub">Belum ada campaign aktif.</div>'; return; }
+  const { data: ccs } = await db.from('endorsement_campaign_creators').select('id, member_id, campaign_id, endorsement_campaigns(brand_products(nama_produk)), members(nama)').in('campaign_id', campaignIds);
+  const ccIds = (ccs || []).map(function(c){ return c.id; });
+  if(ccIds.length === 0){ wrap.innerHTML = '<div class="card-sub">Belum ada creator ditambahkan.</div>'; return; }
+  const ccById = {};
+  (ccs || []).forEach(function(c){ ccById[c.id] = c; });
+  const { data: drafts } = await db.from('endorsement_draft_reviews').select('*').in('campaign_creator_id', ccIds).eq('status', 'pending_review').order('created_at', { ascending: true });
+  if(!drafts || drafts.length === 0){ wrap.innerHTML = '<div class="card-sub">Gak ada draft yang nunggu review.</div>'; return; }
+  wrap.innerHTML = '';
+  drafts.forEach(function(d){
+    const cc = ccById[d.campaign_creator_id];
+    const namaCreator = (cc && cc.members && cc.members.nama) || '-';
+    const namaProduk = (cc && cc.endorsement_campaigns && cc.endorsement_campaigns.brand_products && cc.endorsement_campaigns.brand_products.nama_produk) || '-';
+    const kuotaSisa = d.max_revisions - d.revisions_used;
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    row.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + namaCreator + ' — ' + namaProduk + '</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">Video ke-' + d.slot_number + ' · Sisa kuota revisi: ' + kuotaSisa + '</p>'
+      + '<a href="' + d.file_url + '" target="_blank" style="display:inline-block;margin-bottom:8px;font-size:12px;color:var(--teal)">▶️ Lihat draft video</a>'
+      + '<div class="field" style="margin-bottom:8px"><textarea placeholder="Catatan revisi (opsional)" id="draftnote-' + d.id + '" style="width:100%;min-height:50px"></textarea></div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn btn-primary btn-sm" style="flex:1" id="draftapprove-' + d.id + '">✅ Approve</button>'
+      + '<button class="btn btn-sm" style="flex:1;background:var(--gray-mid);color:var(--dark)" id="draftrevise-' + d.id + '">✏️ Minta Revisi</button>'
+      + '</div>';
+    wrap.appendChild(row);
+    row.querySelector('#draftapprove-' + d.id).addEventListener('click', function(){ decideDraftReview(d.id, 'approve', null); });
+    row.querySelector('#draftrevise-' + d.id).addEventListener('click', function(){
+      const note = document.getElementById('draftnote-' + d.id).value.trim();
+      decideDraftReview(d.id, 'revise', note);
+    });
+  });
+}
+
+async function decideDraftReview(draftId, action, note){
+  const { data: draft } = await db.from('endorsement_draft_reviews').select('*').eq('id', draftId).maybeSingle();
+  if(!draft) return;
+  if(action === 'approve'){
+    await db.from('endorsement_draft_reviews').update({ status: 'approved', brand_note: note, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+    await notifyDraftEvent(draft.campaign_creator_id, 'draft_approved');
+  } else {
+    const willEscalate = draft.revisions_used >= draft.max_revisions;
+    if(willEscalate){
+      await db.from('endorsement_draft_reviews').update({ status: 'escalated', brand_note: note, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+      await notifyDraftEvent(draft.campaign_creator_id, 'draft_escalated');
+    } else {
+      await db.from('endorsement_draft_reviews').update({ status: 'revision_requested', brand_note: note, revisions_used: draft.revisions_used + 1, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+      await notifyDraftEvent(draft.campaign_creator_id, 'draft_revision_requested', { note: note });
+    }
+  }
+  showToast(action === 'approve' ? 'Draft di-approve!' : 'Feedback revisi terkirim.');
+  loadBrandDraftReviews();
+}
+
+// ===== ENDORSEMENT: internal/AE eskalasi =====
+async function loadAeEscalatedDrafts(){
+  const wrap = document.getElementById('ae-escalated-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: drafts, error } = await db.from('endorsement_draft_reviews')
+    .select('*, endorsement_campaign_creators(member_id, members(nama), endorsement_campaigns(brand_id, brands(nama_brand), brand_products(nama_produk)))')
+    .eq('status', 'escalated')
+    .order('reviewed_at', { ascending: true });
+  if(error || !drafts || drafts.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Gak ada eskalasi yang nunggu keputusan.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  drafts.forEach(function(d){
+    const cc = d.endorsement_campaign_creators;
+    const namaCreator = (cc && cc.members && cc.members.nama) || '-';
+    const campaign = cc && cc.endorsement_campaigns;
+    const namaBrand = (campaign && campaign.brands && campaign.brands.nama_brand) || '-';
+    const namaProduk = (campaign && campaign.brand_products && campaign.brand_products.nama_produk) || '-';
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    row.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + namaCreator + ' — ' + namaBrand + ' (' + namaProduk + ')</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">Video ke-' + d.slot_number + ' · Catatan brand terakhir: ' + (d.brand_note || '-') + '</p>'
+      + '<a href="' + d.file_url + '" target="_blank" style="display:inline-block;margin-bottom:8px;font-size:12px;color:var(--teal)">▶️ Lihat draft video</a>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn btn-primary btn-sm" style="flex:1" id="ae-approve-' + d.id + '">✅ Creator Benar (Approve)</button>'
+      + '<button class="btn btn-sm" style="flex:1;background:var(--gray-mid);color:var(--dark)" id="ae-reject-' + d.id + '">❌ Brand Benar (Tolak Final)</button>'
+      + '</div>';
+    wrap.appendChild(row);
+    row.querySelector('#ae-approve-' + d.id).addEventListener('click', function(){ resolveAeEscalation(d.id, 'approved'); });
+    row.querySelector('#ae-reject-' + d.id).addEventListener('click', function(){ resolveAeEscalation(d.id, 'rejected'); });
+  });
+}
+
+async function resolveAeEscalation(draftId, decision){
+  const { data: draft } = await db.from('endorsement_draft_reviews').select('campaign_creator_id').eq('id', draftId).maybeSingle();
+  if(!draft) return;
+  const { error } = await db.from('endorsement_draft_reviews').update({
+    status: decision === 'approved' ? 'approved' : 'rejected_final',
+    ae_decision: decision,
+    ae_decided_at: new Date().toISOString()
+  }).eq('id', draftId);
+  if(error){ showToast('Gagal menyimpan keputusan.'); return; }
+  await notifyDraftEvent(draft.campaign_creator_id, 'draft_escalation_resolved', { decision: decision });
+  showToast('Keputusan tersimpan.');
+  loadAeEscalatedDrafts();
 }
 
 async function submitEndorsementVt(campaignCreatorId, btn){
