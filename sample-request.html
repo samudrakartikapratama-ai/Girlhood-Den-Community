@@ -594,7 +594,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b9'); loadTiktokShopStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">TikTok Shop</div></div>
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" onclick="openModal('m-b-pk'); loadProductKnowledgeCatalog();"><div style="font-size:28px;line-height:1">📚</div><div class="icon-label">Product Knowledge</div></div>
-    <div class="icon-card" onclick="openModal('m-b-funnel'); loadFunnelCatalog();"><div style="font-size:28px;line-height:1">📊</div><div class="icon-label">Funnel Produk</div></div>
+    <div class="icon-card" onclick="openModal('m-b-endorsement'); openEndorsementFlow();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
   </div>
 </div>
 
@@ -1435,10 +1435,32 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="pk-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-b-funnel"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-funnel')">‹ ✕</button>
-  <div class="modal-title">📊 Funnel Produk</div>
-  <div class="card-sub">Upload CTR &amp; CTOR 7 hari terakhir per produk (dari TikTok Shop &gt; Analitik &gt; Produk). Data ini dipakai buat hitung estimasi hasil endorsement — makin sering di-update, makin akurat.</div>
-  <div id="funnel-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
+<div class="modal-bg" id="m-b-endorsement"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-endorsement')">‹ ✕</button>
+  <div class="modal-title">🚀 Endorsement</div>
+
+  <div id="endorsement-step-pick">
+    <div class="field" style="margin-bottom:10px"><label>Pilih Produk</label><select id="endorsement-product-select"><option value="">Memuat produk...</option></select></div>
+    <div class="field" style="margin-bottom:10px"><label>Budget Campaign (Rp)</label><input type="number" min="0" id="endorsement-budget" placeholder="Contoh: 5000000"></div>
+    <button class="btn btn-primary btn-sm" style="width:100%" onclick="endorsementContinueFromPick()">Lanjutkan</button>
+  </div>
+
+  <div id="endorsement-step-funnel" style="display:none">
+    <div class="card-sub" id="endorsement-funnel-summary" style="margin-bottom:12px"></div>
+    <div id="endorsement-funnel-form-area" style="display:none">
+      <div class="card-sub" style="margin-bottom:10px">Upload CTR &amp; CTOR 7 hari terakhir dari TikTok Shop &gt; Analitik &gt; Produk.</div>
+      <div class="field" style="margin-bottom:10px"><label>CTR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="endorsement-ctr7" placeholder="Contoh: 2.5"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTOR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="endorsement-ctor7" placeholder="Contoh: 3.0"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="endorsement-ctr30"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTOR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="endorsement-ctor30"></div>
+      <div class="field" style="margin-bottom:10px"><label>Screenshot Bukti Funnel <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="file" accept="image/*" id="endorsement-ss"></div>
+      <button class="btn btn-primary btn-sm" style="width:100%" id="endorsement-funnel-submit-btn" onclick="submitEndorsementFunnel(this)">Simpan &amp; Lanjutkan</button>
+    </div>
+    <button class="btn btn-primary btn-sm" style="width:100%;display:none" id="endorsement-funnel-continue-btn" onclick="endorsementContinueAfterGate()">Lanjutkan</button>
+  </div>
+
+  <div id="endorsement-step-done" style="display:none">
+    <div class="card-sub" id="endorsement-done-text"></div>
+  </div>
 </div></div>
 
 <script>
@@ -2021,71 +2043,71 @@ function renderPkRow(row, p, filesByProduct){
   });
 }
 
-let funnelOpenProductId = null;
+// ===== ENDORSEMENT: entry point + funnel gate (sub-step 1) =====
+let endorsementProductId = null;
+let endorsementProductName = null;
 
-async function loadFunnelCatalog(){
-  const wrap = document.getElementById('funnel-catalog');
-  wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
-  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).limit(100);
+function openEndorsementFlow(){
+  endorsementProductId = null;
+  endorsementProductName = null;
+  document.getElementById('endorsement-budget').value = '';
+  loadEndorsementProductOptions();
+  renderEndorsementStep('pick');
+}
+
+async function loadEndorsementProductOptions(){
+  const select = document.getElementById('endorsement-product-select');
+  select.innerHTML = '<option value="">Memuat produk...</option>';
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk', { ascending: true });
   if(error || !products || products.length === 0){
-    wrap.innerHTML = '<div class="card-sub">Belum ada produk terdaftar.</div>';
+    select.innerHTML = '<option value="">Belum ada produk terdaftar</option>';
     return;
   }
-  const productIds = products.map(function(p){ return p.id; });
-  const { data: funnelRows } = await db.from('product_funnel_data').select('id, brand_product_id, ctr_7d, ctor_7d, uploaded_at').in('brand_product_id', productIds).order('uploaded_at', { ascending: false });
-  const latestByProduct = {};
-  (funnelRows || []).forEach(function(f){
-    if(!latestByProduct[f.brand_product_id]) latestByProduct[f.brand_product_id] = f;
-  });
-  wrap.innerHTML = '';
-  products.forEach(function(p){
-    const latest = latestByProduct[p.id];
-    const row = document.createElement('div');
-    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;overflow:hidden';
-    const head = document.createElement('div');
-    head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px';
-    head.innerHTML = '<div style="flex:1;min-width:0">'
-      + '<p style="margin:0;font-size:13px;font-weight:700">' + (p.nama_produk || '-') + '</p>'
-      + '<p style="margin:2px 0 0;font-size:11px;color:' + (latest ? 'var(--teal)' : 'var(--gray-text)') + '">' + (latest ? 'CTR ' + latest.ctr_7d + '% · CTOR ' + latest.ctor_7d + '%' : 'Belum ada data funnel') + '</p>'
-      + '</div>';
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-sm ' + (latest ? 'btn-teal' : 'btn-primary');
-    btn.textContent = latest ? 'Update' : 'Isi Funnel';
-    btn.addEventListener('click', function(){ funnelOpenProductId = (funnelOpenProductId === p.id) ? null : p.id; renderFunnelRow(row, p); });
-    head.appendChild(btn);
-    row.appendChild(head);
-    wrap.appendChild(row);
-  });
+  select.innerHTML = '<option value="">Pilih produk...</option>' + products.map(function(p){ return '<option value="' + p.id + '">' + (p.nama_produk || '-').replace(/</g,'&lt;') + '</option>'; }).join('');
 }
 
-function renderFunnelRow(row, p){
-  const existing = row.querySelector('.funnel-form-area');
-  if(existing) existing.remove();
-  if(funnelOpenProductId !== p.id) return;
-  const area = document.createElement('div');
-  area.className = 'funnel-form-area';
-  area.style.cssText = 'border-top:1px solid var(--gray-mid);padding:14px';
-  area.innerHTML = '<div class="field" style="margin-bottom:10px"><label>CTR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="funnel-ctr7-' + p.id + '" placeholder="Contoh: 2.5"></div>'
-    + '<div class="field" style="margin-bottom:10px"><label>CTOR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="funnel-ctor7-' + p.id + '" placeholder="Contoh: 3.0"></div>'
-    + '<div class="field" style="margin-bottom:10px"><label>CTR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="funnel-ctr30-' + p.id + '"></div>'
-    + '<div class="field" style="margin-bottom:10px"><label>CTOR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="funnel-ctor30-' + p.id + '"></div>'
-    + '<div class="field" style="margin-bottom:10px"><label>Screenshot Bukti Funnel <span style="font-weight:400;color:var(--gray-text)">opsional, disarankan</span></label><input type="file" accept="image/*" id="funnel-ss-' + p.id + '"></div>'
-    + '<button class="btn btn-primary btn-sm" style="width:100%" id="funnel-submit-' + p.id + '">Simpan Data Funnel</button>';
-  row.appendChild(area);
-  const submitBtn = area.querySelector('#funnel-submit-' + p.id);
-  submitBtn.addEventListener('click', function(){ submitProductFunnel(p.id, submitBtn); });
+function renderEndorsementStep(step){
+  document.getElementById('endorsement-step-pick').style.display = step === 'pick' ? 'block' : 'none';
+  document.getElementById('endorsement-step-funnel').style.display = step === 'funnel' ? 'block' : 'none';
+  document.getElementById('endorsement-step-done').style.display = step === 'done' ? 'block' : 'none';
 }
 
-async function submitProductFunnel(productId, btn){
-  const ctr7 = parseFloat(document.getElementById('funnel-ctr7-' + productId).value);
-  const ctor7 = parseFloat(document.getElementById('funnel-ctor7-' + productId).value);
+async function endorsementContinueFromPick(){
+  const select = document.getElementById('endorsement-product-select');
+  const productId = select.value;
+  const budget = parseFloat(document.getElementById('endorsement-budget').value);
+  if(!productId){ showToast('Pilih produk dulu ya.'); return; }
+  if(isNaN(budget) || budget <= 0){ showToast('Isi budget campaign dulu ya.'); return; }
+  endorsementProductId = productId;
+  endorsementProductName = select.options[select.selectedIndex].textContent;
+
+  const { data: latestRows } = await db.from('product_funnel_data').select('ctr_7d, ctor_7d, uploaded_at').eq('brand_product_id', productId).order('uploaded_at', { ascending: false }).limit(1);
+  const latest = latestRows && latestRows[0];
+  const summary = document.getElementById('endorsement-funnel-summary');
+  const formArea = document.getElementById('endorsement-funnel-form-area');
+  const continueBtn = document.getElementById('endorsement-funnel-continue-btn');
+  if(latest){
+    summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> udah punya data funnel: CTR ' + latest.ctr_7d + '% · CTOR ' + latest.ctor_7d + '%.';
+    formArea.style.display = 'none';
+    continueBtn.style.display = 'block';
+  } else {
+    summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> belum ada data funnel. Isi dulu sebelum lanjut.';
+    formArea.style.display = 'block';
+    continueBtn.style.display = 'none';
+  }
+  renderEndorsementStep('funnel');
+}
+
+async function submitEndorsementFunnel(btn){
+  const ctr7 = parseFloat(document.getElementById('endorsement-ctr7').value);
+  const ctor7 = parseFloat(document.getElementById('endorsement-ctor7').value);
   if(isNaN(ctr7) || isNaN(ctor7)){
     showToast('CTR dan CTOR 7 hari wajib diisi.');
     return;
   }
-  const ctr30Raw = document.getElementById('funnel-ctr30-' + productId).value;
-  const ctor30Raw = document.getElementById('funnel-ctor30-' + productId).value;
-  const ssInput = document.getElementById('funnel-ss-' + productId);
+  const ctr30Raw = document.getElementById('endorsement-ctr30').value;
+  const ctor30Raw = document.getElementById('endorsement-ctor30').value;
+  const ssInput = document.getElementById('endorsement-ss');
   const file = ssInput && ssInput.files[0];
 
   btn.disabled = true;
@@ -2093,13 +2115,13 @@ async function submitProductFunnel(productId, btn){
 
   let screenshotUrl = null;
   if(file){
-    const { url, error: upErr } = await uploadFileToStorage('funnel-screenshots', file, 'funnel-' + productId);
+    const { url, error: upErr } = await uploadFileToStorage('funnel-screenshots', file, 'funnel-' + endorsementProductId);
     if(upErr){ showToast('Gagal upload screenshot: ' + upErr.message); }
     else { screenshotUrl = url; }
   }
 
   const payload = {
-    brand_product_id: productId,
+    brand_product_id: endorsementProductId,
     ctr_7d: ctr7,
     ctor_7d: ctor7,
     ctr_30d: ctr30Raw ? parseFloat(ctr30Raw) : null,
@@ -2108,14 +2130,42 @@ async function submitProductFunnel(productId, btn){
   };
   const { error } = await db.from('product_funnel_data').insert(payload);
   btn.disabled = false;
-  btn.textContent = 'Simpan Data Funnel';
+  btn.textContent = 'Simpan & Lanjutkan';
   if(error){
     showToast('Gagal menyimpan data funnel.');
     return;
   }
   showToast('Data funnel tersimpan!');
-  funnelOpenProductId = null;
-  loadFunnelCatalog();
+  await createDraftEndorsementCampaign();
+}
+
+async function endorsementContinueAfterGate(){
+  await createDraftEndorsementCampaign();
+}
+
+async function createDraftEndorsementCampaign(){
+  const btn = document.getElementById('endorsement-funnel-continue-btn');
+  if(btn){ btn.disabled = true; }
+  const budget = parseFloat(document.getElementById('endorsement-budget').value);
+  let funnelScoreNormal = null;
+  try {
+    const { data: fsData } = await db.rpc('get_funnel_score_normal');
+    if(fsData && fsData[0]) funnelScoreNormal = fsData[0].funnel_score_normal;
+  } catch(e){ /* non-fatal, campaign tetap dibuat tanpa snapshot skor */ }
+
+  const { error } = await db.from('endorsement_campaigns').insert({
+    brand_id: currentSession.brandId,
+    brand_product_id: endorsementProductId,
+    budget: budget,
+    funnel_score_normal: funnelScoreNormal
+  });
+  if(btn){ btn.disabled = false; }
+  if(error){
+    showToast('Gagal membuat campaign.');
+    return;
+  }
+  document.getElementById('endorsement-done-text').innerHTML = 'Campaign draft buat <b>' + endorsementProductName + '</b> udah dibuat dengan budget Rp' + budget.toLocaleString('id-ID') + '. Pemilihan creator & kalkulator estimasi bakal menyusul.';
+  renderEndorsementStep('done');
 }
 
 
