@@ -1723,6 +1723,16 @@ function pfTopN(countMap, n){
   return Object.keys(countMap || {}).sort(function(a,b){ return countMap[b] - countMap[a]; }).slice(0, n);
 }
 
+async function pfGetConnectedSet(memberIds){
+  if(!memberIds || !memberIds.length) return new Set();
+  const { data } = await db.from('creator_tiktok_authorizations').select('member_id').in('member_id', memberIds);
+  return new Set((data||[]).map(function(r){ return r.member_id; }));
+}
+
+function pfConnectedBadge(isConnected){
+  return isConnected ? '<span style="background:var(--teal-light);color:var(--teal);font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;white-space:nowrap">\uD83D\uDD17 Terhubung</span>' : '';
+}
+
 async function loadPlayfieldMatches(){
   const wrap = document.getElementById('pf-matches');
   if(!pfSelectedProductId){ wrap.innerHTML = '<div class="card-sub">Pilih produk dulu.</div>'; return; }
@@ -1736,7 +1746,12 @@ async function loadPlayfieldMatches(){
     wrap.innerHTML = '<div class="card-sub">Belum ada creator yang match kategori "' + (pfSelectedKategori || '-') + '".</div>';
     return;
   }
-  const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+  const { data: membersRaw } = await db.from('members').select('id, nama').in('id', memberIds);
+  const connectedSet = await pfGetConnectedSet(memberIds);
+  const members = (membersRaw || []).slice().sort(function(a,b){
+    const aC = connectedSet.has(a.id) ? 1 : 0, bC = connectedSet.has(b.id) ? 1 : 0;
+    return bC - aC;
+  });
   wrap.innerHTML = '';
   pfLastMatches = members || [];
   (members || []).forEach(function(m){
@@ -1746,7 +1761,7 @@ async function loadPlayfieldMatches(){
     card.style.cssText = 'background:#fff;border-radius:12px;border:1px solid var(--gray-mid);padding:10px;margin-bottom:8px';
     card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
       + '<div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink)">' + pfInitials(m.nama) + '</div>'
-      + '<div style="font-size:13px;font-weight:700">' + (m.nama || '-') + '</div></div>'
+      + '<div style="font-size:13px;font-weight:700">' + (m.nama || '-') + pfConnectedBadge(connectedSet.has(m.id)) + '</div></div>'
       + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top kategori: ' + cats + '</div>'
       + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top brand: ' + brs + '</div>';
     card.addEventListener('mouseenter', function(){ card.querySelectorAll('.pf-peek').forEach(function(p){ p.style.filter='blur(0px)'; }); });
@@ -1761,14 +1776,19 @@ async function loadPlayfieldCreatorsPlain(){
   const { catByMember, brandByMember } = await pfBuildCreatorCategoryMap();
   const memberIds = Object.keys(catByMember);
   if(!memberIds.length){ wrap.innerHTML = '<div class="card-sub">Belum ada data.</div>'; return; }
-  const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
+  const { data: membersRaw } = await db.from('members').select('id, nama').in('id', memberIds);
+  const connectedSet = await pfGetConnectedSet(memberIds);
+  const members = (membersRaw || []).slice().sort(function(a,b){
+    const aC = connectedSet.has(a.id) ? 1 : 0, bC = connectedSet.has(b.id) ? 1 : 0;
+    return bC - aC;
+  });
   wrap.innerHTML = '';
   (members || []).forEach(function(m){
     const cats = pfTopN(catByMember[m.id], 3).join(', ');
     const card = document.createElement('div');
     card.style.cssText = 'background:#fff;border-radius:12px;border:1px solid var(--gray-mid);padding:10px;margin-bottom:8px;display:flex;align-items:center;gap:8px';
     card.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink)">' + pfInitials(m.nama) + '</div>'
-      + '<div><div style="font-size:13px;font-weight:700">' + (m.nama || '-') + '</div><div style="font-size:11px;color:var(--gray-text)">' + cats + '</div></div>';
+      + '<div><div style="font-size:13px;font-weight:700">' + (m.nama || '-') + pfConnectedBadge(connectedSet.has(m.id)) + '</div><div style="font-size:11px;color:var(--gray-text)">' + cats + '</div></div>';
     wrap.appendChild(card);
   });
 }
