@@ -594,6 +594,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-b9'); loadTiktokShopStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">TikTok Shop</div></div>
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" onclick="openModal('m-b-pk'); loadProductKnowledgeCatalog();"><div style="font-size:28px;line-height:1">📚</div><div class="icon-label">Product Knowledge</div></div>
+    <div class="icon-card" onclick="openModal('m-b-funnel'); loadFunnelCatalog();"><div style="font-size:28px;line-height:1">📊</div><div class="icon-label">Funnel Produk</div></div>
   </div>
 </div>
 
@@ -1434,6 +1435,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="pk-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-b-funnel"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-funnel')">‹ ✕</button>
+  <div class="modal-title">📊 Funnel Produk</div>
+  <div class="card-sub">Upload CTR &amp; CTOR 7 hari terakhir per produk (dari TikTok Shop &gt; Analitik &gt; Produk). Data ini dipakai buat hitung estimasi hasil endorsement — makin sering di-update, makin akurat.</div>
+  <div id="funnel-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
+</div></div>
+
 <script>
 // ===== KONEKSI SUPABASE =====
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -2012,6 +2019,103 @@ function renderPkRow(row, p, filesByProduct){
     await db.from('product_knowledge_files').insert({ brand_product_id: p.id, file_url: url, file_name: file.name });
     loadProductKnowledgeCatalog();
   });
+}
+
+let funnelOpenProductId = null;
+
+async function loadFunnelCatalog(){
+  const wrap = document.getElementById('funnel-catalog');
+  wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).limit(100);
+  if(error || !products || products.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada produk terdaftar.</div>';
+    return;
+  }
+  const productIds = products.map(function(p){ return p.id; });
+  const { data: funnelRows } = await db.from('product_funnel_data').select('id, brand_product_id, ctr_7d, ctor_7d, uploaded_at').in('brand_product_id', productIds).order('uploaded_at', { ascending: false });
+  const latestByProduct = {};
+  (funnelRows || []).forEach(function(f){
+    if(!latestByProduct[f.brand_product_id]) latestByProduct[f.brand_product_id] = f;
+  });
+  wrap.innerHTML = '';
+  products.forEach(function(p){
+    const latest = latestByProduct[p.id];
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;overflow:hidden';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px';
+    head.innerHTML = '<div style="flex:1;min-width:0">'
+      + '<p style="margin:0;font-size:13px;font-weight:700">' + (p.nama_produk || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:' + (latest ? 'var(--teal)' : 'var(--gray-text)') + '">' + (latest ? 'CTR ' + latest.ctr_7d + '% · CTOR ' + latest.ctor_7d + '%' : 'Belum ada data funnel') + '</p>'
+      + '</div>';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm ' + (latest ? 'btn-teal' : 'btn-primary');
+    btn.textContent = latest ? 'Update' : 'Isi Funnel';
+    btn.addEventListener('click', function(){ funnelOpenProductId = (funnelOpenProductId === p.id) ? null : p.id; renderFunnelRow(row, p); });
+    head.appendChild(btn);
+    row.appendChild(head);
+    wrap.appendChild(row);
+  });
+}
+
+function renderFunnelRow(row, p){
+  const existing = row.querySelector('.funnel-form-area');
+  if(existing) existing.remove();
+  if(funnelOpenProductId !== p.id) return;
+  const area = document.createElement('div');
+  area.className = 'funnel-form-area';
+  area.style.cssText = 'border-top:1px solid var(--gray-mid);padding:14px';
+  area.innerHTML = '<div class="field" style="margin-bottom:10px"><label>CTR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="funnel-ctr7-' + p.id + '" placeholder="Contoh: 2.5"></div>'
+    + '<div class="field" style="margin-bottom:10px"><label>CTOR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="funnel-ctor7-' + p.id + '" placeholder="Contoh: 3.0"></div>'
+    + '<div class="field" style="margin-bottom:10px"><label>CTR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="funnel-ctr30-' + p.id + '"></div>'
+    + '<div class="field" style="margin-bottom:10px"><label>CTOR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="funnel-ctor30-' + p.id + '"></div>'
+    + '<div class="field" style="margin-bottom:10px"><label>Screenshot Bukti Funnel <span style="font-weight:400;color:var(--gray-text)">opsional, disarankan</span></label><input type="file" accept="image/*" id="funnel-ss-' + p.id + '"></div>'
+    + '<button class="btn btn-primary btn-sm" style="width:100%" id="funnel-submit-' + p.id + '">Simpan Data Funnel</button>';
+  row.appendChild(area);
+  const submitBtn = area.querySelector('#funnel-submit-' + p.id);
+  submitBtn.addEventListener('click', function(){ submitProductFunnel(p.id, submitBtn); });
+}
+
+async function submitProductFunnel(productId, btn){
+  const ctr7 = parseFloat(document.getElementById('funnel-ctr7-' + productId).value);
+  const ctor7 = parseFloat(document.getElementById('funnel-ctor7-' + productId).value);
+  if(isNaN(ctr7) || isNaN(ctor7)){
+    showToast('CTR dan CTOR 7 hari wajib diisi.');
+    return;
+  }
+  const ctr30Raw = document.getElementById('funnel-ctr30-' + productId).value;
+  const ctor30Raw = document.getElementById('funnel-ctor30-' + productId).value;
+  const ssInput = document.getElementById('funnel-ss-' + productId);
+  const file = ssInput && ssInput.files[0];
+
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+
+  let screenshotUrl = null;
+  if(file){
+    const { url, error: upErr } = await uploadFileToStorage('funnel-screenshots', file, 'funnel-' + productId);
+    if(upErr){ showToast('Gagal upload screenshot: ' + upErr.message); }
+    else { screenshotUrl = url; }
+  }
+
+  const payload = {
+    brand_product_id: productId,
+    ctr_7d: ctr7,
+    ctor_7d: ctor7,
+    ctr_30d: ctr30Raw ? parseFloat(ctr30Raw) : null,
+    ctor_30d: ctor30Raw ? parseFloat(ctor30Raw) : null,
+    screenshot_url: screenshotUrl
+  };
+  const { error } = await db.from('product_funnel_data').insert(payload);
+  btn.disabled = false;
+  btn.textContent = 'Simpan Data Funnel';
+  if(error){
+    showToast('Gagal menyimpan data funnel.');
+    return;
+  }
+  showToast('Data funnel tersimpan!');
+  funnelOpenProductId = null;
+  loadFunnelCatalog();
 }
 
 
