@@ -540,6 +540,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
+    <div class="icon-card" onclick="openModal('m-c-endorsement'); loadCreatorEndorsementJobs();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
@@ -822,6 +823,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-c8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c8')">‹ ✕</button>
   <div class="modal-title">⭐ Poin Kamu</div>
   <div id="c8-poin-content"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c-endorsement"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-endorsement')">‹ ✕</button>
+  <div class="modal-title">🚀 Job Endorsement Kamu</div>
+  <div class="card-sub" style="margin-bottom:10px">Campaign endorsement yang kamu ikut. Wajib upload video sesuai jumlah VT di masing-masing job.</div>
+  <div id="c-endorsement-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c10"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeKomisiBoost()">‹ ✕</button>
@@ -2365,6 +2372,79 @@ async function lockEndorsementCampaign(){
   if(error){ showToast('Gagal mengunci campaign.'); return; }
   showToast('Campaign terkunci! Siap dieksekusi.');
   closeModal('m-b-endorsement');
+}
+
+// ===== ENDORSEMENT: creator-side job list + VT submission (sub-step 3) =====
+async function loadCreatorEndorsementJobs(){
+  const wrap = document.getElementById('c-endorsement-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: jobs, error } = await db.from('endorsement_campaign_creators')
+    .select('id, jumlah_vt_wajib, estimasi_gmv_per_video, campaign_id, endorsement_campaigns(status, brand_products(nama_produk, brands(nama_brand)))')
+    .eq('member_id', currentSession.memberId)
+    .order('added_at', { ascending: false });
+  if(error || !jobs || jobs.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada job endorsement buat kamu.</div>';
+    return;
+  }
+  const jobIds = jobs.map(function(j){ return j.id; });
+  const { data: vtRows } = await db.from('vt_reports').select('endorsement_campaign_creator_id, status').in('endorsement_campaign_creator_id', jobIds);
+  const doneByJob = {};
+  (vtRows || []).forEach(function(v){
+    if(v.status === 'approved') doneByJob[v.endorsement_campaign_creator_id] = (doneByJob[v.endorsement_campaign_creator_id] || 0) + 1;
+  });
+  wrap.innerHTML = '';
+  jobs.forEach(function(j){
+    const campaign = j.endorsement_campaigns;
+    const produk = campaign && campaign.brand_products;
+    const namaProduk = (produk && produk.nama_produk) || '-';
+    const namaBrand = (produk && produk.brands && produk.brands.nama_brand) || '-';
+    const done = doneByJob[j.id] || 0;
+    const wajib = j.jumlah_vt_wajib || 3;
+    const isLocked = campaign && campaign.status === 'locked';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    card.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + namaProduk + '</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">' + namaBrand + ' · Wajib ' + wajib + ' VT · Progress ' + done + '/' + wajib + '</p>'
+      + (!isLocked ? '<p style="margin:0;font-size:11px;color:var(--gray-text)">Campaign belum aktif.</p>' :
+         done >= wajib ? '<p style="margin:0;font-size:12px;font-weight:700;color:var(--teal)">✓ VT kamu udah lengkap buat job ini.</p>' :
+         '<div class="field" style="margin-bottom:8px"><input type="text" placeholder="Link video TikTok..." id="endjob-link-' + j.id + '"></div>'
+         + '<button class="btn btn-primary btn-sm" style="width:100%" id="endjob-submit-' + j.id + '">Submit VT</button>');
+    wrap.appendChild(card);
+    if(isLocked && done < wajib){
+      const btn = card.querySelector('#endjob-submit-' + j.id);
+      if(btn) btn.addEventListener('click', function(){ submitEndorsementVt(j.id, btn); });
+    }
+  });
+}
+
+async function submitEndorsementVt(campaignCreatorId, btn){
+  const input = document.getElementById('endjob-link-' + campaignCreatorId);
+  const videoUrl = input ? input.value.trim() : '';
+  if(!videoUrl){ showToast('Isi link video dulu ya.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Bentar ya...';
+  let result;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-submit-endorsement-vt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ campaignCreatorId: campaignCreatorId, videoUrl: videoUrl })
+    });
+    result = await res.json();
+  } catch(e){
+    btn.disabled = false; btn.textContent = 'Submit VT';
+    showToast('Gagal menghubungi server. Coba lagi ya.');
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Submit VT';
+  if(!result.valid){
+    showToast(result.error || 'Gagal submit VT.');
+    return;
+  }
+  showToast('VT tersimpan! (' + result.totalVt + '/' + result.required + ')');
+  loadCreatorEndorsementJobs();
 }
 
 
