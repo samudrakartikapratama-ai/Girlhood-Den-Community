@@ -1458,8 +1458,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <button class="btn btn-primary btn-sm" style="width:100%;display:none" id="endorsement-funnel-continue-btn" onclick="endorsementContinueAfterGate()">Lanjutkan</button>
   </div>
 
-  <div id="endorsement-step-done" style="display:none">
-    <div class="card-sub" id="endorsement-done-text"></div>
+  <div id="endorsement-step-creators" style="display:none">
+    <div class="card-sub" id="endorsement-creators-header" style="margin-bottom:10px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">🎯 Rekomendasi Creator</div>
+    <div class="card-sub" style="margin-bottom:8px;font-size:11px">Top 3 creator yang cocok sama kategori produk ini (cuma yang udah connect TikTok).</div>
+    <div id="endorsement-recommend-list" style="margin-bottom:16px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">🔍 Cari Creator Lain</div>
+    <div class="field" style="margin-bottom:8px"><input id="endorsement-creator-search" placeholder="Ketik nama creator..." oninput="onEndorsementCreatorSearch()"></div>
+    <div id="endorsement-search-results" style="margin-bottom:16px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">✅ Creator Terpilih</div>
+    <div id="endorsement-selected-list" style="margin-bottom:6px"></div>
+    <div id="endorsement-roi-box"></div>
   </div>
 </div></div>
 
@@ -2043,13 +2055,25 @@ function renderPkRow(row, p, filesByProduct){
   });
 }
 
-// ===== ENDORSEMENT: entry point + funnel gate (sub-step 1) =====
+// ===== ENDORSEMENT: entry point + funnel gate (sub-step 1) + creator picker (sub-step 2) =====
 let endorsementProductId = null;
 let endorsementProductName = null;
+let endorsementProductHarga = 0;
+let endorsementCampaignId = null;
+let endorsementBudget = 0;
+let endorsementFunnelScoreNormal = null;
+let endorsementFunnelScoreProduk = null;
+let endorsementSelectedCreators = []; // { member_id, nama, order_per_video_historis, faktor_penyesuaian, estimasi_order_per_video, estimasi_gmv_per_video }
 
 function openEndorsementFlow(){
   endorsementProductId = null;
   endorsementProductName = null;
+  endorsementProductHarga = 0;
+  endorsementCampaignId = null;
+  endorsementBudget = 0;
+  endorsementFunnelScoreNormal = null;
+  endorsementFunnelScoreProduk = null;
+  endorsementSelectedCreators = [];
   document.getElementById('endorsement-budget').value = '';
   loadEndorsementProductOptions();
   renderEndorsementStep('pick');
@@ -2058,18 +2082,18 @@ function openEndorsementFlow(){
 async function loadEndorsementProductOptions(){
   const select = document.getElementById('endorsement-product-select');
   select.innerHTML = '<option value="">Memuat produk...</option>';
-  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk', { ascending: true });
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk, harga').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk', { ascending: true });
   if(error || !products || products.length === 0){
     select.innerHTML = '<option value="">Belum ada produk terdaftar</option>';
     return;
   }
-  select.innerHTML = '<option value="">Pilih produk...</option>' + products.map(function(p){ return '<option value="' + p.id + '">' + (p.nama_produk || '-').replace(/</g,'&lt;') + '</option>'; }).join('');
+  select.innerHTML = '<option value="">Pilih produk...</option>' + products.map(function(p){ return '<option value="' + p.id + '" data-harga="' + (p.harga || 0) + '">' + (p.nama_produk || '-').replace(/</g,'&lt;') + '</option>'; }).join('');
 }
 
 function renderEndorsementStep(step){
   document.getElementById('endorsement-step-pick').style.display = step === 'pick' ? 'block' : 'none';
   document.getElementById('endorsement-step-funnel').style.display = step === 'funnel' ? 'block' : 'none';
-  document.getElementById('endorsement-step-done').style.display = step === 'done' ? 'block' : 'none';
+  document.getElementById('endorsement-step-creators').style.display = step === 'creators' ? 'block' : 'none';
 }
 
 async function endorsementContinueFromPick(){
@@ -2080,6 +2104,8 @@ async function endorsementContinueFromPick(){
   if(isNaN(budget) || budget <= 0){ showToast('Isi budget campaign dulu ya.'); return; }
   endorsementProductId = productId;
   endorsementProductName = select.options[select.selectedIndex].textContent;
+  endorsementProductHarga = parseFloat(select.options[select.selectedIndex].getAttribute('data-harga')) || 0;
+  endorsementBudget = budget;
 
   const { data: latestRows } = await db.from('product_funnel_data').select('ctr_7d, ctor_7d, uploaded_at').eq('brand_product_id', productId).order('uploaded_at', { ascending: false }).limit(1);
   const latest = latestRows && latestRows[0];
@@ -2087,10 +2113,12 @@ async function endorsementContinueFromPick(){
   const formArea = document.getElementById('endorsement-funnel-form-area');
   const continueBtn = document.getElementById('endorsement-funnel-continue-btn');
   if(latest){
+    endorsementFunnelScoreProduk = latest.ctr_7d * latest.ctor_7d;
     summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> udah punya data funnel: CTR ' + latest.ctr_7d + '% · CTOR ' + latest.ctor_7d + '%.';
     formArea.style.display = 'none';
     continueBtn.style.display = 'block';
   } else {
+    endorsementFunnelScoreProduk = null;
     summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> belum ada data funnel. Isi dulu sebelum lanjut.';
     formArea.style.display = 'block';
     continueBtn.style.display = 'none';
@@ -2136,6 +2164,7 @@ async function submitEndorsementFunnel(btn){
     return;
   }
   showToast('Data funnel tersimpan!');
+  endorsementFunnelScoreProduk = ctr7 * ctor7;
   await createDraftEndorsementCampaign();
 }
 
@@ -2146,27 +2175,199 @@ async function endorsementContinueAfterGate(){
 async function createDraftEndorsementCampaign(){
   const btn = document.getElementById('endorsement-funnel-continue-btn');
   if(btn){ btn.disabled = true; }
-  const budget = parseFloat(document.getElementById('endorsement-budget').value);
   let funnelScoreNormal = null;
   try {
     const { data: fsData } = await db.rpc('get_funnel_score_normal');
     if(fsData && fsData[0]) funnelScoreNormal = fsData[0].funnel_score_normal;
   } catch(e){ /* non-fatal, campaign tetap dibuat tanpa snapshot skor */ }
+  endorsementFunnelScoreNormal = funnelScoreNormal;
 
-  const { error } = await db.from('endorsement_campaigns').insert({
+  const { data: campaign, error } = await db.from('endorsement_campaigns').insert({
     brand_id: currentSession.brandId,
     brand_product_id: endorsementProductId,
-    budget: budget,
+    budget: endorsementBudget,
     funnel_score_normal: funnelScoreNormal
-  });
+  }).select('id').single();
   if(btn){ btn.disabled = false; }
-  if(error){
+  if(error || !campaign){
     showToast('Gagal membuat campaign.');
     return;
   }
-  document.getElementById('endorsement-done-text').innerHTML = 'Campaign draft buat <b>' + endorsementProductName + '</b> udah dibuat dengan budget Rp' + budget.toLocaleString('id-ID') + '. Pemilihan creator & kalkulator estimasi bakal menyusul.';
-  renderEndorsementStep('done');
+  endorsementCampaignId = campaign.id;
+  renderEndorsementStep('creators');
+  document.getElementById('endorsement-creators-header').innerHTML = 'Produk: <b>' + endorsementProductName + '</b> · Budget: <b>Rp' + endorsementBudget.toLocaleString('id-ID') + '</b>';
+  loadEndorsementRecommendations();
+  renderSelectedCreatorsList();
 }
+
+async function loadEndorsementRecommendations(){
+  const wrap = document.getElementById('endorsement-recommend-list');
+  wrap.innerHTML = '<div class="card-sub">Mencari creator yang matched...</div>';
+  const { data: matches, error } = await db.rpc('get_matched_creators', { p_brand_product_id: endorsementProductId, p_limit: 3 });
+  if(error || !matches || matches.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada rekomendasi otomatis (creator harus connect TikTok dulu biar bisa direkomendasikan). Cari manual di bawah.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  matches.forEach(function(c){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + (c.nama || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">' + (c.kategori_match_count > 0 ? c.kategori_match_count + 'x pernah di kategori ini' : 'Belum ada histori kategori ini') + ' · GMV 30hr Rp' + Number(c.gmv_30hari || 0).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm btn-primary" data-mid="' + c.member_id + '" data-nama="' + (c.nama||'-').replace(/"/g,'&quot;') + '">+ Tambah</button>';
+    row.querySelector('button').addEventListener('click', function(){ addEndorsementCreator(c.member_id, c.nama, this); });
+    wrap.appendChild(row);
+  });
+}
+
+let endorsementSearchTimer = null;
+function onEndorsementCreatorSearch(){
+  clearTimeout(endorsementSearchTimer);
+  endorsementSearchTimer = setTimeout(searchEndorsementCreators, 400);
+}
+
+async function searchEndorsementCreators(){
+  const q = document.getElementById('endorsement-creator-search').value.trim();
+  const wrap = document.getElementById('endorsement-search-results');
+  if(!q){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
+  const { data: connected } = await db.from('creator_tiktok_collab_authorizations').select('member_id');
+  const connectedIds = (connected || []).map(function(r){ return r.member_id; });
+  if(connectedIds.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada creator yang connect TikTok.</div>';
+    return;
+  }
+  const { data: creators, error } = await db.from('members').select('id, nama, gmv_30hari').eq('status', 'verified').eq('is_frozen', false).in('id', connectedIds).ilike('nama', '%' + q + '%').limit(10);
+  if(error || !creators || creators.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Gak ketemu creator dengan nama itu (yang udah connect TikTok).</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  creators.forEach(function(c){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + (c.nama || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">GMV 30hr Rp' + Number(c.gmv_30hari || 0).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm btn-primary">+ Tambah</button>';
+    row.querySelector('button').addEventListener('click', function(){ addEndorsementCreator(c.id, c.nama, this); });
+    wrap.appendChild(row);
+  });
+}
+
+async function addEndorsementCreator(memberId, nama, btn){
+  if(endorsementSelectedCreators.some(function(x){ return x.member_id === memberId; })){
+    showToast('Creator ini udah ditambahkan.');
+    return;
+  }
+  if(endorsementFunnelScoreNormal === null || endorsementFunnelScoreProduk === null){
+    showToast('Funnel score belum siap, coba ulang.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Menarik data...';
+
+  let fetchOk = false;
+  let fetchErrorMsg = 'Gagal narik performa creator dari TikTok.';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/endorsement-fetch-creator-performance', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: memberId })
+    });
+    const j = await res.json();
+    const result = j && j.results && j.results[0];
+    if(result && result.ok){ fetchOk = true; }
+    else if(result && result.error){ fetchErrorMsg = result.error; }
+  } catch(e){ /* handled below by fetchOk staying false */ }
+
+  if(!fetchOk){
+    btn.disabled = false;
+    btn.textContent = '+ Tambah';
+    showToast('Gak bisa tambah ' + nama + ': ' + fetchErrorMsg);
+    return;
+  }
+
+  const { data: snapRows } = await db.from('creator_performance_snapshot').select('order_per_video').eq('member_id', memberId).order('fetched_at', { ascending: false }).limit(1);
+  const orderPerVideoHistoris = (snapRows && snapRows[0] && snapRows[0].order_per_video) || 0;
+  const faktorPenyesuaian = endorsementFunnelScoreNormal > 0 ? (endorsementFunnelScoreProduk / endorsementFunnelScoreNormal) : 1;
+  const estimasiOrderPerVideo = orderPerVideoHistoris * faktorPenyesuaian;
+  const estimasiGmvPerVideo = estimasiOrderPerVideo * endorsementProductHarga;
+
+  const { error } = await db.from('endorsement_campaign_creators').insert({
+    campaign_id: endorsementCampaignId,
+    member_id: memberId,
+    order_per_video_historis: orderPerVideoHistoris,
+    faktor_penyesuaian: faktorPenyesuaian,
+    estimasi_gmv_per_video: estimasiGmvPerVideo,
+    jumlah_vt_wajib: 3
+  });
+  if(error){
+    btn.disabled = false;
+    btn.textContent = '+ Tambah';
+    showToast('Gagal menambahkan creator (mungkin udah ada di campaign ini).');
+    return;
+  }
+  endorsementSelectedCreators.push({
+    member_id: memberId,
+    nama: nama,
+    order_per_video_historis: orderPerVideoHistoris,
+    faktor_penyesuaian: faktorPenyesuaian,
+    estimasi_order_per_video: estimasiOrderPerVideo,
+    estimasi_gmv_per_video: estimasiGmvPerVideo
+  });
+  btn.disabled = true;
+  btn.textContent = '✓ Ditambahkan';
+  renderSelectedCreatorsList();
+}
+
+async function removeEndorsementCreator(memberId){
+  endorsementSelectedCreators = endorsementSelectedCreators.filter(function(x){ return x.member_id !== memberId; });
+  renderSelectedCreatorsList();
+  await db.from('endorsement_campaign_creators').delete().eq('campaign_id', endorsementCampaignId).eq('member_id', memberId);
+}
+
+function renderSelectedCreatorsList(){
+  const wrap = document.getElementById('endorsement-selected-list');
+  const roiBox = document.getElementById('endorsement-roi-box');
+  if(endorsementSelectedCreators.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada creator dipilih.</div>';
+    roiBox.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = '';
+  let totalOrder = 0;
+  let totalGmv = 0;
+  endorsementSelectedCreators.forEach(function(c){
+    const jumlahVt = 3;
+    const orderContrib = c.estimasi_order_per_video * jumlahVt;
+    const gmvContrib = c.estimasi_gmv_per_video * jumlahVt;
+    totalOrder += orderContrib;
+    totalGmv += gmvContrib;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + c.nama + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">Wajib 3 VT · Est. order/video ' + c.estimasi_order_per_video.toFixed(2) + ' · Est. GMV total Rp' + Math.round(gmvContrib).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm" style="background:var(--gray-mid);color:var(--dark)">Hapus</button>';
+    row.querySelector('button').addEventListener('click', function(){ removeEndorsementCreator(c.member_id); });
+    wrap.appendChild(row);
+  });
+
+  const ratio = endorsementBudget > 0 ? (totalGmv / endorsementBudget) : 0;
+  const passed = ratio >= 1;
+  roiBox.innerHTML = '<div style="background:' + (passed ? 'var(--teal-light)' : '#FFF0F0') + ';border:1.5px solid ' + (passed ? 'var(--teal)' : '#E85B5B') + ';border-radius:12px;padding:12px 14px;margin-top:6px">'
+    + '<p style="margin:0;font-size:12px;font-weight:700;color:' + (passed ? 'var(--teal)' : '#B33') + '">Estimasi total GMV: Rp' + Math.round(totalGmv).toLocaleString('id-ID') + ' (ROI ' + ratio.toFixed(2) + 'x dari budget Rp' + endorsementBudget.toLocaleString('id-ID') + ')</p>'
+    + '<p style="margin:4px 0 0;font-size:11px;color:' + (passed ? 'var(--teal)' : '#B33') + '">' + (passed ? 'Lolos gate ROI (minimal 1:1). Campaign bisa dikunci.' : 'Belum lolos gate ROI (minimal 1:1). Tambah/ganti creator dulu.') + '</p>'
+    + '</div>'
+    + '<button class="btn btn-primary" style="width:100%;margin-top:10px" ' + (passed ? '' : 'disabled') + ' onclick="lockEndorsementCampaign()">Kunci Campaign</button>';
+}
+
+async function lockEndorsementCampaign(){
+  const { error } = await db.from('endorsement_campaigns').update({ status: 'locked', locked_at: new Date().toISOString() }).eq('id', endorsementCampaignId);
+  if(error){ showToast('Gagal mengunci campaign.'); return; }
+  showToast('Campaign terkunci! Siap dieksekusi.');
+  closeModal('m-b-endorsement');
+}
+
+
 
 
 // ===== TUTORIAL SPOTLIGHT =====
