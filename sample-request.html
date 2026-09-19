@@ -1723,10 +1723,10 @@ function pfTopN(countMap, n){
   return Object.keys(countMap || {}).sort(function(a,b){ return countMap[b] - countMap[a]; }).slice(0, n);
 }
 
-async function pfGetConnectedSet(memberIds){
-  if(!memberIds || !memberIds.length) return new Set();
-  const { data } = await db.from('creator_tiktok_authorizations').select('member_id').in('member_id', memberIds);
-  return new Set((data||[]).map(function(r){ return r.member_id; }));
+function pfGetConnectedSet(membersArr){
+  const s = new Set();
+  (membersArr||[]).forEach(function(m){ if(m.tiktok_connected_at) s.add(m.id); });
+  return s;
 }
 
 function pfConnectedBadge(isConnected){
@@ -1746,8 +1746,8 @@ async function loadPlayfieldMatches(){
     wrap.innerHTML = '<div class="card-sub">Belum ada creator yang match kategori "' + (pfSelectedKategori || '-') + '".</div>';
     return;
   }
-  const { data: membersRaw } = await db.from('members').select('id, nama').in('id', memberIds);
-  const connectedSet = await pfGetConnectedSet(memberIds);
+  const { data: membersRaw } = await db.from('members').select('id, nama, tiktok_connected_at').in('id', memberIds);
+  const connectedSet = pfGetConnectedSet(membersRaw);
   const members = (membersRaw || []).slice().sort(function(a,b){
     const aC = connectedSet.has(a.id) ? 1 : 0, bC = connectedSet.has(b.id) ? 1 : 0;
     return bC - aC;
@@ -1776,8 +1776,8 @@ async function loadPlayfieldCreatorsPlain(){
   const { catByMember, brandByMember } = await pfBuildCreatorCategoryMap();
   const memberIds = Object.keys(catByMember);
   if(!memberIds.length){ wrap.innerHTML = '<div class="card-sub">Belum ada data.</div>'; return; }
-  const { data: membersRaw } = await db.from('members').select('id, nama').in('id', memberIds);
-  const connectedSet = await pfGetConnectedSet(memberIds);
+  const { data: membersRaw } = await db.from('members').select('id, nama, tiktok_connected_at').in('id', memberIds);
+  const connectedSet = pfGetConnectedSet(membersRaw);
   const members = (membersRaw || []).slice().sort(function(a,b){
     const aC = connectedSet.has(a.id) ? 1 : 0, bC = connectedSet.has(b.id) ? 1 : 0;
     return bC - aC;
