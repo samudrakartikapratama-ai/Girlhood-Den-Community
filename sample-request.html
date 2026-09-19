@@ -1108,6 +1108,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk 1</b></div>
         <div class="field"><label>Nama Produk</label><input class="pb-nama" placeholder="Sunscreen Stick"></div>
         <div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>
+        <div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products, kolom ID di bawah nama produk)</span></label><input class="pb-pid" placeholder="1729597881385192127"></div>
         <div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
         <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
@@ -4972,6 +4973,7 @@ async function saveBrandRegistration(){
       id: block.getAttribute('data-product-id') || null,
       nama: nama,
       link: block.querySelector('.pb-link').value.trim(),
+      pid: block.querySelector('.pb-pid') ? block.querySelector('.pb-pid').value.trim() : '',
       sow: block.querySelector('.pb-sow').value,
       tipeProduk: block.querySelector('.pb-tipe') ? block.querySelector('.pb-tipe').value : 'satuan',
       hot: block.querySelector('.pb-hot').checked,
@@ -5087,6 +5089,7 @@ async function saveBrandRegistration(){
       const payload = {
         nama_produk: p.nama,
         link_affiliate: p.link,
+        tiktok_product_id: p.pid || null,
         tipe_sow: p.sow,
         tipe_produk: p.tipeProduk,
         tag_hot: p.hot,
@@ -5209,6 +5212,7 @@ async function editBrand(brandId){
     block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12px">'+(p.nama_produk||'Produk')+'</b><div style="display:flex;gap:10px;align-items:center;flex-shrink:0"><a href="#" style="font-size:11px;font-weight:700" onclick="toggleFreezeProduct(\''+p.id+'\',\''+(p.nama_produk||'-').replace(/'/g,"\\'")+'\','+(p.is_frozen?'true':'false')+',this);return false;">'+(p.is_frozen?'🔥 Unfreeze':'🧊 Freeze')+'</a><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div></div>'
       + '<div class="field"><label>Nama Produk</label><input class="pb-nama" value="'+(p.nama_produk||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
+      + '<div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products)</span></label><input class="pb-pid" value="'+(p.tiktok_product_id||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
             + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple>'+((p.foto_urls||[]).length>0 ? '<div style="background:var(--teal-pale,#e3f6ef);color:var(--teal,#1D9E75);font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;margin-top:5px">✅ '+(p.foto_urls.length)+' foto TERSIMPAN AMAN (kotak di atas emang selalu kosong walau file lama masih ada — itu wajar). Pilih file cuma kalau mau GANTI.</div>' : '<div class="size-note">Belum ada foto.</div>')+' <div class="size-note">Max 3 foto, 5MB/foto</div></div>'
       + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
@@ -6191,6 +6195,7 @@ function addProductBlock(){
   block.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Produk '+productBlockCount+'</b><a href="#" style="font-size:11px;color:var(--red)" onclick="removeProductBlock(this);return false;">Hapus</a></div>'+
     '<div class="field"><label>Nama Produk</label><input class="pb-nama" placeholder="Nama produk"></div>'+
     '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>'+
+    '<div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products, kolom ID di bawah nama produk)</span></label><input class="pb-pid" placeholder="1729597881385192127"></div>'+
     '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>'+
     '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>'+
     '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>'+
