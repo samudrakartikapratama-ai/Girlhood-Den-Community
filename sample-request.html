@@ -13,6 +13,10 @@
   --amber:#FAEEDA;--amber-dark:#854F0B;--border:#E8D5DF;--red:#C41E3A;--red-light:#FDE8EA;
 }
 body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellipse at center, #FF53E3 0%, #FF6FE0 12%, #E87DEE 26%, #D181F5 40%, #C283FC 58%, #BC84FD 75%, #BE84FD 100%);background-attachment:fixed;color:var(--dark);min-height:100vh}
+.personal-marquee{background:linear-gradient(90deg,var(--teal-light),var(--pink-light));border-radius:10px;padding:8px 0;margin-bottom:14px;overflow:hidden;white-space:nowrap;position:relative}
+.personal-marquee-track{display:inline-block;padding-left:100%;animation:marquee-scroll 22s linear infinite;font-size:12px;font-weight:700;color:var(--dark)}
+.personal-marquee-track span{margin-right:36px}
+@keyframes marquee-scroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 .dummy-banner{background:var(--pink);color:#fff;text-align:center;padding:8px;font-size:12px;font-weight:600}
 .login-overlay{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .login-box{width:100%;max-width:380px;background:radial-gradient(ellipse at center, #FF53E3 0%, #FF6FE0 12%, #E87DEE 26%, #D181F5 40%, #C283FC 58%, #BC84FD 75%, #BE84FD 100%);border-radius:20px;padding:32px 22px 26px;box-shadow:0 8px 24px rgba(44,26,34,0.08);position:relative;overflow:hidden;z-index:0}
@@ -526,6 +530,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
+<div id="personal-marquee-creator" class="personal-marquee" style="display:none"></div>
 <p style="font-size:12px;color:#9A7285;margin:0 0 8px;font-weight:600;">\u26A1 Live trading</p>
 <div id="live-ticker-creator" style="margin-bottom:20px;"></div>
 <div class="icon-grid">
@@ -1524,6 +1529,57 @@ async function renderLiveTicker(containerId){
       }).subscribe();
     }
   } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+}
+// === Notifikasi sliding real-time (WA-style) buat approval, cuma jalan pas lagi buka web ===
+let __approvalSlideSub = null;
+function showApprovalSlideNotif(text){
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:14px;left:50%;transform:translate(-50%,-120%);max-width:360px;width:92%;background:#fff;border-radius:14px;box-shadow:0 6px 24px rgba(74,43,71,.25);padding:14px 16px;z-index:100000;display:flex;gap:10px;align-items:flex-start;transition:transform 320ms cubic-bezier(0.23,1,0.32,1);border-left:4px solid var(--teal)';
+  wrap.innerHTML = '<div style="font-size:20px;line-height:1">\ud83d\udd14</div>'
+    + '<div style="flex:1"><div style="font-size:11px;font-weight:800;color:var(--teal);margin-bottom:2px">Girlhood Den</div>'
+    + '<div style="font-size:13px;color:var(--dark);line-height:1.4">' + text + '</div></div>'
+    + '<div style="cursor:pointer;color:var(--gray-text);font-size:16px;line-height:1;padding:2px" onclick="this.closest(\'div[style*=fixed]\').remove()">\u2715</div>';
+  document.body.appendChild(wrap);
+  requestAnimationFrame(function(){ wrap.style.transform = 'translate(-50%,0)'; });
+  setTimeout(function(){
+    wrap.style.transform = 'translate(-50%,-120%)';
+    setTimeout(function(){ wrap.remove(); }, 350);
+  }, 5000);
+}
+async function loadPersonalMarquee(){
+  const el = document.getElementById('personal-marquee-creator');
+  if(!el || !currentSession.memberId) return;
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const [poinRes, memberRes, campaignRes, kirimRes] = await Promise.all([
+      db.from('points_ledger').select('poin').eq('member_id', currentSession.memberId).gte('created_at', startOfMonth),
+      db.from('members').select('status').eq('id', currentSession.memberId).maybeSingle(),
+      db.from('sample_requests').select('id', { count:'exact', head:true }).eq('member_id', currentSession.memberId).eq('status','approved'),
+      db.from('sample_requests').select('id, logistics(sudah_dikirim)').eq('member_id', currentSession.memberId).eq('status','approved')
+    ]);
+    const poinBulanIni = (poinRes.data||[]).reduce(function(sum,r){ return sum + (r.poin||0); }, 0);
+    const statusLabel = { verified:'Terverifikasi \u2705', pending:'Menunggu Verifikasi \u23F3', rejected:'Ditolak \u274C' }[memberRes.data?.status] || (memberRes.data?.status || '-');
+    const campaignAktif = campaignRes.count || 0;
+    const belumDikirim = (kirimRes.data||[]).filter(function(r){ return !r.logistics || !r.logistics.sudah_dikirim; }).length;
+    const items = [
+      '\u2728 Poin bulan ini: <b>' + poinBulanIni + '</b>',
+      '\ud83c\udf80 Status: <b>' + statusLabel + '</b>',
+      '\ud83d\udce6 Campaign aktif: <b>' + campaignAktif + '</b>',
+      belumDikirim > 0 ? '\u23F1\ufe0f Pengiriman belum dikirim: <b>' + belumDikirim + '</b>' : null
+    ].filter(Boolean);
+    el.innerHTML = '<div class="personal-marquee-track">' + items.map(function(t){ return '<span>'+t+'</span>'; }).join('') + '</div>';
+    el.style.display = 'block';
+  } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+}
+function initApprovalSlideNotif(){
+  if(__approvalSlideSub || !currentSession.memberId) return;
+  __approvalSlideSub = db.channel('approval-slide-' + currentSession.memberId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'notifications', filter:'member_id=eq.' + currentSession.memberId }, function(payload){
+      if(payload.new && payload.new.kategori === 'status' && payload.new.detail_text){
+        showApprovalSlideNotif(payload.new.detail_text);
+      }
+    }).subscribe();
 }
 document.addEventListener('DOMContentLoaded', function(){
   renderLiveTicker('live-ticker-creator');
@@ -3430,6 +3486,8 @@ async function loginCreator(){
     currentSession.memberData = result.member;
     enterApp('creator');
     checkFreezeStatus();
+    initApprovalSlideNotif();
+    loadPersonalMarquee();
 
     // Checkin harian otomatis (poin buka aplikasi + streak login)
     fetch(SUPABASE_URL + '/functions/v1/creator-checkin', {
