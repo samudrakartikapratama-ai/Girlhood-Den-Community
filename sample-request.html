@@ -517,6 +517,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
+<div id="home-boosted-section" style="display:none;padding:0 2px 6px"></div>
+<div id="home-trending-section" style="display:none;padding:0 2px 10px"></div>
 <div class="icon-grid">
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
@@ -526,6 +528,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" onclick="openModal('m-c11'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
   </div>
 </div>
 
@@ -618,6 +621,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
+    <div class="field"><label>Kode Referral <span style="font-weight:400;color:var(--gray-text)">(opsional, dari creator yang ngajak kamu)</span></label><input id="reg-kode-referral" placeholder="Contoh: GHD/26LG/08QGR/851-04" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
     <div class="field"><label>Foto Selfie</label>
       <input type="file" id="reg-foto-file" accept="image/*" onchange="previewSelfie(this)">
       <div class="size-note">Maksimal file 10MB</div>
@@ -782,6 +786,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-c8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c8')">‹ ✕</button>
   <div class="modal-title">⭐ Poin Kamu</div>
   <div id="c8-poin-content"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c11"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c11')">‹ ✕</button>
+  <div class="modal-title">🏆 Papan Skor Mingguan</div>
+  <div class="card-sub" style="margin-bottom:10px">Ranking poin minggu ini (reset tiap Jumat). Makin konsisten aktif & nyelesain misi, makin tinggi posisimu.</div>
+  <div id="c11-leaderboard-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c10"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeKomisiBoost()">‹ ✕</button>
@@ -1607,6 +1617,7 @@ async function submitRegistration(){
   const alamat = document.getElementById('reg-alamat').value.trim();
   const patokan = document.getElementById('reg-patokan').value.trim();
   const kodePos = document.getElementById('reg-kodepos').value.trim();
+  const kodeReferral = document.getElementById('reg-kode-referral').value.trim();
 
   if(!nama || !noHpRaw){
     alert('Nama dan No WhatsApp wajib diisi.');
@@ -1679,6 +1690,7 @@ async function submitRegistration(){
         alamat: alamat,
         patokan: patokan,
         kode_pos: kodePos,
+        kode_referral: kodeReferral || null,
         foto_selfie_url: fotoUrl
       })
     });
@@ -1700,6 +1712,8 @@ async function submitRegistration(){
 
   if(fotoGagalUpload){
     alert('Pendaftaran kamu TETAP terkirim! Sistem udah coba upload foto selfie kamu 3 kali, tapi tetap gagal (kemungkinan koneksi kamu lagi kurang stabil). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
+  } else if(kodeReferral && !result.referralValid){
+    alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.\n\nCatatan: kode referral yang kamu masukin gak ketemu, jadi pendaftaran tetap lanjut tanpa referral.');
   } else {
     alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   }
@@ -2640,6 +2654,64 @@ async function getInternalAuthHeader(){
   return 'Bearer ' + data.session.access_token;
 }
 
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+async function loadHomeRecommendations(){
+  // Section 1: produk dari campaign Endorsement yang lagi locked (budget udah dikomit brand)
+  try {
+    const { data: campaigns } = await db.from('endorsement_campaigns')
+      .select('brand_product_id, brand_products(nama_produk, foto_urls, brands(nama_brand))')
+      .eq('status', 'locked')
+      .order('locked_at', { ascending: false })
+      .limit(8);
+    const boostedEl = document.getElementById('home-boosted-section');
+    if(campaigns && campaigns.length > 0 && boostedEl){
+      const seen = new Set();
+      const cards = [];
+      campaigns.forEach(function(c){
+        const bp = c.brand_products;
+        if(!bp || seen.has(c.brand_product_id)) return;
+        seen.add(c.brand_product_id);
+        const foto = (bp.foto_urls && bp.foto_urls[0]) || null;
+        cards.push('<div style="min-width:140px;max-width:140px;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;flex-shrink:0">'
+          + (foto ? '<img src="'+foto+'" style="width:100%;height:100px;object-fit:cover">' : '<div style="width:100%;height:100px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:26px">✨</div>')
+          + '<div style="padding:8px 10px">'
+          + '<div style="display:inline-block;background:#FDECEF;color:var(--pink-dark,#C2185B);font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;margin-bottom:5px">🔥 Endorsement Aktif</div>'
+          + '<div style="font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.3">'+escHtml(bp.nama_produk||'-')+'</div>'
+          + '<div style="font-size:10.5px;color:var(--gray-text);margin-top:2px">'+escHtml(bp.brands?bp.brands.nama_brand:'-')+'</div>'
+          + '</div></div>');
+      });
+      if(cards.length > 0){
+        boostedEl.innerHTML = '<div style="font-weight:800;font-size:13px;margin-bottom:8px">🔥 Lagi Didukung Brand</div>'
+          + '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">' + cards.join('') + '</div>';
+        boostedEl.style.display = 'block';
+      }
+    }
+  } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+
+  // Section 2: produk paling banyak diminta sample minggu ini (proxy minat, lintas creator)
+  try {
+    const { data: trending } = await db.rpc('get_trending_products', { p_days: 7, p_limit: 6 });
+    const trendEl = document.getElementById('home-trending-section');
+    if(trending && trending.length > 0 && trendEl){
+      const rows = trending.map(function(t){
+        const foto = (t.foto_urls && t.foto_urls[0]) || null;
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 10px;margin-bottom:8px">'
+          + (foto ? '<img src="'+foto+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;flex-shrink:0">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✨</div>')
+          + '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--dark)">'+escHtml(t.nama_produk)+'</div>'
+          + '<div style="font-size:10.5px;color:var(--gray-text)">'+escHtml(t.nama_brand)+' &middot; '+t.request_count+' sample diminta minggu ini</div></div>'
+          + '</div>';
+      }).join('');
+      trendEl.innerHTML = '<div style="font-weight:800;font-size:13px;margin-bottom:8px">📈 Paling Diminati Minggu Ini</div>' + rows;
+      trendEl.style.display = 'block';
+    }
+  } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+}
+
 async function loginCreator(){
   const kode = document.getElementById('creator-login-input').value.trim();
   if(!kode){ alert('Masukkan kode kamu dulu.'); return; }
@@ -2682,6 +2754,7 @@ async function loginCreator(){
     currentSession.memberData = result.member;
     enterApp('creator');
     checkFreezeStatus();
+    loadHomeRecommendations();
 
     // Checkin harian otomatis (poin buka aplikasi + streak login)
     fetch(SUPABASE_URL + '/functions/v1/creator-checkin', {
@@ -5572,6 +5645,44 @@ async function updateReportVtLockState(){
   if(lockIcon) lockIcon.style.display = hasApproved ? 'none' : 'flex';
 }
 
+async function loadWeeklyLeaderboard(){
+  const el = document.getElementById('c11-leaderboard-content');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-weekly-leaderboard', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: '{}'
+    });
+    const data = await res.json();
+    if(!data.valid){ el.innerHTML = '<div class="card-sub">'+(data.error||'Gagal memuat papan skor.')+'</div>'; return; }
+
+    let html = '<div style="background:var(--pink-pale);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">';
+    html += data.myRank
+      ? '<div style="font-size:12px;color:var(--gray-text)">Posisi kamu minggu ini</div><div style="font-size:26px;font-weight:800;color:var(--dark)">#'+data.myRank+'</div><div style="font-size:12px;color:var(--gray-text)">'+data.myPoin+' poin</div>'
+      : '<div style="font-size:13px;color:var(--gray-text)">Kamu belum punya poin minggu ini. Buka aplikasi tiap hari buat mulai naik peringkat!</div>';
+    html += '</div>';
+
+    if(!data.top10 || data.top10.length === 0){
+      html += '<div class="card-sub">Belum ada yang dapat poin minggu ini.</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px">';
+      data.top10.forEach(function(r){
+        const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : ('#'+r.rank);
+        const isMe = r.memberId === currentSession.memberId;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;'+(isMe?'background:var(--teal-light);border:1.5px solid var(--teal)':'background:#fff;border:1px solid var(--border)')+'">'
+          + '<div style="width:28px;text-align:center;font-size:14px;font-weight:800">'+medal+'</div>'
+          + '<div style="flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--dark)">'+escHtml(r.nama)+(isMe?' (Kamu)':'')+'</div>'
+          + '<div style="font-size:12.5px;font-weight:800;color:var(--dark)">'+r.poin+'</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e){
+    el.innerHTML = '<div class="card-sub">Gagal menghubungi server, coba lagi ya.</div>';
+  }
+}
+
 async function loadPoinCreator(){
   const el = document.getElementById('c8-poin-content');
   if(POIN_MENU_FROZEN){
@@ -5593,6 +5704,42 @@ async function loadPoinCreator(){
     let html = '';
     html += '<div class="poin-hero"><div class="ph-star">⭐</div><div class="ph-lbl">POIN BULAN INI</div><div class="ph-num">'+summary.totalBulanIni+'</div>';
     html += '<div class="ph-streak">🔥 Streak login: '+summary.streak+' hari berturut-turut</div></div>';
+
+    const { data: misiRules } = await db.from('point_rules').select('kategori, nama, poin').in('kategori', ['buka_aplikasi','login_streak','sow_tuntas','ajak_referral']);
+    const poinByKategori = {};
+    (misiRules || []).forEach(function(r){ poinByKategori[r.kategori] = r.poin; });
+
+    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">🎯 Misi Aktif</div>';
+    html += '<div class="card-sub" style="margin-bottom:8px">Semua otomatis kecatat, gak perlu lapor manual.</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">';
+
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(summary.checkedInToday?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(summary.checkedInToday?'✅':'📲')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Buka Aplikasi Hari Ini</div><div style="font-size:10.5px;color:var(--gray-text)">'+(summary.checkedInToday?'Udah dapet hari ini':'Buka & login buat dapet poin')+'</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.buka_aplikasi||1)+'</div>'
+      + '</div>';
+
+    const loginDone = summary.streak >= 7;
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(loginDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(loginDone?'✅':'🔥')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Login 7 Hari Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.streak,7)+'/7 hari</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.login_streak||10)+'</div>'
+      + '</div>';
+
+    const sowDone = summary.sowStreak >= 3;
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(sowDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(sowDone?'✅':'📦')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Tuntas 3 SOW Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.sowStreak,3)+'/3 SOW tepat waktu</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.sow_tuntas||25)+'</div>'
+      + '</div>';
+
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">🤝</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Ajak Teman Jadi Creator</div><div style="font-size:10.5px;color:var(--gray-text)">'+summary.referralCount+' teman lolos verifikasi &middot; kode referral kamu: '+(currentSession.memberData && currentSession.memberData.kode_login ? currentSession.memberData.kode_login : '-')+'</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.ajak_referral||50)+'/orang</div>'
+      + '</div>';
+
+    html += '</div>';
 
     html += '<div class="card-sub" style="font-weight:700;margin-top:6px">Aktivitas Terbaru</div>';
     if(!summary.recent || summary.recent.length===0){
