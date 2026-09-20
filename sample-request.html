@@ -7098,6 +7098,42 @@ async function loadPoinCreator(){
     html += '<div class="poin-hero"><div class="ph-star">⭐</div><div class="ph-lbl">POIN BULAN INI</div><div class="ph-num">'+summary.totalBulanIni+'</div>';
     html += '<div class="ph-streak">🔥 Streak login: '+summary.streak+' hari berturut-turut</div></div>';
 
+    const { data: misiRules } = await db.from('point_rules').select('kategori, nama, poin').in('kategori', ['buka_aplikasi','login_streak','sow_tuntas','ajak_referral']);
+    const poinByKategori = {};
+    (misiRules || []).forEach(function(r){ poinByKategori[r.kategori] = r.poin; });
+
+    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">🎯 Misi Aktif</div>';
+    html += '<div class="card-sub" style="margin-bottom:8px">Semua otomatis kecatat, gak perlu lapor manual.</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">';
+
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(summary.checkedInToday?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(summary.checkedInToday?'✅':'📲')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Buka Aplikasi Hari Ini</div><div style="font-size:10.5px;color:var(--gray-text)">'+(summary.checkedInToday?'Udah dapet hari ini':'Buka & login buat dapet poin')+'</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.buka_aplikasi||1)+'</div>'
+      + '</div>';
+
+    const loginDone = summary.streak >= 7;
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(loginDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(loginDone?'✅':'🔥')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Login 7 Hari Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.streak,7)+'/7 hari</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.login_streak||10)+'</div>'
+      + '</div>';
+
+    const sowDone = summary.sowStreak >= 3;
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(sowDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">'+(sowDone?'✅':'📦')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Tuntas 3 SOW Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.sowStreak,3)+'/3 SOW tepat waktu</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.sow_tuntas||25)+'</div>'
+      + '</div>';
+
+    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px">'
+      + '<div style="font-size:18px;flex-shrink:0">🤝</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Ajak Teman Jadi Creator</div><div style="font-size:10.5px;color:var(--gray-text)">'+summary.referralCount+' teman lolos verifikasi &middot; kode referral kamu: '+(currentSession.memberData && currentSession.memberData.kode_login ? currentSession.memberData.kode_login : '-')+'</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.ajak_referral||50)+'/orang</div>'
+      + '</div>';
+
+    html += '</div>';
+
     html += '<div class="card-sub" style="font-weight:700;margin-top:6px">Aktivitas Terbaru</div>';
     if(!summary.recent || summary.recent.length===0){
       html += '<div class="card-sub">Belum ada aktivitas poin.</div>';
