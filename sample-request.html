@@ -529,6 +529,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
     <div class="icon-card" onclick="openModal('m-c11'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
+    <div class="icon-card" onclick="openModal('m-c-endorsement'); loadCreatorEndorsementJobs();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
   </div>
 </div>
 
@@ -575,6 +576,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-upcoming-brand" onclick="openModal('m-b7'); loadUpcomingLiveBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/upcoming.png" alt="Upcoming Live"><div class="icon-label">Upcoming Live</div></div>
     <div class="icon-card" onclick="openModal('m-b8'); loadCatchupMeetings('brand');"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/catchup.png" alt="Catch Up Meeting"><div class="icon-label">Catch Up Meeting</div></div>
     <div class="icon-card" onclick="openModal('m-b9'); loadTiktokShopStatus();"><div style="font-size:28px;line-height:1">🔗</div><div class="icon-label">TikTok Shop</div></div>
+    <div class="icon-card" onclick="openModal('m-b-endorsement'); openEndorsementFlow();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
+    <div class="icon-card" onclick="openModal('m-b-draftreview'); loadBrandDraftReviews();"><div style="font-size:28px;line-height:1">🎬</div><div class="icon-label">Review Draft</div></div>
   </div>
 </div>
 
@@ -601,6 +604,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
     <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
+    <div class="icon-card" onclick="openModal('m-i18'); loadAeEscalatedDrafts();"><div class="icon-emoji">⚖️</div><div class="icon-label">Eskalasi Draft Endorsement</div></div>
   </div>
 </div>
 
@@ -794,6 +798,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="c11-leaderboard-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-c-endorsement"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-endorsement')">‹ ✕</button>
+  <div class="modal-title">🚀 Job Endorsement Kamu</div>
+  <div class="card-sub" style="margin-bottom:10px">Campaign endorsement yang kamu ikut. Wajib upload video sesuai jumlah VT di masing-masing job.</div>
+  <div id="c-endorsement-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
 <div class="modal-bg" id="m-c10"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeKomisiBoost()">‹ ✕</button>
   <div class="modal-title">📈 Tukar Poin dengan Kenaikan Komisi</div>
   <div id="kb-step-brand">
@@ -923,6 +933,52 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">🔗 TikTok Shop</div>
   <div class="card-sub">Hubungkan akun TikTok Shop kamu ke Girlhood Den Community biar data order & produk bisa tersinkron otomatis.</div>
   <div id="tiktok-shop-status" style="margin-top:14px"><div class="card-sub">Memuat status...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-b-endorsement"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-endorsement')">‹ ✕</button>
+  <div class="modal-title">🚀 Endorsement</div>
+
+  <div id="endorsement-step-pick">
+    <div class="field" style="margin-bottom:10px"><label>Pilih Produk</label><select id="endorsement-product-select"><option value="">Memuat produk...</option></select></div>
+    <div class="field" style="margin-bottom:10px"><label>Budget Campaign (Rp)</label><input type="number" min="0" id="endorsement-budget" placeholder="Contoh: 5000000"></div>
+    <button class="btn btn-primary btn-sm" style="width:100%" onclick="endorsementContinueFromPick()">Lanjutkan</button>
+  </div>
+
+  <div id="endorsement-step-funnel" style="display:none">
+    <div class="card-sub" id="endorsement-funnel-summary" style="margin-bottom:12px"></div>
+    <div id="endorsement-funnel-form-area" style="display:none">
+      <div class="card-sub" style="margin-bottom:10px">Upload CTR &amp; CTOR 7 hari terakhir dari TikTok Shop &gt; Analitik &gt; Produk.</div>
+      <div class="field" style="margin-bottom:10px"><label>CTR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="endorsement-ctr7" placeholder="Contoh: 2.5"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTOR 7 Hari (%) <span style="font-weight:400;color:var(--gray-text)">wajib</span></label><input type="number" step="0.01" min="0" id="endorsement-ctor7" placeholder="Contoh: 3.0"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="endorsement-ctr30"></div>
+      <div class="field" style="margin-bottom:10px"><label>CTOR 30 Hari (%) <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="number" step="0.01" min="0" id="endorsement-ctor30"></div>
+      <div class="field" style="margin-bottom:10px"><label>Screenshot Bukti Funnel <span style="font-weight:400;color:var(--gray-text)">opsional</span></label><input type="file" accept="image/*" id="endorsement-ss"></div>
+      <button class="btn btn-primary btn-sm" style="width:100%" id="endorsement-funnel-submit-btn" onclick="submitEndorsementFunnel(this)">Simpan &amp; Lanjutkan</button>
+    </div>
+    <button class="btn btn-primary btn-sm" style="width:100%;display:none" id="endorsement-funnel-continue-btn" onclick="endorsementContinueAfterGate()">Lanjutkan</button>
+  </div>
+
+  <div id="endorsement-step-creators" style="display:none">
+    <div class="card-sub" id="endorsement-creators-header" style="margin-bottom:10px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">🎯 Rekomendasi Creator</div>
+    <div class="card-sub" style="margin-bottom:8px;font-size:11px">Top 3 creator yang cocok sama kategori produk ini (cuma yang udah connect TikTok).</div>
+    <div id="endorsement-recommend-list" style="margin-bottom:16px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">🔍 Cari Creator Lain</div>
+    <div class="field" style="margin-bottom:8px"><input id="endorsement-creator-search" placeholder="Ketik nama creator..." oninput="onEndorsementCreatorSearch()"></div>
+    <div id="endorsement-search-results" style="margin-bottom:16px"></div>
+
+    <div class="card-title" style="font-size:12px;margin-bottom:6px">✅ Creator Terpilih</div>
+    <div id="endorsement-selected-list" style="margin-bottom:6px"></div>
+    <div id="endorsement-roi-box"></div>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-b-draftreview"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-draftreview')">‹ ✕</button>
+  <div class="modal-title">🎬 Review Draft Endorsement</div>
+  <div class="card-sub" style="margin-bottom:10px">Draft video mentah dari creator, wajib di-approve sebelum mereka posting &amp; submit link.</div>
+  <div id="b-draftreview-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="popup-bg" id="version-notif-popup" style="display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
@@ -1364,6 +1420,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">↩️ Revoke Keputusan Brand</div>
   <div class="card-sub" style="margin-bottom:10px">Daftar laporan "salah pencet" dari brand yang belum ditindaklanjuti. Pilih status yang benar — begitu diproses, hilang dari daftar ini otomatis.</div>
   <div id="revoke-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-i18"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i18')">‹ ✕</button>
+  <div class="modal-title">⚖️ Eskalasi Draft Endorsement</div>
+  <div class="card-sub">Draft yang kuota revisi brand-nya udah habis tapi masih ditolak. AE yang mutusin final: creator yang salah, atau brand-nya yang kelewatan.</div>
+  <div id="ae-escalated-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <script>
@@ -5681,6 +5743,595 @@ async function loadWeeklyLeaderboard(){
   } catch(e){
     el.innerHTML = '<div class="card-sub">Gagal menghubungi server, coba lagi ya.</div>';
   }
+}
+
+let endorsementProductId = null;
+let endorsementProductName = null;
+let endorsementProductHarga = 0;
+let endorsementCampaignId = null;
+let endorsementBudget = 0;
+let endorsementFunnelScoreNormal = null;
+let endorsementFunnelScoreProduk = null;
+let endorsementSelectedCreators = [];
+
+function openEndorsementFlow(){
+  endorsementProductId = null;
+  endorsementProductName = null;
+  endorsementProductHarga = 0;
+  endorsementCampaignId = null;
+  endorsementBudget = 0;
+  endorsementFunnelScoreNormal = null;
+  endorsementFunnelScoreProduk = null;
+  endorsementSelectedCreators = [];
+  document.getElementById('endorsement-budget').value = '';
+  loadEndorsementProductOptions();
+  renderEndorsementStep('pick');
+}
+
+async function loadEndorsementProductOptions(){
+  const select = document.getElementById('endorsement-product-select');
+  select.innerHTML = '<option value="">Memuat produk...</option>';
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk, harga').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk', { ascending: true });
+  if(error || !products || products.length === 0){
+    select.innerHTML = '<option value="">Belum ada produk terdaftar</option>';
+    return;
+  }
+  select.innerHTML = '<option value="">Pilih produk...</option>' + products.map(function(p){ return '<option value="' + p.id + '" data-harga="' + (p.harga || 0) + '">' + (p.nama_produk || '-').replace(/</g,'&lt;') + '</option>'; }).join('');
+}
+
+function renderEndorsementStep(step){
+  document.getElementById('endorsement-step-pick').style.display = step === 'pick' ? 'block' : 'none';
+  document.getElementById('endorsement-step-funnel').style.display = step === 'funnel' ? 'block' : 'none';
+  document.getElementById('endorsement-step-creators').style.display = step === 'creators' ? 'block' : 'none';
+}
+
+async function endorsementContinueFromPick(){
+  const select = document.getElementById('endorsement-product-select');
+  const productId = select.value;
+  const budget = parseFloat(document.getElementById('endorsement-budget').value);
+  if(!productId){ alert('Pilih produk dulu ya.'); return; }
+  if(isNaN(budget) || budget <= 0){ alert('Isi budget campaign dulu ya.'); return; }
+  endorsementProductId = productId;
+  endorsementProductName = select.options[select.selectedIndex].textContent;
+  endorsementProductHarga = parseFloat(select.options[select.selectedIndex].getAttribute('data-harga')) || 0;
+  endorsementBudget = budget;
+
+  const { data: latestRows } = await db.from('product_funnel_data').select('ctr_7d, ctor_7d, uploaded_at').eq('brand_product_id', productId).order('uploaded_at', { ascending: false }).limit(1);
+  const latest = latestRows && latestRows[0];
+  const summary = document.getElementById('endorsement-funnel-summary');
+  const formArea = document.getElementById('endorsement-funnel-form-area');
+  const continueBtn = document.getElementById('endorsement-funnel-continue-btn');
+  if(latest){
+    endorsementFunnelScoreProduk = latest.ctr_7d * latest.ctor_7d;
+    summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> udah punya data funnel: CTR ' + latest.ctr_7d + '% · CTOR ' + latest.ctor_7d + '%.';
+    formArea.style.display = 'none';
+    continueBtn.style.display = 'block';
+  } else {
+    endorsementFunnelScoreProduk = null;
+    summary.innerHTML = 'Produk <b>' + endorsementProductName + '</b> belum ada data funnel. Isi dulu sebelum lanjut.';
+    formArea.style.display = 'block';
+    continueBtn.style.display = 'none';
+  }
+  renderEndorsementStep('funnel');
+}
+
+async function submitEndorsementFunnel(btn){
+  const ctr7 = parseFloat(document.getElementById('endorsement-ctr7').value);
+  const ctor7 = parseFloat(document.getElementById('endorsement-ctor7').value);
+  if(isNaN(ctr7) || isNaN(ctor7)){
+    alert('CTR dan CTOR 7 hari wajib diisi.');
+    return;
+  }
+  const ctr30Raw = document.getElementById('endorsement-ctr30').value;
+  const ctor30Raw = document.getElementById('endorsement-ctor30').value;
+  const ssInput = document.getElementById('endorsement-ss');
+  const file = ssInput && ssInput.files[0];
+
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+
+  let screenshotUrl = null;
+  if(file){
+    const { url, error: upErr } = await uploadFileToStorage('funnel-screenshots', file, 'funnel-' + endorsementProductId);
+    if(upErr){ alert('Gagal upload screenshot: ' + upErr.message); }
+    else { screenshotUrl = url; }
+  }
+
+  const payload = {
+    brand_product_id: endorsementProductId,
+    ctr_7d: ctr7,
+    ctor_7d: ctor7,
+    ctr_30d: ctr30Raw ? parseFloat(ctr30Raw) : null,
+    ctor_30d: ctor30Raw ? parseFloat(ctor30Raw) : null,
+    screenshot_url: screenshotUrl
+  };
+  const { error } = await db.from('product_funnel_data').insert(payload);
+  btn.disabled = false;
+  btn.textContent = 'Simpan & Lanjutkan';
+  if(error){
+    alert('Gagal menyimpan data funnel.');
+    return;
+  }
+  alert('Data funnel tersimpan!');
+  endorsementFunnelScoreProduk = ctr7 * ctor7;
+  await createDraftEndorsementCampaign();
+}
+
+async function endorsementContinueAfterGate(){
+  await createDraftEndorsementCampaign();
+}
+
+async function createDraftEndorsementCampaign(){
+  const btn = document.getElementById('endorsement-funnel-continue-btn');
+  if(btn){ btn.disabled = true; }
+  let funnelScoreNormal = null;
+  try {
+    const { data: fsData } = await db.rpc('get_funnel_score_normal');
+    if(fsData && fsData[0]) funnelScoreNormal = fsData[0].funnel_score_normal;
+  } catch(e){ /* non-fatal, campaign tetap dibuat tanpa snapshot skor */ }
+  endorsementFunnelScoreNormal = funnelScoreNormal;
+
+  const { data: campaign, error } = await db.from('endorsement_campaigns').insert({
+    brand_id: currentSession.brandId,
+    brand_product_id: endorsementProductId,
+    budget: endorsementBudget,
+    funnel_score_normal: funnelScoreNormal
+  }).select('id').single();
+  if(btn){ btn.disabled = false; }
+  if(error || !campaign){
+    alert('Gagal membuat campaign.');
+    return;
+  }
+  endorsementCampaignId = campaign.id;
+  renderEndorsementStep('creators');
+  document.getElementById('endorsement-creators-header').innerHTML = 'Produk: <b>' + endorsementProductName + '</b> · Budget: <b>Rp' + endorsementBudget.toLocaleString('id-ID') + '</b>';
+  loadEndorsementRecommendations();
+  renderSelectedCreatorsList();
+}
+
+async function loadEndorsementRecommendations(){
+  const wrap = document.getElementById('endorsement-recommend-list');
+  wrap.innerHTML = '<div class="card-sub">Mencari creator yang matched...</div>';
+  const { data: matches, error } = await db.rpc('get_matched_creators', { p_brand_product_id: endorsementProductId, p_limit: 3 });
+  if(error || !matches || matches.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada rekomendasi otomatis (creator harus connect TikTok dulu biar bisa direkomendasikan). Cari manual di bawah.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  matches.forEach(function(c){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + escHtml(c.nama || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">' + (c.kategori_match_count > 0 ? c.kategori_match_count + 'x pernah di kategori ini' : 'Belum ada histori kategori ini') + ' · GMV 30hr Rp' + Number(c.gmv_30hari || 0).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm btn-primary" data-mid="' + c.member_id + '" data-nama="' + (c.nama||'-').replace(/"/g,'&quot;') + '">+ Tambah</button>';
+    row.querySelector('button').addEventListener('click', function(){ addEndorsementCreator(c.member_id, c.nama, this); });
+    wrap.appendChild(row);
+  });
+}
+
+let endorsementSearchTimer = null;
+function onEndorsementCreatorSearch(){
+  clearTimeout(endorsementSearchTimer);
+  endorsementSearchTimer = setTimeout(searchEndorsementCreators, 400);
+}
+
+async function searchEndorsementCreators(){
+  const q = document.getElementById('endorsement-creator-search').value.trim();
+  const wrap = document.getElementById('endorsement-search-results');
+  if(!q){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
+  const { data: connected } = await db.from('creator_tiktok_collab_authorizations').select('member_id');
+  const connectedIds = (connected || []).map(function(r){ return r.member_id; });
+  if(connectedIds.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada creator yang connect TikTok.</div>';
+    return;
+  }
+  const { data: creators, error } = await db.from('members').select('id, nama, gmv_30hari').eq('status', 'verified').eq('is_frozen', false).in('id', connectedIds).ilike('nama', '%' + q + '%').limit(10);
+  if(error || !creators || creators.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Gak ketemu creator dengan nama itu (yang udah connect TikTok).</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  creators.forEach(function(c){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + escHtml(c.nama || '-') + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">GMV 30hr Rp' + Number(c.gmv_30hari || 0).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm btn-primary">+ Tambah</button>';
+    row.querySelector('button').addEventListener('click', function(){ addEndorsementCreator(c.id, c.nama, this); });
+    wrap.appendChild(row);
+  });
+}
+
+async function addEndorsementCreator(memberId, nama, btn){
+  if(endorsementSelectedCreators.some(function(x){ return x.member_id === memberId; })){
+    alert('Creator ini udah ditambahkan.');
+    return;
+  }
+  if(endorsementFunnelScoreNormal === null || endorsementFunnelScoreProduk === null){
+    alert('Funnel score belum siap, coba ulang.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Menarik data...';
+
+  let fetchOk = false;
+  let fetchErrorMsg = 'Gagal narik performa creator dari TikTok.';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/endorsement-fetch-creator-performance', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: memberId })
+    });
+    const j = await res.json();
+    const result = j && j.results && j.results[0];
+    if(result && result.ok){ fetchOk = true; }
+    else if(result && result.error){ fetchErrorMsg = result.error; }
+  } catch(e){ /* handled below by fetchOk staying false */ }
+
+  if(!fetchOk){
+    btn.disabled = false;
+    btn.textContent = '+ Tambah';
+    alert('Gak bisa tambah ' + nama + ': ' + fetchErrorMsg);
+    return;
+  }
+
+  const { data: snapRows } = await db.from('creator_performance_snapshot').select('order_per_video').eq('member_id', memberId).order('fetched_at', { ascending: false }).limit(1);
+  const orderPerVideoHistoris = (snapRows && snapRows[0] && snapRows[0].order_per_video) || 0;
+  const faktorPenyesuaian = endorsementFunnelScoreNormal > 0 ? (endorsementFunnelScoreProduk / endorsementFunnelScoreNormal) : 1;
+  const estimasiOrderPerVideo = orderPerVideoHistoris * faktorPenyesuaian;
+  const estimasiGmvPerVideo = estimasiOrderPerVideo * endorsementProductHarga;
+
+  const { error } = await db.from('endorsement_campaign_creators').insert({
+    campaign_id: endorsementCampaignId,
+    member_id: memberId,
+    order_per_video_historis: orderPerVideoHistoris,
+    faktor_penyesuaian: faktorPenyesuaian,
+    estimasi_gmv_per_video: estimasiGmvPerVideo,
+    jumlah_vt_wajib: 3
+  });
+  if(error){
+    btn.disabled = false;
+    btn.textContent = '+ Tambah';
+    alert('Gagal menambahkan creator (mungkin udah ada di campaign ini).');
+    return;
+  }
+  endorsementSelectedCreators.push({
+    member_id: memberId,
+    nama: nama,
+    order_per_video_historis: orderPerVideoHistoris,
+    faktor_penyesuaian: faktorPenyesuaian,
+    estimasi_order_per_video: estimasiOrderPerVideo,
+    estimasi_gmv_per_video: estimasiGmvPerVideo
+  });
+  btn.disabled = true;
+  btn.textContent = '✓ Ditambahkan';
+  renderSelectedCreatorsList();
+}
+
+async function removeEndorsementCreator(memberId){
+  endorsementSelectedCreators = endorsementSelectedCreators.filter(function(x){ return x.member_id !== memberId; });
+  renderSelectedCreatorsList();
+  await db.from('endorsement_campaign_creators').delete().eq('campaign_id', endorsementCampaignId).eq('member_id', memberId);
+}
+
+function renderSelectedCreatorsList(){
+  const wrap = document.getElementById('endorsement-selected-list');
+  const roiBox = document.getElementById('endorsement-roi-box');
+  if(endorsementSelectedCreators.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada creator dipilih.</div>';
+    roiBox.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = '';
+  let totalOrder = 0;
+  let totalGmv = 0;
+  endorsementSelectedCreators.forEach(function(c){
+    const jumlahVt = 3;
+    const orderContrib = c.estimasi_order_per_video * jumlahVt;
+    const gmvContrib = c.estimasi_gmv_per_video * jumlahVt;
+    totalOrder += orderContrib;
+    totalGmv += gmvContrib;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:8px';
+    row.innerHTML = '<div style="flex:1;min-width:0"><p style="margin:0;font-size:13px;font-weight:700">' + escHtml(c.nama) + '</p>'
+      + '<p style="margin:2px 0 0;font-size:11px;color:var(--gray-text)">Wajib 3 VT · Est. order/video ' + c.estimasi_order_per_video.toFixed(2) + ' · Est. GMV total Rp' + Math.round(gmvContrib).toLocaleString('id-ID') + '</p></div>'
+      + '<button class="btn btn-sm" style="background:var(--gray-mid);color:var(--dark)">Hapus</button>';
+    row.querySelector('button').addEventListener('click', function(){ removeEndorsementCreator(c.member_id); });
+    wrap.appendChild(row);
+  });
+
+  const ratio = endorsementBudget > 0 ? (totalGmv / endorsementBudget) : 0;
+  const passed = ratio >= 1;
+  roiBox.innerHTML = '<div style="background:' + (passed ? 'var(--teal-light)' : '#FFF0F0') + ';border:1.5px solid ' + (passed ? 'var(--teal)' : '#E85B5B') + ';border-radius:12px;padding:12px 14px;margin-top:6px">'
+    + '<p style="margin:0;font-size:12px;font-weight:700;color:' + (passed ? 'var(--teal)' : '#B33') + '">Estimasi total GMV: Rp' + Math.round(totalGmv).toLocaleString('id-ID') + ' (ROI ' + ratio.toFixed(2) + 'x dari budget Rp' + endorsementBudget.toLocaleString('id-ID') + ')</p>'
+    + '<p style="margin:4px 0 0;font-size:11px;color:' + (passed ? 'var(--teal)' : '#B33') + '">' + (passed ? 'Lolos gate ROI (minimal 1:1). Campaign bisa dikunci.' : 'Belum lolos gate ROI (minimal 1:1). Tambah/ganti creator dulu.') + '</p>'
+    + '</div>'
+    + '<button class="btn btn-primary" style="width:100%;margin-top:10px" ' + (passed ? '' : 'disabled') + ' onclick="lockEndorsementCampaign()">Kunci Campaign</button>';
+}
+
+async function lockEndorsementCampaign(){
+  const { error } = await db.from('endorsement_campaigns').update({ status: 'locked', locked_at: new Date().toISOString() }).eq('id', endorsementCampaignId);
+  if(error){ alert('Gagal mengunci campaign.'); return; }
+  alert('Campaign terkunci! Siap dieksekusi.');
+  closeModal('m-b-endorsement');
+}
+
+// ===== ENDORSEMENT: creator-side job list + VT submission (sub-step 3) =====
+async function loadCreatorEndorsementJobs(){
+  const wrap = document.getElementById('c-endorsement-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: jobs, error } = await db.from('endorsement_campaign_creators')
+    .select('id, jumlah_vt_wajib, estimasi_gmv_per_video, campaign_id, endorsement_campaigns(status, brand_products(nama_produk, brands(nama_brand)))')
+    .eq('member_id', currentSession.memberId)
+    .order('added_at', { ascending: false });
+  if(error || !jobs || jobs.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Belum ada job endorsement buat kamu.</div>';
+    return;
+  }
+  const jobIds = jobs.map(function(j){ return j.id; });
+  const { data: vtRows } = await db.from('vt_reports').select('endorsement_campaign_creator_id, status').in('endorsement_campaign_creator_id', jobIds);
+  const doneByJob = {};
+  (vtRows || []).forEach(function(v){
+    if(v.status === 'approved') doneByJob[v.endorsement_campaign_creator_id] = (doneByJob[v.endorsement_campaign_creator_id] || 0) + 1;
+  });
+  const { data: draftRows } = await db.from('endorsement_draft_reviews').select('*').in('campaign_creator_id', jobIds);
+  const draftsByJob = {};
+  (draftRows || []).forEach(function(d){
+    if(!draftsByJob[d.campaign_creator_id]) draftsByJob[d.campaign_creator_id] = {};
+    draftsByJob[d.campaign_creator_id][d.slot_number] = d;
+  });
+
+  wrap.innerHTML = '';
+  jobs.forEach(function(j){
+    const campaign = j.endorsement_campaigns;
+    const produk = campaign && campaign.brand_products;
+    const namaProduk = (produk && produk.nama_produk) || '-';
+    const namaBrand = (produk && produk.brands && produk.brands.nama_brand) || '-';
+    const done = doneByJob[j.id] || 0;
+    const wajib = j.jumlah_vt_wajib || 3;
+    const isLocked = campaign && campaign.status === 'locked';
+    const currentSlot = done + 1;
+    const draft = draftsByJob[j.id] && draftsByJob[j.id][currentSlot];
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    let bodyHtml = '<p style="margin:0;font-size:13px;font-weight:700">' + namaProduk + '</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">' + namaBrand + ' · Wajib ' + wajib + ' VT · Progress ' + done + '/' + wajib + '</p>';
+
+    if(!isLocked){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">Campaign belum aktif.</p>';
+    } else if(done >= wajib){
+      bodyHtml += '<p style="margin:0;font-size:12px;font-weight:700;color:var(--teal)">✓ VT kamu udah lengkap buat job ini.</p>';
+    } else if(!draft){
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:var(--gray-text)">Video ke-' + currentSlot + ' dari ' + wajib + ' — upload draft mentah dulu (maks. 25MB) buat direview brand sebelum posting.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="file" accept="video/*" id="draft-file-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="draft-submit-' + j.id + '">Upload Draft</button>';
+    } else if(draft.status === 'pending_review'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">⏳ Draft video ke-' + currentSlot + ' lagi direview brand.</p>';
+    } else if(draft.status === 'revision_requested'){
+      const kuotaSisa = draft.max_revisions - draft.revisions_used;
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:#B33">Brand minta revisi' + (draft.brand_note ? ': "' + escHtml(draft.brand_note) + '"' : '.') + ' Sisa kuota revisi: ' + kuotaSisa + '.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="file" accept="video/*" id="draft-file-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="draft-submit-' + j.id + '">Upload Revisi</button>';
+    } else if(draft.status === 'escalated'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:var(--gray-text)">⚠️ Draft ini dieskalasi ke tim internal buat diputus. Tunggu keputusannya ya.</p>';
+    } else if(draft.status === 'rejected_final'){
+      bodyHtml += '<p style="margin:0;font-size:11px;color:#B33">Draft video ke-' + currentSlot + ' ditolak final. Hubungi tim kami.</p>';
+    } else if(draft.status === 'approved' && !draft.vt_report_id){
+      bodyHtml += '<p style="margin:0 0 6px;font-size:11px;color:var(--teal)">✓ Draft video ke-' + currentSlot + ' udah di-acc brand. Posting videonya ke TikTok, terus submit link di bawah.</p>'
+        + '<div class="field" style="margin-bottom:8px"><input type="text" placeholder="Link video TikTok..." id="endjob-link-' + j.id + '"></div>'
+        + '<button class="btn btn-primary btn-sm" style="width:100%" id="endjob-submit-' + j.id + '">Submit VT</button>';
+    }
+
+    card.innerHTML = bodyHtml;
+    wrap.appendChild(card);
+
+    const draftBtn = card.querySelector('#draft-submit-' + j.id);
+    if(draftBtn) draftBtn.addEventListener('click', function(){ submitEndorsementDraft(j.id, currentSlot, draftBtn); });
+    const vtBtn = card.querySelector('#endjob-submit-' + j.id);
+    if(vtBtn) vtBtn.addEventListener('click', function(){ submitEndorsementVt(j.id, vtBtn); });
+  });
+}
+
+async function submitEndorsementDraft(campaignCreatorId, slotNumber, btn){
+  const input = document.getElementById('draft-file-' + campaignCreatorId);
+  const file = input && input.files[0];
+  if(!file){ alert('Pilih file video dulu ya.'); return; }
+  const maxBytes = 25 * 1024 * 1024;
+  if(file.size > maxBytes){ alert('File-nya kegedean, maksimal 25MB ya.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Mengupload...';
+  const { url, error: upErr } = await uploadFileToStorage('endorsement-drafts', file, 'draft-' + campaignCreatorId + '-' + slotNumber);
+  if(upErr){
+    btn.disabled = false; btn.textContent = 'Upload Draft';
+    alert('Gagal upload: ' + upErr.message);
+    return;
+  }
+  const { data: existing } = await db.from('endorsement_draft_reviews').select('id').eq('campaign_creator_id', campaignCreatorId).eq('slot_number', slotNumber).maybeSingle();
+  let saveError;
+  if(existing){
+    const { error } = await db.from('endorsement_draft_reviews').update({
+      status: 'pending_review', file_url: url, file_size_bytes: file.size, updated_at: new Date().toISOString()
+    }).eq('id', existing.id);
+    saveError = error;
+  } else {
+    const { error } = await db.from('endorsement_draft_reviews').insert({
+      campaign_creator_id: campaignCreatorId, slot_number: slotNumber, status: 'pending_review', file_url: url, file_size_bytes: file.size
+    });
+    saveError = error;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Upload Draft';
+  if(saveError){ alert('Gagal menyimpan draft.'); return; }
+  await notifyDraftEvent(campaignCreatorId, 'draft_uploaded');
+  alert('Draft berhasil diupload, tunggu review brand ya.');
+  loadCreatorEndorsementJobs();
+}
+
+// Notifikasi 3 pihak (brand, creator, internal): baris brand_id/member_id masuk ke
+// notifications table yang sudah ada. Feed internal (internal-notifications) sudah
+// membaca SEMUA baris di tabel ini tanpa filter, jadi cukup insert sekali di sini.
+async function notifyDraftEvent(campaignCreatorId, eventType, extra){
+  extra = extra || {};
+  const { data: ctx } = await db.from('endorsement_campaign_creators')
+    .select('member_id, campaign_id, endorsement_campaigns(brand_id, brand_products(nama_produk)), members(nama)')
+    .eq('id', campaignCreatorId).maybeSingle();
+  if(!ctx) return;
+  const brandId = ctx.endorsement_campaigns && ctx.endorsement_campaigns.brand_id;
+  const memberId = ctx.member_id;
+  const namaProduk = (ctx.endorsement_campaigns && ctx.endorsement_campaigns.brand_products && ctx.endorsement_campaigns.brand_products.nama_produk) || '-';
+  const namaCreator = (ctx.members && ctx.members.nama) || '-';
+
+  const messages = {
+    draft_uploaded: { brand: '🎬 Draft video baru dari ' + namaCreator + ' buat produk ' + namaProduk + ', yuk direview.', member: null },
+    draft_revision_requested: { brand: null, member: '✏️ Brand minta revisi draft video kamu buat produk ' + namaProduk + (extra.note ? ': "' + extra.note + '"' : '') + '.' },
+    draft_approved: { brand: null, member: '✅ Draft video kamu buat produk ' + namaProduk + ' di-acc brand! Posting & submit link videonya ya.' },
+    draft_escalated: { brand: '⚠️ Draft video ' + namaCreator + ' (' + namaProduk + ') dieskalasi ke tim internal karena kuota revisi habis.', member: '⚠️ Draft video kamu buat produk ' + namaProduk + ' dieskalasi ke tim kami buat diputus final.' },
+    draft_escalation_resolved: { brand: '📋 Tim internal udah mutusin draft ' + namaCreator + ' (' + namaProduk + '): ' + (extra.decision === 'approved' ? 'disetujui' : 'ditolak final') + '.', member: '📋 Tim kami udah mutusin draft video kamu (' + namaProduk + '): ' + (extra.decision === 'approved' ? 'disetujui, lanjut posting ya!' : 'ditolak final.') }
+  };
+  const m = messages[eventType];
+  if(!m) return;
+  const rows = [];
+  if(m.brand && brandId) rows.push({ kategori: 'endorsement_draft', brand_id: brandId, detail_text: m.brand });
+  if(m.member && memberId) rows.push({ kategori: 'endorsement_draft', member_id: memberId, detail_text: m.member });
+  if(rows.length > 0) await db.from('notifications').insert(rows);
+}
+
+// ===== ENDORSEMENT: brand-side draft review =====
+async function loadBrandDraftReviews(){
+  const wrap = document.getElementById('b-draftreview-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: campaigns } = await db.from('endorsement_campaigns').select('id').eq('brand_id', currentSession.brandId).eq('status', 'locked');
+  const campaignIds = (campaigns || []).map(function(c){ return c.id; });
+  if(campaignIds.length === 0){ wrap.innerHTML = '<div class="card-sub">Belum ada campaign aktif.</div>'; return; }
+  const { data: ccs } = await db.from('endorsement_campaign_creators').select('id, member_id, campaign_id, endorsement_campaigns(brand_products(nama_produk)), members(nama)').in('campaign_id', campaignIds);
+  const ccIds = (ccs || []).map(function(c){ return c.id; });
+  if(ccIds.length === 0){ wrap.innerHTML = '<div class="card-sub">Belum ada creator ditambahkan.</div>'; return; }
+  const ccById = {};
+  (ccs || []).forEach(function(c){ ccById[c.id] = c; });
+  const { data: drafts } = await db.from('endorsement_draft_reviews').select('*').in('campaign_creator_id', ccIds).eq('status', 'pending_review').order('created_at', { ascending: true });
+  if(!drafts || drafts.length === 0){ wrap.innerHTML = '<div class="card-sub">Gak ada draft yang nunggu review.</div>'; return; }
+  wrap.innerHTML = '';
+  drafts.forEach(function(d){
+    const cc = ccById[d.campaign_creator_id];
+    const namaCreator = (cc && cc.members && cc.members.nama) || '-';
+    const namaProduk = (cc && cc.endorsement_campaigns && cc.endorsement_campaigns.brand_products && cc.endorsement_campaigns.brand_products.nama_produk) || '-';
+    const kuotaSisa = d.max_revisions - d.revisions_used;
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    row.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + escHtml(namaCreator) + ' — ' + escHtml(namaProduk) + '</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">Video ke-' + d.slot_number + ' · Sisa kuota revisi: ' + kuotaSisa + '</p>'
+      + '<a href="' + d.file_url + '" target="_blank" style="display:inline-block;margin-bottom:8px;font-size:12px;color:var(--teal)">▶️ Lihat draft video</a>'
+      + '<div class="field" style="margin-bottom:8px"><textarea placeholder="Catatan revisi (opsional)" id="draftnote-' + d.id + '" style="width:100%;min-height:50px"></textarea></div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn btn-primary btn-sm" style="flex:1" id="draftapprove-' + d.id + '">✅ Approve</button>'
+      + '<button class="btn btn-sm" style="flex:1;background:var(--gray-mid);color:var(--dark)" id="draftrevise-' + d.id + '">✏️ Minta Revisi</button>'
+      + '</div>';
+    wrap.appendChild(row);
+    row.querySelector('#draftapprove-' + d.id).addEventListener('click', function(){ decideDraftReview(d.id, 'approve', null); });
+    row.querySelector('#draftrevise-' + d.id).addEventListener('click', function(){
+      const note = document.getElementById('draftnote-' + d.id).value.trim();
+      decideDraftReview(d.id, 'revise', note);
+    });
+  });
+}
+
+async function decideDraftReview(draftId, action, note){
+  const { data: draft } = await db.from('endorsement_draft_reviews').select('*').eq('id', draftId).maybeSingle();
+  if(!draft) return;
+  if(action === 'approve'){
+    await db.from('endorsement_draft_reviews').update({ status: 'approved', brand_note: note, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+    await notifyDraftEvent(draft.campaign_creator_id, 'draft_approved');
+  } else {
+    const willEscalate = draft.revisions_used >= draft.max_revisions;
+    if(willEscalate){
+      await db.from('endorsement_draft_reviews').update({ status: 'escalated', brand_note: note, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+      await notifyDraftEvent(draft.campaign_creator_id, 'draft_escalated');
+    } else {
+      await db.from('endorsement_draft_reviews').update({ status: 'revision_requested', brand_note: note, revisions_used: draft.revisions_used + 1, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+      await notifyDraftEvent(draft.campaign_creator_id, 'draft_revision_requested', { note: note });
+    }
+  }
+  alert(action === 'approve' ? 'Draft di-approve!' : 'Feedback revisi terkirim.');
+  loadBrandDraftReviews();
+}
+
+// ===== ENDORSEMENT: internal/AE eskalasi =====
+async function loadAeEscalatedDrafts(){
+  const wrap = document.getElementById('ae-escalated-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const { data: drafts, error } = await db.from('endorsement_draft_reviews')
+    .select('*, endorsement_campaign_creators(member_id, members(nama), endorsement_campaigns(brand_id, brands(nama_brand), brand_products(nama_produk)))')
+    .eq('status', 'escalated')
+    .order('reviewed_at', { ascending: true });
+  if(error || !drafts || drafts.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Gak ada eskalasi yang nunggu keputusan.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  drafts.forEach(function(d){
+    const cc = d.endorsement_campaign_creators;
+    const namaCreator = (cc && cc.members && cc.members.nama) || '-';
+    const campaign = cc && cc.endorsement_campaigns;
+    const namaBrand = (campaign && campaign.brands && campaign.brands.nama_brand) || '-';
+    const namaProduk = (campaign && campaign.brand_products && campaign.brand_products.nama_produk) || '-';
+    const row = document.createElement('div');
+    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;padding:12px 14px';
+    row.innerHTML = '<p style="margin:0;font-size:13px;font-weight:700">' + escHtml(namaCreator) + ' — ' + escHtml(namaBrand) + ' (' + escHtml(namaProduk) + ')</p>'
+      + '<p style="margin:2px 0 8px;font-size:11px;color:var(--gray-text)">Video ke-' + d.slot_number + ' · Catatan brand terakhir: ' + escHtml(d.brand_note || '-') + '</p>'
+      + '<a href="' + d.file_url + '" target="_blank" style="display:inline-block;margin-bottom:8px;font-size:12px;color:var(--teal)">▶️ Lihat draft video</a>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn btn-primary btn-sm" style="flex:1" id="ae-approve-' + d.id + '">✅ Creator Benar (Approve)</button>'
+      + '<button class="btn btn-sm" style="flex:1;background:var(--gray-mid);color:var(--dark)" id="ae-reject-' + d.id + '">❌ Brand Benar (Tolak Final)</button>'
+      + '</div>';
+    wrap.appendChild(row);
+    row.querySelector('#ae-approve-' + d.id).addEventListener('click', function(){ resolveAeEscalation(d.id, 'approved'); });
+    row.querySelector('#ae-reject-' + d.id).addEventListener('click', function(){ resolveAeEscalation(d.id, 'rejected'); });
+  });
+}
+
+async function resolveAeEscalation(draftId, decision){
+  const { data: draft } = await db.from('endorsement_draft_reviews').select('campaign_creator_id').eq('id', draftId).maybeSingle();
+  if(!draft) return;
+  const { error } = await db.from('endorsement_draft_reviews').update({
+    status: decision === 'approved' ? 'approved' : 'rejected_final',
+    ae_decision: decision,
+    ae_decided_at: new Date().toISOString()
+  }).eq('id', draftId);
+  if(error){ alert('Gagal menyimpan keputusan.'); return; }
+  await notifyDraftEvent(draft.campaign_creator_id, 'draft_escalation_resolved', { decision: decision });
+  alert('Keputusan tersimpan.');
+  loadAeEscalatedDrafts();
+}
+
+async function submitEndorsementVt(campaignCreatorId, btn){
+  const input = document.getElementById('endjob-link-' + campaignCreatorId);
+  const videoUrl = input ? input.value.trim() : '';
+  if(!videoUrl){ alert('Isi link video dulu ya.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Bentar ya...';
+  let result;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-submit-endorsement-vt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ campaignCreatorId: campaignCreatorId, videoUrl: videoUrl })
+    });
+    result = await res.json();
+  } catch(e){
+    btn.disabled = false; btn.textContent = 'Submit VT';
+    alert('Gagal menghubungi server. Coba lagi ya.');
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Submit VT';
+  if(!result.valid){
+    alert(result.error || 'Gagal submit VT.');
+    return;
+  }
+  alert('VT tersimpan! (' + result.totalVt + '/' + result.required + ')');
+  loadCreatorEndorsementJobs();
 }
 
 async function loadPoinCreator(){
