@@ -645,6 +645,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
+    <div class="field"><label>Kode Referral <span style="font-weight:400;color:var(--gray-text)">(opsional, dari creator yang ngajak kamu)</span></label><input id="reg-kode-referral" placeholder="Contoh: GHD/26LG/08QGR/851-04" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
     <div class="field"><label>Foto Selfie</label>
       <input type="file" id="reg-foto-file" accept="image/*" onchange="previewSelfie(this)">
       <div class="size-note">Maksimal file 10MB</div>
@@ -3039,6 +3040,7 @@ async function submitRegistration(){
   const alamat = document.getElementById('reg-alamat').value.trim();
   const patokan = document.getElementById('reg-patokan').value.trim();
   const kodePos = document.getElementById('reg-kodepos').value.trim();
+  const kodeReferral = document.getElementById('reg-kode-referral').value.trim();
 
   if(!nama || !noHpRaw){
     alert('Nama dan No WhatsApp wajib diisi.');
@@ -3111,6 +3113,7 @@ async function submitRegistration(){
         alamat: alamat,
         patokan: patokan,
         kode_pos: kodePos,
+        kode_referral: kodeReferral || null,
         foto_selfie_url: fotoUrl
       })
     });
@@ -3132,6 +3135,8 @@ async function submitRegistration(){
 
   if(fotoGagalUpload){
     alert('Pendaftaran kamu TETAP terkirim! Sistem udah coba upload foto selfie kamu 3 kali, tapi tetap gagal (kemungkinan koneksi kamu lagi kurang stabil). Data kamu sudah masuk, tapi mohon kirim ulang foto selfie-nya ke WhatsApp tim internal ya, biar verifikasinya bisa lanjut.');
+  } else if(kodeReferral && !result.referralValid){
+    alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.\n\nCatatan: kode referral yang kamu masukin gak ketemu, jadi pendaftaran tetap lanjut tanpa referral.');
   } else {
     alert('Pendaftaran terkirim! Tunggu verifikasi dan kode masuk dari tim internal via WhatsApp.');
   }
