@@ -186,6 +186,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .field input,.field select,.field textarea{width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--gray-mid);font-size:13px;font-family:inherit}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .size-note{font-size:10px;color:var(--gray-text);margin-top:3px}
+.login-footer-note{font-size:13px;font-weight:700}
 .photo-upload{border:2px dashed var(--gray-mid);border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:12px}
 .photo-preview-wrap{display:none;text-align:center;margin-top:8px}
 .photo-preview-wrap.show{display:block}
@@ -516,8 +517,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="pin-box" id="pin-creator">
       <input id="creator-login-input" placeholder="Contoh: GHD/26AB/08K7Q/133-47">
       <button class="btn btn-primary" id="creator-login-btn" onclick="loginCreator()">Masuk</button>
-      <div class="size-note" style="text-align:center;margin-top:6px;color:#fff;opacity:.9">Lupa kode? Kode tidak bisa di-reset sendiri — hubungi tim internal.</div>
-      <div class="size-note" style="text-align:center;margin-top:10px;border-top:1px dashed rgba(255,255,255,.4);padding-top:10px;color:#fff;opacity:.9">Belum punya akun? <a href="#" onclick="showRegister();return false;" style="color:#fff;font-weight:700;text-decoration:underline">Daftar di sini</a></div>
+      <div class="login-footer-note" style="text-align:center;margin-top:6px;color:#fff">Lupa kode? Kode tidak bisa di-reset sendiri — hubungi tim internal.</div>
+      <div class="login-footer-note" style="text-align:center;margin-top:10px;border-top:1px dashed rgba(255,255,255,.6);padding-top:10px;color:#fff">Belum punya akun? <a href="#" onclick="showRegister();return false;" style="color:#fff;font-weight:800;text-decoration:underline">Daftar di sini</a></div>
     </div>
     <div class="role-option" onclick="togglePin('pin-brand')"><div class="role-icon-circle" style="background:#FBEAF0"><span style="font-size:18px">🏢</span></div>&nbsp;&nbsp;<b>Masuk sebagai Brand</b></div>
     <div class="pin-box" id="pin-brand"><input id="brand-login-input" placeholder="Contoh: GLOWIA-X7F2"><button class="btn btn-primary" id="brand-login-btn" onclick="loginBrand()">Masuk</button></div>
@@ -2736,13 +2737,8 @@ async function submitEndorsementVt(campaignCreatorId, btn){
 
 
 
-// ===== TUTORIAL SPOTLIGHT =====
+// ===== TUTORIAL: brand spotlight (ikon disorot dari luar, tetap dipertahankan) =====
 const TUTORIAL_STEPS = {
-  creator: [
-    { id: 'ic-campaign', title: 'Campaign', body: 'Semua campaign yang lagi dibuka brand ada di sini. Klik buat lihat detail dan ajukan produk.' },
-    { id: 'ic-cekstatus', title: 'Cek status', body: 'Pantau status request kamu di sini, dari diajukan sampai selesai.' },
-    { id: 'ic-poin-creator', title: 'Poin', body: 'Poin naik dari aktivitas positif, dan bisa dipotong kalau ingkar janji posting. Riwayatnya ada di sini.' },
-  ],
   brand: [
     { id: 'tut-b-approval', title: 'Approval', body: 'Request sample dari creator masuk ke sini. Kamu yang approve atau reject satu-satu.' },
     { id: 'tut-b-pengiriman', title: 'Pengiriman', body: 'Setelah approve, catat resi pengiriman produk kamu ke creator di sini.' },
@@ -2756,7 +2752,7 @@ async function maybeStartCreatorTutorial(){
   if(!currentSession.memberId){ showRewardPopup(); return; }
   const { data } = await db.from('members').select('tutorial_completed_at').eq('id', currentSession.memberId).maybeSingle();
   if(data && data.tutorial_completed_at){ showRewardPopup(); return; }
-  startSpotlightTutorial('creator');
+  startCreatorWalkthrough();
 }
 
 async function maybeStartBrandTutorial(){
@@ -2831,14 +2827,123 @@ async function finishSpotlightTutorial(){
   const tooltip = document.getElementById('tut-tooltip');
   if(overlay) overlay.remove();
   if(tooltip) tooltip.remove();
-  const finishedRole = tutRole;
-  if(finishedRole === 'creator' && currentSession.memberId){
-    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
-    showRewardPopup();
-  }
-  if(finishedRole === 'brand' && currentSession.brandId){
+  if(tutRole === 'brand' && currentSession.brandId){
     await db.from('brands').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.brandId);
   }
+}
+
+// ===== TUTORIAL: creator walkthrough (buka menu asli satu-satu, wajib sampai selesai) =====
+const CREATOR_WALKTHROUGH_STEPS = [
+  {
+    modalId: 'm-c2',
+    open: function(){ backToBrandList(); loadBrandList(); loadMyQuota(); },
+    title: '🛍️ Campaign',
+    body: [
+      'Ini produk yang lagi dibuka brand buat kamu endorse.',
+      'Kamu boleh pegang maks 3 brand sekaligus, 2 produk tiap brand.',
+      'Slot kebuka lagi otomatis begitu semua tugas di 1 brand kelar.',
+      'Pilih produk, pilih tipe konten, tekan "Request Sample" — brand yang approve.'
+    ]
+  },
+  {
+    modalId: 'm-c4',
+    open: function(){ loadVtReportPage(); },
+    title: '🎬 Report VT',
+    body: [
+      'Di sini kamu lapor video atau live yang udah kamu posting.',
+      'Begitu kamu konfirmasi paket sampai, kamu punya waktu 3 hari buat posting & lapor di sini.',
+      'Tempel link video/live-nya, tekan Submit — selesai, kelar SOW-nya.'
+    ]
+  },
+  {
+    modalId: 'm-c3',
+    open: function(){ loadCekStatus(); },
+    title: '🔍 Cek Status',
+    body: [
+      'Pantau tiap request dari sini: Diajukan → Disetujui → Dikirim → Selesai.',
+      'Begitu paket sampai, konfirmasi di sini (selfie sama produk, atau foto produk yang keliatan nomor resinya) — dari situ hitungan 3 hari buat posting mulai jalan.',
+      'Jangan ditunda konfirmasinya — telat konfirmasi bukan berarti waktu postingmu nambah.'
+    ]
+  },
+  {
+    modalId: 'm-c8',
+    open: function(){ loadPoinCreator(); },
+    title: '⭐ Poin',
+    body: [
+      'Poin nambah otomatis: buka aplikasi tiap hari, login berturut-turut, SOW yang tuntas tepat waktu, sampai ngajak temen jadi creator.',
+      'Poin bisa dipotong kalau kamu ingkar janji posting.',
+      'Tukar poin di sini buat hadiah, atau buat naikin persentase komisi salah satu produkmu.'
+    ]
+  }
+];
+let cwStepIdx = 0;
+let cwHiddenCloseButtons = [];
+
+function startCreatorWalkthrough(){
+  cwStepIdx = 0;
+  cwHiddenCloseButtons = [];
+  const overlay = document.createElement('div');
+  overlay.id = 'cw-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(74,43,71,.55);z-index:99990;';
+  document.body.appendChild(overlay);
+  renderCwStep();
+}
+
+function renderCwStep(){
+  const steps = CREATOR_WALKTHROUGH_STEPS;
+  const s = steps[cwStepIdx];
+
+  document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); });
+
+  openModal(s.modalId);
+  s.open();
+
+  const modalBox = document.querySelector('#' + s.modalId + ' .modal-box');
+  if(modalBox) modalBox.style.zIndex = '99992';
+  const modalBg = document.getElementById(s.modalId);
+  if(modalBg) modalBg.style.zIndex = '99991';
+  const closeBtn = document.querySelector('#' + s.modalId + ' .modal-close');
+  if(closeBtn){ closeBtn.style.display = 'none'; cwHiddenCloseButtons.push(closeBtn); }
+
+  let panel = document.getElementById('cw-panel');
+  if(!panel){
+    panel = document.createElement('div');
+    panel.id = 'cw-panel';
+    panel.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99993;background:#fff;border-radius:20px 20px 0 0;padding:18px 20px 22px;box-shadow:0 -8px 30px rgba(74,43,71,.35);max-width:520px;margin:0 auto;';
+    document.body.appendChild(panel);
+  }
+
+  const bodyHtml = s.body.map(function(line){ return '<li style="margin-bottom:6px">' + escHtml(line) + '</li>'; }).join('');
+  panel.innerHTML = '<div style="font-weight:800;font-size:15px;color:var(--dark);margin-bottom:8px">' + escHtml(s.title) + '</div>'
+    + '<ul style="margin:0 0 14px;padding-left:18px;font-size:12.5px;color:var(--dark);line-height:1.5">' + bodyHtml + '</ul>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between">'
+    + '<span style="font-size:11px;color:var(--gray-text)">' + (cwStepIdx+1) + ' / ' + steps.length + '</span>'
+    + '<div style="display:flex;gap:8px">'
+    + (cwStepIdx > 0 ? '<button onclick="cwBack()" class="btn btn-outline btn-sm">Kembali</button>' : '')
+    + '<button onclick="cwNext()" class="btn btn-primary btn-sm">' + (cwStepIdx === steps.length-1 ? 'Selesai' : 'Lanjut') + '</button>'
+    + '</div></div>';
+}
+
+function cwNext(){
+  if(cwStepIdx < CREATOR_WALKTHROUGH_STEPS.length - 1){ cwStepIdx++; renderCwStep(); }
+  else { finishCreatorWalkthrough(); }
+}
+function cwBack(){
+  if(cwStepIdx > 0){ cwStepIdx--; renderCwStep(); }
+}
+async function finishCreatorWalkthrough(){
+  document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); m.style.zIndex = ''; });
+  document.querySelectorAll('.modal-box').forEach(function(b){ b.style.zIndex = ''; });
+  cwHiddenCloseButtons.forEach(function(btn){ btn.style.display = ''; });
+  cwHiddenCloseButtons = [];
+  const overlay = document.getElementById('cw-overlay');
+  const panel = document.getElementById('cw-panel');
+  if(overlay) overlay.remove();
+  if(panel) panel.remove();
+  if(currentSession.memberId){
+    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
+  }
+  showRewardPopup();
 }
 
 
@@ -5008,6 +5113,14 @@ function backToBrandList(){
 async function requestSample(productId, btn){
   if(!currentSession.memberId){
     alert('Sesi login kamu tidak terdeteksi. Coba login ulang.');
+    return;
+  }
+
+  const { data: tutCheck } = await db.from('members').select('tutorial_completed_at').eq('id', currentSession.memberId).maybeSingle();
+  if(!tutCheck || !tutCheck.tutorial_completed_at){
+    alert('Sebelum request sample, kelarin dulu tur singkat soal cara kerja aplikasi ya — biar kamu paham aturan kuota, cara lapor VT, dan cara pantau statusnya.');
+    closeModal('m-c2');
+    startCreatorWalkthrough();
     return;
   }
 
