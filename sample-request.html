@@ -531,6 +531,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div id="personal-marquee-creator" class="personal-marquee" style="display:none"></div>
+<div id="home-boosted-section" style="display:none;padding:0 2px 6px"></div>
+<div id="home-trending-section" style="display:none;padding:0 2px 10px"></div>
 <p style="font-size:12px;color:#9A7285;margin:0 0 8px;font-weight:600;">\u26A1 Live trading</p>
 <div id="live-ticker-creator" style="margin-bottom:20px;"></div>
 <div class="icon-grid">
@@ -545,6 +547,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" onclick="openModal('m-c9'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
   </div>
 </div>
 
@@ -826,6 +829,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <div class="modal-bg" id="m-c8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c8')">‹ ✕</button>
   <div class="modal-title">⭐ Poin Kamu</div>
   <div id="c8-poin-content"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c9"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c9')">‹ ✕</button>
+  <div class="modal-title">🏆 Papan Skor Mingguan</div>
+  <div class="card-sub" style="margin-bottom:10px">Ranking poin minggu ini (reset tiap Jumat). Makin konsisten aktif & nyelesain misi, makin tinggi posisimu.</div>
+  <div id="c9-leaderboard-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c-endorsement"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-endorsement')">‹ ✕</button>
@@ -1638,6 +1647,58 @@ async function loadPersonalMarquee(){
     ].filter(Boolean);
     el.innerHTML = '<div class="personal-marquee-track">' + items.map(function(t){ return '<span>'+t+'</span>'; }).join('') + '</div>';
     el.style.display = 'block';
+  } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+}
+
+async function loadHomeRecommendations(){
+  // Section 1: produk dari campaign Endorsement yang lagi locked (budget udah dikomit brand)
+  try {
+    const { data: campaigns } = await db.from('endorsement_campaigns')
+      .select('brand_product_id, brand_products(nama_produk, foto_urls, brands(nama_brand))')
+      .eq('status', 'locked')
+      .order('locked_at', { ascending: false })
+      .limit(8);
+    const boostedEl = document.getElementById('home-boosted-section');
+    if(campaigns && campaigns.length > 0){
+      const seen = new Set();
+      const cards = [];
+      campaigns.forEach(function(c){
+        const bp = c.brand_products;
+        if(!bp || seen.has(c.brand_product_id)) return;
+        seen.add(c.brand_product_id);
+        const foto = (bp.foto_urls && bp.foto_urls[0]) || null;
+        cards.push('<div style="min-width:140px;max-width:140px;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;flex-shrink:0">'
+          + (foto ? '<img src="'+foto+'" style="width:100%;height:100px;object-fit:cover">' : '<div style="width:100%;height:100px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:26px">✨</div>')
+          + '<div style="padding:8px 10px">'
+          + '<div style="display:inline-block;background:#FDECEF;color:var(--pink-dark,#C2185B);font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;margin-bottom:5px">🔥 Endorsement Aktif</div>'
+          + '<div style="font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.3">'+(bp.nama_produk||'-')+'</div>'
+          + '<div style="font-size:10.5px;color:var(--gray-text);margin-top:2px">'+(bp.brands?bp.brands.nama_brand:'-')+'</div>'
+          + '</div></div>');
+      });
+      if(cards.length > 0){
+        boostedEl.innerHTML = '<div style="font-weight:800;font-size:13px;margin-bottom:8px">🔥 Lagi Didukung Brand</div>'
+          + '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">' + cards.join('') + '</div>';
+        boostedEl.style.display = 'block';
+      }
+    }
+  } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
+
+  // Section 2: produk paling banyak diminta sample minggu ini (proxy minat, lintas creator)
+  try {
+    const { data: trending } = await db.rpc('get_trending_products', { p_days: 7, p_limit: 6 });
+    const trendEl = document.getElementById('home-trending-section');
+    if(trending && trending.length > 0){
+      const rows = trending.map(function(t){
+        const foto = (t.foto_urls && t.foto_urls[0]) || null;
+        return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 10px;margin-bottom:8px">'
+          + (foto ? '<img src="'+foto+'" style="width:44px;height:44px;border-radius:9px;object-fit:cover;flex-shrink:0">' : '<div style="width:44px;height:44px;border-radius:9px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✨</div>')
+          + '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--dark)">'+t.nama_produk+'</div>'
+          + '<div style="font-size:10.5px;color:var(--gray-text)">'+t.nama_brand+' &middot; '+t.request_count+' sample diminta minggu ini</div></div>'
+          + '</div>';
+      }).join('');
+      trendEl.innerHTML = '<div style="font-weight:800;font-size:13px;margin-bottom:8px">📈 Paling Diminati Minggu Ini</div>' + rows;
+      trendEl.style.display = 'block';
+    }
   } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
 }
 function initApprovalSlideNotif(){
@@ -4182,6 +4243,7 @@ async function loginCreator(){
     checkFreezeStatus();
     initApprovalSlideNotif();
     loadPersonalMarquee();
+    loadHomeRecommendations();
 
     // Checkin harian otomatis (poin buka aplikasi + streak login)
     fetch(SUPABASE_URL + '/functions/v1/creator-checkin', {
@@ -7074,6 +7136,44 @@ async function updateReportVtLockState(){
   card.classList.toggle('locked', !hasApproved);
   card.style.opacity = hasApproved ? '1' : '.45';
   if(lockIcon) lockIcon.style.display = hasApproved ? 'none' : 'flex';
+}
+
+async function loadWeeklyLeaderboard(){
+  const el = document.getElementById('c9-leaderboard-content');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-weekly-leaderboard', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: '{}'
+    });
+    const data = await res.json();
+    if(!data.valid){ el.innerHTML = '<div class="card-sub">'+(data.error||'Gagal memuat papan skor.')+'</div>'; return; }
+
+    let html = '<div style="background:var(--pink-pale);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">';
+    html += data.myRank
+      ? '<div style="font-size:12px;color:var(--gray-text)">Posisi kamu minggu ini</div><div style="font-size:26px;font-weight:800;color:var(--dark)">#'+data.myRank+'</div><div style="font-size:12px;color:var(--gray-text)">'+data.myPoin+' poin</div>'
+      : '<div style="font-size:13px;color:var(--gray-text)">Kamu belum punya poin minggu ini. Buka aplikasi tiap hari buat mulai naik peringkat!</div>';
+    html += '</div>';
+
+    if(!data.top10 || data.top10.length === 0){
+      html += '<div class="card-sub">Belum ada yang dapat poin minggu ini.</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px">';
+      data.top10.forEach(function(r){
+        const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : ('#'+r.rank);
+        const isMe = r.memberId === currentSession.memberId;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;'+(isMe?'background:var(--teal-pale);border:1.5px solid var(--teal)':'background:#fff;border:1px solid var(--border)')+'">'
+          + '<div style="width:28px;text-align:center;font-size:14px;font-weight:800">'+medal+'</div>'
+          + '<div style="flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--dark)">'+r.nama+(isMe?' (Kamu)':'')+'</div>'
+          + '<div style="font-size:12.5px;font-weight:800;color:var(--dark)">'+r.poin+'</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+    el.innerHTML = html;
+  } catch(e){
+    el.innerHTML = '<div class="card-sub">Gagal menghubungi server, coba lagi ya.</div>';
+  }
 }
 
 async function loadPoinCreator(){
