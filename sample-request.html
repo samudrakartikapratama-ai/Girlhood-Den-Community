@@ -1696,7 +1696,7 @@ async function loadHomeRecommendations(){
 
   // Section 2: produk paling banyak diminta sample minggu ini (proxy minat, lintas creator)
   try {
-    const { data: trending } = await db.rpc('get_trending_products', { p_days: 7, p_limit: 6 });
+    const { data: trending } = await db.rpc('get_trending_products', { p_days: 7, p_limit: 10 });
     const trendEl = document.getElementById('home-trending-section');
     if(trending && trending.length > 0){
       const featured = trending[0];
