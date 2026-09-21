@@ -1572,12 +1572,12 @@ async function ticFetchNames(rows){
   const brandIds = Array.from(new Set(rows.filter(function(n){return n.brand_id;}).map(function(n){return n.brand_id;})));
   let members = {}, brands = {};
   if(memberIds.length){
-    const r = await db.from('members').select('id,nama').in('id', memberIds);
-    if(r.data) r.data.forEach(function(m){ members[m.id] = m.nama; });
+    const r = await db.from('members').select('id,nama,foto_selfie_url').in('id', memberIds);
+    if(r.data) r.data.forEach(function(m){ members[m.id] = { nama: m.nama, foto: m.foto_selfie_url || null }; });
   }
   if(brandIds.length){
-    const r = await db.from('brands').select('id,nama_brand').in('id', brandIds);
-    if(r.data) r.data.forEach(function(b){ brands[b.id] = b.nama_brand; });
+    const r = await db.from('brands').select('id,nama_brand,logo_url').in('id', brandIds);
+    if(r.data) r.data.forEach(function(b){ brands[b.id] = { nama: b.nama_brand, foto: b.logo_url || null }; });
   }
   return { members: members, brands: brands };
 }
@@ -1587,14 +1587,20 @@ function ticTagInfo(n){
   return { tag:'system', bg:'#F1ECF7', color:'#6C4FA0', iconBg:'#6C4FA0' };
 }
 function ticRenderRow(n, names){
-  const name = names.members[n.member_id] || names.brands[n.brand_id] || 'Aktivitas';
-  const sub = (names.brands[n.brand_id] && names.members[n.member_id]) ? names.brands[n.brand_id] : '';
+  const memberEntry = names.members[n.member_id];
+  const brandEntry = names.brands[n.brand_id];
+  const name = (memberEntry && memberEntry.nama) || (brandEntry && brandEntry.nama) || 'Aktivitas';
+  const foto = (memberEntry && memberEntry.foto) || (brandEntry && brandEntry.foto) || null;
+  const sub = (brandEntry && memberEntry) ? brandEntry.nama : '';
   const time = new Date(n.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
   const info = ticTagInfo(n);
   const msg = ticEsc(ticLabel(n)) + (sub ? ' <span style="color:#B79AA8">\u2022</span> ' + ticEsc(sub) : '');
+  const iconHtml = foto
+    ? '<img src="'+foto+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px" onerror="this.parentElement.textContent=\''+ticEsc(ticInitials(name))+'\';this.parentElement.style.fontSize=\'15px\';this.parentElement.style.fontWeight=\'700\';">'
+    : ticEsc(ticInitials(name));
   const row = document.createElement('div');
   row.style.cssText = 'position:absolute;top:0;left:0;right:0;display:flex;align-items:flex-start;gap:12px;width:100%;background:rgba(255,255,255,.85);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-radius:22px;padding:14px 16px;box-shadow:0 8px 22px rgba(74,43,71,.12),0 1px 0 rgba(255,255,255,.6) inset;border:1px solid rgba(255,255,255,.6);opacity:0;transform:translateY(-22px) scale(.94);transition:opacity .46s cubic-bezier(.34,1.1,.4,1),transform .46s cubic-bezier(.34,1.1,.4,1);';
-  row.innerHTML = '<div style="width:42px;height:42px;border-radius:13px;background:'+info.iconBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15);">' + ticEsc(ticInitials(name)) + '</div>'
+  row.innerHTML = '<div style="width:42px;height:42px;border-radius:13px;background:'+info.iconBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15);overflow:hidden;">' + iconHtml + '</div>'
     + '<div style="flex:1;min-width:0;">'
     + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">'
     +   '<span style="font-size:14px;font-weight:800;color:#4A2B47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ticEsc(name) + '</span>'
