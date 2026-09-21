@@ -300,10 +300,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   .login-box{padding:28px 18px;border-radius:16px}
   .app{padding:14px 12px 50px}
   .icon-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-  .icon-card{padding:22px 8px;border-radius:16px}
-  .icon-card .icon-emoji{font-size:18px;height:22px;line-height:22px;margin-bottom:8px}
-  .icon-card .icon-img-custom{width:22px;height:22px;margin-bottom:8px}
-  .icon-card .icon-label{font-size:11.5px}
+  .icon-card{padding:20px 8px;border-radius:16px}
+  .icon-card .icon-emoji{font-size:28px;height:32px;line-height:32px;margin-bottom:10px}
+  .icon-card .icon-img-custom{width:32px;height:32px;margin-bottom:10px}
+  .icon-card .icon-label{font-size:13.5px}
   .modal-box{padding:16px;border-radius:16px;max-height:92vh}
   .modal-title{font-size:16px}
   .poin-hero{padding:14px 16px}
@@ -547,7 +547,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
-    <div class="icon-card" id="ic-reportvt" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
+    <div class="icon-card" id="ic-reportvt" style="border-color:var(--pink)" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div style="position:absolute;top:-7px;left:-7px;background:var(--pink);color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Batas 3 hari</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" onclick="openModal('m-c-endorsement'); loadCreatorEndorsementJobs();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
