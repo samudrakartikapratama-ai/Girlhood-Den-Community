@@ -3116,6 +3116,21 @@ async function finishCreatorWalkthrough(){
 })();
 
 
+// Nampilin foto verifikasi asli si creator (foto_selfie_url) sebagai foto profil di topbar.
+// Fallback ke inisial nama kalau fotonya belum ada / gagal dimuat.
+function applyCreatorAvatar(){
+  const frame = document.getElementById('avatar-frame');
+  if(!frame) return;
+  const m = currentSession.memberData || {};
+  const foto = m.foto_selfie_url;
+  if(foto){
+    frame.innerHTML = '<img src="'+foto+'" alt="Foto profil '+(m.nama||'')+'" onerror="this.parentElement.textContent=ticInitials(currentSession.memberData&&currentSession.memberData.nama);">';
+  } else {
+    frame.textContent = ticInitials(m.nama || '?');
+  }
+  frame.classList.add('show');
+}
+
 async function logNotification(kategori, opts){
   opts = opts || {};
   try {
@@ -4376,6 +4391,7 @@ async function logout(){
     setTimeout(function(){ checkMandatoryEducation(); }, 800);
     setTimeout(function(){ checkMonthlyRecap(); }, 1400);
     updateReportVtLockState();
+    applyCreatorAvatar();
   }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
