@@ -1730,7 +1730,7 @@ async function loadHomeRecommendations(){
       };
       const restCards = rest.map(cardHtml).join('') + rest.map(cardHtml).join('');
       const restHtml = rest.length > 0
-        ? '<div style="font-size:11px;font-weight:700;color:var(--gray-text);margin:10px 0 8px">Lagi naik daun juga</div>'
+        ? '<div style="font-size:13px;font-weight:800;color:var(--dark);margin:10px 0 8px">Paling banyak di Request</div>'
           + '<div style="overflow:hidden"><div class="trending-endless-track">' + restCards + '</div></div>'
         : '';
 
