@@ -1706,7 +1706,7 @@ async function loadHomeRecommendations(){
           + '<div style="font-size:11px;color:var(--gray-text);margin-top:3px;font-weight:600">'+escHtml(t.nama_brand)+' &middot; '+t.request_count+'x diminta minggu ini</div></div>'
           + '</div>';
       }).join('');
-      trendEl.innerHTML = '<div style="font-weight:800;font-size:13px;margin-bottom:8px">📈 Paling Diminati Minggu Ini</div>' + rows;
+      trendEl.innerHTML = '<div style="font-weight:800;font-size:15px;margin-bottom:9px">Paling Diminati Minggu Ini</div>' + rows;
       trendEl.style.display = 'block';
     }
   } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
