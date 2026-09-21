@@ -507,7 +507,50 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .wa-toast.show{top:14px}
 .wa-toast-ic{font-size:20px;flex-shrink:0}
 .wa-toast-txt{font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.4}
-.wa-toast-sub{font-size:9.5px;color:var(--gray-text);font-weight:500;margin-top:2px}
+.wa-toast-sub{font-size:9.5px;color:var(--gray-text);font-weight:500;margin-top:2px}/* ===================== TUTORIAL SLIDES (v2) — ganti stepper lama & spotlight lama ===================== */
+.tut2-overlay{ display:none; position:fixed; inset:0; z-index:99995; background:linear-gradient(160deg,#fff 0%, #fdf1f6 100%); }
+.tut2-overlay.open{ display:flex; flex-direction:column; }
+.tut2-header-row{ display:flex; align-items:center; gap:14px; padding:calc(env(safe-area-inset-top,0px) + 46px) 20px 0; flex-shrink:0; }
+.tut2-progress{ height:4px; border-radius:4px; background:#ECD8E2; overflow:hidden; flex:1; }
+.tut2-progress .fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--pink),#E8A419); border-radius:4px; transition:width .25s linear; }
+.tut2-skip{ flex-shrink:0; font-size:12px; color:var(--gray-text); font-weight:700; background:#F5EBF0; border:none; border-radius:999px; padding:7px 14px; cursor:pointer; white-space:nowrap; }
+.tut2-body{ flex:1; min-height:0; overflow-y:auto; padding:16px 20px 0; display:flex; flex-direction:column; }
+.tut2-icon{ width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:14px; box-shadow:0 8px 18px rgba(74,43,71,.18); flex-shrink:0; }
+.tut2-title{ font-size:19px; font-weight:800; color:var(--dark); margin:0 0 4px; flex-shrink:0; }
+.tut2-sub{ font-size:12.5px; color:var(--gray-text); margin:0 0 14px; line-height:1.45; flex-shrink:0; }
+.tut2-rules{ display:flex; flex-direction:column; gap:8px; }
+.tut2-rule{ display:flex; align-items:flex-start; gap:9px; background:#fff; border-radius:13px; padding:9px 11px; box-shadow:0 3px 10px rgba(74,43,71,.08); font-size:12.5px; line-height:1.4; color:#5c4655; }
+.tut2-rule .num{ flex-shrink:0; width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; }
+.tut2-note{ display:flex; flex-direction:column; gap:5px; background:linear-gradient(135deg,#FFF6E6,#FDECEF); border:1px solid #F4DFB0; border-radius:14px; padding:13px 15px; margin-top:16px; flex-shrink:0; }
+.tut2-note .nt{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; color:#8a5a12; }
+.tut2-note .nb{ font-size:11.5px; line-height:1.55; color:#6b5030; }
+.tut2-empty-icon{ flex:1; display:flex; align-items:center; justify-content:center; font-size:64px; padding:20px 0; }
+.tut2-side{ display:none; }
+.tut2-card{ display:flex; flex-direction:column; width:100%; height:100%; }
+.tut2-main{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; }
+.tut2-bottom{ flex-shrink:0; padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; align-items:center; gap:10px; }
+.tut2-btn{ height:50px; border-radius:25px; border:none; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.tut2-btn.primary{ flex:1; background:linear-gradient(90deg,var(--pink),#C2185B); color:#fff; box-shadow:0 6px 16px rgba(232,24,90,.35); }
+.tut2-btn.ghost{ width:50px; flex-shrink:0; background:#F1E3EC; color:var(--dark); }
+@media (min-width:1024px){
+  .tut2-overlay{ background:rgba(74,43,71,.45); align-items:center; justify-content:center; }
+  .tut2-card{ width:900px; max-width:94vw; height:760px; background:#fff; border-radius:22px; overflow:hidden; display:flex; flex-direction:row; box-shadow:0 30px 70px rgba(74,43,71,.3); }
+  .tut2-side{ width:230px; flex-shrink:0; background:linear-gradient(160deg,#fdf2f6,#f3dfe9); padding:24px 14px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; }
+  .tut2-side-title{ font-size:13px; font-weight:800; color:var(--dark); padding:0 10px 12px; }
+  .tut2-nav-item{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:12px; font-size:12px; font-weight:700; color:var(--gray-text); cursor:pointer; }
+  .tut2-nav-item .ic{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; background:#fff; flex-shrink:0; }
+  .tut2-nav-item.active{ background:#fff; color:var(--dark); box-shadow:0 3px 10px rgba(74,43,71,.10); }
+  .tut2-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .tut2-header-row{ padding:24px 36px 0; }
+  .tut2-body{ padding:22px 36px 0; }
+  .tut2-icon{ width:46px; height:46px; border-radius:14px; font-size:22px; margin-bottom:10px; }
+  .tut2-title{ font-size:20px; }
+  .tut2-rules{ display:grid; grid-template-columns:1fr 1fr; }
+  .tut2-bottom{ padding:16px 36px calc(env(safe-area-inset-bottom,0px) + 22px); justify-content:flex-end; }
+  .tut2-btn{ height:44px; padding:0 24px; border-radius:22px; }
+  .tut2-btn.primary{ flex:none; }
+  .tut2-btn.ghost{ width:auto; padding:0 22px; }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -598,6 +641,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="hero-banner-wrap"><img src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/banners/banner-welcome.jpg" alt="Selamat Datang di Sistem Baru"></div>
 <div id="live-ticker-brand" style="margin-bottom:20px;"></div>
 <div class="icon-grid">
+    <div class="icon-card" onclick="openModal('m-b-tutorial')"><div style="font-size:28px;line-height:1">📖</div><div class="icon-label">Tutorial</div></div>
     <div class="icon-card" onclick="openModal('m-b1'); loadApprovalRows();" id="tut-b-approval"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/approval-purple.png" alt="Approval"><div class="icon-label">Approval</div></div>
     <div class="icon-card" onclick="openModal('m-b3'); loadPengiriman(); showFlowPopup('b');" id="tut-b-pengiriman"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/pengiriman.png" alt="Pengiriman"><div class="icon-label">Pengiriman</div></div>
     <div class="icon-card" onclick="openModal('m-b5'); loadLogistik();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/logistik.png" alt="Logistik"><div class="icon-label">Logistik</div></div>
@@ -674,6 +718,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">📖 Tutorial</div>
   <div class="freeze-banner">👋 <b>Hai, Member Girlhood Den!</b><br>Kalau masih ada VT/Live yang belum kamu report ke tim kami, semua menu di sistem ini bakal di-freeze dulu ya. Yuk selesaikan dulu produk yang kamu pegang — makin banyak konten yang kamu buat, makin besar peluang kamu dapetin GMV! 🚀✨</div>
   <div class="card"><div class="card-title">Cara Kerja (4 Langkah)</div><div class="card-sub">1. Daftar Member (sekali, sebelum masuk) → 2. Pilih Campaign & Request Sample → 3. Cek Status → 4. Report VT</div></div>
+  <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal('m-c1'); openTutorial2('creator');">▶ Lihat Tutorial Lengkap</button>
 </div></div>
 
 <div class="modal-bg" id="m-c-tiktok"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-tiktok')">‹ ✕</button>
@@ -909,6 +954,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">📦 Pengiriman</div>
   <div class="card-sub">Barang yang sudah kamu "Kirim" di Approval. Tentukan tanggal final pengirimannya di sini — konfirmasi barang benar-benar berangkat dilakukan di menu <b>Logistik</b>.</div>
   <div id="pengiriman-list"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-b-tutorial"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-tutorial')">‹ ✕</button>
+  <div class="modal-title">📖 Tutorial</div>
+  <div class="card-sub">Ringkasan cara kerja tiap menu penting: Approval, Pengiriman, Logistik, dan kenapa Self Report bisa menguntungkan brand kamu.</div>
+  <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal('m-b-tutorial'); openTutorial2('brand');">▶ Lihat Tutorial Lengkap</button>
 </div></div>
 
 <div class="flow-popup-bg" id="flow-popup-b" onclick="if(event.target===this) closeFlowPopup('b')">
@@ -1513,6 +1564,27 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub" style="margin-bottom:10px">Draft video mentah dari creator, wajib di-approve sebelum mereka posting & submit link.</div>
   <div id="b-draftreview-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
+
+<!-- ============ TUTORIAL SLIDES v2 (creator & brand, phone + web) ============ -->
+<div class="tut2-overlay" id="tut2-overlay">
+  <div class="tut2-card">
+    <div class="tut2-side" id="tut2Side">
+      <div class="tut2-side-title" id="tut2SideTitle">Tutorial</div>
+      <div id="tut2Nav"></div>
+    </div>
+    <div class="tut2-main">
+      <div class="tut2-header-row">
+        <div class="tut2-progress"><div class="fill" id="tut2ProgressFill"></div></div>
+        <button class="tut2-skip" onclick="closeTutorial2()">Lewati ✕</button>
+      </div>
+      <div class="tut2-body" id="tut2Body"></div>
+      <div class="tut2-bottom">
+        <button class="tut2-btn ghost" id="tut2Back" onclick="tutorial2Prev()">←</button>
+        <button class="tut2-btn primary" id="tut2Next" onclick="tutorial2Next()">Lanjut</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ===== KONEKSI SUPABASE =====
@@ -2803,300 +2875,159 @@ async function submitEndorsementVt(campaignCreatorId, btn){
 
 
 
-// ===== TUTORIAL: brand spotlight (ikon disorot dari luar, tetap dipertahankan) =====
-const TUTORIAL_STEPS = {
+// ===== TUTORIAL SLIDES v2 (creator & brand) — gantiin stepper 4-langkah lama & spotlight 2-langkah lama =====
+const TUTORIAL2_SLIDES = {
+  creator: [
+    { icon:'👋', color:'linear-gradient(135deg,#E8185A,#F06A9C)', title:'Yuk Kenalan Dulu', sub:'5 menit doang. Biar kamu nggak bingung pas mulai campaign, dan poin kamu maksimal.', rules:null },
+    { icon:'🛍️', color:'linear-gradient(135deg,#E8185A,#C2185B)', title:'Request Sample', sub:'Menu buat minta produk ke brand.', rules:[
+      'Maksimal pegang 3 brand barengan',
+      'Tiap brand: pilih 2 produk satuan, atau 1 paket — nggak bisa gabung dua-duanya',
+      'Belum posting video lebih dari 5 hari? Cuma brand itu yang dikunci, brand lain tetap aman',
+      'Produk atau brand yang lagi di-freeze nggak bisa diminta',
+      'Status masih "Menunggu"? Boleh dibatalin sendiri, kuota langsung balik',
+      'Udah "Disetujui"? Nggak bisa dibatalin sendiri lagi',
+      'Brand nggak jawab dalam 7 hari, permintaan otomatis ditutup dan kuota balik'
+    ], note:null },
+    { icon:'🔍', color:'linear-gradient(135deg,#1E8A80,#159086)', title:'Cek Status & Kuota', sub:'Pantau progress tiap request kamu di sini.', rules:[
+      'Barang sampai → kamu punya 3 hari buat posting biar dapat bonus poin',
+      'Lewat 3 hari? Masih boleh posting, cuma bonusnya hangus',
+      'Lewat 5 hari belum posting sama sekali? Brand itu dikunci sementara buat request baru',
+      'Semua status — dibatalin, ditutup, disetujui — kelihatan jelas di sini'
+    ], note:null },
+    { icon:'🎬', color:'linear-gradient(135deg,#6C4FA0,#8B6FC7)', title:'Report VT (SOW)', sub:'Laporin video kamu di sini, tiap kali abis dapat produk dari Request Sample.', rules:[
+      'Kirim minimal 3 video per produk',
+      'Video WAJIB direkam & diposting SETELAH produknya sampai — video lama dari sebelum itu nggak bisa dipakai',
+      'Kirim lebih dari 3 video? Dapat bonus poin extra',
+      '1 video cuma bisa dipakai buat 1 produk — nggak bisa dipakai dobel',
+      'Menu ini selalu kebuka kapan aja, walau udah lewat 3 atau 5 hari'
+    ], note:null },
+    { icon:'📸', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Self Report', sub:'Buat produk yang UDAH kamu punya SENDIRI sebelum ikut campaign ini — bukan dari Request Sample.', rules:[
+      'Ajukan duluan: upload foto bukti produknya SEBELUM kamu bikin video',
+      'Tim internal review foto itu dulu',
+      'Foto ditolak? Upload ulang aja, otomatis ganti yang lama',
+      'Udah disetujui? Baru boleh posting videonya — caranya sama kayak Report VT biasa',
+      'Produk yang udah pernah disetujui nggak bisa diajuin dobel',
+      'Nggak makan kuota 3 brand kamu'
+    ], note:null },
+    { icon:'💰', color:'linear-gradient(135deg,#E8A419,#E8185A)', title:'Soal Poin', sub:'Poin kamu nambah dari beberapa hal ini:', rules:[
+      'Buka aplikasi tiap hari (check-in harian)',
+      'Posting video dalam 3 hari sejak barang sampai → bonus tepat waktu',
+      'Posting lebih dari 3 video per produk → bonus video ekstra',
+      'Poin RESET ke 0 tiap tanggal 1 — jadi jangan ditimbun, segera dipakai',
+      'Tukar hadiah: pilih SATU hadiah dari dropdown (yang butuh poin ≤ poin kamu), maksimal 1x tukar per bulan',
+      'Sisa poin minimal 1000? Bisa ajukan kenaikan komisi untuk 1 produk pilihan kamu (nunggu di-acc tim internal)'
+    ], note:null },
+    { icon:'🎉', color:'linear-gradient(135deg,#E8185A,#E8A419)', title:'Siap Mulai!', sub:'Kalau lupa aturan, buka lagi tutorial ini kapan aja lewat menu Tutorial.', rules:null }
+  ],
   brand: [
-    { id: 'tut-b-approval', title: 'Approval', body: 'Request sample dari creator masuk ke sini. Kamu yang approve atau reject satu-satu.' },
-    { id: 'tut-b-pengiriman', title: 'Pengiriman', body: 'Setelah approve, catat resi pengiriman produk kamu ke creator di sini.' },
+    { icon:'👋', color:'linear-gradient(135deg,#1E8A80,#4DBDB0)', title:'Selamat Datang, Partner Brand!', sub:'Yuk kenalan sama alur kerja campaign kamu di sini.', rules:null },
+    { icon:'📋', color:'linear-gradient(135deg,#E8185A,#C2185B)', title:'Approval', sub:'Semua request sample dari creator masuk ke sini.', rules:[
+      'Approve atau reject satu-satu, sesuai kriteria kamu',
+      'Nggak direspon dalam 7 hari? Request otomatis ditutup dan hilang dari daftar kamu',
+      'Creator juga langsung lihat requestnya expired di waktu yang sama',
+      'Laporan "Self Report" (creator yang udah punya produk sendiri) OTOMATIS ke-approve di sistem — bukan lewat approval kamu, jadi wajar kalau muncul tanpa kamu acc dulu'
+    ], note:{ title:'Kenapa ada Self Report?', body:'Fitur ini bikin sample produk yang sudah lebih dulu beredar di tangan creator tetap jadi keuntungan buat brand kamu. Creator jadi terdorong posting sebanyak-banyaknya — bukan cuma dari kiriman baru — karena tiap video nambah poin mereka, dan poin itu bisa mereka tukar jadi kesempatan kenaikan komisi.' } },
+    { icon:'📦', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Pengiriman', sub:'Setelah approve, tentukan tanggal janji pengiriman produknya di sini.', rules:[
+      'Isi tanggal janji pengiriman (estimasi) di sini',
+      'Konfirmasi barang BENERAN sudah dikirim dilakukan di menu Logistik yang terpisah',
+      'Hitungan 3 hari buat creator baru mulai jalan begitu CREATOR konfirmasi sudah terima barangnya — bukan dari tanggal kamu kirim'
+    ], note:null },
+    { icon:'🚚', color:'linear-gradient(135deg,#6C4FA0,#8B6FC7)', title:'Logistik', sub:'Centang begitu barang beneran sudah dikirim.', rules:[
+      'Isi nomor resi, lalu tandai "Sudah Dikirim"',
+      'Creator wajib upload foto konfirmasi begitu barang sampai — dari situ kamu otomatis dapat notif',
+      'Sebelum ada konfirmasi itu, wajar belum ada laporan SOW — barangnya kemungkinan emang belum sampai',
+      'Data ini juga yang bikin creator kamu muncul di jadwal Live/Upcoming'
+    ], note:null },
+    { icon:'🎉', color:'linear-gradient(135deg,#1E8A80,#E8A419)', title:'Siap Jalan!', sub:'Kalau lupa, buka lagi tutorial ini lewat menu Tutorial di halaman brand.', rules:null }
   ]
 };
 
-let tutStepIdx = 0;
-let tutRole = null;
+let tut2Role = null;
+let tut2Idx = 0;
+
+function tut2RuleColor(i){
+  const colors = ['#E8185A','#C2185B','#1E8A80','#6C4FA0','#E8A419'];
+  return colors[i % colors.length];
+}
+function tut2RulesHtml(s){
+  if(!s.rules) return '';
+  return s.rules.map(function(r, i){
+    return '<div class="tut2-rule"><div class="num" style="background:'+tut2RuleColor(i)+'">'+(i+1)+'</div><div>'+escHtml(r)+'</div></div>';
+  }).join('');
+}
+function tut2NoteHtml(s){
+  if(!s.note) return '';
+  return '<div class="tut2-note"><div class="nt">💡 '+escHtml(s.note.title)+'</div><div class="nb">'+escHtml(s.note.body)+'</div></div>';
+}
+
+function openTutorial2(role){
+  tut2Role = role;
+  tut2Idx = 0;
+  document.getElementById('tut2-overlay').classList.add('open');
+  document.getElementById('tut2Side').style.display = '';
+  document.getElementById('tut2SideTitle').textContent = role === 'creator' ? 'Tutorial Creator' : 'Tutorial Brand';
+  tutorial2Render();
+}
+
+function tutorial2Render(){
+  const slides = TUTORIAL2_SLIDES[tut2Role];
+  const s = slides[tut2Idx];
+  const total = slides.length;
+
+  const body = document.getElementById('tut2Body');
+  let html = '';
+  if(s.rules){
+    html += '<div class="tut2-icon" style="background:'+s.color+'">'+s.icon+'</div>';
+  }
+  html += '<h2 class="tut2-title">'+escHtml(s.title)+'</h2><p class="tut2-sub">'+escHtml(s.sub)+'</p>';
+  if(s.rules){
+    html += '<div class="tut2-rules">'+tut2RulesHtml(s)+'</div>'+tut2NoteHtml(s);
+  } else {
+    html += '<div class="tut2-empty-icon">'+s.icon+'</div>';
+  }
+  body.innerHTML = html;
+
+  document.getElementById('tut2ProgressFill').style.width = ((tut2Idx+1)/total*100) + '%';
+  document.getElementById('tut2Back').style.visibility = tut2Idx === 0 ? 'hidden' : 'visible';
+  document.getElementById('tut2Next').textContent = tut2Idx === total - 1 ? 'Mulai Sekarang' : 'Lanjut';
+
+  const nav = document.getElementById('tut2Nav');
+  nav.innerHTML = slides.map(function(sl, i){
+    return '<div class="tut2-nav-item'+(i===tut2Idx?' active':'')+'" onclick="tutorial2JumpTo('+i+')"><div class="ic">'+sl.icon+'</div>'+escHtml(sl.title)+'</div>';
+  }).join('');
+}
+
+function tutorial2JumpTo(i){ tut2Idx = i; tutorial2Render(); }
+function tutorial2Next(){
+  const total = TUTORIAL2_SLIDES[tut2Role].length;
+  if(tut2Idx < total - 1){ tut2Idx++; tutorial2Render(); }
+  else { closeTutorial2(); }
+}
+function tutorial2Prev(){ if(tut2Idx > 0){ tut2Idx--; tutorial2Render(); } }
+
+async function closeTutorial2(){
+  const role = tut2Role;
+  document.getElementById('tut2-overlay').classList.remove('open');
+  if(role === 'creator' && currentSession.memberId){
+    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
+    showRewardPopup();
+  } else if(role === 'brand' && currentSession.brandId){
+    await db.from('brands').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.brandId);
+  }
+}
 
 async function maybeStartCreatorTutorial(){
   if(!currentSession.memberId){ showRewardPopup(); return; }
   const { data } = await db.from('members').select('tutorial_completed_at').eq('id', currentSession.memberId).maybeSingle();
   if(data && data.tutorial_completed_at){ showRewardPopup(); return; }
-  startCreatorWalkthrough();
+  openTutorial2('creator');
 }
 
 async function maybeStartBrandTutorial(){
   if(!currentSession.brandId) return;
   const { data } = await db.from('brands').select('tutorial_completed_at').eq('id', currentSession.brandId).maybeSingle();
   if(data && data.tutorial_completed_at) return;
-  startSpotlightTutorial('brand');
-}
-
-function startSpotlightTutorial(role){
-  tutRole = role;
-  tutStepIdx = 0;
-  const overlay = document.createElement('div');
-  overlay.id = 'tut-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;';
-  document.body.appendChild(overlay);
-  const tooltip = document.createElement('div');
-  tooltip.id = 'tut-tooltip';
-  tooltip.style.cssText = 'position:fixed;z-index:99999;background:#fff;border-radius:12px;padding:16px;width:260px;box-shadow:0 4px 20px rgba(74,43,71,0.4);opacity:0;transition:opacity 200ms ease-out;';
-  document.body.appendChild(tooltip);
-  renderTutStep();
-}
-
-function renderTutStep(){
-  const steps = TUTORIAL_STEPS[tutRole];
-  const s = steps[tutStepIdx];
-  const el = document.getElementById(s.id);
-  document.querySelectorAll('.tut-highlighted').forEach(function(e){ e.classList.remove('tut-highlighted'); e.style.boxShadow=''; e.style.position=''; e.style.zIndex=''; });
-  if(!el){ finishSpotlightTutorial(); return; }
-  el.classList.add('tut-highlighted');
-  el.style.position = 'relative';
-  el.style.zIndex = '99999';
-  el.style.boxShadow = '0 0 0 3px #E8185A, 0 0 0 2000px rgba(74,43,71,0.75)';
-  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-
-  const tooltip = document.getElementById('tut-tooltip');
-  tooltip.style.opacity = '0';
-  tooltip.innerHTML = '<p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#4A2B47">' + s.title + '</p>'
-    + '<p style="margin:0 0 12px;font-size:12px;color:#6b5566;line-height:1.5">' + s.body + '</p>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between">'
-    + '<span style="font-size:11px;color:#9A7285">' + (tutStepIdx+1) + ' / ' + steps.length + '</span>'
-    + '<div style="display:flex;gap:6px">'
-    + (tutStepIdx > 0 ? '<button onclick="tutBack()" style="padding:4px 10px;font-size:12px;border:1px solid #E8D5DF;background:#fff;border-radius:6px;color:#4A2B47">Back</button>' : '')
-    + '<button onclick="tutNext()" style="padding:4px 10px;font-size:12px;background:#E8185A;color:#fff;border:none;border-radius:6px">' + (tutStepIdx === steps.length-1 ? 'Selesai' : 'Next') + '</button>'
-    + '</div></div>';
-
-  setTimeout(function(){
-    const newRect = el.getBoundingClientRect();
-    let top = newRect.bottom + 12;
-    let left = newRect.left;
-    if(top + 140 > window.innerHeight) top = newRect.top - 150;
-    if(top < 10) top = 10;
-    if(left + 260 > window.innerWidth) left = window.innerWidth - 270;
-    if(left < 10) left = 10;
-    tooltip.style.top = top + 'px';
-    tooltip.style.left = left + 'px';
-    tooltip.style.opacity = '1';
-  }, 350);
-}
-
-function tutNext(){
-  const steps = TUTORIAL_STEPS[tutRole];
-  if(tutStepIdx < steps.length - 1){ tutStepIdx++; renderTutStep(); }
-  else { finishSpotlightTutorial(); }
-}
-function tutBack(){
-  if(tutStepIdx > 0){ tutStepIdx--; renderTutStep(); }
-}
-async function finishSpotlightTutorial(){
-  document.querySelectorAll('.tut-highlighted').forEach(function(e){ e.classList.remove('tut-highlighted'); e.style.boxShadow=''; e.style.position=''; e.style.zIndex=''; });
-  const overlay = document.getElementById('tut-overlay');
-  const tooltip = document.getElementById('tut-tooltip');
-  if(overlay) overlay.remove();
-  if(tooltip) tooltip.remove();
-  if(tutRole === 'brand' && currentSession.brandId){
-    await db.from('brands').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.brandId);
-  }
-}
-
-// ===== TUTORIAL: creator walkthrough (buka menu asli satu-satu, wajib sampai selesai) =====
-const CREATOR_WALKTHROUGH_STEPS = [
-  {
-    modalId: 'm-c2',
-    open: function(){ backToBrandList(); loadBrandList(); loadMyQuota(); },
-    icon: '🛍️',
-    title: 'Campaign',
-    bullets: [
-      'Mau produk buat konten? Ada 2 cara.',
-      'Cara 1: pencet "Request Sample". Nunggu dikasih brand.',
-      'Cara 2: udah punya produknya sendiri? Pencet "Udah Punya Produknya".',
-      'Kamu cuma boleh pegang 3 brand dalam waktu yang sama.',
-      'Tiap brand, maksimal 2 produk aja.',
-      '1 brand udah kelar semua? Slotnya kebuka lagi otomatis.'
-    ]
-  },
-  {
-    modalId: 'm-c3',
-    open: function(){ loadCekStatus(); },
-    icon: '🔍',
-    title: 'Cek Status',
-    bullets: [
-      'Di sini kamu liat request kamu udah sampai mana.',
-      'Paket kamu udah nyampe di rumah? Buka menu ini.',
-      'Foto produknya. Boleh selfie sama produknya juga.',
-      'Abis difoto, kamu punya waktu 3 hari buat posting.',
-      'Jangan ditunda-tunda. Waktu 3 harinya tetep jalan terus.'
-    ]
-  },
-  {
-    modalId: 'm-c4',
-    open: function(){ loadVtReportPage(); },
-    icon: '🎬',
-    title: 'Report VT',
-    bullets: [
-      'Video atau live kamu udah kamu posting? Lapor di sini.',
-      'Copy link video atau live kamu.',
-      'Tempel link-nya di sini. Pencet "Submit".',
-      'Selesai! Tugas kamu buat produk itu kelar.',
-      'Inget: kamu cuma punya 3 hari dari paket sampai.'
-    ]
-  },
-  {
-    modalId: 'm-c8',
-    open: function(){ loadPoinCreator(); },
-    icon: '⭐',
-    title: 'Poin',
-    bullets: [
-      'Poin kamu nambah sendiri. Gak perlu ngapa-ngapain.',
-      'Buka aplikasi tiap hari = dapet poin.',
-      'Login berturut-turut tiap hari = poin makin banyak.',
-      'Selesai posting tepat waktu = dapet poin gede.',
-      'Ingkar janji posting = poin kamu bisa dikurangin.',
-      'Poin bisa ditukar hadiah, atau naikin komisi produk kamu.'
-    ]
-  }
-];
-const CW_STEP_SECONDS = 15;
-let cwStepIdx = 0;
-let cwHiddenCloseButtons = [];
-let cwSecondsLeft = CW_STEP_SECONDS;
-let cwTimer = null;
-
-function startCreatorWalkthrough(){
-  cwStepIdx = 0;
-  cwHiddenCloseButtons = [];
-  const overlay = document.createElement('div');
-  overlay.id = 'cw-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:99990;';
-  document.body.appendChild(overlay);
-  renderCwStep();
-}
-
-function cwStepperHtml(){
-  const steps = CREATOR_WALKTHROUGH_STEPS;
-  let html = '<div style="display:flex;align-items:flex-start">';
-  steps.forEach(function(s, i){
-    const done = i < cwStepIdx;
-    const active = i === cwStepIdx;
-    const filled = done || active;
-    const circleBg = filled ? 'var(--pink)' : 'rgba(255,255,255,.18)';
-    const circleBorder = filled ? 'var(--pink)' : 'rgba(255,255,255,.8)';
-    const inner = done
-      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-      : '<span style="color:#fff;font-weight:800;font-size:12px">' + (i+1) + '</span>';
-    html += '<div style="display:flex;align-items:center;flex:1 1 0">'
-      + '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0">'
-      + '<div style="width:30px;height:30px;border-radius:50%;background:' + circleBg + ';border:2px solid ' + circleBorder + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;' + (active ? 'box-shadow:0 0 0 4px rgba(232,24,90,.35)' : '') + '">' + inner + '</div>'
-      + '<div style="font-size:9px;font-weight:700;color:#fff;text-align:center;max-width:60px;line-height:1.2">' + escHtml(s.title) + '</div>'
-      + '</div>';
-    if(i < steps.length - 1){
-      html += '<div style="height:2px;flex:1;background:' + (i < cwStepIdx ? 'var(--pink)' : 'rgba(255,255,255,.4)') + ';margin:0 2px 15px;border-radius:2px"></div>';
-    }
-    html += '</div>';
-  });
-  html += '</div>';
-  return html;
-}
-
-function renderCwStep(){
-  const steps = CREATOR_WALKTHROUGH_STEPS;
-  const s = steps[cwStepIdx];
-
-  document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); });
-
-  openModal(s.modalId);
-  s.open();
-
-  const modalBox = document.querySelector('#' + s.modalId + ' .modal-box');
-  if(modalBox) modalBox.style.zIndex = '99992';
-  const modalBg = document.getElementById(s.modalId);
-  if(modalBg) modalBg.style.zIndex = '99991';
-  const closeBtn = document.querySelector('#' + s.modalId + ' .modal-close');
-  if(closeBtn){ closeBtn.style.display = 'none'; cwHiddenCloseButtons.push(closeBtn); }
-
-  let stepper = document.getElementById('cw-stepper');
-  if(!stepper){
-    stepper = document.createElement('div');
-    stepper.id = 'cw-stepper';
-    stepper.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99993;padding:18px 24px 8px;max-width:520px;margin:0 auto;';
-    document.body.appendChild(stepper);
-  }
-  stepper.innerHTML = cwStepperHtml();
-
-  let panel = document.getElementById('cw-panel');
-  if(!panel){
-    panel = document.createElement('div');
-    panel.id = 'cw-panel';
-    panel.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99993;background:#fff;border-radius:20px 20px 0 0;padding:18px 20px 22px;box-shadow:0 -8px 30px rgba(74,43,71,.35);max-width:520px;margin:0 auto;';
-    document.body.appendChild(panel);
-  }
-
-  const bodyHtml = s.bullets.map(function(line){ return '<li style="margin-bottom:8px">' + escHtml(line) + '</li>'; }).join('');
-  panel.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
-    + '<div style="font-size:20px">' + s.icon + '</div>'
-    + '<div style="font-weight:800;font-size:15px;color:var(--dark)">' + escHtml(s.title) + '</div>'
-    + '</div>'
-    + '<ul style="margin:0 0 14px;padding-left:18px;font-size:13px;font-weight:600;color:var(--dark);line-height:1.55">' + bodyHtml + '</ul>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)">'
-    + '<span style="font-size:11px;color:var(--gray-text);font-weight:700">' + (cwStepIdx+1) + ' / ' + steps.length + '</span>'
-    + '<div id="cw-footer-btns" style="display:flex;gap:8px"></div></div>';
-
-  cwStartTimer();
-}
-
-function cwUpdateNextButton(){
-  const wrap = document.getElementById('cw-footer-btns');
-  if(!wrap) return;
-  const steps = CREATOR_WALKTHROUGH_STEPS;
-  const isLast = cwStepIdx === steps.length - 1;
-  const backBtn = cwStepIdx > 0 ? '<button onclick="cwBack()" class="btn btn-outline btn-sm">Kembali</button>' : '';
-  let nextBtn;
-  if(cwSecondsLeft > 0){
-    nextBtn = '<button disabled class="btn btn-sm" style="background:#F3D9E3;color:#C2718F;border:none;cursor:not-allowed">⏳ ' + cwSecondsLeft + ' detik</button>';
-  } else {
-    nextBtn = '<button onclick="cwNext()" class="btn btn-primary btn-sm">' + (isLast ? 'Selesai' : 'Lanjut') + '</button>';
-  }
-  wrap.innerHTML = backBtn + nextBtn;
-}
-
-function cwStartTimer(){
-  if(cwTimer) clearInterval(cwTimer);
-  cwSecondsLeft = CW_STEP_SECONDS;
-  cwUpdateNextButton();
-  cwTimer = setInterval(function(){
-    cwSecondsLeft--;
-    if(cwSecondsLeft <= 0){
-      cwSecondsLeft = 0;
-      clearInterval(cwTimer);
-      cwTimer = null;
-    }
-    cwUpdateNextButton();
-  }, 1000);
-}
-
-function cwNext(){
-  if(cwSecondsLeft > 0) return;
-  if(cwStepIdx < CREATOR_WALKTHROUGH_STEPS.length - 1){ cwStepIdx++; renderCwStep(); }
-  else { finishCreatorWalkthrough(); }
-}
-function cwBack(){
-  if(cwStepIdx > 0){ cwStepIdx--; renderCwStep(); }
-}
-async function finishCreatorWalkthrough(){
-  if(cwTimer){ clearInterval(cwTimer); cwTimer = null; }
-  document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); m.style.zIndex = ''; });
-  document.querySelectorAll('.modal-box').forEach(function(b){ b.style.zIndex = ''; });
-  cwHiddenCloseButtons.forEach(function(btn){ btn.style.display = ''; });
-  cwHiddenCloseButtons = [];
-  const overlay = document.getElementById('cw-overlay');
-  const stepper = document.getElementById('cw-stepper');
-  const panel = document.getElementById('cw-panel');
-  if(overlay) overlay.remove();
-  if(stepper) stepper.remove();
-  if(panel) panel.remove();
-  if(currentSession.memberId){
-    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
-  }
-  showRewardPopup();
+  openTutorial2('brand');
 }
 
 
@@ -5289,7 +5220,7 @@ async function requestSample(productId, btn){
   if(!tutCheck || !tutCheck.tutorial_completed_at){
     alert('Sebelum request sample, kelarin dulu tur singkat soal cara kerja aplikasi ya — biar kamu paham aturan kuota, cara lapor VT, dan cara pantau statusnya.');
     closeModal('m-c2');
-    startCreatorWalkthrough();
+    openTutorial2('creator');
     return;
   }
 
