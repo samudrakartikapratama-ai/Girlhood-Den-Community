@@ -1581,41 +1581,65 @@ async function ticFetchNames(rows){
   }
   return { members: members, brands: brands };
 }
+function ticTagInfo(n){
+  if(n.member_id) return { tag:'creator', bg:'#FDECEF', color:'#C2185B', iconBg:'#E8185A' };
+  if(n.brand_id) return { tag:'brand', bg:'#E5F2F1', color:'#1E8A80', iconBg:'#1E8A80' };
+  return { tag:'system', bg:'#F1ECF7', color:'#6C4FA0', iconBg:'#6C4FA0' };
+}
 function ticRenderRow(n, names){
   const name = names.members[n.member_id] || names.brands[n.brand_id] || 'Aktivitas';
   const sub = (names.brands[n.brand_id] && names.members[n.member_id]) ? names.brands[n.brand_id] : '';
   const time = new Date(n.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  const info = ticTagInfo(n);
+  const msg = ticEsc(ticLabel(n)) + (sub ? ' <span style="color:#B79AA8">\u2022</span> ' + ticEsc(sub) : '');
   const row = document.createElement('div');
-  row.style.cssText = 'width:100%;background:#fff;border:1px solid #E8D5DF;border-radius:999px;padding:10px 14px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-8px);transition:opacity 220ms cubic-bezier(0.23,1,0.32,1),transform 220ms cubic-bezier(0.23,1,0.32,1);margin-bottom:8px;';
-  row.innerHTML = '<div style="width:34px;height:34px;border-radius:50%;background:#E8185A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;">' + ticEsc(ticInitials(name)) + '</div>'
+  row.style.cssText = 'position:absolute;top:0;left:0;right:0;display:flex;align-items:flex-start;gap:12px;width:100%;background:rgba(255,255,255,.85);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-radius:22px;padding:14px 16px;box-shadow:0 8px 22px rgba(74,43,71,.12),0 1px 0 rgba(255,255,255,.6) inset;border:1px solid rgba(255,255,255,.6);opacity:0;transform:translateY(-22px) scale(.94);transition:opacity .46s cubic-bezier(.34,1.1,.4,1),transform .46s cubic-bezier(.34,1.1,.4,1);';
+  row.innerHTML = '<div style="width:42px;height:42px;border-radius:13px;background:'+info.iconBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15);">' + ticEsc(ticInitials(name)) + '</div>'
     + '<div style="flex:1;min-width:0;">'
-    + '<p style="margin:0;font-size:13px;font-weight:500;color:#4A2B47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ticEsc(name) + ' <span style="font-weight:400;color:#8A7480;">' + ticEsc(ticLabel(n)) + '</span></p>'
-    + (sub ? '<p style="margin:0;font-size:11px;color:#8A7480;">' + ticEsc(sub) + '</p>' : '')
+    + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">'
+    +   '<span style="font-size:14px;font-weight:800;color:#4A2B47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ticEsc(name) + '</span>'
+    +   '<span style="font-size:11px;color:#9A7285;font-weight:600;flex-shrink:0;">' + time + '</span>'
     + '</div>'
-    + '<span style="font-size:11px;color:#B79AA8;flex-shrink:0;">' + time + '</span>';
+    + '<p style="margin:2px 0 0;font-size:13px;line-height:1.35;color:#5c4655;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + msg + '</p>'
+    + '<span style="display:inline-block;margin-top:6px;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:.2px;background:'+info.bg+';color:'+info.color+';">' + info.tag.toUpperCase() + '</span>'
+    + '</div>';
   return row;
 }
+function ticSwapRow(el, n, names){
+  const oldRow = el.firstChild;
+  const newRow = ticRenderRow(n, names);
+  if(oldRow){
+    oldRow.style.opacity = '0';
+    oldRow.style.transform = 'translateY(14px) scale(.97)';
+    oldRow.style.transition = 'opacity .38s cubic-bezier(.4,0,1,1),transform .38s cubic-bezier(.4,0,1,1)';
+    setTimeout(function(){ if(oldRow.parentNode) oldRow.parentNode.removeChild(oldRow); }, 380);
+  }
+  el.appendChild(newRow);
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      newRow.style.opacity = '1';
+      newRow.style.transform = 'translateY(0) scale(1)';
+    });
+  });
+}
+// Satu kartu notifikasi real-time (gaya banner iOS): baris baru gantiin baris lama
+// dengan crossfade halus; kalau belum ada aktivitas baru, baris terakhir tetap nempel.
 async function renderLiveTicker(containerId){
   const el = document.getElementById(containerId);
   if(!el) return;
+  el.style.position = 'relative';
+  el.style.height = '92px';
   try {
-    const res = await db.from('notifications').select('*').order('created_at', { ascending:false }).limit(6);
-    if(res.error || !res.data){ return; }
-    const names = await ticFetchNames(res.data);
-    el.innerHTML = '';
-    res.data.forEach(function(n){
-      const row = ticRenderRow(n, names);
-      el.appendChild(row);
-      requestAnimationFrame(function(){ row.style.opacity='1'; row.style.transform='translateY(0)'; });
-    });
+    const res = await db.from('notifications').select('*').order('created_at', { ascending:false }).limit(1);
+    if(!res.error && res.data && res.data.length){
+      const names = await ticFetchNames(res.data);
+      ticSwapRow(el, res.data[0], names);
+    }
     if(!el.dataset.ticSub){
       el.dataset.ticSub = '1';
       db.channel('tic-' + containerId).on('postgres_changes', { event:'INSERT', schema:'public', table:'notifications' }, async function(payload){
         const names2 = await ticFetchNames([payload.new]);
-        const row = ticRenderRow(payload.new, names2);
-        el.insertBefore(row, el.firstChild);
-        requestAnimationFrame(function(){ row.style.opacity='1'; row.style.transform='translateY(0)'; });
-        while(el.children.length > 6){ el.removeChild(el.lastChild); }
+        ticSwapRow(el, payload.new, names2);
       }).subscribe();
     }
   } catch(e){ /* diam-diam gagal, jangan ganggu halaman utama */ }
