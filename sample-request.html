@@ -182,6 +182,18 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
   .pf-feed-close{left:calc(50% - 232px)}
 }
 .pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:pointer;background:#1a1a1a}
+.pf-brand-block{margin-bottom:20px}
+.pf-brand-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pf-brand-logo{width:26px;height:26px;border-radius:8px;background:#fff;border:1px solid var(--gray-mid);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--pink);flex-shrink:0;overflow:hidden}
+.pf-brand-logo img{width:100%;height:100%;object-fit:cover}
+.pf-brand-name{font-size:13.5px;font-weight:800;color:var(--dark)}
+.pf-brand-count{font-size:11px;color:var(--gray-text);margin-left:auto}
+.pf-video-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.pf-vsrc{font-size:8px;opacity:.9;display:flex;align-items:center;gap:3px;margin-top:1px}
+.pf-vsrc.self{color:#ffe28a}
+@media (min-width:680px){
+  .pf-video-card{width:140px;height:198px}
+}
 .pf-video-card img{width:100%;height:100%;object-fit:cover}
 .pf-video-card .pf-vinfo{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent 70%);color:#fff;padding:20px 8px 6px}
 .pf-video-card .pf-vname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1529,7 +1541,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-escalated-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-playfield"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
+<div class="modal-bg" id="m-playfield"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
   <div class="modal-title">🎮 Creator Playfield</div>
   <div class="card-sub">Newest video</div>
   <div id="playfield-videos" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px;display:flex;gap:8px;margin:8px 0 16px"><div class="card-sub">Memuat video...</div></div>
@@ -1967,19 +1979,15 @@ function ensureTiktokEmbedScript(){
 
 function openPlayfield(){
   const isBrand = currentSession.role === 'brand';
-  if(!isBrand){
-    // Creator: langsung ke full-screen feed, skip modal kotak-kotak
-    openPfFullFeedDirect();
-    return;
-  }
   openModal('m-playfield');
-  loadPlayfieldVideos();
-  document.getElementById('pf-brand-only').style.display = 'block';
-  document.getElementById('pf-creator-only').style.display = 'none';
-  loadPlayfieldProducts();
+  loadPlayfieldByBrand();
+  document.getElementById('pf-brand-only').style.display = isBrand ? 'block' : 'none';
+  document.getElementById('pf-creator-only').style.display = isBrand ? 'none' : 'block';
+  if(isBrand){ loadPlayfieldProducts(); } else { loadPlayfieldCreatorsPlain(); }
 }
 
 let pfFeedVideos = [];
+let pfBrandsData = [];
 
 function pfFormatCount(n){
   n = Number(n) || 0;
@@ -1996,48 +2004,60 @@ const pfIcon = {
   close: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 
-async function fetchPfVideos(){
-  const resp = await fetch('https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-feed');
-  const json = await resp.json();
-  return json.videos || [];
-}
+function pfInitialsShort(name){ return String(name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
 
-async function openPfFullFeedDirect(){
-  const overlay = document.getElementById('pf-feed-overlay');
-  overlay.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">Memuat video...</div>';
-  overlay.classList.add('open');
-  pfFeedVideos = await fetchPfVideos();
-  if(!pfFeedVideos.length){
-    overlay.innerHTML = '<button class="pf-feed-close" onclick="closePfFullFeed()">' + pfIcon.close + '</button>'
-      + '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;text-align:center;padding:0 30px">Belum ada creator yang terhubung Video Insights.</div>';
-    return;
-  }
-  openPfFullFeed(0);
-}
-
-async function loadPlayfieldVideos(){
+async function loadPlayfieldByBrand(){
   const wrap = document.getElementById('playfield-videos');
+  wrap.style.display = 'block';
+  wrap.style.maxHeight = 'none';
   wrap.innerHTML = '<div class="card-sub">Memuat video...</div>';
   try{
-    const videos = await fetchPfVideos();
-    if(!videos.length){
-      wrap.innerHTML = '<div class="card-sub">Belum ada creator yang terhubung Video Insights.</div>';
+    const resp = await fetch('https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-by-brand');
+    const json = await resp.json();
+    const brands = json.brands || [];
+    pfBrandsData = brands;
+    if(!brands.length){
+      wrap.innerHTML = '<div class="card-sub">Belum ada video approved buat ditampilin.</div>';
       return;
     }
-    pfFeedVideos = videos;
-    wrap.innerHTML = '';
-    videos.forEach(function(v, i){
-      const card = document.createElement('div');
-      card.className = 'pf-video-card';
-      card.onclick = function(){ openPfFullFeed(i); };
-      card.innerHTML = (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
-        + '<div class="pf-vinfo"><div class="pf-vname">' + (v.creator_nama || 'Creator') + '</div>'
-        + '<div class="pf-vviews">👁️ ' + pfFormatCount(v.view_count) + '</div></div>';
-      wrap.appendChild(card);
-    });
+    wrap.innerHTML = brands.map(function(b){
+      return '<div class="pf-brand-block">'
+        + '<div class="pf-brand-head">'
+        +   '<div class="pf-brand-logo">' + (b.logo_url ? '<img src="' + b.logo_url + '">' : pfInitialsShort(b.nama)) + '</div>'
+        +   '<div class="pf-brand-name">' + b.nama + '</div>'
+        +   '<div class="pf-brand-count">' + b.videos.length + ' video</div>'
+        + '</div>'
+        + '<div class="pf-video-row">'
+        +   b.videos.map(function(v, i){
+              return '<div class="pf-video-card" onclick="openPfFullFeedForBrand(\'' + b.brand_id + '\', ' + i + ')">'
+                + (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
+                + '<div class="pf-vinfo"><div class="pf-vname">' + (v.creator_nama || 'Creator') + '</div>'
+                + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : '🤝 Campaign') + '</div></div>'
+                + '</div>';
+            }).join('')
+        + '</div>'
+        + '</div>';
+    }).join('');
   }catch(e){
     wrap.innerHTML = '<div class="card-sub">Gagal memuat video.</div>';
   }
+}
+
+function openPfFullFeedForBrand(brandId, startIndex){
+  const brand = pfBrandsData.find(function(b){ return b.brand_id === brandId; });
+  if(!brand) return;
+  pfFeedVideos = brand.videos.map(function(v){
+    return {
+      creator_nama: v.creator_nama,
+      cover_image_url: v.cover_image_url,
+      embed_link: v.video_id ? ('https://www.tiktok.com/embed/v2/' + v.video_id) : null,
+      share_url: null,
+      title: '',
+      like_count: null,
+      comment_count: null
+    };
+  });
+  openPfFullFeed(startIndex);
 }
 
 function pfInitialsName(name){ return String(name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
@@ -2075,9 +2095,9 @@ function openPfFullFeed(startIndex){
       + '<div class="pf-play-overlay">' + pfIcon.playBig + '</div>'
       + '<div class="pf-feed-actions">'
       +   '<div class="pf-avatar" style="background:var(--pink)">' + pfInitialsName(v.creator_nama) + '</div>'
-      +   '<div class="pf-act">' + pfIcon.heart + pfFormatCount(v.like_count) + '</div>'
-      +   '<div class="pf-act">' + pfIcon.comment + pfFormatCount(v.comment_count) + '</div>'
-      +   '<a class="pf-act" href="' + (v.share_url || '#') + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + pfIcon.play + 'Buka</a>'
+      +   (v.like_count != null ? '<div class="pf-act">' + pfIcon.heart + pfFormatCount(v.like_count) + '</div>' : '')
+      +   (v.comment_count != null ? '<div class="pf-act">' + pfIcon.comment + pfFormatCount(v.comment_count) + '</div>' : '')
+      +   (v.share_url ? '<a class="pf-act" href="' + v.share_url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + pfIcon.play + 'Buka</a>' : '')
       + '</div>'
       + '<div class="pf-feed-info"><div class="pf-fname">@' + (v.creator_nama || 'Creator') + '</div>'
       + '<div class="pf-ftitle">' + (v.title || '') + '</div></div>'
@@ -2094,7 +2114,6 @@ function openPfFullFeed(startIndex){
   overlay.classList.add('open');
   const newScroll = document.getElementById('pf-feed-scroll');
   let pfCurrent = startIndex;
-  let pfScrollTimer = null;
   newScroll.addEventListener('scroll', function(){
     const idx = Math.round(newScroll.scrollTop / newScroll.clientHeight);
     if(idx !== pfCurrent && idx >= 0 && idx < pfFeedVideos.length){
@@ -2103,12 +2122,9 @@ function openPfFullFeed(startIndex){
         seg.classList.toggle('filled', Number(seg.dataset.seg) <= pfCurrent);
       });
     }
-    clearTimeout(pfScrollTimer);
-    pfScrollTimer = setTimeout(function(){ pfPlayInline(pfCurrent); }, 220);
   });
   requestAnimationFrame(function(){
     newScroll.scrollTo({ top: startIndex * newScroll.clientHeight, behavior: 'instant' });
-    pfPlayInline(startIndex);
   });
 }
 
