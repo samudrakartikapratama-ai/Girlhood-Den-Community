@@ -4232,15 +4232,18 @@ async function loadCreatorTiktokStatus(){
 
 // App "Girlhood Den Video Insights" di developers.tiktok.com (Login Kit)
 const TIKTOK_VI_CLIENT_KEY = 'awzs5e9er1hmjduu';
+const TIKTOK_VI_SANDBOX_CLIENT_KEY = 'sbaw296liuuj8gx338';
 const TIKTOK_VI_REDIRECT_URI = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/tiktok-video-insights-oauth-callback';
+// Mode testing sementara (buat rekam demo App Review) - buka situs dengan ?vi_sandbox=1
+const TIKTOK_VI_IS_SANDBOX = new URLSearchParams(window.location.search).get('vi_sandbox') === '1';
 
 function buildTiktokVideoInsightsAuthUrl(memberId){
   const params = new URLSearchParams({
-    client_key: TIKTOK_VI_CLIENT_KEY,
+    client_key: TIKTOK_VI_IS_SANDBOX ? TIKTOK_VI_SANDBOX_CLIENT_KEY : TIKTOK_VI_CLIENT_KEY,
     scope: 'user.info.basic,user.info.stats,video.list',
     response_type: 'code',
     redirect_uri: TIKTOK_VI_REDIRECT_URI,
-    state: memberId
+    state: (TIKTOK_VI_IS_SANDBOX ? 'sandbox:' : '') + memberId
   });
   return 'https://www.tiktok.com/v2/auth/authorize/?' + params.toString();
 }
