@@ -163,8 +163,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pf-progress-row{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:52px;right:12px;z-index:320;display:flex;gap:4px}
 .pf-progress-seg{flex:1;height:2.5px;border-radius:2px;background:rgba(255,255,255,.32);overflow:hidden}
 .pf-progress-seg.filled{background:#fff}
-.pf-play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;pointer-events:none}
-.pf-feed-item.pf-show-play .pf-play-overlay{opacity:1}
+.pf-play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:.85;pointer-events:none}
 .pf-feed-close{position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);left:16px;z-index:320;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .pf-feed-info{position:absolute;left:16px;right:76px;bottom:26px;color:#fff;z-index:10}
 .pf-feed-info .pf-fname{font-size:14px;font-weight:800}
@@ -2042,7 +2041,7 @@ function pfInitialsName(name){ return String(name||'?').trim().split(/\s+/).map(
 
 function openPfFullFeed(startIndex){
   const itemsHtml = pfFeedVideos.map(function(v){
-    return '<div class="pf-feed-item" onclick="this.classList.toggle(\'pf-show-play\')">'
+    return '<div class="pf-feed-item" onclick="window.open(\'' + (v.share_url || '#') + '\', \'_blank\')">'
       + '<div class="pf-stage">'
       + (v.cover_image_url ? '<img class="pf-cover" src="' + v.cover_image_url + '">' : '')
       + '<div class="pf-top-gradient"></div>'
