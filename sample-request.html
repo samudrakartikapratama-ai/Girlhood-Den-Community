@@ -213,6 +213,18 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
 .card-title{font-size:14px;font-weight:700;margin-bottom:4px}
 .card-sub{font-size:12px;color:var(--gray-text);margin-bottom:8px}
+.notif-day-label{font-size:11px;font-weight:800;color:var(--gray-text);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.3px}
+.notif-day-label:first-child{margin-top:0}
+.notif-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--gray-mid)}
+.notif-item:last-child{border-bottom:none}
+.notif-item .ic{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
+.notif-item .ic.reject{background:#FBE4E4}
+.notif-item .ic.approve{background:#DFF3EA}
+.notif-item .ic.new{background:#FCF1D9}
+.notif-item .ic.info{background:var(--gray)}
+.notif-item .txt{font-size:12.5px;color:var(--dark);line-height:1.4}
+.notif-item .time{font-size:10.5px;color:var(--gray-text);margin-top:3px}
+.notif-item .action-btn{display:inline-block;margin-top:7px;padding:5px 12px;border-radius:999px;background:var(--pink);color:#fff;font-size:10.5px;font-weight:800;cursor:pointer;border:none}
 .notif-dot{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #fff}
 .icon-card{position:relative}
 .sr-stage-tab{flex:1;padding:9px;border-radius:9px;font-size:11.5px;font-weight:800;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray-text)}
@@ -3299,6 +3311,37 @@ function notifTimeAgo(iso){
   return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
 }
 
+function notifTypeClass(kategori, text){
+  const t = (text||'').toLowerCase();
+  if(t.indexOf('ditolak') !== -1 || t.indexOf('belum bisa') !== -1) return 'reject';
+  if(t.indexOf('disetujui') !== -1 || t.indexOf('→ kirim') !== -1 || t.indexOf('approved') !== -1) return 'approve';
+  if(kategori === 'request') return 'new';
+  return 'info';
+}
+
+function humanizeNotifText(kategori, rawText, brandName){
+  let t = rawText;
+  // Terjemahin pola lama yang kaku jadi kalimat biasa
+  if(/^Requested\s*→\s*Ditolak/i.test(t)){
+    t = 'Request sample kamu ke <b>' + (brandName || 'brand ini') + '</b> belum bisa dilanjut kali ini';
+  } else if(/^Requested\s*→\s*Kirim/i.test(t)){
+    t = 'Yes! Request sample kamu ke <b>' + (brandName || 'brand ini') + '</b> disetujui, lagi disiapin buat dikirim';
+  } else if(brandName && t.indexOf(brandName) === -1){
+    t = t + ' <span style="color:var(--gray-text)">(' + brandName + ')</span>';
+  }
+  return t;
+}
+
+function notifDayLabel(iso){
+  const d = new Date(iso);
+  const now = new Date();
+  const startOfDay = function(x){ return new Date(x.getFullYear(), x.getMonth(), x.getDate()); };
+  const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if(diffDays === 0) return 'Hari ini';
+  if(diffDays === 1) return 'Kemarin';
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+}
+
 async function loadNotificationsCreator(){
   const container = document.getElementById('c7-notif-list');
   if(!currentSession.memberId){ container.innerHTML = '<div class="card-sub">Sesi tidak terdeteksi.</div>'; return; }
@@ -3344,14 +3387,29 @@ async function loadNotificationsCreator(){
     (brands||[]).forEach(function(b){ brandNames[b.id] = b.nama_brand; });
   }
 
-  container.innerHTML = allData.map(function(n){
+  const iconEmoji = { reject:'✕', approve:'✓', new:'🔔', info:'ℹ️' };
+  let html = '';
+  let lastDayLabel = null;
+  allData.forEach(function(n){
     const brandName = n.brand_id && brandNames[n.brand_id] ? brandNames[n.brand_id] : null;
-    return '<div class="card"><div style="display:flex;gap:8px;align-items:flex-start">'
-      + '<div style="font-size:18px">' + (n.kategori==='resi' ? '📦' : notifIcon(n.kategori)) + '</div>'
-      + '<div style="flex:1"><div>' + n.detail_text + (brandName ? ' <span class="card-sub">(' + brandName + ')</span>' : '') + '</div>'
-      + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
-      + '</div></div>';
-  }).join('');
+    const dayLabel = notifDayLabel(n.created_at);
+    if(dayLabel !== lastDayLabel){
+      html += '<div class="notif-day-label">' + dayLabel + '</div>';
+      lastDayLabel = dayLabel;
+    }
+    const typeClass = n.kategori === 'resi' ? 'info' : notifTypeClass(n.kategori, n.detail_text);
+    const text = n.kategori === 'resi' ? n.detail_text : humanizeNotifText(n.kategori, n.detail_text, brandName);
+    const isAutoClose = /ditutup otomatis/i.test(n.detail_text || '');
+    html += '<div class="notif-item">'
+      + '<div class="ic ' + typeClass + '">' + (n.kategori === 'resi' ? '📦' : iconEmoji[typeClass]) + '</div>'
+      + '<div style="flex:1">'
+      +   '<div class="txt">' + text + '</div>'
+      +   '<div class="time">' + notifTimeAgo(n.created_at) + '</div>'
+      +   (isAutoClose ? '<button class="action-btn" onclick="closeModal(\'m-c7\'); openModal(\'m-c2\'); backToBrandList(); loadBrandList(); loadMyQuota();">Coba Brand Lain</button>' : '')
+      + '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
 }
 
 async function loadNotificationsBrand(){
