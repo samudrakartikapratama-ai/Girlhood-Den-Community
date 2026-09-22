@@ -252,6 +252,22 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 
 /* ===== QUOTA COUNTER (animasi) ===== */
 .quota-box{background:linear-gradient(135deg,var(--pink),#F472A8);border-radius:16px;padding:16px;color:#fff;margin-bottom:14px;text-align:center;position:relative;overflow:hidden}
+.bc-chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px;scrollbar-width:none}
+.bc-chip-row::-webkit-scrollbar{display:none}
+.bc-chip{flex-shrink:0;padding:7px 14px;border-radius:999px;background:var(--gray);font-size:12.5px;font-weight:600;color:var(--gray-text);white-space:nowrap;cursor:pointer;border:none}
+.bc-chip.active{background:var(--dark);color:#fff}
+.bc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bc-card{border-radius:20px;padding:14px;min-height:150px;position:relative;overflow:hidden;cursor:pointer}
+.bc-card .bc-top{display:flex;align-items:center;justify-content:space-between}
+.bc-card .bc-logo{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;overflow:hidden;flex-shrink:0}
+.bc-card .bc-logo img{width:100%;height:100%;object-fit:cover}
+.bc-card .bc-kom{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.55);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.bc-card .bc-nm{font-size:14.5px;font-weight:700;margin-top:12px;line-height:1.2}
+.bc-card .bc-meta{font-size:11px;opacity:.8;margin-top:3px;font-weight:600}
+@media (min-width:680px){
+  .bc-grid{grid-template-columns:repeat(4,1fr)}
+  .bc-card{min-height:168px}
+}
 #brand-list-scroll{max-height:360px;overflow-y:auto;padding-right:2px}
 .brand-list-item{margin-bottom:8px}
 .quota-num{font-size:38px;font-weight:900;animation:pulse 1.6s infinite}
@@ -786,7 +802,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="creator-tiktok-vi-videos" style="margin-top:10px"></div>
 </div></div>
 
-<div class="modal-bg" id="m-c2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
+<div class="modal-bg" id="m-c2"><div class="modal-box" style="max-width:920px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
   <div class="modal-title">🛍️ Campaign</div>
   <div class="quota-box">
     <div class="quota-label">Kuota Brand Kamu <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--pink);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Kamu boleh pegang <b>maksimal 3 brand</b> bersamaan. Kalau salah satu brand videonya udah lengkap semua, slot-nya kosong lagi dan bisa diisi brand baru. Kalau ada brand yang videonya belum diposting sampai 5 hari, brand itu doang yang kekunci — brand lain tetap aman.')">!</span></div>
@@ -808,17 +824,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <input id="brand-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandList(this.value)">
     </div>
     <div class="field-row" style="margin-bottom:12px">
-      <select id="brand-filter" onchange="filterBrandList(document.getElementById('brand-search').value)" style="font-size:12px">
-        <option value="all">Semua Kategori</option>
-        <option value="hot">🔥 Hot Product</option>
-        <option value="comm">💰 High Commission</option>
-      </select>
       <select style="font-size:12px"><option>Urutkan: A-Z</option><option>Urutkan: Terbaru</option></select>
     </div>
+    <div class="bc-chip-row" id="bc-chip-row"></div>
     <div class="size-note" style="margin-bottom:8px" id="brand-count-note">Memuat daftar brand...</div>
 
-    <div id="brand-list-scroll">
-      <div id="brand-list-empty" style="display:none;text-align:center;padding:30px 10px;color:var(--gray-text)">
+    <div id="brand-list-scroll" class="bc-grid">
+      <div id="brand-list-empty" style="display:none;text-align:center;padding:30px 10px;color:var(--gray-text);grid-column:1/-1">
         <div style="font-size:32px;margin-bottom:6px">🔍</div>
         <div>Brand tidak ditemukan. Coba kata kunci lain.</div>
       </div>
@@ -5262,11 +5274,55 @@ async function loadHotProductsCreator(){
   }).join('');
 }
 
+const BC_CATEGORIES = ['Semua','Skincare','Bodycare','Makeup','Fragrance','Haircare'];
+let bcActiveCategory = 'Semua';
+
+function bcRenderChips(){
+  document.getElementById('bc-chip-row').innerHTML = BC_CATEGORIES.map(function(c){
+    return '<button class="bc-chip' + (c === bcActiveCategory ? ' active' : '') + '" onclick="bcSetCategory(\'' + c + '\')">' + c + '</button>';
+  }).join('');
+}
+function bcSetCategory(c){
+  bcActiveCategory = c;
+  bcRenderChips();
+  filterBrandList(document.getElementById('brand-search').value);
+}
+
+// Ekstrak warna dominan dari logo brand (buat background card) - gagal diam-diam kalau gambar gak bisa dibaca (CORS dll)
+const bcColorCache = {};
+function bcExtractDominantColor(imgEl, brandId, cardEl){
+  if(bcColorCache[brandId]){ cardEl.style.background = bcColorCache[brandId]; return; }
+  try{
+    const c = document.createElement('canvas');
+    c.width = 24; c.height = 24;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(imgEl, 0, 0, 24, 24);
+    const data = ctx.getImageData(0, 0, 24, 24).data;
+    let r=0,g=0,b=0,n=0;
+    for(let i=0;i<data.length;i+=4){
+      const alpha = data[i+3];
+      const rr=data[i], gg=data[i+1], bb=data[i+2];
+      // skip transparan & putih/hampir putih (background logo)
+      if(alpha < 100) continue;
+      if(rr>235 && gg>235 && bb>235) continue;
+      r+=rr; g+=gg; b+=bb; n++;
+    }
+    if(n === 0){ return; }
+    r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+    const light = 'rgba(' + r + ',' + g + ',' + b + ',0.16)';
+    const mid = 'rgba(' + r + ',' + g + ',' + b + ',0.32)';
+    const grad = 'linear-gradient(160deg,' + light + ',' + mid + ')';
+    bcColorCache[brandId] = grad;
+    cardEl.style.background = grad;
+  }catch(e){ /* canvas tainted (CORS) - biarin pakai warna default */ }
+}
+
 async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
+  bcRenderChips();
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, brand_products(id, tag_hot, tag_high_commission, komisi_percent, kategori)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -5293,25 +5349,22 @@ function renderBrandList(brands){
     return;
   }
 
-  const colors = ['linear-gradient(135deg,var(--pink-light),var(--pink))','linear-gradient(135deg,#F5B0C8,#E8185A)','linear-gradient(135deg,#FFD9A0,#E8185A)','linear-gradient(135deg,#D9A0FF,#E8185A)','linear-gradient(135deg,#A0D9FF,#E8185A)','linear-gradient(135deg,#B0FFC8,#E8185A)'];
+  const fallbackColors = ['linear-gradient(160deg,#FBD5E0,#F4A6C0)','linear-gradient(160deg,#FFE3C2,#FFC98A)','linear-gradient(160deg,#FFF3B0,#FFE066)','linear-gradient(160deg,#C9F2DD,#8FE3B8)','linear-gradient(160deg,#DCD3FA,#B8A6F0)','linear-gradient(160deg,#C7E6FA,#94C9EE)'];
 
   scroll.innerHTML = brands.map(function(b, i){
     const products = b.brand_products || [];
-    const hasHot = products.some(function(p){ return p.tag_hot; });
-    const hasComm = products.some(function(p){ return p.tag_high_commission; });
-    let tagText = '';
-    if(hasHot) tagText += ' · 🔥 Hot Product';
-    if(hasComm) tagText += ' · 💰 High Commission';
+    let maxKomisi = 0;
+    products.forEach(function(p){ if(p.komisi_percent && p.komisi_percent > maxKomisi) maxKomisi = p.komisi_percent; });
     const initial = b.nama_brand.charAt(0).toUpperCase();
-    const color = colors[i % colors.length];
-    const avatarHtml = b.logo_url
-      ? '<img src="'+b.logo_url+'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0">'
-      : '<div style="width:44px;height:44px;border-radius:12px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">'+initial+'</div>';
-    return '<div class="card brand-list-item" style="'+(b.is_frozen?'opacity:.55;filter:grayscale(1)':'')+'" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
-      + '<div style="display:flex;align-items:center;gap:12px;cursor:pointer">'
-      + avatarHtml
-      + '<div style="flex:1"><b>'+b.nama_brand+'</b><div class="card-sub" style="margin:0">'+products.length+' produk tersedia'+tagText+(b.is_frozen?' · 🧊 Freeze':'')+'</div></div>'
-      + '<div>›</div></div></div>';
+    const fallback = fallbackColors[i % fallbackColors.length];
+    const logoHtml = b.logo_url ? '<img src="'+b.logo_url+'" crossorigin="anonymous" onload="bcExtractDominantColor(this, \''+b.id+'\', this.closest(\'.bc-card\'))">' : initial;
+    return '<div class="bc-card" style="background:'+fallback+(b.is_frozen?';opacity:.55;filter:grayscale(1)':'')+'" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
+      + '<div class="bc-top"><div class="bc-logo">'+logoHtml+'</div>'
+      + (maxKomisi > 0 ? '<div class="bc-kom">'+maxKomisi+'%</div>' : '')
+      + '</div>'
+      + '<div class="bc-nm">'+b.nama_brand+'</div>'
+      + '<div class="bc-meta">'+products.length+' produk'+(b.is_frozen?' · 🧊 Freeze':'')+'</div>'
+      + '</div>';
   }).join('');
   note.textContent = 'Menampilkan ' + brands.length + ' dari ' + allBrandsCache.length + ' brand';
   totalNote.textContent = 'Total ' + allBrandsCache.length + ' brand aktif';
@@ -5319,14 +5372,14 @@ function renderBrandList(brands){
 
 function filterBrandList(query){
   query = (query || '').toLowerCase().trim();
-  const tagFilter = document.getElementById('brand-filter').value;
   const filtered = allBrandsCache.filter(function(b){
     const products = b.brand_products || [];
     const matchesName = b.nama_brand.toLowerCase().indexOf(query) !== -1;
-    let matchesTag = true;
-    if(tagFilter === 'hot') matchesTag = products.some(function(p){ return p.tag_hot; });
-    if(tagFilter === 'comm') matchesTag = products.some(function(p){ return p.tag_high_commission; });
-    return matchesName && matchesTag;
+    let matchesCategory = true;
+    if(bcActiveCategory !== 'Semua'){
+      matchesCategory = products.some(function(p){ return p.kategori === bcActiveCategory; });
+    }
+    return matchesName && matchesCategory;
   });
   renderBrandList(filtered);
 }
