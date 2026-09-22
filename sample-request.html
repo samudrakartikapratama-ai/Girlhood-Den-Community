@@ -2001,10 +2001,13 @@ async function fetchPfVideos(){
 }
 
 async function openPfFullFeedDirect(){
-  showToast('Memuat video...');
+  const overlay = document.getElementById('pf-feed-overlay');
+  overlay.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">Memuat video...</div>';
+  overlay.classList.add('open');
   pfFeedVideos = await fetchPfVideos();
   if(!pfFeedVideos.length){
-    showToast('Belum ada creator yang terhubung Video Insights.');
+    overlay.innerHTML = '<button class="pf-feed-close" onclick="closePfFullFeed()">' + pfIcon.close + '</button>'
+      + '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;text-align:center;padding:0 30px">Belum ada creator yang terhubung Video Insights.</div>';
     return;
   }
   openPfFullFeed(0);
