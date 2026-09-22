@@ -1642,7 +1642,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
     <div id="pf-wiz-step-3" style="display:none">
       <div class="card-sub" style="margin-bottom:6px">Minimal budget campaign</div>
-      <div style="display:flex;align-items:center;background:#fff;border:1px solid var(--gray-mid);border-radius:10px;padding:0 12px;margin-bottom:4px"><span style="font-size:13px;color:var(--gray-text)">Rp</span><input id="pf-budget" type="number" value="25000000" step="1000000" min="25000000" style="border:none;background:transparent;flex:1;padding:10px 8px;font-size:13px"></div>
+      <div id="pf-budget-box" style="display:flex;align-items:center;background:#fff;border:1.5px solid var(--gray-mid);border-radius:10px;padding:0 12px;margin-bottom:4px"><span style="font-size:13px;color:var(--gray-text)">Rp</span><input id="pf-budget" type="number" value="25000000" step="1000000" min="25000000" oninput="pfValidateBudget()" style="border:none;background:transparent;flex:1;padding:10px 8px;font-size:13px"></div>
+      <div id="pf-budget-warning" style="display:none;color:#B33;font-size:10.5px;font-weight:700;margin:0 0 8px">⚠️ Budget minimal Rp25.000.000. Naikin dulu angkanya buat lanjut.</div>
       <div class="card-sub" style="margin:0 0 14px;font-size:10.5px">Minimal Rp25.000.000. Tim kami (AE) bakal follow-up buat sesuaikan detail budget & creator pas meeting.</div>
       <div class="card-sub" style="margin:0 0 6px">Summary &amp; Objective</div>
       <textarea id="pf-summary" maxlength="10000" placeholder="Ceritain apa yang kamu mau, timeline, objective, komisi produk, dll (maks 10.000 kata)" style="width:100%;min-height:100px;border:1px solid var(--gray-mid);border-radius:12px;padding:10px 12px;font-size:13px;font-family:inherit;margin-bottom:14px;box-sizing:border-box"></textarea>
@@ -2254,10 +2255,25 @@ function pfGoToWizardStep(step){
     return '<div style="flex:1;height:4px;border-radius:2px;background:' + color + '"></div>';
   }).join('');
   document.getElementById('pf-wiz-step-label').textContent = 'Step ' + step + ' dari 3';
+  if(step === 3){ pfValidateBudget(); }
   if(step === 1 && document.getElementById('pf-product-picker').dataset.loaded !== '1'){
     loadPlayfieldProducts();
     document.getElementById('pf-product-picker').dataset.loaded = '1';
   }
+}
+
+function pfValidateBudget(){
+  const val = Number(document.getElementById('pf-budget').value || 0);
+  const box = document.getElementById('pf-budget-box');
+  const warn = document.getElementById('pf-budget-warning');
+  const btn = document.getElementById('pf-finish-btn');
+  const valid = val >= 25000000;
+  box.style.borderColor = valid ? 'var(--gray-mid)' : '#E85B5B';
+  warn.style.display = valid ? 'none' : 'block';
+  btn.disabled = !valid;
+  btn.style.opacity = valid ? '1' : '.5';
+  btn.style.cursor = valid ? 'pointer' : 'not-allowed';
+  return valid;
 }
 
 function pfInitials(name){ return String(name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
