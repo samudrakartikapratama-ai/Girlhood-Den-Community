@@ -804,27 +804,28 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-c2"><div class="modal-box" style="max-width:920px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
   <div class="modal-title">🛍️ Campaign</div>
-  <div class="quota-box">
-    <div class="quota-label">Kuota Brand Kamu <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--pink);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Kamu boleh pegang <b>maksimal 3 brand</b> bersamaan. Kalau salah satu brand videonya udah lengkap semua, slot-nya kosong lagi dan bisa diisi brand baru. Kalau ada brand yang videonya belum diposting sampai 5 hari, brand itu doang yang kekunci — brand lain tetap aman.')">!</span></div>
-    <div class="quota-num" id="quota-num">-</div>
-    <div class="quota-dots" id="quota-dots"></div>
-    <div class="quota-bar-track" style="height:8px;background:#f0d9e6;border-radius:99px;overflow:hidden;margin:10px 0 4px">
-      <div id="quota-bar-fill" style="height:100%;background:var(--teal);border-radius:99px;width:0%;transition:width .4s ease"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+    <div class="quota-box" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:center">
+      <div class="quota-label">Kuota Brand Kamu <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.3);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Kamu boleh pegang <b>maksimal 3 brand</b> bersamaan. Kalau salah satu brand videonya udah lengkap semua, slot-nya kosong lagi dan bisa diisi brand baru. Kalau ada brand yang videonya belum diposting sampai 5 hari, brand itu doang yang kekunci — brand lain tetap aman.')">!</span></div>
+      <div class="quota-num" id="quota-num">-</div>
+      <div class="quota-bar-track" style="height:8px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden;margin:8px 0 4px">
+        <div id="quota-bar-fill" style="height:100%;background:var(--teal);border-radius:99px;width:0%;transition:width .4s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9.5px;color:rgba(255,255,255,.85)">
+        <span id="quota-bar-sisa-label">3 tersedia</span><span id="quota-bar-used-label">0 terpakai</span>
+      </div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--gray-text)">
-      <span id="quota-bar-sisa-label">3 tersedia</span><span id="quota-bar-used-label">0 terpakai</span>
+    <div style="background:var(--gray);border:1.5px solid var(--gray-mid);border-radius:16px;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:center;cursor:pointer" onclick="openSelfReportModal()">
+      <div style="font-size:26px;margin-bottom:4px">📸</div>
+      <div style="font-weight:800;color:var(--dark);font-size:13.5px;margin-bottom:4px">Sudah Punya Produknya Sendiri?</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-bottom:10px;line-height:1.4">Laporkan produk yang udah kamu beli/punya, biar bisa langsung lanjut ke tahap video — nggak perlu nunggu dikirim.</div>
+      <button class="btn btn-outline btn-sm" style="width:100%;pointer-events:none">Laporkan Produk Sekarang</button>
     </div>
-    <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
-
-  <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="openSelfReportModal()">📸 Udah Punya Produknya? Ajukan di Sini</button>
 
   <div id="c2-brandlist">
     <div class="field" style="margin-bottom:10px">
       <input id="brand-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandList(this.value)">
-    </div>
-    <div class="field-row" style="margin-bottom:12px">
-      <select style="font-size:12px"><option>Urutkan: A-Z</option><option>Urutkan: Terbaru</option></select>
     </div>
     <div class="bc-chip-row" id="bc-chip-row"></div>
     <div class="size-note" style="margin-bottom:8px" id="brand-count-note">Memuat daftar brand...</div>
@@ -5654,9 +5655,11 @@ async function loadMyQuota(){
   const used = activeBrandIds.size;
   const sisa = Math.max(0, 3 - used);
   numEl.textContent = sisa;
-  dotsEl.innerHTML = '';
-  for(let i=0;i<3;i++){
-    dotsEl.innerHTML += '<div class="quota-dot' + (i < sisa ? ' filled' : '') + '"></div>';
+  if(dotsEl){
+    dotsEl.innerHTML = '';
+    for(let i=0;i<3;i++){
+      dotsEl.innerHTML += '<div class="quota-dot' + (i < sisa ? ' filled' : '') + '"></div>';
+    }
   }
   if(barFill){
     barFill.style.width = Math.round((sisa/3)*100) + '%';
