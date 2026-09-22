@@ -2061,7 +2061,7 @@ function pfPlayInline(idx){
     other.querySelector('.pf-media').innerHTML = otherV && otherV.cover_image_url ? '<img class="pf-cover" src="' + otherV.cover_image_url + '">' : '';
   });
   const sep = v.embed_link.indexOf('?') > -1 ? '&' : '?';
-  media.innerHTML = '<iframe src="' + v.embed_link + sep + 'autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen frameborder="0" sandbox="allow-scripts allow-same-origin allow-fullscreen"></iframe>';
+  media.innerHTML = '<iframe src="' + v.embed_link + sep + 'autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen frameborder="0"></iframe>';
   item.classList.add('pf-playing');
 }
 
