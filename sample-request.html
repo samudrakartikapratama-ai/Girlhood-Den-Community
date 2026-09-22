@@ -156,6 +156,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pf-feed-scroll{width:100%;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
 .pf-feed-scroll::-webkit-scrollbar{display:none}
 .pf-feed-item{width:100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111}
+.pf-stage{position:relative;width:100%;height:100%;overflow:hidden}
 .pf-feed-item img.pf-cover{width:100%;height:100%;object-fit:cover}
 .pf-top-gradient{position:absolute;left:0;right:0;top:0;height:90px;background:linear-gradient(180deg,rgba(0,0,0,.35),transparent);z-index:2}
 .pf-bottom-gradient{position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(0deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.32) 55%,transparent 100%);z-index:2}
@@ -172,6 +173,12 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pf-avatar{width:42px;height:42px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;margin-bottom:2px}
 .pf-feed-actions .pf-act{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:700;text-decoration:none;color:#fff}
 .pf-feed-actions .pf-act svg{width:25px;height:25px}
+@media (min-width:680px){
+  .pf-feed-item{background:#000}
+  .pf-stage{width:420px;height:min(100%, 746px);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .pf-progress-row{left:50%;right:auto;transform:translateX(-50%);width:396px}
+  .pf-feed-close{left:calc(50% - 232px)}
+}
 .pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:pointer;background:#1a1a1a}
 .pf-video-card img{width:100%;height:100%;object-fit:cover}
 .pf-video-card .pf-vinfo{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent 70%);color:#fff;padding:20px 8px 6px}
@@ -2033,6 +2040,7 @@ function pfInitialsName(name){ return String(name||'?').trim().split(/\s+/).map(
 function openPfFullFeed(startIndex){
   const itemsHtml = pfFeedVideos.map(function(v){
     return '<div class="pf-feed-item" onclick="this.classList.toggle(\'pf-show-play\')">'
+      + '<div class="pf-stage">'
       + (v.cover_image_url ? '<img class="pf-cover" src="' + v.cover_image_url + '">' : '')
       + '<div class="pf-top-gradient"></div>'
       + '<div class="pf-bottom-gradient"></div>'
@@ -2045,6 +2053,7 @@ function openPfFullFeed(startIndex){
       + '</div>'
       + '<div class="pf-feed-info"><div class="pf-fname">@' + (v.creator_nama || 'Creator') + '</div>'
       + '<div class="pf-ftitle">' + (v.title || '') + '</div></div>'
+      + '</div>'
       + '</div>';
   }).join('');
   const progressHtml = '<div class="pf-progress-row">' + pfFeedVideos.map(function(_, j){
