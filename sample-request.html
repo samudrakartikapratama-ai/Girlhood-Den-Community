@@ -213,6 +213,17 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
 .card-title{font-size:14px;font-weight:700;margin-bottom:4px}
 .card-sub{font-size:12px;color:var(--gray-text);margin-bottom:8px}
+.pk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pk-card{background:#fff;border:1.5px solid var(--gray-mid);border-radius:14px;padding:11px;cursor:pointer;transition:border-color .15s}
+.pk-card.selected{border-color:var(--pink);border-width:2px}
+.pk-card .pk-thumb{width:100%;aspect-ratio:1;border-radius:10px;background:var(--gray);margin-bottom:8px;object-fit:cover}
+.pk-card .pk-name{font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:29px}
+.pk-card .pk-status{font-size:10px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.pk-card .pk-status.empty{color:var(--gray-text)}
+.pk-card .pk-status.filled{color:var(--teal);font-weight:700}
+@media (min-width:680px){
+  .pk-grid{grid-template-columns:repeat(4,1fr)}
+}
 .notif-day-label{font-size:11px;font-weight:800;color:var(--gray-text);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.3px}
 .notif-day-label:first-child{margin-top:0}
 .notif-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--gray-mid)}
@@ -1608,10 +1619,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div>
 </div></div>
 
-<div class="modal-bg" id="m-b-pk"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-pk')">‹ ✕</button>
+<div class="modal-bg" id="m-b-pk"><div class="modal-box" style="max-width:920px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-pk')">‹ ✕</button>
   <div class="modal-title">📚 Product Knowledge</div>
   <div class="card-sub">Upload materi produk (PDF/PPTX) biar tim AE dan creator paham produk kamu.</div>
-  <div id="pk-catalog" style="margin-top:12px"><div class="card-sub">Memuat produk...</div></div>
+  <div class="field" style="margin:10px 0 12px"><input id="pk-search" placeholder="🔍 Cari nama produk..." oninput="filterPkCatalog(this.value)"></div>
+  <div id="pk-catalog" class="pk-grid" style="margin-top:4px"><div class="card-sub">Memuat produk...</div></div>
+  <div id="pk-upload-panel" style="display:none;margin-top:16px;padding-top:16px;border-top:1.5px solid var(--gray-mid)"></div>
 </div></div>
 
 <div class="modal-bg" id="m-b-endorsement"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-endorsement')">‹ ✕</button>
@@ -2413,80 +2426,94 @@ async function uploadDocFileRaw(bucket, file, pathPrefix){
 
 let pkOpenProductId = null;
 
+let pkAllProducts = [];
+let pkFilesByProduct = {};
+let pkSelectedProductId = null;
+
 async function loadProductKnowledgeCatalog(){
   const wrap = document.getElementById('pk-catalog');
   wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
-  const { data: products, error } = await db.from('brand_products').select('id, nama_produk').eq('brand_id', currentSession.brandId).eq('is_frozen', false).limit(100);
+  document.getElementById('pk-upload-panel').style.display = 'none';
+  pkSelectedProductId = null;
+  const { data: products, error } = await db.from('brand_products').select('id, nama_produk, foto_urls').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk', { ascending: true }).limit(100);
   if(error || !products || products.length === 0){
     wrap.innerHTML = '<div class="card-sub">Belum ada produk terdaftar.</div>';
     return;
   }
+  pkAllProducts = products;
   const productIds = products.map(function(p){ return p.id; });
   const { data: files } = await db.from('product_knowledge_files').select('id, brand_product_id, file_name, file_url').in('brand_product_id', productIds);
-  const filesByProduct = {};
+  pkFilesByProduct = {};
   (files || []).forEach(function(f){
-    filesByProduct[f.brand_product_id] = filesByProduct[f.brand_product_id] || [];
-    filesByProduct[f.brand_product_id].push(f);
+    pkFilesByProduct[f.brand_product_id] = pkFilesByProduct[f.brand_product_id] || [];
+    pkFilesByProduct[f.brand_product_id].push(f);
   });
-  wrap.innerHTML = '';
-  products.forEach(function(p){
-    const myFiles = filesByProduct[p.id] || [];
-    const done = myFiles.length > 0;
-    const row = document.createElement('div');
-    row.style.cssText = 'background:#fff;border:1px solid var(--gray-mid);border-radius:12px;margin-bottom:10px;overflow:hidden';
-    const head = document.createElement('div');
-    head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px';
-    head.innerHTML = '<div style="flex:1;min-width:0">'
-      + '<p style="margin:0;font-size:13px;font-weight:700">' + (p.nama_produk || '-') + '</p>'
-      + '<p style="margin:2px 0 0;font-size:11px;color:' + (done ? 'var(--teal)' : 'var(--gray-text)') + '">' + (done ? myFiles.length + ' file terupload' : 'Belum ada file') + '</p>'
-      + '</div>';
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-sm ' + (done ? 'btn-teal' : 'btn-primary');
-    btn.textContent = done ? '✓ Selesai' : 'Isi Product Knowledge';
-    btn.addEventListener('click', function(){ pkOpenProductId = (pkOpenProductId === p.id) ? null : p.id; renderPkRow(row, p, filesByProduct); });
-    head.appendChild(btn);
-    row.appendChild(head);
-    wrap.appendChild(row);
-    row._product = p;
-    row._filesByProduct = filesByProduct;
-  });
+  renderPkCatalog(pkAllProducts);
 }
 
-function renderPkRow(row, p, filesByProduct){
-  const existing = row.querySelector('.pk-drop-area');
-  if(existing) existing.remove();
-  if(pkOpenProductId !== p.id) return;
-  const myFiles = filesByProduct[p.id] || [];
-  const dropArea = document.createElement('div');
-  dropArea.className = 'pk-drop-area';
-  dropArea.style.cssText = 'border-top:1px solid var(--gray-mid);padding:14px';
-  const inputId = 'pk-file-input-' + p.id;
-  dropArea.innerHTML = '<div style="border:2px dashed var(--gray-mid);border-radius:12px;padding:18px;text-align:center;margin-bottom:10px;cursor:pointer" id="pk-dz-' + p.id + '">'
+function filterPkCatalog(query){
+  query = (query || '').toLowerCase().trim();
+  const filtered = pkAllProducts.filter(function(p){ return (p.nama_produk||'').toLowerCase().indexOf(query) !== -1; });
+  renderPkCatalog(filtered);
+}
+
+function renderPkCatalog(products){
+  const wrap = document.getElementById('pk-catalog');
+  if(products.length === 0){
+    wrap.innerHTML = '<div class="card-sub">Produk tidak ditemukan.</div>';
+    return;
+  }
+  wrap.innerHTML = products.map(function(p){
+    const myFiles = pkFilesByProduct[p.id] || [];
+    const done = myFiles.length > 0;
+    const img = (p.foto_urls && p.foto_urls[0]) ? p.foto_urls[0] : '';
+    return '<div class="pk-card' + (p.id === pkSelectedProductId ? ' selected' : '') + '" onclick="selectPkProduct(\'' + p.id + '\')">'
+      + (img ? '<img class="pk-thumb" src="' + img + '">' : '<div class="pk-thumb"></div>')
+      + '<div class="pk-name">' + (p.nama_produk || '-') + '</div>'
+      + '<div class="pk-status ' + (done ? 'filled' : 'empty') + '">' + (done ? '✓ ' + myFiles.length + ' file' : '○ Belum ada file') + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function selectPkProduct(id){
+  pkSelectedProductId = id;
+  renderPkCatalog(pkAllProducts.filter(function(p){
+    const q = (document.getElementById('pk-search').value || '').toLowerCase().trim();
+    return (p.nama_produk||'').toLowerCase().indexOf(q) !== -1;
+  }));
+  const p = pkAllProducts.find(function(x){ return x.id === id; });
+  const panel = document.getElementById('pk-upload-panel');
+  panel.style.display = 'block';
+  const myFiles = pkFilesByProduct[id] || [];
+  const inputId = 'pk-file-input-' + id;
+  panel.innerHTML = '<div style="font-weight:800;color:var(--dark);font-size:13.5px;margin-bottom:10px">' + (p.nama_produk||'-') + '</div>'
+    + '<div style="border:2px dashed var(--gray-mid);border-radius:12px;padding:18px;text-align:center;margin-bottom:10px;cursor:pointer" id="pk-dz-' + id + '">'
     + '<p style="margin:0;font-size:12px;color:var(--dark)">Drag your files or choose files</p>'
     + '<p style="margin:4px 0 0;font-size:10px;color:var(--gray-text)">PDF atau PPTX</p>'
     + '</div><input type="file" id="' + inputId + '" accept=".pdf,.pptx,.ppt" style="display:none">'
-    + '<div id="pk-chips-' + p.id + '" style="display:flex;flex-wrap:wrap;gap:6px"></div>';
-  row.appendChild(dropArea);
-  const chipWrap = dropArea.querySelector('#pk-chips-' + p.id);
+    + '<div id="pk-chips-' + id + '" style="display:flex;flex-wrap:wrap;gap:6px"></div>';
+  const chipWrap = document.getElementById('pk-chips-' + id);
   myFiles.forEach(function(f){
     const chip = document.createElement('span');
     chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--gray);border-radius:999px;padding:4px 10px;font-size:11px';
     chip.textContent = f.file_name;
     chipWrap.appendChild(chip);
   });
-  const dz = dropArea.querySelector('#pk-dz-' + p.id);
-  const input = dropArea.querySelector('#' + inputId);
+  const dz = document.getElementById('pk-dz-' + id);
+  const input = document.getElementById(inputId);
   dz.addEventListener('click', function(){ input.click(); });
   input.addEventListener('change', async function(){
     const file = input.files[0];
     if(!file) return;
     dz.querySelector('p').textContent = 'Mengupload...';
-    const { url, error } = await uploadDocFileRaw('product-knowledge', file, 'pk-' + p.id);
+    const { url, error } = await uploadDocFileRaw('product-knowledge', file, 'pk-' + id);
     if(error){ showToast('Gagal upload: ' + error.message); dz.querySelector('p').textContent = 'Drag your files or choose files'; return; }
-    await db.from('product_knowledge_files').insert({ brand_product_id: p.id, file_url: url, file_name: file.name });
-    loadProductKnowledgeCatalog();
+    await db.from('product_knowledge_files').insert({ brand_product_id: id, file_url: url, file_name: file.name });
+    await loadProductKnowledgeCatalog();
+    selectPkProduct(id);
   });
 }
+
 
 // ===== ENDORSEMENT: entry point + funnel gate (sub-step 1) + creator picker (sub-step 2) =====
 let endorsementProductId = null;
