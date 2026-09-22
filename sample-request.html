@@ -191,7 +191,9 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pf-video-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
 .pf-vsrc{font-size:8px;opacity:.9;display:flex;align-items:center;gap:3px;margin-top:1px}
 .pf-vsrc.self{color:#ffe28a}
+.pf-prod-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (min-width:680px){
+  .pf-prod-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .pf-video-card{width:140px;height:198px}
 }
 .pf-video-card img{width:100%;height:100%;object-fit:cover}
@@ -1610,7 +1612,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
     <div id="pf-wiz-step-1">
       <div class="card-sub" style="margin-bottom:6px">Pilih produk kamu</div>
-      <div id="pf-product-picker" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:220px;overflow-y:auto;padding:2px"><div class="card-sub">Memuat produk...</div></div>
+      <div id="pf-product-picker" class="pf-prod-grid" style="max-height:340px;overflow-y:auto;padding:2px"><div class="card-sub">Memuat produk...</div></div>
     </div>
 
     <div id="pf-wiz-step-2" style="display:none">
