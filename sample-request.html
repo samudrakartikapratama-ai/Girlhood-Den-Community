@@ -1169,11 +1169,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div>
 
-<div class="modal-bg" id="m-c9"><div class="modal-box sr-modal-box" style="padding:0;overflow:hidden">
+<div class="modal-bg" id="m-selfreport"><div class="modal-box sr-modal-box" style="padding:0;overflow:hidden">
   <!-- ===== LAYAR A: PILIH BRAND ===== -->
   <div class="sr-screen active" id="sr-screen-brand">
     <div style="padding:20px 20px 4px;position:relative">
-      <button class="modal-close" title="Kembali" onclick="closeModal('m-c9')" style="position:absolute;top:14px;right:16px">‹ ✕</button>
+      <button class="modal-close" title="Kembali" onclick="closeModal('m-selfreport')" style="position:absolute;top:14px;right:16px">‹ ✕</button>
       <div class="modal-title" style="margin-bottom:2px">📸 Udah Punya Produknya? <span style="display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Menu ini buat produk yang <b>UDAH kamu punya sendiri</b> — bukan minta dikirim. Kalau produknya belum pernah disetujui, upload foto dulu di sini. Kalau UDAH PERNAH disetujui sebelumnya, langsung aja ke <b>Report VT</b>, nggak usah upload foto lagi.')">!</span></div>
       <div class="card-sub">Pilih brand dulu, abis itu pilih produknya dari foto.</div>
       <input class="sr-search" id="sr-search-input" placeholder="🔍 Cari brand..." oninput="filterSelfReportBrands(this.value)" style="margin-top:10px">
@@ -1187,7 +1187,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="sr-product-header">
       <button class="sr-back" onclick="backToSelfReportBrandScreen()">‹</button>
       <div class="modal-title" id="sr-product-title" style="margin:0">Produk</div>
-      <button class="modal-close" title="Kembali" onclick="closeModal('m-c9')" style="position:absolute;top:14px;right:16px">‹ ✕</button>
+      <button class="modal-close" title="Kembali" onclick="closeModal('m-selfreport')" style="position:absolute;top:14px;right:16px">‹ ✕</button>
     </div>
     <div class="sr-product-scroll">
       <div class="sr-hero-label" id="sr-hero-label" style="display:none">✨ Best Seller — geser buat lihat lainnya</div>
@@ -8708,7 +8708,7 @@ let srCurrentProducts = [];
 let srSelectedProductId = null;
 
 async function openSelfReportModal(){
-  openModal('m-c9');
+  openModal('m-selfreport');
   document.getElementById('sr-screen-product').classList.remove('active');
   document.getElementById('sr-screen-brand').classList.add('active');
   document.getElementById('sr-search-input').value = '';
@@ -8921,13 +8921,13 @@ async function submitSelfReport(){
       if(!j.valid){
         if(j.errorType === 'already_approved'){
           const goVt = confirm((j.error || 'Produk ini udah pernah di-approve.') + '\n\nMau langsung ke Report VT sekarang?');
-          if(goVt){ closeModal('m-c9'); handleReportVtClick(); }
+          if(goVt){ closeModal('m-selfreport'); handleReportVtClick(); }
           return;
         }
         alert(j.error || 'Gagal mengajukan.'); return;
       }
       alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
-      closeModal('m-c9');
+      closeModal('m-selfreport');
     } catch(e){ alert('Gagal menghubungi server.'); }
   };
   reader.readAsDataURL(file);
