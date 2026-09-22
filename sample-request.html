@@ -3399,7 +3399,7 @@ async function loadNotificationsCreator(){
     }
     const typeClass = n.kategori === 'resi' ? 'info' : notifTypeClass(n.kategori, n.detail_text);
     const text = n.kategori === 'resi' ? n.detail_text : humanizeNotifText(n.kategori, n.detail_text, brandName);
-    const isAutoClose = /ditutup otomatis/i.test(n.detail_text || '');
+    const isAutoClose = /otomatis ditutup|ditutup otomatis/i.test(n.detail_text || '');
     html += '<div class="notif-item">'
       + '<div class="ic ' + typeClass + '">' + (n.kategori === 'resi' ? '📦' : iconEmoji[typeClass]) + '</div>'
       + '<div style="flex:1">'
