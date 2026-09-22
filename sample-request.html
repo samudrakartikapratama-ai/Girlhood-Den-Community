@@ -196,6 +196,10 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
   .pf-prod-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .pf-video-card{width:140px;height:198px}
 }
+.modal-box-pf{display:flex;flex-direction:column;overflow:hidden;padding:0}
+.modal-box-pf .modal-close{position:absolute;top:20px;right:20px;z-index:10}
+.pf-scroll-area{flex:1;overflow-y:auto;padding:24px}
+.pf-cta-sticky{flex-shrink:0;padding:16px 24px;background:linear-gradient(135deg,var(--pink),#F472A8);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -8px 20px rgba(0,0,0,.12)}
 .pf-video-card img{width:100%;height:100%;object-fit:cover}
 .pf-video-card .pf-vinfo{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent 70%);color:#fff;padding:20px 8px 6px}
 .pf-video-card .pf-vname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1596,28 +1600,39 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-escalated-list" style="margin-top:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
-<div class="modal-bg" id="m-playfield"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
-  <div class="modal-title">🎮 Creator Playfield</div>
-  <div class="card-sub">Newest video</div>
-  <div id="playfield-videos" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px;display:flex;gap:8px;margin:8px 0 16px"><div class="card-sub">Memuat video...</div></div>
-  <div id="pf-brand-only" style="display:none;margin-top:14px">
-  <div class="cta-banner" onclick="pfGoToWizardStep(1)" style="background:linear-gradient(135deg,var(--pink),#F472A8);border-radius:14px;padding:14px 16px;margin-bottom:14px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-    <div><div style="font-weight:800;font-size:13.5px">🚀 Suka sama kontennya?</div><div style="font-size:11px;opacity:.9;margin-top:2px">Mulai kerja bareng creator-creator ini lewat Endorsement</div></div>
-    <div style="font-size:20px">→</div>
+<div class="modal-bg" id="m-playfield"><div class="modal-box modal-box-pf" style="max-width:900px;max-height:88vh"><button class="modal-close" title="Kembali" onclick="closeModal('m-playfield')">‹ ✕</button>
+
+  <div id="pf-view-showcase" style="display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0">
+    <div class="pf-scroll-area" id="pf-showcase-scroll" style="padding-top:24px">
+      <div class="modal-title">🎮 Creator Playfield</div>
+      <div class="card-sub">Newest video</div>
+      <div id="playfield-videos" style="background:var(--gray);border-radius:14px;max-height:260px;overflow-y:auto;padding:10px;display:flex;gap:8px;margin:8px 0 16px"><div class="card-sub">Memuat video...</div></div>
+      <div id="pf-creator-only" style="display:none;margin-top:14px">
+        <div class="card-sub" style="margin-bottom:6px">Creator</div>
+        <div id="pf-creator-list" style="background:var(--gray);border-radius:12px;padding:10px"><div class="card-sub">Memuat...</div></div>
+      </div>
+    </div>
+    <div id="pf-cta-sticky" class="pf-cta-sticky" style="display:none" onclick="pfOpenWizardView()">
+      <div><div style="font-weight:800;font-size:13.5px">🚀 Suka sama kontennya?</div><div style="font-size:11px;opacity:.9;margin-top:2px">Mulai kerja bareng creator-creator ini lewat Endorsement</div></div>
+      <div style="font-size:20px">→</div>
+    </div>
   </div>
 
-  <div id="pf-wizard" style="display:none;background:#fff;border:1.5px solid var(--gray-mid);border-radius:16px;padding:16px">
+  <div id="pf-view-wizard" style="display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0">
+    <div class="pf-scroll-area" id="pf-wizard-scroll">
+    <div class="card-sub" style="cursor:pointer;margin-bottom:8px" onclick="pfCloseWizardView()">‹ Kembali ke Showcase</div>
+  <div id="pf-wizard">
     <div style="display:flex;gap:6px;margin-bottom:6px" id="pf-wiz-dots"></div>
     <div class="card-sub" id="pf-wiz-step-label" style="margin-bottom:12px"></div>
 
     <div id="pf-wiz-step-1">
       <div class="card-sub" style="margin-bottom:6px">Pilih produk kamu</div>
-      <div id="pf-product-picker" class="pf-prod-grid" style="max-height:340px;overflow-y:auto;padding:2px"><div class="card-sub">Memuat produk...</div></div>
+      <div id="pf-product-picker" class="pf-prod-grid" style="padding:2px"><div class="card-sub">Memuat produk...</div></div>
     </div>
 
     <div id="pf-wiz-step-2" style="display:none">
       <div class="card-sub" style="margin-bottom:6px">Creator yang match produk ini</div>
-      <div id="pf-matches" style="background:var(--gray);border-radius:12px;max-height:280px;overflow-y:auto;padding:10px"><div class="card-sub">Pilih produk dulu.</div></div>
+      <div id="pf-matches" style="background:var(--gray);border-radius:12px;padding:10px"><div class="card-sub">Pilih produk dulu.</div></div>
       <div class="card-sub" style="margin-top:8px;font-size:10.5px">🔗 Terhubung = creator ini udah connect akun TikTok mereka ke platform kami.</div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-outline btn-sm" style="flex:1" onclick="pfGoToWizardStep(1)">‹ Kembali</button>
@@ -1635,13 +1650,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <button id="pf-finish-btn" class="btn btn-primary" style="width:100%" onclick="sendEndorsementProposal()">Send your proposal to our team</button>
       <div id="pf-finish-msg" style="display:none;margin-top:8px;text-align:center;font-size:12px"></div>
     </div>
+    </div>
   </div>
   </div>
 
-<div id="pf-creator-only" style="display:none;margin-top:14px">
-  <div class="card-sub" style="margin-bottom:6px">Creator</div>
-  <div id="pf-creator-list" style="background:var(--gray);border-radius:12px;max-height:260px;overflow-y:auto;padding:10px"><div class="card-sub">Memuat...</div></div>
-</div>
 </div></div>
 
 <div class="modal-bg" id="m-b-pk"><div class="modal-box" style="max-width:920px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-pk')">‹ ✕</button>
@@ -2061,9 +2073,21 @@ function openPlayfield(){
   const isBrand = currentSession.role === 'brand';
   openModal('m-playfield');
   loadPlayfieldByBrand();
-  document.getElementById('pf-brand-only').style.display = isBrand ? 'block' : 'none';
+  document.getElementById('pf-cta-sticky').style.display = isBrand ? 'flex' : 'none';
   document.getElementById('pf-creator-only').style.display = isBrand ? 'none' : 'block';
-  if(isBrand){ document.getElementById('pf-wizard').style.display = 'none'; document.getElementById('pf-product-picker').dataset.loaded = '0'; } else { loadPlayfieldCreatorsPlain(); }
+  document.getElementById('pf-view-showcase').style.display = 'flex';
+  document.getElementById('pf-view-wizard').style.display = 'none';
+  if(isBrand){ document.getElementById('pf-product-picker').dataset.loaded = '0'; } else { loadPlayfieldCreatorsPlain(); }
+}
+
+function pfOpenWizardView(){
+  document.getElementById('pf-view-showcase').style.display = 'none';
+  document.getElementById('pf-view-wizard').style.display = 'flex';
+  pfGoToWizardStep(1);
+}
+function pfCloseWizardView(){
+  document.getElementById('pf-view-wizard').style.display = 'none';
+  document.getElementById('pf-view-showcase').style.display = 'flex';
 }
 
 let pfFeedVideos = [];
@@ -2221,7 +2245,6 @@ let pfLastMatches = [];
 let pfWizStep = 1;
 
 function pfGoToWizardStep(step){
-  document.getElementById('pf-wizard').style.display = 'block';
   pfWizStep = step;
   document.getElementById('pf-wiz-step-1').style.display = step === 1 ? 'block' : 'none';
   document.getElementById('pf-wiz-step-2').style.display = step === 2 ? 'block' : 'none';
