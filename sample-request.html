@@ -181,7 +181,11 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
   .pf-progress-row{left:50%;right:auto;transform:translateX(-50%);width:396px}
   .pf-feed-close{left:calc(50% - 232px)}
 }
-.pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:pointer;background:#1a1a1a}
+.pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:default;user-select:none;background:#1a1a1a;transition:box-shadow 260ms cubic-bezier(.23,1,.32,1)}
+.pf-video-card iframe.pf-auto{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
+.pf-video-card .pf-auto-block{position:absolute;inset:0;z-index:3}
+.pf-video-card .pf-vinfo{z-index:2}
+.pf-video-card.pf-auto-on{box-shadow:0 0 0 3px var(--pink)}
 .pf-brand-block{margin-bottom:20px}
 .pf-brand-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .pf-brand-logo{width:26px;height:26px;border-radius:8px;background:#fff;border:1px solid var(--gray-mid);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--pink);flex-shrink:0;overflow:hidden}
@@ -2105,10 +2109,12 @@ function pfOpenWizardView(){
   document.getElementById('pf-view-showcase').style.display = 'none';
   document.getElementById('pf-view-wizard').style.display = 'flex';
   pfGoToWizardStep(1);
+  pfAutoRestart();
 }
 function pfCloseWizardView(){
   document.getElementById('pf-view-wizard').style.display = 'none';
   document.getElementById('pf-view-showcase').style.display = 'flex';
+  pfAutoRestart();
 }
 
 let pfFeedVideos = [];
@@ -2154,7 +2160,7 @@ async function loadPlayfieldByBrand(){
         + '</div>'
         + '<div class="pf-video-row">'
         +   b.videos.map(function(v, i){
-              return '<div class="pf-video-card" onclick="openPfFullFeedForBrand(\'' + b.brand_id + '\', ' + i + ')">'
+              return '<div class="pf-video-card"' + (v.video_id ? ' data-vid="' + escHtml(v.video_id) + '"' : '') + '>'
                 + (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
                 + '<div class="pf-vinfo"><div class="pf-vname">' + (v.creator_nama || 'Creator') + '</div>'
                 + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : '🤝 Campaign') + '</div></div>'
@@ -2163,9 +2169,111 @@ async function loadPlayfieldByBrand(){
         + '</div>'
         + '</div>';
     }).join('');
+    pfStartAutoplay();
   }catch(e){
     wrap.innerHTML = '<div class="card-sub">Gagal memuat video.</div>';
   }
+}
+
+// Showcase: 1 video auto-play (mute, tidak bisa diklik) di baris brand yang paling kelihatan, gantian tiap 10 detik.
+// Cuma 1 player aktif di seluruh halaman biar ringan; berhenti otomatis saat modal ditutup / tab disembunyikan.
+let pfAutoTimer = null;
+let pfAutoScrollEl = null;
+let pfAutoScrollDebounce = null;
+let pfAutoState = { block: null, idx: -1 };
+
+function pfStopAutoplay(){
+  clearInterval(pfAutoTimer); pfAutoTimer = null;
+  clearTimeout(pfAutoScrollDebounce);
+  if(pfAutoScrollEl){ pfAutoScrollEl.removeEventListener('scroll', pfAutoOnScroll); pfAutoScrollEl = null; }
+  pfClearAutoCard();
+  pfAutoState = { block: null, idx: -1 };
+}
+
+function pfClearAutoCard(){
+  document.querySelectorAll('#playfield-videos .pf-video-card.pf-auto-on').forEach(function(c){
+    c.classList.remove('pf-auto-on');
+    c.querySelectorAll('iframe.pf-auto, .pf-auto-block').forEach(function(el){ el.remove(); });
+  });
+}
+
+function pfAutoplayAllowed(){
+  const modal = document.getElementById('m-playfield');
+  const showcase = document.getElementById('pf-view-showcase');
+  return modal && modal.classList.contains('open')
+    && showcase && showcase.style.display !== 'none'
+    && document.visibilityState === 'visible';
+}
+
+// Baris brand yang minimal 50% tingginya kelihatan di area scroll modal; kalau beberapa, ambil yang paling kelihatan.
+function pfAutoBestBlock(){
+  if(!pfAutoScrollEl) return null;
+  const view = pfAutoScrollEl.getBoundingClientRect();
+  let best = null, bestRatio = 0.5;
+  document.querySelectorAll('#playfield-videos .pf-brand-block').forEach(function(bl){
+    if(!bl.querySelector('.pf-video-card[data-vid]')) return;
+    const r = bl.getBoundingClientRect();
+    if(r.height <= 0) return;
+    const visible = Math.min(r.bottom, view.bottom) - Math.max(r.top, view.top);
+    const ratio = visible / r.height;
+    if(ratio > bestRatio){ best = bl; bestRatio = ratio; }
+  });
+  return best;
+}
+
+function pfAutoTick(){
+  if(!document.getElementById('m-playfield').classList.contains('open')){ pfStopAutoplay(); return; }
+  if(!pfAutoplayAllowed()){ pfClearAutoCard(); pfAutoState = { block: null, idx: -1 }; return; }
+  const best = pfAutoBestBlock();
+  if(!best){ pfClearAutoCard(); pfAutoState = { block: null, idx: -1 }; return; }
+  const cards = Array.prototype.slice.call(best.querySelectorAll('.pf-video-card[data-vid]'));
+  const nextIdx = best === pfAutoState.block ? (pfAutoState.idx + 1) % cards.length : 0;
+  pfClearAutoCard();
+  pfAutoState = { block: best, idx: nextIdx };
+  const card = cards[nextIdx];
+  const frame = document.createElement('iframe');
+  frame.className = 'pf-auto';
+  frame.src = 'https://www.tiktok.com/player/v1/' + encodeURIComponent(card.getAttribute('data-vid'))
+    + '?autoplay=1&muted=1&loop=1&controls=0&progress_bar=0&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0';
+  frame.allow = 'autoplay; encrypted-media';
+  frame.setAttribute('tabindex', '-1');
+  frame.setAttribute('aria-hidden', 'true');
+  const shield = document.createElement('div');
+  shield.className = 'pf-auto-block';
+  card.appendChild(frame);
+  card.appendChild(shield);
+  card.classList.add('pf-auto-on');
+  const row = card.parentElement;
+  if(row && (card.offsetLeft < row.scrollLeft || card.offsetLeft + card.offsetWidth > row.scrollLeft + row.clientWidth)){
+    row.scrollTo({ left: Math.max(0, card.offsetLeft - 8), behavior: 'smooth' });
+  }
+}
+
+function pfAutoRestart(){
+  if(!pfAutoTimer) return;
+  clearInterval(pfAutoTimer);
+  pfAutoTick();
+  if(pfAutoScrollEl) pfAutoTimer = setInterval(pfAutoTick, 10000);
+}
+
+// Kalau user scroll ke brand lain, langsung pindah tanpa nunggu 10 detik.
+function pfAutoOnScroll(){
+  clearTimeout(pfAutoScrollDebounce);
+  pfAutoScrollDebounce = setTimeout(function(){
+    if(pfAutoTimer && pfAutoBestBlock() !== pfAutoState.block) pfAutoRestart();
+  }, 250);
+}
+
+document.addEventListener('visibilitychange', pfAutoRestart);
+
+function pfStartAutoplay(){
+  pfStopAutoplay();
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  pfAutoScrollEl = document.getElementById('pf-showcase-scroll');
+  if(!pfAutoScrollEl) return;
+  pfAutoScrollEl.addEventListener('scroll', pfAutoOnScroll, { passive: true });
+  pfAutoTimer = setInterval(pfAutoTick, 10000);
+  pfAutoTick();
 }
 
 function openPfFullFeedForBrand(brandId, startIndex){
@@ -4913,7 +5021,7 @@ async function loginBrand(){
   }
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open'); if(id === 'm-playfield' && typeof pfStopAutoplay === 'function') pfStopAutoplay();}
 function showFlowPopup(role){document.getElementById('flow-popup-'+role).classList.add('open');}
 function closeFlowPopup(role){document.getElementById('flow-popup-'+role).classList.remove('open');}
 
