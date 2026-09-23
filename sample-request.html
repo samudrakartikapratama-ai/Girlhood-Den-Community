@@ -6145,45 +6145,14 @@ async function loadBelumPosting(){
       }
       const waMsg = encodeURIComponent('Halo ' + r.creatorName + ', sample kamu dari ' + r.brandName + ' (' + r.produkName + ') sudah dikirim. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏');
       const waUrl = r.noHp ? 'https://wa.me/' + r.noHp.replace(/\D/g,'') + '?text=' + waMsg : null;
-      const waiveBtn = r.sampleRequestId
-        ? '<button class="btn btn-outline btn-sm" style="flex-shrink:0" onclick="waiveSow(this, \'' + r.sampleRequestId + '\', \'' + escHtml(r.creatorName).replace(/'/g, "&#39;") + '\', \'' + escHtml(r.produkName).replace(/'/g, "&#39;") + '\')">🚫 Bebasin SOW</button>'
-        : '';
       return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
         + '<div><b>'+escHtml(r.creatorName)+'</b><br><span class="card-sub">'+subLabel+' · '+escHtml(r.produkName)+'</span></div>'
         + '<div style="display:flex;gap:6px;flex-shrink:0">'
         + (waUrl ? '<a class="btn btn-teal btn-sm" style="text-decoration:none" href="'+waUrl+'" target="_blank">📲 Kirim WA</a>' : '<span class="card-sub">No HP tidak ada</span>')
-        + waiveBtn
         + '</div>'
         + '</div></div>';
     }).join('');
   } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
-}
-
-// Bebasin kewajiban SOW satu request (barang gak pernah dikirim, kesalahan sistem, dll).
-// Tipe SOW-nya sengaja TIDAK diubah, jadi riwayat kesepakatan aslinya tetap utuh.
-async function waiveSow(btn, sampleRequestId, creatorName, produkName){
-  const reason = prompt('Alasan pembebasan SOW untuk ' + creatorName + ' (' + produkName + '):\n\nContoh: barang tidak pernah dikirim brand.');
-  if(reason === null) return;
-  if(reason.trim().length < 5){ alert('Alasan wajib diisi minimal 5 karakter.'); return; }
-
-  btn.disabled = true;
-  const labelLama = btn.textContent;
-  btn.textContent = 'Memproses...';
-  try {
-    const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-waive-sow', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': auth },
-      body: JSON.stringify({ action: 'waive', sampleRequestId: sampleRequestId, reason: reason.trim() })
-    });
-    const j = await res.json();
-    if(!j.valid){ alert(j.error || 'Gagal membebaskan SOW.'); btn.disabled = false; btn.textContent = labelLama; return; }
-    alert('SOW dibebaskan. Creator otomatis dapat notifikasi, dan produk ini hilang dari tagihan Report VT.');
-    await loadBelumPosting();
-  } catch(e){
-    alert('Gagal menghubungi server.');
-    btn.disabled = false; btn.textContent = labelLama;
-  }
 }
 
 const VT_THUMB_BASE = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1/object/public/vt-thumbs/';
