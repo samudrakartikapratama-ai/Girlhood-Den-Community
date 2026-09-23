@@ -5928,7 +5928,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       videoHtml = '<div class="card-sub" style="font-weight:800;color:var(--dark);margin-top:10px">Video referensi dari brand</div>'
       + '<div class="vref">'
       +   '<div class="vbg"></div>'
-      +   '<video src="'+videos[0]+'" muted autoplay loop playsinline preload="metadata"></video>'
+      +   '<video data-src="'+videos[0]+'" muted loop playsinline preload="none"></video>'
       +   '<span class="vbadge">Contoh konten</span>'
       +   '<div class="vbar">'
       +     '<button type="button" class="vsound" onclick="vrefSound(this)">🔇 Ketuk untuk nyalakan suara</button>'
@@ -5970,6 +5970,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
   });
 
   renderPilihanGirlhoodDen(brandId, data, container);
+  vrefAmati(container);
 }
 
 // Kotak "Pilihan Girlhood Den" — 2 Hero + 1 Produk Baru pilihan internal, tampil paling atas.
@@ -6232,9 +6233,46 @@ function toggleLive(sel){
 // --- Video referensi: suara & ganti video ---
 function vrefPlay(vid){
   if(!vid) return;
+  if(!vid.getAttribute('src') && vid.dataset.src) vid.setAttribute('src', vid.dataset.src);
   var pr = vid.play();
   if(pr && pr.catch) pr.catch(function(){}); // browser lama: play() nggak balikin promise
 }
+
+// Video referensi baru dimuat & diputar kalau kartunya lagi kelihatan di layar.
+// Tanpa ini, buka satu brand isi 20 produk = 20 video ke-download sekaligus, boros kuota creator.
+let vrefScrollEl = null;
+let vrefContainer = null;
+let vrefTunda = null;
+
+function vrefKelihatan(box){
+  var r = box.getBoundingClientRect();
+  var tinggiLayar = window.innerHeight || document.documentElement.clientHeight;
+  var terlihat = Math.min(r.bottom, tinggiLayar) - Math.max(r.top, 0);
+  return r.height > 0 && (terlihat / r.height) >= 0.6;
+}
+
+function vrefSegarkan(container){
+  if(!container) return;
+  container.querySelectorAll('.vref').forEach(function(box){
+    var vid = box.querySelector('video');
+    if(!vid) return;
+    if(vrefKelihatan(box)){ vrefPlay(vid); } else { vid.pause(); }
+  });
+}
+
+function vrefOnScroll(){
+  clearTimeout(vrefTunda);
+  vrefTunda = setTimeout(function(){ vrefSegarkan(vrefContainer); }, 150);
+}
+
+function vrefAmati(container){
+  if(vrefScrollEl) vrefScrollEl.removeEventListener('scroll', vrefOnScroll);
+  vrefContainer = container;
+  vrefScrollEl = container.closest('.modal-box') || window;
+  vrefScrollEl.addEventListener('scroll', vrefOnScroll, { passive: true });
+  vrefSegarkan(container);
+}
+
 function vrefSound(btn){
   var vid = btn.closest('.vref').querySelector('video');
   if(!vid) return;
@@ -6249,6 +6287,7 @@ function vrefPick(btn, url){
   wrap.querySelectorAll('.vpick').forEach(function(b){ b.classList.remove('on'); });
   btn.classList.add('on');
   var vid = wrap.querySelector('video');
+  vid.dataset.src = url;
   vid.src = url;
   vrefPlay(vid);
 }
