@@ -3589,9 +3589,12 @@ async function loadNotificationsCreator(){
   if(!currentSession.memberId){ container.innerHTML = '<div class="card-sub">Sesi tidak terdeteksi.</div>'; return; }
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
+  // Cuma notifikasi yang audience-nya memang buat creator (audience di-set otomatis
+  // sama trigger DB set_notif_audience, jadi semua penulis notifikasi kebagian aturan sama).
   const { data, error } = await db.from('notifications')
     .select('id, kategori, brand_id, detail_text, created_at')
     .eq('member_id', currentSession.memberId)
+    .contains('audience', ['creator'])
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -3659,9 +3662,12 @@ async function loadNotificationsBrand(){
   if(!currentSession.brandId){ container.innerHTML = '<div class="card-sub">Sesi tidak terdeteksi.</div>'; return; }
   container.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
+  // Brand cuma lihat notifikasi yang audience-nya 'brand' -- aksi internal/creator
+  // (poin, submit VT, antrean review self-report, log keputusan) nggak bocor ke sini.
   const { data, error } = await db.from('notifications')
     .select('id, kategori, member_id, detail_text, created_at')
     .eq('brand_id', currentSession.brandId)
+    .contains('audience', ['brand'])
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -4489,7 +4495,7 @@ async function loadVtReportPage(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, brand_products(nama_produk, link_affiliate, brands(nama_brand)), vt_reports(id)')
+    .select('id, tipe_sow_dipilih, sumber, sow_waived_at, brand_products(nama_produk, link_affiliate, brands(nama_brand)), logistics(sudah_dikirim), self_reported_products(status), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved');
@@ -4500,19 +4506,44 @@ async function loadVtReportPage(){
     return;
   }
 
-  const needVt = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0; });
+  // Produk yang barangnya belum dikirim brand JANGAN ditagih VT. Jalur 'Sudah Punya Produk'
+  // (self-report) dikecualikan karena barangnya memang udah di tangan creator sejak awal.
+  function sudahDiTangan(r){
+    if(r.sumber === 'self_report') return true;
+    if((r.self_reported_products || []).some(function(x){ return x.status === 'approved'; })) return true;
+    const logi = Array.isArray(r.logistics) ? r.logistics[0] : r.logistics;
+    return !!(logi && logi.sudah_dikirim);
+  }
+  function labelProduk(r){
+    const bp = r.brand_products || {};
+    const brandName = bp.brands ? bp.brands.nama_brand : '-';
+    return brandName + ' — ' + (bp.nama_produk || '-');
+  }
+  function blokInfo(list, cls, badge){
+    return list.map(function(r){
+      return '<div class="status-item ' + cls + '"><b>' + escHtml(labelProduk(r)) + '</b>' + badge + '</div>';
+    }).join('');
+  }
+
+  const semuaWajibVt = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0 && !r.sow_waived_at; });
+  const needVt = semuaWajibVt.filter(sudahDiTangan);
+  const belumDikirim = semuaWajibVt.filter(function(r){ return !sudahDiTangan(r); });
+  const dibebaskan = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0 && r.sow_waived_at; });
+
+  const infoLain = blokInfo(belumDikirim, 'shipping', '<div class="pending-flag">📦 Barangnya belum dikirim brand — kamu belum perlu lapor VT</div>')
+    + blokInfo(dibebaskan, 'approved', '<div class="card-sub" style="margin-top:2px">✅ Kewajiban VT dibebaskan tim internal</div>');
 
   if(needVt.length === 0){
     select.innerHTML = '<option value="">Tidak ada produk yang perlu VT</option>';
-    progressList.innerHTML = '<div class="card-sub">Belum ada produk approved yang butuh Report VT.</div>';
+    progressList.innerHTML = infoLain || '<div class="card-sub">Belum ada produk approved yang butuh Report VT.</div>';
     return;
   }
 
-  select.innerHTML = needVt.map(function(r){
-    const bp = r.brand_products || {};
-    const brandName = bp.brands ? bp.brands.nama_brand : '-';
-    return '<option value="'+r.id+'">'+brandName+' — '+(bp.nama_produk||'-')+'</option>';
+  // Placeholder yang nggak kepilih otomatis, biar creator nggak salah kirim VT ke produk pertama.
+  select.innerHTML = '<option value="" selected disabled>-- Pilih produk dulu --</option>' + needVt.map(function(r){
+    return '<option value="'+r.id+'">'+escHtml(labelProduk(r))+'</option>';
   }).join('');
+  select.value = '';
 
   progressList.innerHTML = needVt.map(function(r){
     const bp = r.brand_products || {};
@@ -4522,8 +4553,8 @@ async function loadVtReportPage(){
     const linkBtn = bp.link_affiliate
       ? '<button class="btn-mini-copy" onclick="copySowLink(\''+encodeURIComponent(bp.link_affiliate)+'\')">📋 Copy Link</button>'
       : '';
-    return '<div class="status-item approved"><b>'+(bp.nama_produk||'-')+'</b> · '+done+'/'+required+' VT'+flag+linkBtn+'</div>';
-  }).join('');
+    return '<div class="status-item approved"><b>'+escHtml(bp.nama_produk||'-')+'</b> · '+done+'/'+required+' VT'+flag+linkBtn+'</div>';
+  }).join('') + infoLain;
 }
 
 const VT_REJECT_CONTENT = {
@@ -6102,7 +6133,10 @@ async function loadBelumPosting(){
 
     el.innerHTML = j.rows.map(function(r){
       let subLabel;
-      if(r.telatHari !== null){
+      if(r.sudahDikirim === false){
+        // Brand belum kirim barangnya -- yang perlu ditagih brand, bukan creator.
+        subLabel = r.brandName + ' · <b style="color:var(--amber-dark)">barang belum dikirim brand</b> (VT ' + r.vtProgress + ')';
+      } else if(r.telatHari !== null){
         subLabel = r.brandName + ' · telat ' + r.telatHari + ' hari (VT ' + r.vtProgress + ')';
       } else if(r.deadline){
         subLabel = r.brandName + ' · belum lewat H+3 (VT ' + r.vtProgress + ')';
@@ -6111,12 +6145,45 @@ async function loadBelumPosting(){
       }
       const waMsg = encodeURIComponent('Halo ' + r.creatorName + ', sample kamu dari ' + r.brandName + ' (' + r.produkName + ') sudah dikirim. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏');
       const waUrl = r.noHp ? 'https://wa.me/' + r.noHp.replace(/\D/g,'') + '?text=' + waMsg : null;
+      const waiveBtn = r.sampleRequestId
+        ? '<button class="btn btn-outline btn-sm" style="flex-shrink:0" onclick="waiveSow(this, \'' + r.sampleRequestId + '\', \'' + escHtml(r.creatorName).replace(/'/g, "&#39;") + '\', \'' + escHtml(r.produkName).replace(/'/g, "&#39;") + '\')">🚫 Bebasin SOW</button>'
+        : '';
       return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
-        + '<div><b>'+r.creatorName+'</b><br><span class="card-sub">'+subLabel+'</span></div>'
-        + (waUrl ? '<a class="btn btn-teal btn-sm" style="text-decoration:none;flex-shrink:0" href="'+waUrl+'" target="_blank">📲 Kirim WA</a>' : '<span class="card-sub">No HP tidak ada</span>')
+        + '<div><b>'+escHtml(r.creatorName)+'</b><br><span class="card-sub">'+subLabel+' · '+escHtml(r.produkName)+'</span></div>'
+        + '<div style="display:flex;gap:6px;flex-shrink:0">'
+        + (waUrl ? '<a class="btn btn-teal btn-sm" style="text-decoration:none" href="'+waUrl+'" target="_blank">📲 Kirim WA</a>' : '<span class="card-sub">No HP tidak ada</span>')
+        + waiveBtn
+        + '</div>'
         + '</div></div>';
     }).join('');
   } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
+// Bebasin kewajiban SOW satu request (barang gak pernah dikirim, kesalahan sistem, dll).
+// Tipe SOW-nya sengaja TIDAK diubah, jadi riwayat kesepakatan aslinya tetap utuh.
+async function waiveSow(btn, sampleRequestId, creatorName, produkName){
+  const reason = prompt('Alasan pembebasan SOW untuk ' + creatorName + ' (' + produkName + '):\n\nContoh: barang tidak pernah dikirim brand.');
+  if(reason === null) return;
+  if(reason.trim().length < 5){ alert('Alasan wajib diisi minimal 5 karakter.'); return; }
+
+  btn.disabled = true;
+  const labelLama = btn.textContent;
+  btn.textContent = 'Memproses...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-waive-sow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'waive', sampleRequestId: sampleRequestId, reason: reason.trim() })
+    });
+    const j = await res.json();
+    if(!j.valid){ alert(j.error || 'Gagal membebaskan SOW.'); btn.disabled = false; btn.textContent = labelLama; return; }
+    alert('SOW dibebaskan. Creator otomatis dapat notifikasi, dan produk ini hilang dari tagihan Report VT.');
+    await loadBelumPosting();
+  } catch(e){
+    alert('Gagal menghubungi server.');
+    btn.disabled = false; btn.textContent = labelLama;
+  }
 }
 
 const VT_THUMB_BASE = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1/object/public/vt-thumbs/';
@@ -6135,7 +6202,7 @@ async function loadReportVtBrand(){
   const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at, thumb_path)')
+    .select('id, tipe_sow_dipilih, sow_waived_at, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at, thumb_path)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved')
@@ -6150,7 +6217,7 @@ async function loadReportVtBrand(){
     return;
   }
 
-  const rows = data.map(function(r){
+  const rows = data.filter(function(r){ return !r.sow_waived_at; }).map(function(r){
     const required = VT_REQUIRED[r.tipe_sow_dipilih] || 3;
     const reports = (r.vt_reports || []).slice().sort(function(x, y){
       return String(x.submitted_at || '').localeCompare(String(y.submitted_at || ''));
