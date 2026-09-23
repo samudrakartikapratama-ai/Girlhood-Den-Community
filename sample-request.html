@@ -1340,6 +1340,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>
         <div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products, kolom ID di bawah nama produk)</span></label><input class="pb-pid" placeholder="1729597881385192127"></div>
         <div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>
+        <div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori"></select></div>
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
         <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
         <div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan">Satuan (max 2 SKU per brand)</option><option value="bundling">Bundling (habiskan kuota brand ini)</option></select></div>
@@ -5556,7 +5557,21 @@ async function loadHotProductsCreator(){
   }).join('');
 }
 
-const BC_CATEGORIES = ['Semua','Skincare','Bodycare','Makeup','Fragrance','Haircare'];
+// Satu-satunya daftar kategori produk. Dipakai barengan sama form internal (isi kategori)
+// dan chip filter di menu campaign creator, biar nggak pernah beda isi.
+const PRODUCT_CATEGORIES = ['Skincare','Bodycare','Makeup','Fragrance','Haircare','Supplement','Lainnya'];
+function kategoriOptionsHtml(selected){
+  return '<option value="">— Belum dipilih —</option>' + PRODUCT_CATEGORIES.map(function(k){
+    return '<option value="'+k+'"'+(k === selected ? ' selected' : '')+'>'+k+'</option>';
+  }).join('');
+}
+const BC_CATEGORIES = ['Semua'].concat(PRODUCT_CATEGORIES);
+// Isi dropdown kategori di blok produk pertama (blok statis di form brand baru).
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('#product-blocks .pb-kategori').forEach(function(sel){
+    if(!sel.options.length) sel.innerHTML = kategoriOptionsHtml('');
+  });
+});
 let bcActiveCategory = 'Semua';
 
 function bcRenderChips(){
@@ -6591,6 +6606,7 @@ async function saveBrandRegistration(){
       tipeProduk: block.querySelector('.pb-tipe') ? block.querySelector('.pb-tipe').value : 'satuan',
       hot: block.querySelector('.pb-hot').checked,
       comm: block.querySelector('.pb-comm').checked,
+      kategori: block.querySelector('.pb-kategori') ? block.querySelector('.pb-kategori').value : '',
       harga: block.querySelector('.pb-harga').value.trim(),
       komisi: block.querySelector('.pb-komisi').value.trim(),
       fotoFiles: block.querySelector('.pb-foto').files,
@@ -6701,6 +6717,7 @@ async function saveBrandRegistration(){
 
       const payload = {
         nama_produk: p.nama,
+        kategori: p.kategori || null,
         link_affiliate: p.link,
         tiktok_product_id: p.pid || null,
         tipe_sow: p.sow,
@@ -6782,7 +6799,7 @@ async function toggleFreezeProduct(productId, nama, isFrozen, link){
 async function editBrand(brandId){
   const { data: brand, error: brandErr } = await db.from('brands').select('id, nama_brand, komisi_percent, logo_url, is_frozen').eq('id', brandId).single();
   if(brandErr || !brand){ showDbError('memuat brand', brandErr); return; }
-    const { data: products, error: prodErr } = await db.from('brand_products').select('id, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent, is_frozen').eq('brand_id', brandId).order('created_at', { ascending: true });
+    const { data: products, error: prodErr } = await db.from('brand_products').select('id, kategori, nama_produk, link_affiliate, tipe_sow, tipe_produk, tag_hot, tag_high_commission, foto_urls, video_referensi_urls, harga, komisi_percent, is_frozen').eq('brand_id', brandId).order('created_at', { ascending: true });
   if(prodErr){ showDbError('memuat produk brand', prodErr); return; }
 
   editingBrandId = brand.id;
@@ -6827,6 +6844,7 @@ async function editBrand(brandId){
       + '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" value="'+(p.link_affiliate||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products)</span></label><input class="pb-pid" value="'+(p.tiktok_product_id||'').replace(/"/g,'&quot;')+'"></div>'
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
+            + '<div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori">'+kategoriOptionsHtml(p.kategori||'')+'</select></div>'
             + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple>'+((p.foto_urls||[]).length>0 ? '<div style="background:var(--teal-pale,#e3f6ef);color:var(--teal,#1D9E75);font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;margin-top:5px">✅ '+(p.foto_urls.length)+' foto TERSIMPAN AMAN (kotak di atas emang selalu kosong walau file lama masih ada — itu wajar). Pilih file cuma kalau mau GANTI.</div>' : '<div class="size-note">Belum ada foto.</div>')+' <div class="size-note">Max 3 foto, 5MB/foto</div></div>'
       + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
       + '<div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan"'+(p.tipe_produk!=='bundling'?' selected':'')+'>Satuan (max 2 SKU per brand)</option><option value="bundling"'+(p.tipe_produk==='bundling'?' selected':'')+'>Bundling (habiskan kuota brand ini)</option></select></div>'
@@ -7809,6 +7827,7 @@ function addProductBlock(){
     '<div class="field"><label>Link Affiliate TikTok Shop</label><input class="pb-link" placeholder="https://vt.tiktok.com/xxxxx"></div>'+
     '<div class="field"><label>Product ID TikTok Shop <span style="font-weight:400;color:var(--gray-text)">(dari Partner Center &gt; Creator Matchmaking &gt; Partner collabs &gt; Products, kolom ID di bawah nama produk)</span></label><input class="pb-pid" placeholder="1729597881385192127"></div>'+
     '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>'+
+    '<div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori">'+kategoriOptionsHtml('')+'</select></div>'+
     '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>'+
     '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>'+
     '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>'+
