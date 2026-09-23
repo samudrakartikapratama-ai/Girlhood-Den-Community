@@ -694,7 +694,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .rvt-thumb{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:center;text-decoration:none;transition:transform 160ms cubic-bezier(.23,1,.32,1)}
 .rvt-thumb:active{transform:scale(.96)}
 @media (hover:hover){.rvt-thumb:hover{transform:translateY(-2px)}}
-.rvt-tile{position:relative;width:68px;height:120px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.rvt-tile{position:relative;width:68px;height:120px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.rvt-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.rvt-tile .play{position:relative;z-index:1}
+.rvt-tile.has-img .play{background:rgba(255,255,255,.82)}
 .rvt-tile .no{position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.85);color:var(--dark)}
 .rvt-tile .play{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center}
 .rvt-date{font-size:11px;font-weight:600;color:#7E5A6C}
@@ -6116,6 +6119,7 @@ async function loadBelumPosting(){
   } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
 }
 
+const VT_THUMB_BASE = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1/object/public/vt-thumbs/';
 let reportVtBrandRows = [];
 let reportVtBrandTab = 'semua';
 
@@ -6131,7 +6135,7 @@ async function loadReportVtBrand(){
   const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at)')
+    .select('id, tipe_sow_dipilih, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at, thumb_path)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved')
@@ -6223,7 +6227,9 @@ function renderReportVtBrandList(){
         const tag = url ? 'a' : 'div';
         const attrs = url ? ' href="'+url+'" target="_blank" rel="noopener noreferrer" aria-label="Buka video '+(i+1)+' dari '+nama+' di TikTok"' : '';
         return '<'+tag+' class="rvt-thumb"'+attrs+'>'
-          + '<div class="rvt-tile" style="background:'+tileBg[i % tileBg.length]+'"><span class="no">#'+(i+1)+'</span>'
+          + '<div class="rvt-tile'+(v.thumb_path ? ' has-img' : '')+'" style="background:'+tileBg[i % tileBg.length]+'">'
+          + (v.thumb_path ? '<img src="'+VT_THUMB_BASE+encodeURIComponent(v.thumb_path)+'" alt="" loading="lazy" onerror="this.remove()">' : '')
+          + '<span class="no">#'+(i+1)+'</span>'
           + '<span class="play"><svg width="12" height="12" viewBox="0 0 24 24" fill="#4A2B47" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"></path></svg></span></div>'
           + '<span class="rvt-date">'+tgl+'</span></'+tag+'>';
       }).join('') + '</div>';
