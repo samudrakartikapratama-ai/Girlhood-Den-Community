@@ -337,6 +337,25 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .vpick{min-height:36px;padding:0 13px;border-radius:999px;border:0;background:rgba(255,255,255,.22);color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .vpick.on{background:#fff;color:#241521}
 /* Tipe SOW: kartu pilihan, bukan dropdown — biar kewajibannya kebaca sebelum diklik */
+/* Kotak "Pilihan Girlhood Den" di halaman brand (creator) */
+.rek-box{background:var(--pink-pale);border:1px solid var(--pink-light,#F3D3E0);border-radius:16px;padding:14px;margin-bottom:12px}
+.rek-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.rek-head b{font-size:13px}
+.rek-item{display:flex;gap:12px;align-items:center;margin-bottom:12px;width:100%;text-align:left;background:transparent;border:0;padding:0;font-family:inherit;color:var(--dark);cursor:pointer}
+.rek-item:last-of-type{margin-bottom:2px}
+.rek-thumb{width:58px;height:58px;border-radius:12px;background:var(--gray-mid);flex-shrink:0;overflow:hidden}
+.rek-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.rek-pill{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;color:#fff}
+.rek-pill.hero{background:linear-gradient(90deg,#D3134F,#C9821F)}
+.rek-pill.baru{background:#6B4A86}
+.rek-nama{font-weight:700;font-size:14px;margin-top:5px}
+.card.rek-sorot{box-shadow:0 0 0 3px var(--pink);transition:box-shadow 400ms ease}
+/* Panel internal buat milih Hero / Produk Baru */
+.rek-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--border);border-radius:14px;padding:10px;margin-bottom:8px}
+.rek-row .nm{flex:1 1 180px;min-width:0}
+.rek-btn{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.rek-btn.hero.on{background:var(--pink);color:#fff;border-color:transparent}
+.rek-btn.baru.on{background:#6B4A86;color:#fff;border-color:transparent}
 .sow-opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sow-opt{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--border);border-radius:14px;padding:12px;background:transparent;text-align:left;font-family:inherit;color:var(--dark);cursor:pointer;transition:border-color 160ms cubic-bezier(.23,1,.32,1),background-color 160ms cubic-bezier(.23,1,.32,1)}
 .sow-opt[aria-pressed="true"]{border-color:var(--pink);background:var(--pink-pale)}
@@ -860,6 +879,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
     <div class="icon-card" onclick="openModal('m-i19'); loadAeEscalatedDrafts();"><div class="icon-emoji">⚖️</div><div class="icon-label">Eskalasi Draft Endorsement</div></div>
     <div class="icon-card" onclick="openModal('m-i18'); loadAeHunting();"><div class="icon-emoji">🎯</div><div class="icon-label">Hunting Produk (AE)</div></div>
+    <div class="icon-card" onclick="openModal('m-i20'); loadRekomendasiBrands();"><div class="icon-emoji">🏆</div><div class="icon-label">Pilihan Girlhood Den</div></div>
   </div>
 </div>
 
@@ -1645,6 +1665,16 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-i20"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i20')">‹ ✕</button>
+  <div class="modal-title">🏆 Pilihan Girlhood Den</div>
+  <div class="card-sub">Maksimal 2 Hero + 1 Produk Baru per brand. Tampil paling atas di halaman brand (menu Campaign) buat creator. Berlaku sampai akhir bulan, lewat itu hilang sendiri.</div>
+  <div class="field" style="margin-top:10px"><label>Pilih Brand</label><select id="rek-brand-select" onchange="loadRekomendasiProduk()"><option value="">Memuat brand...</option></select></div>
+  <div id="rek-info" class="card-sub" style="margin-top:4px"></div>
+  <div id="rek-produk-list" style="margin-top:10px"></div>
+  <div id="rek-status" style="margin-top:8px"></div>
+  <button class="btn btn-primary" id="rek-simpan-btn" style="margin-top:10px;display:none" onclick="simpanRekomendasi()">Simpan &amp; tayangkan</button>
+</div></div>
+
 <div class="modal-bg" id="m-i19"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i19')">‹ ✕</button>
   <div class="modal-title">⚖️ Eskalasi Draft Endorsement</div>
   <div class="card-sub">Draft yang kuota revisi brand-nya udah habis tapi masih ditolak. AE yang mutusin final: creator yang salah, atau brand-nya yang kelewatan.</div>
@@ -2055,6 +2085,127 @@ document.addEventListener('DOMContentLoaded', function(){
   renderLiveTicker('live-ticker-creator');
   renderLiveTicker('live-ticker-brand');
 });
+
+// ===== Pilihan Girlhood Den (internal) =====
+let rekPilihan = { hero: [], baru: null };
+let rekProdukCache = [];
+
+async function loadRekomendasiBrands(){
+  const sel = document.getElementById('rek-brand-select');
+  sel.innerHTML = '<option value="">Memuat brand...</option>';
+  document.getElementById('rek-produk-list').innerHTML = '';
+  document.getElementById('rek-info').textContent = '';
+  document.getElementById('rek-status').innerHTML = '';
+  document.getElementById('rek-simpan-btn').style.display = 'none';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'brands' })
+    });
+    const j = await res.json();
+    if(!j.valid){ sel.innerHTML = '<option value="">' + (j.error || 'Gagal memuat brand') + '</option>'; return; }
+    sel.innerHTML = '<option value="">-- Pilih brand --</option>' + (j.rows || []).map(function(b){
+      return '<option value="' + b.id + '">' + escHtml(b.nama) + (b.jumlahPilihan > 0 ? ' (' + b.jumlahPilihan + ' dipilih)' : '') + '</option>';
+    }).join('');
+  } catch(e){
+    sel.innerHTML = '<option value="">Gagal menghubungi server</option>';
+  }
+}
+
+async function loadRekomendasiProduk(){
+  const brandId = document.getElementById('rek-brand-select').value;
+  const list = document.getElementById('rek-produk-list');
+  const info = document.getElementById('rek-info');
+  const btn = document.getElementById('rek-simpan-btn');
+  document.getElementById('rek-status').innerHTML = '';
+  rekPilihan = { hero: [], baru: null };
+  if(!brandId){ list.innerHTML = ''; info.textContent = ''; btn.style.display = 'none'; return; }
+
+  list.innerHTML = '<div class="card-sub">Memuat produk...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'list', brandId: brandId })
+    });
+    const j = await res.json();
+    if(!j.valid){ list.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal memuat.') + '</div>'; return; }
+    rekProdukCache = j.rows || [];
+    rekPilihan = { hero: (j.pilihan && j.pilihan.hero) || [], baru: (j.pilihan && j.pilihan.baru) || null };
+    info.textContent = (j.pilihan && j.pilihan.berlakuSampai)
+      ? 'Pilihan sekarang berlaku sampai ' + j.pilihan.berlakuSampai + ' · dipilih ' + (j.pilihan.dipilihOleh || '-')
+      : 'Brand ini belum punya pilihan bulan ini.';
+    btn.style.display = 'inline-block';
+    renderRekomendasiProduk();
+  } catch(e){
+    list.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
+  }
+}
+
+function renderRekomendasiProduk(){
+  const list = document.getElementById('rek-produk-list');
+  if(rekProdukCache.length === 0){ list.innerHTML = '<div class="card-sub">Brand ini belum punya produk.</div>'; return; }
+  list.innerHTML = rekProdukCache.map(function(p){
+    const heroOn = rekPilihan.hero.indexOf(p.id) !== -1;
+    const baruOn = rekPilihan.baru === p.id;
+    const komisi = (p.komisi !== null && p.komisi !== undefined) ? 'komisi ' + p.komisi + '%' : 'komisi -';
+    const tombol = p.frozen
+      ? '<span class="card-sub">di-freeze, nggak bisa dipilih</span>'
+      : '<button type="button" class="rek-btn hero' + (heroOn ? ' on' : '') + '" onclick="toggleRekHero(\'' + p.id + '\')">' + (heroOn ? 'Hero ✓' : 'Jadikan Hero') + '</button>'
+        + '<button type="button" class="rek-btn baru' + (baruOn ? ' on' : '') + '" onclick="toggleRekBaru(\'' + p.id + '\')">' + (baruOn ? 'Produk Baru ✓' : 'Jadikan Produk Baru') + '</button>';
+    return '<div class="rek-row"' + (p.frozen ? ' style="opacity:.55"' : '') + '>'
+      + '<div class="nm"><b>' + escHtml(p.nama || '-') + '</b><div class="card-sub">' + p.vt + ' VT creator · ' + komisi + '</div></div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">' + tombol + '</div>'
+      + '</div>';
+  }).join('')
+  + '<div class="card-sub" style="margin-top:4px">Terpilih: ' + rekPilihan.hero.length + '/2 Hero'
+  + (rekPilihan.baru ? ' · 1 Produk Baru' : ' · belum ada Produk Baru') + '</div>';
+}
+
+function toggleRekHero(id){
+  const i = rekPilihan.hero.indexOf(id);
+  if(i !== -1){ rekPilihan.hero.splice(i, 1); }
+  else {
+    if(rekPilihan.hero.length >= 2){ alert('Maksimal 2 Hero per brand. Lepas salah satu dulu.'); return; }
+    if(rekPilihan.baru === id) rekPilihan.baru = null;
+    rekPilihan.hero.push(id);
+  }
+  renderRekomendasiProduk();
+}
+
+function toggleRekBaru(id){
+  if(rekPilihan.baru === id){ rekPilihan.baru = null; }
+  else {
+    const i = rekPilihan.hero.indexOf(id);
+    if(i !== -1) rekPilihan.hero.splice(i, 1);
+    rekPilihan.baru = id;
+  }
+  renderRekomendasiProduk();
+}
+
+async function simpanRekomendasi(){
+  const brandId = document.getElementById('rek-brand-select').value;
+  if(!brandId) return;
+  const btn = document.getElementById('rek-simpan-btn');
+  const status = document.getElementById('rek-status');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'save', brandId: brandId, heroIds: rekPilihan.hero, baruId: rekPilihan.baru })
+    });
+    const j = await res.json();
+    if(!j.valid){ status.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal menyimpan.') + '</div>'; }
+    else if(j.tersimpan === 0){ status.innerHTML = '<div class="card-sub">Kosong. Kotak rekomendasi nggak muncul di halaman creator.</div>'; }
+    else { status.innerHTML = '<div class="card-sub" style="color:var(--teal)">Tersimpan &amp; tayang. Berlaku sampai ' + j.berlakuSampai + '.</div>'; }
+    document.getElementById('rek-info').textContent = '';
+  } catch(e){
+    status.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Simpan & tayangkan';
+}
 
 async function loadAeHunting(){
   const wrap = document.getElementById('ae-hunting-list');
@@ -5817,6 +5968,62 @@ async function openBrandDetail(brandId, brandName, logoUrl){
     b.disabled = true;
     b.style.opacity = '0.45';
   });
+
+  renderPilihanGirlhoodDen(brandId, data, container);
+}
+
+// Kotak "Pilihan Girlhood Den" — 2 Hero + 1 Produk Baru pilihan internal, tampil paling atas.
+// Kalau internal belum milih (atau periodenya lewat), kotaknya nggak muncul sama sekali.
+async function renderPilihanGirlhoodDen(brandId, produkList, container){
+  const hariIni = new Date().toISOString().slice(0, 10);
+  const { data: recs } = await db.from('brand_recommendations')
+    .select('brand_product_id, jenis, urutan')
+    .eq('brand_id', brandId)
+    .gte('berlaku_sampai', hariIni)
+    .order('jenis', { ascending: true })
+    .order('urutan', { ascending: true });
+  if(!recs || recs.length === 0) return;
+
+  const byId = {};
+  (produkList || []).forEach(function(p){ byId[p.id] = p; });
+
+  const hero = recs.filter(function(r){ return r.jenis === 'hero'; });
+  const baru = recs.filter(function(r){ return r.jenis === 'baru'; });
+
+  function kartu(rec, jenis){
+    const p = byId[rec.brand_product_id];
+    if(!p || p.is_frozen) return '';
+    const foto = (p.foto_urls && p.foto_urls[0]) ? '<img src="'+p.foto_urls[0]+'" alt="">' : '';
+    const komisi = (p.komisi_percent !== null && p.komisi_percent !== undefined) ? 'Komisi '+p.komisi_percent+'%' : '';
+    return '<button type="button" class="rek-item" onclick="lompatKeProduk(\''+p.id+'\')">'
+      + '<span class="rek-thumb">'+foto+'</span>'
+      + '<span style="min-width:0">'
+      +   '<span class="rek-pill '+jenis+'">'+(jenis === 'hero' ? 'HERO PRODUK' : 'PRODUK BARU')+'</span>'
+      +   '<span class="rek-nama" style="display:block">'+escHtml(p.nama_produk || '-')+'</span>'
+      +   '<span class="card-sub" style="display:block">'+komisi+' · ketuk buat lihat detail &amp; request</span>'
+      + '</span>'
+      + '</button>';
+  }
+
+  const isi = hero.map(function(r){ return kartu(r, 'hero'); }).join('')
+    + baru.map(function(r){ return kartu(r, 'baru'); }).join('');
+  if(!isi) return;
+
+  const box = document.createElement('div');
+  box.className = 'rek-box';
+  box.innerHTML = '<div class="rek-head"><b>🏆 Pilihan Girlhood Den</b><span class="card-sub">bulan ini</span></div>'
+    + isi
+    + '<div class="card-sub" style="margin-top:6px">Dipilih tim Girlhood Den buat bulan ini.</div>';
+  container.insertBefore(box, container.firstChild);
+}
+
+// Dari kotak rekomendasi, turun ke kartu produknya di daftar bawah lalu disorot sebentar.
+function lompatKeProduk(productId){
+  const card = document.querySelector('.card[data-product-id="' + productId + '"]');
+  if(!card) return;
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  card.classList.add('rek-sorot');
+  setTimeout(function(){ card.classList.remove('rek-sorot'); }, 2000);
 }
 
 function pfNav(btn, dir){
