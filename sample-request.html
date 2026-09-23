@@ -324,6 +324,29 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .tag-hot{background:#FFE4D6;color:#C4520A}
 .tag-comm{background:var(--teal-light);color:#116B4F}
 .deadline-note{font-size:11px;color:var(--red);font-weight:600}
+/* Video referensi: melebar sampai tepi kartu, rasio video TIDAK diubah.
+   Sisa ruang jadi tepi gelap, jadi video bentuk apa pun tetap utuh. */
+.vref{position:relative;margin:10px -16px;background:#140B12;overflow:hidden;height:min(70vh,520px);display:flex;align-items:center;justify-content:center}
+.vref video{position:relative;z-index:1;height:100%;max-width:100%;object-fit:contain;background:transparent}
+.vref .vbg{position:absolute;inset:-8%;background:linear-gradient(160deg,#5B2F45,#2A1622 60%,#402235);filter:blur(26px);opacity:.75}
+.vref .vbadge{position:absolute;top:12px;left:16px;z-index:2;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:999px}
+.vref .vbar{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;padding:26px 12px 12px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72))}
+.vsound{min-height:44px;padding:0 18px;border-radius:999px;border:0;background:#fff;color:#241521;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;display:flex;gap:8px;align-items:center;transition:transform 140ms cubic-bezier(.23,1,.32,1)}
+.vsound:active{transform:scale(.97)}
+.vsound.on{background:var(--pink);color:#fff}
+.vpick{min-height:36px;padding:0 13px;border-radius:999px;border:0;background:rgba(255,255,255,.22);color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.vpick.on{background:#fff;color:#241521}
+/* Tipe SOW: kartu pilihan, bukan dropdown — biar kewajibannya kebaca sebelum diklik */
+.sow-opts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.sow-opt{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--border);border-radius:14px;padding:12px;background:transparent;text-align:left;font-family:inherit;color:var(--dark);cursor:pointer;transition:border-color 160ms cubic-bezier(.23,1,.32,1),background-color 160ms cubic-bezier(.23,1,.32,1)}
+.sow-opt[aria-pressed="true"]{border-color:var(--pink);background:var(--pink-pale)}
+.sow-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center}
+.sow-opt[aria-pressed="true"] .sow-dot{border-color:var(--pink)}
+.sow-opt[aria-pressed="true"] .sow-dot::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--pink)}
+.sow-opt b{display:block;font-size:13.5px}
+.sow-opt .desc{font-size:12px;color:var(--gray-text);line-height:1.45}
+.sow-agree{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12.5px;line-height:1.45}
+.sow-agree input{width:18px;height:18px;margin-top:2px;accent-color:var(--pink);flex-shrink:0}
 .video-ref{display:flex;gap:6px;margin-top:6px}
 .video-thumb{width:38px;height:60px;background:var(--dark);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
 .sow-big{font-size:24px;font-weight:800;color:var(--teal);margin:4px 0}
@@ -5748,11 +5771,20 @@ async function openBrandDetail(brandId, brandName, logoUrl){
     const videos = p.video_referensi_urls || [];
     let videoHtml = '';
     if(videos.length > 0){
-      videoHtml = '<div class="video-ref">' + videos.map(function(v,i){
-        return '<div class="video-thumb" onclick="playInlineVideoReal(this,\''+v+'\')">▶</div>';
-      }).join('') + '</div>'
-      + '<div class="size-note">Video referensi terputar langsung di halaman ini — klik salah satu di atas</div>'
-      + '<div class="inline-video-wrap-real" style="display:none;margin-top:8px"><video controls style="width:100%;border-radius:10px;max-height:220px"></video></div>';
+      const pickHtml = videos.length > 1
+        ? videos.map(function(v,i){ return '<button type="button" class="vpick'+(i===0?' on':'')+'" onclick="vrefPick(this,\''+v+'\')">Video '+(i+1)+'</button>'; }).join('')
+        : '';
+      videoHtml = '<div class="card-sub" style="font-weight:800;color:var(--dark);margin-top:10px">Video referensi dari brand</div>'
+      + '<div class="vref">'
+      +   '<div class="vbg"></div>'
+      +   '<video src="'+videos[0]+'" muted autoplay loop playsinline preload="metadata"></video>'
+      +   '<span class="vbadge">Contoh konten</span>'
+      +   '<div class="vbar">'
+      +     '<button type="button" class="vsound" onclick="vrefSound(this)">🔇 Ketuk untuk nyalakan suara</button>'
+      +     pickHtml
+      +   '</div>'
+      + '</div>'
+      + '<div class="size-note" style="margin-top:8px">Videonya jalan sendiri tanpa suara. Rasio aslinya tidak diubah, jadi tidak ada bagian yang kepotong.</div>';
     }
 
     return '<div class="card" data-product-id="'+p.id+'" style="'+(brandFrozen||p.is_frozen?'opacity:.5;filter:grayscale(1)':'')+'">'
@@ -5763,17 +5795,28 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + infoHtml
       + '<div class="card-sub" style="margin-top:6px">Wajib upload laporan setelah kamu konfirmasi "Barang Sudah Sampai" di menu Cek Status ya 😎</div>'
       + videoHtml
-      + '<div class="field" style="margin-top:8px"><label>Tipe SOW</label>'
-      + '<select class="sow-select" onchange="toggleLive(this)">'
-      + '<option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT (3 VT)</option>'
-      + '<option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option>'
-      + '<option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live saja</option>'
-      + '</select></div>'
+      + '<div class="field" style="margin-top:10px"><label>Pilih Tipe SOW</label>'
+      + '<div class="card-sub" style="margin:-2px 0 4px">Ini kewajiban yang kamu ambil kalau request disetujui. Baca dulu sebelum pilih.</div>'
+      + '<input type="hidden" class="sow-select" value="">'
+      + '<div class="sow-opts">'
+      +   sowOptionHtml('VT', 'VT saja', '3 video testimoni, maksimal 3 hari setelah kamu konfirmasi barang sampai. Tidak ada kewajiban live.')
+      +   sowOptionHtml('VT_LIVE', 'VT & Live', '3 video testimoni, ditambah 3 sesi live minimal 2 jam di tanggal yang berbeda.')
+      +   sowOptionHtml('LIVE', 'Live saja', '3 sesi live minimal 2 jam di tanggal yang berbeda. Tidak ada kewajiban video.')
+      + '</div>'
+      + '<label class="sow-agree"><input type="checkbox" class="sow-agree-check" onchange="sowRefreshBtn(this)"> <span>Aku sudah baca kewajibannya dan siap menyelesaikan.</span></label>'
+      + '</div>'
       + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
 + '<button class="btn btn-outline btn-sm" style="margin-top:6px;filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
 + '<button class="btn btn-teal btn-sm request-sample-btn" data-brand-id="'+brandId+'" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(p.is_frozen?'disabled style="opacity:.4" title="Produk ini lagi di-freeze sementara, request sample dimatikan dulu."':(frozenBrandIds.has(brandId)?'disabled style="opacity:.4" title="Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini."':'')))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
   }).join('');
+
+  // Tombol request mati dulu sampai creator pilih tipe SOW dan centang persetujuan.
+  container.querySelectorAll('.card .request-sample-btn').forEach(function(b){
+    if(b.disabled){ b.dataset.hardDisabled = '1'; return; }
+    b.disabled = true;
+    b.style.opacity = '0.45';
+  });
 }
 
 function pfNav(btn, dir){
@@ -5824,6 +5867,14 @@ async function requestSample(productId, btn){
   const card = btn.closest('.card');
   const sowSelect = card.querySelector('.sow-select');
   const tipeSow = sowSelect.value;
+  const setuju = card.querySelector('.sow-agree-check');
+
+  if(!tipeSow){ alert('Pilih tipe SOW dulu ya, biar kamu tahu kewajibannya.'); return; }
+  if(setuju && !setuju.checked){ alert('Centang dulu persetujuan kewajibannya ya.'); return; }
+
+  // Konfirmasi terakhir: ulangi kewajiban yang dipilih, biar nggak ada yang kaget belakangan.
+  const daftar = (SOW_KEWAJIBAN[tipeSow] || []).map(function(k){ return '\u2022 ' + k; }).join('\n');
+  if(!confirm('Kamu ambil ' + (SOW_LABEL[tipeSow] || tipeSow) + ' untuk produk ini.\n\nKewajiban kamu:\n' + daftar + '\n\nLanjut ajukan request?')) return;
 
   // Jadwal live nggak diisi di sini lagi — baru diisi setelah creator konfirmasi barang sampai (menu Cek Status).
   const jadwalLive = null;
@@ -5969,6 +6020,68 @@ function toggleLive(sel){
   var card = sel.closest('.card');
   var block = card ? card.querySelector('.live-schedule-note') : null;
   if(block) block.style.display = show ? 'block' : 'none';
+}
+
+// --- Video referensi: suara & ganti video ---
+function vrefPlay(vid){
+  if(!vid) return;
+  var pr = vid.play();
+  if(pr && pr.catch) pr.catch(function(){}); // browser lama: play() nggak balikin promise
+}
+function vrefSound(btn){
+  var vid = btn.closest('.vref').querySelector('video');
+  if(!vid) return;
+  var nyala = !btn.classList.contains('on'); // status diambil dari tombol, bukan dari elemen video
+  vid.muted = !nyala;
+  btn.classList.toggle('on', nyala);
+  btn.textContent = nyala ? '🔊 Suara nyala' : '🔇 Ketuk untuk nyalakan suara';
+  if(nyala) vrefPlay(vid);
+}
+function vrefPick(btn, url){
+  var wrap = btn.closest('.vref');
+  wrap.querySelectorAll('.vpick').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  var vid = wrap.querySelector('video');
+  vid.src = url;
+  vrefPlay(vid);
+}
+
+// --- Tipe SOW: kartu pilihan, nggak ada yang kepilih otomatis ---
+const SOW_KEWAJIBAN = {
+  VT: ['3 video testimoni', 'Batas 3 hari setelah konfirmasi barang sampai', 'Wajib pakai link affiliate Girlhood Den'],
+  VT_LIVE: ['3 video testimoni', '3 sesi live, minimal 2 jam per sesi, tanggal berbeda', 'Batas 3 hari setelah konfirmasi barang sampai', 'Wajib pakai link affiliate Girlhood Den'],
+  LIVE: ['3 sesi live, minimal 2 jam per sesi, tanggal berbeda', 'Wajib pakai link affiliate Girlhood Den']
+};
+const SOW_LABEL = { VT: 'VT saja', VT_LIVE: 'VT & Live', LIVE: 'Live saja' };
+
+function sowOptionHtml(tipe, judul, deskripsi){
+  return '<button type="button" class="sow-opt" aria-pressed="false" data-sow="' + tipe + '" onclick="pilihSow(this)">'
+    + '<span class="sow-dot"></span>'
+    + '<span><b>' + judul + '</b><span class="desc">' + deskripsi + '</span></span>'
+    + '</button>';
+}
+
+function pilihSow(btn){
+  var card = btn.closest('.card');
+  card.querySelectorAll('.sow-opt').forEach(function(o){ o.setAttribute('aria-pressed', 'false'); });
+  btn.setAttribute('aria-pressed', 'true');
+  var hidden = card.querySelector('.sow-select');
+  hidden.value = btn.getAttribute('data-sow');
+  toggleLive(hidden);
+  var check = card.querySelector('.sow-agree-check');
+  if(check) check.checked = false;
+  sowRefreshBtn(btn);
+}
+
+function sowRefreshBtn(el){
+  var card = el.closest('.card');
+  var btn = card.querySelector('.request-sample-btn');
+  if(!btn || btn.dataset.hardDisabled === '1') return;
+  var hidden = card.querySelector('.sow-select');
+  var setuju = card.querySelector('.sow-agree-check');
+  var boleh = !!(hidden && hidden.value) && !!(setuju && setuju.checked);
+  btn.disabled = !boleh;
+  btn.style.opacity = boleh ? '1' : '0.45';
 }
 var slideIdx = 0;
 function slideCarousel(dir){
