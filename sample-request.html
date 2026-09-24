@@ -5004,7 +5004,8 @@ async function loadCreatorTiktokVideos(){
   }
 }
 
-const TIKTOK_COLLAB_SERVICE_ID = '7686780715204151058';
+// Link otorisasi CREATOR (bukan seller). Link seller bikin creator nyasar ke halaman toko Tokopedia.
+const TIKTOK_COLLAB_APP_KEY = '6latc062264ep';
 
 async function loadCreatorTiktokCollabStatus(){
   const wrap = document.getElementById('creator-tiktok-collab-status');
@@ -5018,7 +5019,7 @@ async function loadCreatorTiktokCollabStatus(){
     .limit(1)
     .maybeSingle();
 
-  const authUrl = 'https://services.tiktokshop.com/open/authorize?service_id=' + TIKTOK_COLLAB_SERVICE_ID + '&state=' + encodeURIComponent(memberId);
+  const authUrl = 'https://shop.tiktok.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(memberId);
 
   if(error || !data){
     wrap.innerHTML =
