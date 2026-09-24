@@ -4894,39 +4894,6 @@ async function submitVtReport(){
   await loadVtReportPage();
   checkFreezeStatus();
 }
-const TIKTOK_SERVICE_ID = '7685893564174419720';
-
-async function loadTiktokShopStatus(){
-  const wrap = document.getElementById('tiktok-shop-status');
-  wrap.innerHTML = '<div class="card-sub">Memuat status...</div>';
-  const brandId = currentSession.brandId;
-  const { data, error } = await db.from('tiktok_shop_authorizations')
-    .select('seller_name, seller_base_region, authorized_at, updated_at')
-    .eq('brand_id', brandId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const authUrl = 'https://services.tiktokshop.com/open/authorize?service_id=' + TIKTOK_SERVICE_ID + '&state=' + encodeURIComponent(brandId);
-
-  if(error || !data){
-    wrap.innerHTML =
-      '<div style="background:var(--gray);border-radius:14px;padding:14px;margin-bottom:12px">'
-      + '<div style="font-weight:700;color:var(--dark);margin-bottom:4px">Belum terhubung</div>'
-      + '<div class="card-sub" style="margin:0">Hubungkan akun TikTok Shop kamu supaya sistem bisa verifikasi link affiliate dan data produk secara otomatis.</div>'
-      + '</div>'
-      + '<a href="' + authUrl + '" target="_blank" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none">Hubungkan Sekarang</a>';
-    return;
-  }
-
-  wrap.innerHTML =
-    '<div style="background:var(--teal-light);border-radius:14px;padding:14px;margin-bottom:12px">'
-    + '<div style="font-weight:700;color:var(--dark);margin-bottom:4px">✅ Terhubung</div>'
-    + '<div class="card-sub" style="margin:0">Akun: ' + (data.seller_name || '-') + ' (' + (data.seller_base_region || '-') + ')</div>'
-    + '</div>'
-    + '<a href="' + authUrl + '" target="_blank" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none">Hubungkan Ulang / Ganti Akun</a>';
-}
-
 async function loadCreatorTiktokStatus(){
   const wrap = document.getElementById('creator-tiktok-status');
   wrap.innerHTML = '<div class="card-sub">Memuat status...</div>';
@@ -5037,8 +5004,7 @@ async function loadCreatorTiktokVideos(){
   }
 }
 
-// Link otorisasi CREATOR (bukan seller). Link seller bikin creator nyasar ke halaman toko Tokopedia.
-const TIKTOK_COLLAB_APP_KEY = '6latc062264ep';
+const TIKTOK_COLLAB_SERVICE_ID = '7686780715204151058';
 
 async function loadCreatorTiktokCollabStatus(){
   const wrap = document.getElementById('creator-tiktok-collab-status');
@@ -5052,7 +5018,7 @@ async function loadCreatorTiktokCollabStatus(){
     .limit(1)
     .maybeSingle();
 
-  const authUrl = 'https://shop.tiktok.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(memberId);
+  const authUrl = 'https://services.tiktokshop.com/open/authorize?service_id=' + TIKTOK_COLLAB_SERVICE_ID + '&state=' + encodeURIComponent(memberId);
 
   if(error || !data){
     wrap.innerHTML =
