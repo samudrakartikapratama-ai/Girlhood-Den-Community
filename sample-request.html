@@ -448,6 +448,10 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .code-box{background:var(--pink-pale);border:1px dashed var(--pink);border-radius:8px;padding:9px;font-family:monospace;font-size:12px;font-weight:700;color:var(--pink);margin-top:6px}
 .word-count{font-size:10px;color:var(--gray-text);text-align:right;margin-top:3px}
 .word-count.over{color:var(--red);font-weight:700}
+/* Daftar creator yang pakai produknya sendiri -- info aja buat brand, tanpa tombol kirim */
+.punya-sendiri-box{margin-top:18px;border-top:1px dashed var(--border);padding-top:14px}
+.punya-sendiri-head{font-size:13.5px;margin-bottom:4px}
+.punya-sendiri-item{background:var(--teal-light);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px}
 .ship-action{background:var(--amber-light,#FDF3E1);border:1px solid var(--amber-dark);border-radius:10px;padding:10px;margin-bottom:8px;font-size:12px}
 
 /* ===================== RESPONSIVE: MOBILE / TABLET / DESKTOP ===================== */
@@ -6735,6 +6739,34 @@ async function loadPengiriman(){
       + '<div class="field" style="margin-top:8px"><label>Tanggal Final Pengiriman</label><input type="date" class="ship-date-input" value="'+todayIso+'"></div>'
       + '<button class="btn btn-primary btn-sm" onclick="finalizeShipDate(\''+r.id+'\', this)">Final — Wajib Dikirim Tanggal Ini</button></div>';
   }).join('');
+
+  renderPakaiProdukSendiri(container);
+}
+
+// Creator yang pakai produk yang SUDAH dia punya. Brand nggak kirim apa-apa,
+// tapi tetap ditampilkan supaya brand tahu produknya lagi dibawakan creator.
+async function renderPakaiProdukSendiri(container){
+  const { data } = await db.from('sample_requests')
+    .select('id, decided_at, members(nama), brand_products!inner(nama_produk, brand_id)')
+    .eq('brand_products.brand_id', currentSession.brandId)
+    .eq('status', 'approved')
+    .eq('sumber', 'self_report')
+    .order('decided_at', { ascending: false })
+    .limit(60);
+  if(!data || data.length === 0) return;
+
+  const isi = data.map(function(r){
+    const nama = ((r.members && r.members.nama) || '-') + ' — ' + ((r.brand_products && r.brand_products.nama_produk) || '-');
+    const tgl = r.decided_at ? new Date(r.decided_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '-';
+    return '<div class="punya-sendiri-item"><b>' + escHtml(nama) + '</b><br><span class="card-sub">Disetujui ' + tgl + ' · nggak perlu dikirim</span></div>';
+  }).join('');
+
+  const blok = document.createElement('div');
+  blok.className = 'punya-sendiri-box';
+  blok.innerHTML = '<div class="punya-sendiri-head"><b>🛍️ Dibawakan pakai produk milik creator sendiri</b></div>'
+    + '<div class="card-sub" style="margin-bottom:10px">Creator ini sudah punya produkmu sebelumnya dan memilih membawakannya lagi lewat Girlhood Den. Kamu <b>nggak perlu kirim apa pun</b> — mereka tetap wajib setor 3 VT, dan dapat poin ekstra dari kami sebagai gantinya. Buat kamu: tambahan konten dan GMV tanpa biaya sample.</div>'
+    + isi;
+  container.appendChild(blok);
 }
 
 async function finalizeShipDate(requestId, btn){
