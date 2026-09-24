@@ -351,6 +351,18 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .rek-nama{font-weight:700;font-size:14px;margin-top:5px}
 .card.rek-sorot{box-shadow:0 0 0 3px var(--pink);transition:box-shadow 400ms ease}
 /* Panel internal buat milih Hero / Produk Baru */
+/* Hunting Produk (AE): tabel Top 100 penjualan creator kita */
+.ph-tabs{display:flex;gap:6px;background:var(--gray);border-radius:999px;padding:4px}
+.ph-tab{min-height:34px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ph-tab.on{background:var(--dark);color:#fff}
+.ph-head,.ph-row{display:grid;grid-template-columns:1.6fr 1.1fr 0.8fr 0.7fr 0.8fr;gap:8px;padding:8px 4px;align-items:center;font-size:12px}
+.ph-head{font-size:10.5px;font-weight:700;color:var(--gray-text);border-bottom:1px solid var(--border);text-transform:uppercase}
+.ph-row{border-bottom:1px solid var(--gray-mid)}
+.ph-row b{font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-tag{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px}
+.ph-tag.mitra{background:var(--teal-light);color:var(--teal)}
+.ph-tag.prospek{background:var(--amber);color:var(--amber-dark)}
+@media (max-width:560px){.ph-head{display:none}.ph-row{grid-template-columns:1fr;gap:2px;padding:10px 4px}}
 .rek-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--border);border-radius:14px;padding:10px;margin-bottom:8px}
 .rek-row .nm{flex:1 1 180px;min-width:0}
 .rek-btn{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
@@ -1660,7 +1672,24 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-i18"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i18')">‹ ✕</button>
   <div class="modal-title">🎯 Hunting Produk (AE)</div>
-  <div class="card-sub">Produk trending TikTok Shop, diurutkan dari unit terjual. Tandai "Sudah Join" kalau brand-nya udah berhasil di-onboard.</div>
+
+  <div class="card-sub" style="font-weight:800;color:var(--dark);margin-top:6px">📈 Top 100 dari penjualan creator kita</div>
+  <div class="card-sub">Diurutkan dari GMV per bulan. Termasuk brand yang sudah kerja sama maupun brand lain buat cari prospek.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+    <select id="ph-periode" onchange="loadProductHunting()" style="min-height:40px"><option value="">Memuat bulan...</option></select>
+    <div class="ph-tabs">
+      <button type="button" class="ph-tab on" data-filter="semua" onclick="setPhFilter(this)">Semua</button>
+      <button type="button" class="ph-tab" data-filter="mitra" onclick="setPhFilter(this)">Sudah kerja sama</button>
+      <button type="button" class="ph-tab" data-filter="prospek" onclick="setPhFilter(this)">Prospek</button>
+    </div>
+    <input type="search" id="ph-cari" placeholder="Cari brand / produk" oninput="renderProductHunting()" style="min-height:40px;flex:1 1 160px">
+  </div>
+  <div id="ph-ringkas" class="card-sub" style="margin-top:6px"></div>
+  <div id="ph-list" style="margin-top:8px"><div class="card-sub">Memuat data...</div></div>
+
+  <div style="height:1px;background:var(--gray-mid);margin:18px 0"></div>
+  <div class="card-sub" style="font-weight:800;color:var(--dark)">🔎 Produk trending TikTok Shop</div>
+  <div class="card-sub">Diurutkan dari unit terjual. Tandai "Sudah Join" kalau brand-nya udah berhasil di-onboard.</div>
   <button class="btn btn-outline btn-sm" style="margin:10px 0" onclick="refreshAeHunting()" id="ae-refresh-btn">🔄 Refresh dari TikTok</button>
   <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
@@ -2207,7 +2236,81 @@ async function simpanRekomendasi(){
   btn.disabled = false; btn.textContent = 'Simpan & tayangkan';
 }
 
+// ===== Hunting Produk: Top 100 dari penjualan creator kita =====
+let phFilter = 'semua';
+let phRows = [];
+
+async function loadProductHuntingPeriode(){
+  const sel = document.getElementById('ph-periode');
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-product-hunting', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'periode' })
+    });
+    const j = await res.json();
+    const list = (j.valid && j.periode) ? j.periode : [];
+    if(list.length === 0){
+      sel.innerHTML = '<option value="">Belum ada data</option>';
+      document.getElementById('ph-list').innerHTML = '<div class="card-sub">Belum ada data penjualan. Import dulu dari Partner Center, atau tunggu Creator Connect aktif.</div>';
+      return;
+    }
+    sel.innerHTML = list.map(function(p){ return '<option value="' + p + '">' + p.slice(0,7) + '</option>'; }).join('');
+    loadProductHunting();
+  } catch(e){
+    sel.innerHTML = '<option value="">Gagal memuat</option>';
+  }
+}
+
+async function loadProductHunting(){
+  const periode = document.getElementById('ph-periode').value;
+  const wrap = document.getElementById('ph-list');
+  if(!periode){ return; }
+  wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-product-hunting', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'top', periode: periode, filter: phFilter })
+    });
+    const j = await res.json();
+    if(!j.valid){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal memuat.') + '</div>'; return; }
+    phRows = j.rows || [];
+    document.getElementById('ph-ringkas').textContent = phRows.length + ' produk · total GMV Rp' + (j.totalGmv || 0).toLocaleString('id-ID');
+    renderProductHunting();
+  } catch(e){
+    wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
+  }
+}
+
+function setPhFilter(btn){
+  document.querySelectorAll('.ph-tab').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  phFilter = btn.getAttribute('data-filter');
+  loadProductHunting();
+}
+
+function renderProductHunting(){
+  const wrap = document.getElementById('ph-list');
+  const cari = (document.getElementById('ph-cari').value || '').toLowerCase().trim();
+  const rows = cari
+    ? phRows.filter(function(r){ return (r.produk + ' ' + r.brand).toLowerCase().indexOf(cari) !== -1; })
+    : phRows;
+  if(rows.length === 0){ wrap.innerHTML = '<div class="card-sub">Tidak ada produk yang cocok.</div>'; return; }
+  wrap.innerHTML = '<div class="ph-head"><span>Produk</span><span>Brand</span><span>GMV</span><span>Creator</span><span>Order rata-rata</span></div>'
+    + rows.map(function(r, i){
+      return '<div class="ph-row">'
+        + '<span><b>' + (i+1) + '. ' + escHtml(r.produk) + '</b></span>'
+        + '<span>' + escHtml(r.brand) + ' <span class="ph-tag ' + (r.mitra ? 'mitra">kerja sama' : 'prospek">prospek') + '</span></span>'
+        + '<span>Rp' + (r.gmv || 0).toLocaleString('id-ID') + '</span>'
+        + '<span>' + r.jumlahCreator + ' creator</span>'
+        + '<span>' + r.orderRataRata + ' order</span>'
+        + '</div>';
+    }).join('');
+}
+
 async function loadAeHunting(){
+  loadProductHuntingPeriode();
   const wrap = document.getElementById('ae-hunting-list');
   wrap.innerHTML = '<div class="card-sub">Memuat data...</div>';
   const { data, error } = await db.from('ae_hunting_products')
