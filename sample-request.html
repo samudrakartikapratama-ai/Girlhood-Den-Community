@@ -5019,7 +5019,8 @@ async function loadCreatorTiktokCollabStatus(){
     .limit(1)
     .maybeSingle();
 
-  const authUrl = 'https://shop.tiktok.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(memberId);
+  // Domain Indonesia: shop.tiktok.com diblokir "tidak tersedia di wilayah Anda" buat akun ID.
+  const authUrl = 'https://shop-id.tokopedia.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(memberId);
 
   if(error || !data){
     wrap.innerHTML =
