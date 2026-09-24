@@ -4210,6 +4210,7 @@ async function loadApprovalRows(){
     .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .in('status', ['requested','approved','rejected'])
+    .eq('sumber', 'sow')
     .order('requested_at', { ascending: false });
 
   if(error){
@@ -4218,14 +4219,9 @@ async function loadApprovalRows(){
     return;
   }
 
-  // Self-report: creator udah punya produknya sendiri & auto-approved sistem, TIDAK PERNAH butuh approval/kirim manual dari brand -- exclude total.
-  const reqIds3 = (data||[]).map(function(r){ return r.id; });
-  let selfReportIds3 = new Set();
-  if(reqIds3.length > 0){
-    const { data: srRows3 } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds3);
-    selfReportIds3 = new Set((srRows3||[]).map(function(r){ return r.sample_request_id; }));
-  }
-  const dataNoSelfReport3 = (data||[]).filter(function(r){ return !selfReportIds3.has(r.id); });
+  // Self-report udah disaring langsung di query (sumber = 'sow'), jadi nggak perlu query kedua
+  // yang dulu suka gagal diam-diam kalau request brand-nya banyak.
+  const dataNoSelfReport3 = data || [];
 
   if(!dataNoSelfReport3 || dataNoSelfReport3.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada request sample masuk.</div>';
@@ -6708,6 +6704,7 @@ async function loadPengiriman(){
     .select('id, members(nama), brand_products!inner(nama_produk, brand_id), shipments(id, tanggal_janji_kirim, finalized_at)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
+    .eq('sumber', 'sow')
     .order('decided_at', { ascending: false });
 
   if(error){
@@ -6716,14 +6713,8 @@ async function loadPengiriman(){
     return;
   }
 
-  // Self-report: creator udah PUNYA produknya sendiri, brand nggak perlu kirim apa-apa -- exclude dari daftar ini.
-  const reqIds = (data||[]).map(function(r){ return r.id; });
-  let selfReportIds = new Set();
-  if(reqIds.length > 0){
-    const { data: srRows } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds);
-    selfReportIds = new Set((srRows||[]).map(function(r){ return r.sample_request_id; }));
-  }
-  const dataFiltered = (data||[]).filter(function(r){ return !selfReportIds.has(r.id); });
+  // Self-report udah disaring langsung di query (sumber = 'sow').
+  const dataFiltered = data || [];
 
   if(dataFiltered.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada produk yang di-approve dan siap dikirim.</div>';
@@ -6800,7 +6791,8 @@ async function loadLogistik(){
   const { data, error } = await db.from('sample_requests')
     .select('id, members(nama), brand_products!inner(nama_produk, brand_id), shipments!inner(tanggal_janji_kirim, finalized_at), logistics(id, sudah_dikirim, nomor_resi)')
     .eq('brand_products.brand_id', currentSession.brandId)
-    .eq('status', 'approved');
+    .eq('status', 'approved')
+    .eq('sumber', 'sow');
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -6808,14 +6800,8 @@ async function loadLogistik(){
     return;
   }
 
-  // Self-report: nggak butuh brand kirim apapun -- exclude, jaga-jaga kalau ada data lama yang salah kesangkut.
-  const reqIds2 = (data||[]).map(function(r){ return r.id; });
-  let selfReportIds2 = new Set();
-  if(reqIds2.length > 0){
-    const { data: srRows2 } = await db.from('self_reported_products').select('sample_request_id').in('sample_request_id', reqIds2);
-    selfReportIds2 = new Set((srRows2||[]).map(function(r){ return r.sample_request_id; }));
-  }
-  const dataNoSelfReport = (data||[]).filter(function(r){ return !selfReportIds2.has(r.id); });
+  // Self-report udah disaring langsung di query (sumber = 'sow').
+  const dataNoSelfReport = data || [];
 
   const belumDikirim = dataNoSelfReport.filter(function(r){ return !r.logistics || !r.logistics.sudah_dikirim; });
 
