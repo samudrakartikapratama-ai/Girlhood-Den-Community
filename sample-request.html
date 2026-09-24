@@ -2921,6 +2921,83 @@ let pkAllProducts = [];
 let pkFilesByProduct = {};
 let pkSelectedProductId = null;
 
+// ===== Ringkasan Product Knowledge (AI) =====
+// Dipanggil dari panel produk di menu Product Knowledge brand.
+async function panggilPkAi(body){
+  const res = await fetch(SUPABASE_URL + '/functions/v1/summarize-product-knowledge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function muatRingkasanPk(productId){
+  const teks = document.getElementById('pk-ai-teks');
+  const tombolSimpan = document.getElementById('pk-ai-save');
+  if(!teks) return;
+  try {
+    const j = await panggilPkAi({ action: 'get', brandProductId: productId });
+    if(j.valid && j.summary && j.summary.isi){
+      teks.value = j.summary.isi;
+      teks.style.display = 'block';
+      tombolSimpan.style.display = 'inline-block';
+      document.getElementById('pk-ai-status').textContent = j.summary.disimpan_at
+        ? 'Tersimpan, sudah tampil ke creator.'
+        : 'Draft dari AI, belum disimpan.';
+    }
+  } catch(e){}
+}
+
+async function ringkasProductKnowledge(productId){
+  const btn = document.getElementById('pk-ai-btn');
+  const teks = document.getElementById('pk-ai-teks');
+  const flag = document.getElementById('pk-ai-flag');
+  const status = document.getElementById('pk-ai-status');
+  btn.disabled = true;
+  const labelLama = btn.textContent;
+  btn.textContent = 'AI lagi baca materinya...';
+  status.textContent = '';
+  try {
+    const j = await panggilPkAi({ action: 'summarize', brandProductId: productId });
+    if(!j.valid){
+      status.innerHTML = '<span style="color:var(--red)">' + (j.error || 'Gagal meringkas.') + '</span>';
+    } else {
+      teks.value = j.isi || '';
+      teks.style.display = 'block';
+      document.getElementById('pk-ai-save').style.display = 'inline-block';
+      if(j.flag){
+        flag.style.display = 'block';
+        flag.innerHTML = '<div style="background:var(--amber);color:var(--amber-dark);border-radius:10px;padding:9px 11px;margin-top:8px;font-weight:600">Perlu dicek: ada klaim berisiko di materi kamu (' + escHtml(j.flag) + '). Klaim itu dibuang dari ringkasan.</div>';
+      } else {
+        flag.style.display = 'none';
+      }
+      status.textContent = 'Draft siap. Edit kalau perlu, lalu Simpan. Sisa jatah ringkas hari ini: ' + (j.sisaHariIni !== undefined ? j.sisaHariIni : '-') + '.';
+    }
+  } catch(e){
+    status.innerHTML = '<span style="color:var(--red)">Gagal menghubungi server.</span>';
+  }
+  btn.disabled = false;
+  btn.textContent = labelLama;
+}
+
+async function simpanRingkasanPk(productId){
+  const teks = document.getElementById('pk-ai-teks');
+  const status = document.getElementById('pk-ai-status');
+  const btn = document.getElementById('pk-ai-save');
+  if(!teks.value.trim()){ status.textContent = 'Isinya masih kosong.'; return; }
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const j = await panggilPkAi({ action: 'save', brandProductId: productId, isi: teks.value, disimpanOleh: 'brand' });
+    status.innerHTML = j.valid
+      ? '<span style="color:var(--teal)">Tersimpan. Creator sudah bisa baca poin ini di halaman produk.</span>'
+      : '<span style="color:var(--red)">' + (j.error || 'Gagal menyimpan.') + '</span>';
+  } catch(e){
+    status.innerHTML = '<span style="color:var(--red)">Gagal menghubungi server.</span>';
+  }
+  btn.disabled = false; btn.textContent = 'Simpan';
+}
+
 async function loadProductKnowledgeCatalog(){
   const wrap = document.getElementById('pk-catalog');
   wrap.innerHTML = '<div class="card-sub">Memuat produk...</div>';
@@ -3003,6 +3080,21 @@ function selectPkProduct(id){
     await loadProductKnowledgeCatalog();
     selectPkProduct(id);
   });
+
+  const aiWrap = document.createElement('div');
+  aiWrap.id = 'pk-ai-wrap';
+  aiWrap.style.cssText = 'margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)';
+  aiWrap.innerHTML = '<div style="font-weight:800;color:var(--dark);font-size:13px">\u2728 Ringkasan buat creator</div>'
+    + '<div class="card-sub">Materi di atas bisa diringkas otomatis jadi poin siap pakai: keunggulan, cara pakai, dan angle konten. Kamu bisa edit dulu sebelum simpan. Yang tersimpan inilah yang dibaca creator di menu Campaign.</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+    +   '<button class="btn btn-primary btn-sm" id="pk-ai-btn" onclick="ringkasProductKnowledge(\'' + id + '\')">\u2728 Ringkas dengan AI</button>'
+    +   '<button class="btn btn-outline btn-sm" id="pk-ai-save" onclick="simpanRingkasanPk(\'' + id + '\')" style="display:none">Simpan</button>'
+    + '</div>'
+    + '<div id="pk-ai-flag" style="display:none" class="card-sub"></div>'
+    + '<textarea id="pk-ai-teks" style="display:none;width:100%;min-height:190px;margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:10px;font-family:inherit;font-size:13px;line-height:1.6"></textarea>'
+    + '<div id="pk-ai-status" class="card-sub" style="margin-top:6px"></div>';
+  panel.appendChild(aiWrap);
+  muatRingkasanPk(id);
 }
 
 
