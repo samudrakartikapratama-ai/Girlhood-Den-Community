@@ -4894,6 +4894,9 @@ async function submitVtReport(){
   await loadVtReportPage();
   checkFreezeStatus();
 }
+// Dipakai tombol Hubungkan TikTok (display API) di sisi creator.
+const TIKTOK_SERVICE_ID = '7685893564174419720';
+
 async function loadCreatorTiktokStatus(){
   const wrap = document.getElementById('creator-tiktok-status');
   wrap.innerHTML = '<div class="card-sub">Memuat status...</div>';
