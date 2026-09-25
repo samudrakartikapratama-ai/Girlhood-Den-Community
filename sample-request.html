@@ -5125,7 +5125,11 @@ async function cekGerbangVerifikasi(){
 
 function pasangGembokMenu(){
   const dikunci = ['Campaign', 'Report VT', 'Poin', 'Cek Status', 'Endorsement', 'Papan Skor'];
-  document.querySelectorAll('.icon-card').forEach(function(card){
+  // penting: cuma menu creator. Kalau pakai querySelectorAll global, menu brand dan internal
+  // (Kelola Poin, Leaderboard, Eskalasi Draft) ikut kegembok padahal beda peran.
+  const area = document.getElementById('app-creator');
+  if(!area) return;
+  area.querySelectorAll('.icon-card').forEach(function(card){
     const label = card.textContent.replace(/\s+/g,' ').trim();
     if(!dikunci.some(function(n){ return label.indexOf(n) !== -1; })) return;
     card.classList.add('locked');
