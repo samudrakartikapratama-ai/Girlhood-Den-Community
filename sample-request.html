@@ -352,6 +352,8 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .card.rek-sorot{box-shadow:0 0 0 3px var(--pink);transition:box-shadow 400ms ease}
 /* Panel internal buat milih Hero / Produk Baru */
 /* Hunting Produk (AE): tabel Top 100 penjualan creator kita */
+.icon-card.locked{opacity:.55;position:relative}
+.icon-card.locked::after{content:"\\1F512";position:absolute;top:6px;right:8px;font-size:12px}
 .ph-tabs{display:flex;gap:6px;background:var(--gray);border-radius:999px;padding:4px}
 .ph-tab{min-height:34px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .ph-tab.on{background:var(--dark);color:#fff}
@@ -895,7 +897,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
     <div class="icon-card" onclick="openModal('m-i19'); loadAeEscalatedDrafts();"><div class="icon-emoji">⚖️</div><div class="icon-label">Eskalasi Draft Endorsement</div></div>
     <div class="icon-card" onclick="openModal('m-i18'); loadAeHunting();"><div class="icon-emoji">🎯</div><div class="icon-label">Hunting Produk (AE)</div></div>
-    <div class="icon-card" onclick="openModal('m-i20'); loadRekomendasiBrands();"><div class="icon-emoji">🏆</div><div class="icon-label">Pilihan Girlhood Den</div></div>
+    <div class="icon-card" onclick="openModal('m-i21'); loadGerbangVerifikasi();"><div style="font-size:28px;line-height:1">🪪</div><div class="icon-label">Gerbang Verifikasi</div></div>
+        <div class="icon-card" onclick="openModal('m-i20'); loadRekomendasiBrands();"><div class="icon-emoji">🏆</div><div class="icon-label">Pilihan Girlhood Den</div></div>
   </div>
 </div>
 
@@ -1691,6 +1694,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="ae-hunting-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
+<div class="modal-bg" id="m-i21"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-i21')">‹ ✕</button>
+  <div class="modal-title">🪪 Gerbang Verifikasi</div>
+  <div class="card-sub">Kalau dinyalakan, creator wajib verifikasi akun TikTok dulu sebelum bisa buka menu Campaign, Report VT, Poin, dan Cek Status.</div>
+  <div id="gate-status" style="margin-top:12px"><div class="card-sub">Memuat...</div></div>
+  <div style="background:var(--amber);color:var(--amber-dark);border-radius:12px;padding:10px;margin-top:12px;font-size:12px;font-weight:600">⚠️ Jangan dinyalakan sebelum otorisasi TikTok disetujui. Kalau dinyalakan sekarang, semua creator nggak bisa request sample.</div>
+</div></div>
+
 <div class="modal-bg" id="m-i20"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i20')">‹ ✕</button>
   <div class="modal-title">🏆 Pilihan Girlhood Den</div>
   <div class="card-sub">Maksimal 2 Hero + 1 Produk Baru per brand. Tampil paling atas di halaman brand (menu Campaign) buat creator. Berlaku sampai akhir bulan, lewat itu hilang sendiri.</div>
@@ -2115,6 +2125,29 @@ document.addEventListener('DOMContentLoaded', function(){
 // ===== Pilihan Girlhood Den (internal) =====
 let rekPilihan = { hero: [], baru: null };
 let rekProdukCache = [];
+
+async function loadGerbangVerifikasi(nyalakan){
+  const wrap = document.getElementById('gate-status');
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  try {
+    const auth = await getInternalAuthHeader();
+    const body = (nyalakan === undefined) ? { action: 'status' } : { action: 'set', nyala: nyalakan };
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-verifikasi-gate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify(body)
+    });
+    const j = await res.json();
+    if(!j.valid){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal memuat.') + '</div>'; return; }
+    wrap.innerHTML = '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">'
+      + '<div><b style="font-size:13.5px">Wajibkan verifikasi</b><div class="card-sub">' + (j.nyala ? 'Nyala \u2014 creator wajib verifikasi dulu' : 'Mati \u2014 creator bisa request tanpa verifikasi') + '</div></div>'
+      + '<button class="btn btn-sm ' + (j.nyala ? 'btn-outline' : 'btn-primary') + '" onclick="loadGerbangVerifikasi(' + (j.nyala ? 'false' : 'true') + ')">' + (j.nyala ? 'Matikan' : 'Nyalakan') + '</button>'
+      + '</div>'
+      + '<div class="card-sub" style="margin-top:10px">\u2705 Sudah verifikasi: <b>' + j.sudahVerifikasi + '</b> creator</div>'
+      + '<div class="card-sub">\u23f3 Belum verifikasi: <b>' + j.belumVerifikasi + '</b> dari total ' + j.totalCreator + ' creator</div>';
+  } catch(e){
+    wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
+  }
+}
 
 async function loadRekomendasiBrands(){
   const sel = document.getElementById('rek-brand-select');
@@ -5071,6 +5104,61 @@ async function loadCreatorTiktokVideos(){
 // Link otorisasi CREATOR (bukan seller). Link seller bikin creator nyasar ke halaman toko Tokopedia.
 const TIKTOK_COLLAB_APP_KEY = '6latc062264ep';
 
+// ===== Gerbang verifikasi akun TikTok =====
+// Saklarnya ada di app_config.verifikasi_tiktok_wajib (default 'off').
+// Kalau nyala: creator yang belum menghubungkan akun TikTok nggak bisa buka menu
+// yang menghasilkan uang (Campaign, Report VT, Poin, Cek Status) sampai dia verifikasi.
+let gerbangVerifikasiNyala = false;
+let creatorSudahVerifikasi = false;
+
+async function cekGerbangVerifikasi(){
+  try {
+    const { data: cfg } = await db.from('app_config').select('value').eq('key','verifikasi_tiktok_wajib').maybeSingle();
+    gerbangVerifikasiNyala = (cfg && cfg.value === 'on');
+    if(!gerbangVerifikasiNyala) return;
+    const { data: auth } = await db.from('creator_tiktok_collab_authorizations')
+      .select('member_id').eq('member_id', currentSession.memberId).maybeSingle();
+    creatorSudahVerifikasi = !!auth;
+    if(!creatorSudahVerifikasi) pasangGembokMenu();
+  } catch(e){ /* kalau gagal baca, jangan kunci siapa pun */ }
+}
+
+function pasangGembokMenu(){
+  const dikunci = ['Campaign', 'Report VT', 'Poin', 'Cek Status', 'Endorsement', 'Papan Skor'];
+  document.querySelectorAll('.icon-card').forEach(function(card){
+    const label = card.textContent.replace(/\s+/g,' ').trim();
+    if(!dikunci.some(function(n){ return label.indexOf(n) !== -1; })) return;
+    card.classList.add('locked');
+    card.setAttribute('onclick', 'bukaGerbangVerifikasi()');
+  });
+  bukaGerbangVerifikasi();
+}
+
+function bukaGerbangVerifikasi(){
+  let m = document.getElementById('m-verifikasi-akun');
+  if(!m){
+    m = document.createElement('div');
+    m.className = 'modal-bg';
+    m.id = 'm-verifikasi-akun';
+    m.innerHTML = '<div class="modal-box" style="text-align:center">'
+      + '<div style="font-size:38px;line-height:1">\ud83e\udeaa</div>'
+      + '<div class="modal-title" style="justify-content:center">Verifikasi Akun TikTok</div>'
+      + '<div class="card-sub">Satu langkah terakhir sebelum kamu bisa request sample. Kami perlu memastikan akun TikTok yang kamu daftarkan memang punya kamu.</div>'
+      + '<div style="text-align:left;margin:14px 0">'
+      +   '<div class="card-sub" style="margin-bottom:7px">\u2705 Terbukti akunmu sendiri, bukan akun orang lain</div>'
+      +   '<div class="card-sub" style="margin-bottom:7px">\u26a1 Laporan VT langsung terverifikasi, nggak nunggu dicek manual</div>'
+      +   '<div class="card-sub" style="margin-bottom:7px">\ud83c\udf81 Langsung dapat <b>+50 poin</b></div>'
+      +   '<div class="card-sub">\u2b50 Masuk daftar prioritas brand & paid campaign</div>'
+      + '</div>'
+      + '<a class="btn btn-primary" style="display:block;text-decoration:none" href="https://shop-id.tokopedia.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(currentSession.memberId || '') + '">Verifikasi lewat TikTok</a>'
+      + '<div class="card-sub" style="margin-top:10px;font-size:11.5px">Kami cuma membaca daftar produk di showcase kamu. Nggak bisa posting, nggak bisa ubah apa pun di akunmu, dan izinnya bisa kamu cabut kapan saja dari TikTok.</div>'
+      + '<button class="btn btn-outline" style="margin-top:10px" onclick="document.getElementById(\'m-verifikasi-akun\').classList.remove(\'open\')">Nanti dulu</button>'
+      + '</div>';
+    document.body.appendChild(m);
+  }
+  m.classList.add('open');
+}
+
 async function loadCreatorTiktokCollabStatus(){
   const wrap = document.getElementById('creator-tiktok-collab-status');
   if(!wrap) return;
@@ -5296,6 +5384,7 @@ async function loginCreator(){
     currentSession.memberId = result.member.id;
     currentSession.memberData = result.member;
     enterApp('creator');
+    cekGerbangVerifikasi();
     checkFreezeStatus();
     initApprovalSlideNotif();
     loadPersonalMarquee();
