@@ -354,6 +354,10 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 /* Hunting Produk (AE): tabel Top 100 penjualan creator kita */
 .icon-card.locked{opacity:.55;position:relative}
 .icon-card.locked::after{content:"\\1F512";position:absolute;top:6px;right:8px;font-size:12px}
+/* Jadwal live: 3 kotak ditumpuk ke bawah + label sesi, biar nggak ketuker urutannya */
+.jl-baris{display:flex;align-items:center;gap:10px;margin-top:8px}
+.jl-label{flex:0 0 52px;font-size:12px;font-weight:800;color:var(--amber-dark)}
+.jl-baris input{flex:1;min-width:0}
 .ph-tabs{display:flex;gap:6px;background:var(--gray);border-radius:999px;padding:4px}
 .ph-tab{min-height:34px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--dark);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .ph-tab.on{background:var(--dark);color:#fff}
@@ -4691,8 +4695,9 @@ async function loadJadwalLivePrompts(){
     return '<div class="card" style="background:var(--pink-pale);border:1.5px solid var(--amber)">'
       + '<div style="font-weight:800;color:var(--amber-dark)">🎥 Jadwalin Live buat '+g.brandName+'</div>'
       + '<div class="card-sub" style="margin:4px 0 8px">Barang udah kamu terima — jadwalin 3 sesi live-nya (min. 2 jam/sesi, tanggal beda-beda). Ini nge-cover semua produk dari brand ini sekaligus.</div>'
-      + '<div class="field-row"><input type="datetime-local" class="jl-s1" min="'+minDt+'"><input type="datetime-local" class="jl-s2" min="'+minDt+'"></div>'
-      + '<input type="datetime-local" class="jl-s3" min="'+minDt+'" style="margin-top:8px;width:100%">'
+      + '<div class="jl-baris"><span class="jl-label">Sesi 1</span><input type="datetime-local" class="jl-s1" min="'+minDt+'"></div>'
+      + '<div class="jl-baris"><span class="jl-label">Sesi 2</span><input type="datetime-local" class="jl-s2" min="'+minDt+'"></div>'
+      + '<div class="jl-baris"><span class="jl-label">Sesi 3</span><input type="datetime-local" class="jl-s3" min="'+minDt+'"></div>'
       + '<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" data-brand-id="'+bId+'" data-request-ids="'+g.requestIds.join(',')+'" onclick="saveJadwalLive(this)">✅ Simpan Jadwal</button>'
       + '</div>';
   }).join('');
