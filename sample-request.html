@@ -236,10 +236,31 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pd-vref-tabs button.on{background:var(--pink);border-color:var(--pink);color:#fff}
 .sow-title{font-size:14px;font-weight:800;color:var(--dark);margin:14px 0 2px}
 .sow-sub{font-size:12px;color:var(--gray-text);margin-bottom:8px}
-.sow-opt{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--border);border-radius:16px;padding:14px 14px;margin-bottom:9px;cursor:pointer;background:#fff;transition:border-color 140ms ease,background 140ms ease}
-.sow-opt input{width:22px;height:22px;accent-color:var(--pink);flex-shrink:0;margin-top:2px}
-.sow-opt b{display:block;font-size:15.5px;color:var(--dark);margin-bottom:3px}
-.sow-opt span{font-size:12.5px;color:var(--gray-text);line-height:1.45}
+.sow-opt{display:flex;gap:14px;align-items:flex-start;border:2px solid var(--border);border-radius:18px;padding:18px 18px;margin-bottom:11px;cursor:pointer;background:#fff;transition:border-color 140ms ease,background 140ms ease}
+.sow-opt input{width:26px;height:26px;accent-color:var(--pink);flex-shrink:0;margin-top:1px}
+.sow-opt b{display:block;font-size:17.5px;color:var(--dark);margin-bottom:4px}
+.sow-opt span{font-size:14px;color:var(--gray-text);line-height:1.5}
+.sow-title{font-size:16px !important}
+.sow-agree{font-size:14px !important}
+/* Tombol pilih file di seluruh aplikasi */
+input[type=file]{font-family:inherit;font-size:12.5px;color:var(--gray-text);max-width:100%}
+input[type=file]::file-selector-button{border:0;background:var(--pink);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:999px;margin-right:10px;cursor:pointer}
+/* Kotak pilih foto self-report */
+.fz{display:flex;align-items:center;gap:12px;border:2px dashed var(--pink);border-radius:16px;padding:14px;background:var(--pink-pale);cursor:pointer}
+.fz-ic{font-size:26px;flex-shrink:0}
+.fz-tx b{display:block;font-size:14px;color:var(--dark)}
+.fz-tx small{display:block;font-size:12px;color:var(--gray-text);margin-top:2px;word-break:break-all}
+.fz.ada{border-style:solid;background:#E3F4EA;border-color:#4A9D78}
+.fz-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+/* Langkah ambil sample */
+.how-steps{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:14px 14px 8px;margin-bottom:12px}
+.how-title{font-size:14px;font-weight:800;color:var(--dark);margin-bottom:10px}
+.how-list{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:720px){.how-list{grid-template-columns:1fr 1fr}}
+.how-item{display:flex;gap:10px;align-items:flex-start;padding-bottom:6px}
+.how-no{width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-item b{display:block;font-size:13px;color:var(--dark)}
+.how-item span{display:block;font-size:11.5px;color:var(--gray-text);line-height:1.45}
 .sow-opt.on{border-color:var(--pink);background:var(--pink-pale)}
 .sow-agree{display:flex;gap:10px;align-items:flex-start;margin:10px 0 12px;font-size:13px;font-weight:700;color:var(--dark);cursor:pointer}
 .sow-agree input{width:20px;height:20px;accent-color:var(--pink);flex-shrink:0;margin-top:1px}
@@ -741,6 +762,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div><b id="brand-detail-name">-</b></div>
       </div>
     </div>
+    <div class="how-steps">
+      <div class="how-title">📋 Cara ambil sample</div>
+      <div class="how-list">
+        <div class="how-item"><div class="how-no">1</div><div><b>Pilih kewajiban dan centang setuju</b><span>Baca dulu isinya. Setelah dicentang, tombol Request Sample baru bisa ditekan.</span></div></div>
+        <div class="how-item"><div class="how-no">2</div><div><b>Tunggu brand menyetujui</b><span>Pantau statusnya di menu Cek Status.</span></div></div>
+        <div class="how-item"><div class="how-no">3</div><div><b>Barang datang? Konfirmasi</b><span>Tekan "Barang Sudah Sampai" di Cek Status begitu paketnya kamu terima.</span></div></div>
+        <div class="how-item"><div class="how-no">4</div><div><b>Upload 3 video di Report VT</b><span>Paling lambat 3 hari setelah konfirmasi barang sampai.</span></div></div>
+      </div>
+    </div>
     <div id="brand-products-list"><div class="card-sub">Memuat produk...</div></div>
   </div>
 </div></div>
@@ -1080,8 +1110,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="sr-bar-txt"><div class="sr-bar-name" id="sr-bar-name"></div><div class="sr-bar-hint">Upload foto bukti lalu ajukan</div></div>
     </div>
     <div class="sr-foto-row" id="sr-foto-row" style="display:none">
-      <input type="file" id="sr-foto" accept="image/*">
-      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitSelfReport()">Ajukan</button>
+      <label class="fz" for="sr-foto" id="sr-foto-box">
+        <span class="fz-ic">📷</span>
+        <span class="fz-tx"><b id="sr-foto-judul">Pilih foto produkmu</b><small id="sr-foto-nama">Foto produk yang benar-benar kamu punya, jelas dan terang.</small></span>
+      </label>
+      <input type="file" id="sr-foto" class="fz-input" accept="image/*" onchange="srFotoDipilih(this)">
+      <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="submitSelfReport()">Ajukan</button>
     </div>
   </div>
 </div></div>
@@ -3686,6 +3720,13 @@ function pdSowChange(el){
   btn.disabled = terkunciAlasanLain || !(picked && agree && agree.checked);
   var liveNote = card.querySelector('.live-schedule-note');
   if(liveNote) liveNote.style.display = (picked && (picked.value==='LIVE' || picked.value==='VT_LIVE')) ? 'block' : 'none';
+}
+function srFotoDipilih(input){
+  var box = document.getElementById('sr-foto-box');
+  var f = input.files && input.files[0];
+  box.classList.toggle('ada', !!f);
+  document.getElementById('sr-foto-judul').textContent = f ? 'Foto siap diajukan ✓' : 'Pilih foto produkmu';
+  document.getElementById('sr-foto-nama').textContent = f ? f.name + ' — ketuk untuk ganti' : 'Foto produk yang benar-benar kamu punya, jelas dan terang.';
 }
 function pdVrefPick(btn, url){
   var wrap = btn.closest('.pd-vref');
@@ -6897,6 +6938,7 @@ async function submitSelfReport(){
         alert(j.error || 'Gagal mengajukan.'); return;
       }
       alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
+      fotoInput.value = ''; srFotoDipilih(fotoInput);
       closeModal('m-c9');
     } catch(e){ alert('Gagal menghubungi server.'); }
   };
