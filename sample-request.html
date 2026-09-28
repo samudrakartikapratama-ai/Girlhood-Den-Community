@@ -3326,9 +3326,8 @@ function renderBrandList(brands){
   const emptyEl = document.getElementById('brand-list-empty');
 
   if(brands.length === 0){
-    scroll.innerHTML = '';
-    scroll.appendChild(emptyEl);
-    emptyEl.style.display = 'block';
+    // Kotak "tidak ada hasil" ikut terhapus saat daftar dirender ulang, jadi dibuat lagi kalau hilang.
+    scroll.innerHTML = '<div id="brand-list-empty" style="grid-column:1/-1;text-align:center;padding:30px 10px;color:var(--gray-text)"><div style="font-size:32px;margin-bottom:6px">🔍</div>Brand tidak ditemukan. Coba kata lain atau pilih filter Semua.</div>';
     note.textContent = 'Menampilkan 0 dari ' + allBrandsCache.length + ' brand';
     totalNote.textContent = '';
     return;
