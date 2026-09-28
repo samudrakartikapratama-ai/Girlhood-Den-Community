@@ -246,6 +246,19 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pd-actions{display:flex;gap:8px;flex-wrap:wrap}
 .pd-actions .btn{flex:1;min-width:140px}
 .request-sample-btn[disabled]{opacity:.45;cursor:not-allowed}
+.sr-cta{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:2px dashed var(--pink);border-radius:16px;padding:12px 14px;margin-bottom:14px;cursor:pointer;font-family:inherit;transition:transform 140ms cubic-bezier(.23,1,.32,1)}
+.sr-cta:active{transform:scale(.98)}
+.sr-cta-ic{font-size:24px;flex-shrink:0}
+.sr-cta-tx{flex:1;min-width:0}
+.sr-cta-tx b{display:block;font-size:14px;color:var(--dark)}
+.sr-cta-tx small{display:block;font-size:11.5px;color:var(--gray-text);line-height:1.4;margin-top:2px}
+.bf-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.bf-chips{display:flex;gap:6px;flex-wrap:wrap}
+.bf-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--dark);cursor:pointer;font-family:inherit;transition:background 140ms ease,border-color 140ms ease}
+.bf-chip.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.bf-sort{display:inline-flex;background:var(--pink-pale);border-radius:999px;padding:3px}
+.bf-sort button{border:0;background:transparent;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gray-text);cursor:pointer;font-family:inherit}
+.bf-sort button.on{background:#fff;color:var(--pink);box-shadow:0 1px 4px rgba(194,18,75,.15)}
 .video-thumb{width:38px;height:60px;background:var(--dark);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
 .sow-big{font-size:24px;font-weight:800;color:var(--teal);margin:4px 0}
 .status-item{border-radius:10px;padding:10px;margin-bottom:6px;font-size:12px}
@@ -686,19 +699,28 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
 
-  <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="openSelfReportModal()">📸 Udah Punya Produknya? Ajukan di Sini</button>
+  <button type="button" class="sr-cta" onclick="openSelfReportModal()">
+    <span class="sr-cta-ic">📸</span>
+    <span class="sr-cta-tx"><b>Sudah punya produknya sendiri?</b><small>Laporkan di sini supaya videomu tetap dapat poin. Ini bukan tempat minta sample.</small></span>
+    <span class="bl-arrow">›</span>
+  </button>
 
   <div id="c2-brandlist">
     <div class="field" style="margin-bottom:10px">
       <input id="brand-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandList(this.value)">
     </div>
-    <div class="field-row" style="margin-bottom:12px">
-      <select id="brand-filter" onchange="filterBrandList(document.getElementById('brand-search').value)" style="font-size:12px">
-        <option value="all">Semua Kategori</option>
-        <option value="hot">🔥 Hot Product</option>
-        <option value="comm">💰 High Commission</option>
-      </select>
-      <select style="font-size:12px"><option>Urutkan: A-Z</option><option>Urutkan: Terbaru</option></select>
+    <input type="hidden" id="brand-filter" value="all">
+    <input type="hidden" id="brand-sort" value="az">
+    <div class="bf-bar">
+      <div class="bf-chips">
+        <button type="button" class="bf-chip on" data-f="all" onclick="pilihFilterBrand(this)">Semua</button>
+        <button type="button" class="bf-chip" data-f="hot" onclick="pilihFilterBrand(this)">🔥 Hot</button>
+        <button type="button" class="bf-chip" data-f="comm" onclick="pilihFilterBrand(this)">💰 Komisi tinggi</button>
+      </div>
+      <div class="bf-sort">
+        <button type="button" class="on" data-s="az" onclick="pilihUrutBrand(this)">A–Z</button>
+        <button type="button" data-s="baru" onclick="pilihUrutBrand(this)">Terbaru</button>
+      </div>
     </div>
     <div class="size-note" style="margin-bottom:8px" id="brand-count-note">Memuat daftar brand...</div>
 
@@ -3285,7 +3307,7 @@ async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, created_at, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -3351,7 +3373,24 @@ function filterBrandList(query){
     if(tagFilter === 'comm') matchesTag = products.some(function(p){ return p.tag_high_commission; });
     return matchesName && matchesTag;
   });
+  const urut = (document.getElementById('brand-sort') || {}).value || 'az';
+  if(urut === 'baru'){
+    filtered.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
+  } else {
+    filtered.sort(function(a,b){ return a.nama_brand.localeCompare(b.nama_brand); });
+  }
   renderBrandList(filtered);
+}
+
+function pilihFilterBrand(btn){
+  document.querySelectorAll('.bf-chip').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  document.getElementById('brand-filter').value = btn.dataset.f;
+  filterBrandList(document.getElementById('brand-search').value);
+}
+function pilihUrutBrand(btn){
+  document.querySelectorAll('.bf-sort button').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  document.getElementById('brand-sort').value = btn.dataset.s;
+  filterBrandList(document.getElementById('brand-search').value);
 }
 
 async function openBrandDetail(brandId, brandName, logoUrl){
