@@ -261,6 +261,50 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 .how-no{width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .how-item b{display:block;font-size:13px;color:var(--dark)}
 .how-item span{display:block;font-size:11.5px;color:var(--gray-text);line-height:1.45}
+/* ===================== TUTORIAL SLIDES (v2) — ganti stepper lama & spotlight lama ===================== */
+.tut2-overlay{ display:none; position:fixed; inset:0; z-index:99995; background:linear-gradient(160deg,#fff 0%, #fdf1f6 100%); }
+.tut2-overlay.open{ display:flex; flex-direction:column; }
+.tut2-header-row{ display:flex; align-items:center; gap:14px; padding:calc(env(safe-area-inset-top,0px) + 46px) 20px 0; flex-shrink:0; }
+.tut2-progress{ height:4px; border-radius:4px; background:#ECD8E2; overflow:hidden; flex:1; }
+.tut2-progress .fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--pink),#E8A419); border-radius:4px; transition:width .25s linear; }
+.tut2-skip{ flex-shrink:0; font-size:12px; color:var(--gray-text); font-weight:700; background:#F5EBF0; border:none; border-radius:999px; padding:7px 14px; cursor:pointer; white-space:nowrap; }
+.tut2-body{ flex:1; min-height:0; overflow-y:auto; padding:16px 20px 0; display:flex; flex-direction:column; }
+.tut2-icon{ width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:14px; box-shadow:0 8px 18px rgba(74,43,71,.18); flex-shrink:0; }
+.tut2-title{ font-size:19px; font-weight:800; color:var(--dark); margin:0 0 4px; flex-shrink:0; }
+.tut2-sub{ font-size:12.5px; color:var(--gray-text); margin:0 0 14px; line-height:1.45; flex-shrink:0; }
+.tut2-rules{ display:flex; flex-direction:column; gap:8px; }
+.tut2-rule{ display:flex; align-items:flex-start; gap:9px; background:#fff; border-radius:13px; padding:9px 11px; box-shadow:0 3px 10px rgba(74,43,71,.08); font-size:12.5px; line-height:1.4; color:#5c4655; }
+.tut2-rule .num{ flex-shrink:0; width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#fff; }
+.tut2-note{ display:flex; flex-direction:column; gap:5px; background:linear-gradient(135deg,#FFF6E6,#FDECEF); border:1px solid #F4DFB0; border-radius:14px; padding:13px 15px; margin-top:16px; flex-shrink:0; }
+.tut2-note .nt{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; color:#8a5a12; }
+.tut2-note .nb{ font-size:11.5px; line-height:1.55; color:#6b5030; }
+.tut2-empty-icon{ flex:1; display:flex; align-items:center; justify-content:center; font-size:64px; padding:20px 0; }
+.tut2-side{ display:none; }
+.tut2-card{ display:flex; flex-direction:column; width:100%; height:100%; }
+.tut2-main{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; }
+.tut2-bottom{ flex-shrink:0; padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; align-items:center; gap:10px; }
+.tut2-btn{ height:50px; border-radius:25px; border:none; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.tut2-btn.primary{ flex:1; background:linear-gradient(90deg,var(--pink),#C2185B); color:#fff; box-shadow:0 6px 16px rgba(232,24,90,.35); }
+.tut2-btn.ghost{ width:50px; flex-shrink:0; background:#F1E3EC; color:var(--dark); }
+@media (min-width:1024px){
+  .tut2-overlay{ background:rgba(74,43,71,.45); align-items:center; justify-content:center; }
+  .tut2-card{ width:900px; max-width:94vw; height:760px; background:#fff; border-radius:22px; overflow:hidden; display:flex; flex-direction:row; box-shadow:0 30px 70px rgba(74,43,71,.3); }
+  .tut2-side{ width:230px; flex-shrink:0; background:linear-gradient(160deg,#fdf2f6,#f3dfe9); padding:24px 14px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; }
+  .tut2-side-title{ font-size:13px; font-weight:800; color:var(--dark); padding:0 10px 12px; }
+  .tut2-nav-item{ display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:12px; font-size:12px; font-weight:700; color:var(--gray-text); cursor:pointer; }
+  .tut2-nav-item .ic{ width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; background:#fff; flex-shrink:0; }
+  .tut2-nav-item.active{ background:#fff; color:var(--dark); box-shadow:0 3px 10px rgba(74,43,71,.10); }
+  .tut2-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .tut2-header-row{ padding:24px 36px 0; }
+  .tut2-body{ padding:22px 36px 0; }
+  .tut2-icon{ width:46px; height:46px; border-radius:14px; font-size:22px; margin-bottom:10px; }
+  .tut2-title{ font-size:20px; }
+  .tut2-rules{ display:grid; grid-template-columns:1fr 1fr; }
+  .tut2-bottom{ padding:16px 36px calc(env(safe-area-inset-bottom,0px) + 22px); justify-content:flex-end; }
+  .tut2-btn{ height:44px; padding:0 24px; border-radius:22px; }
+  .tut2-btn.primary{ flex:none; }
+  .tut2-btn.ghost{ width:auto; padding:0 22px; }
+}
 .sow-opt.on{border-color:var(--pink);background:var(--pink-pale)}
 .sow-agree{display:flex;gap:10px;align-items:flex-start;margin:10px 0 12px;font-size:13px;font-weight:700;color:var(--dark);cursor:pointer}
 .sow-agree input{width:20px;height:20px;accent-color:var(--pink);flex-shrink:0;margin-top:1px}
@@ -703,6 +747,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="modal-title">📖 Tutorial</div>
   <div class="freeze-banner">👋 <b>Hai, Member Girlhood Den!</b><br>Kalau masih ada VT/Live yang belum kamu report ke tim kami, semua menu di sistem ini bakal di-freeze dulu ya. Yuk selesaikan dulu produk yang kamu pegang — makin banyak konten yang kamu buat, makin besar peluang kamu dapetin GMV! 🚀✨</div>
   <div class="card"><div class="card-title">Cara Kerja (4 Langkah)</div><div class="card-sub">1. Daftar Member (sekali, sebelum masuk) → 2. Pilih Campaign & Request Sample → 3. Cek Status → 4. Report VT</div></div>
+  <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal('m-c1'); openTutorial2('creator');">▶ Lihat Tutorial Lengkap</button>
 </div></div>
 
 <div class="modal-bg" id="m-c2"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
@@ -3721,6 +3766,154 @@ function pdSowChange(el){
   var liveNote = card.querySelector('.live-schedule-note');
   if(liveNote) liveNote.style.display = (picked && (picked.value==='LIVE' || picked.value==='VT_LIVE')) ? 'block' : 'none';
 }
+
+// Pengaman teks sebelum dimasukkan ke HTML (dipakai tutorial)
+function escHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+const TUTORIAL2_SLIDES = {
+  creator: [
+    { icon:'👋', color:'linear-gradient(135deg,#E8185A,#F06A9C)', title:'Yuk Kenalan Dulu', sub:'5 menit doang. Biar kamu nggak bingung pas mulai campaign, dan poin kamu maksimal.', rules:null },
+    { icon:'🛍️', color:'linear-gradient(135deg,#E8185A,#C2185B)', title:'Request Sample', sub:'Menu buat minta produk ke brand.', rules:[
+      'Sebelum request, pilih kewajiban (VT saja, VT & Live, atau Live saja) lalu centang setuju — tanpa itu tombol Request Sample tidak bisa ditekan',
+      'Maksimal pegang 3 brand barengan',
+      'Tiap brand: pilih 2 produk satuan, atau 1 paket — nggak bisa gabung dua-duanya',
+      'Belum posting video lebih dari 5 hari? Cuma brand itu yang dikunci, brand lain tetap aman',
+      'Produk atau brand yang lagi di-freeze nggak bisa diminta',
+      'Status masih "Menunggu"? Boleh dibatalin sendiri, kuota langsung balik',
+      'Udah "Disetujui"? Nggak bisa dibatalin sendiri lagi',
+      'Brand nggak jawab dalam 7 hari, permintaan otomatis ditutup dan kuota balik'
+    ], note:null },
+    { icon:'🔍', color:'linear-gradient(135deg,#1E8A80,#159086)', title:'Cek Status & Kuota', sub:'Pantau progress tiap request kamu di sini.', rules:[
+      'Barang sampai → kamu punya 3 hari buat posting biar dapat bonus poin',
+      'Lewat 3 hari? Masih boleh posting, cuma bonusnya hangus',
+      'Lewat 5 hari belum posting sama sekali? Brand itu dikunci sementara buat request baru',
+      'Semua status — dibatalin, ditutup, disetujui — kelihatan jelas di sini'
+    ], note:null },
+    { icon:'🎬', color:'linear-gradient(135deg,#6C4FA0,#8B6FC7)', title:'Report VT (SOW)', sub:'Laporin video kamu di sini, tiap kali abis dapat produk dari Request Sample.', rules:[
+      'Kirim minimal 3 video per produk',
+      'Video WAJIB direkam & diposting SETELAH produknya sampai — video lama dari sebelum itu nggak bisa dipakai',
+      'Kirim lebih dari 3 video? Dapat bonus poin extra',
+      '1 video cuma bisa dipakai buat 1 produk — nggak bisa dipakai dobel',
+      'Menu ini selalu kebuka kapan aja, walau udah lewat 3 atau 5 hari'
+    ], note:null },
+    { icon:'📸', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Self Report', sub:'Buat produk yang UDAH kamu punya SENDIRI sebelum ikut campaign ini — bukan dari Request Sample.', rules:[
+      'Ini BUKAN tempat minta sample. Belum punya produknya? Pakai Request Sample',
+      'Ajukan duluan: upload foto bukti produknya SEBELUM kamu bikin video',
+      'Tim internal review foto itu dulu',
+      'Foto ditolak? Upload ulang aja, otomatis ganti yang lama',
+      'Udah disetujui? Baru boleh posting videonya — caranya sama kayak Report VT biasa',
+      'Produk yang udah pernah disetujui nggak bisa diajuin dobel',
+      'Nggak makan kuota 3 brand kamu'
+    ], note:null },
+    { icon:'💰', color:'linear-gradient(135deg,#E8A419,#E8185A)', title:'Soal Poin', sub:'Poin kamu nambah dari beberapa hal ini:', rules:[
+      'Buka aplikasi tiap hari (check-in harian)',
+      'Posting video dalam 3 hari sejak barang sampai → bonus tepat waktu',
+      'Posting lebih dari 3 video per produk → bonus video ekstra',
+      'Poin RESET ke 0 tiap tanggal 1 — jadi jangan ditimbun, segera dipakai',
+      'Tukar hadiah: pilih SATU hadiah dari dropdown (yang butuh poin ≤ poin kamu), maksimal 1x tukar per bulan',
+      'Sisa poin minimal 1000? Bisa ajukan kenaikan komisi untuk 1 produk pilihan kamu (nunggu di-acc tim internal)'
+    ], note:null },
+    { icon:'🎉', color:'linear-gradient(135deg,#E8185A,#E8A419)', title:'Siap Mulai!', sub:'Kalau lupa aturan, buka lagi tutorial ini kapan aja lewat menu Tutorial.', rules:null }
+  ],
+  brand: [
+    { icon:'👋', color:'linear-gradient(135deg,#1E8A80,#4DBDB0)', title:'Selamat Datang, Partner Brand!', sub:'Yuk kenalan sama alur kerja campaign kamu di sini.', rules:null },
+    { icon:'📋', color:'linear-gradient(135deg,#E8185A,#C2185B)', title:'Approval', sub:'Semua request sample dari creator masuk ke sini.', rules:[
+      'Approve atau reject satu-satu, sesuai kriteria kamu',
+      'Nggak direspon dalam 7 hari? Request otomatis ditutup dan hilang dari daftar kamu',
+      'Creator juga langsung lihat requestnya expired di waktu yang sama',
+      'Laporan "Self Report" (creator yang udah punya produk sendiri) OTOMATIS ke-approve di sistem — bukan lewat approval kamu, jadi wajar kalau muncul tanpa kamu acc dulu'
+    ], note:{ title:'Kenapa ada Self Report?', body:'Fitur ini bikin sample produk yang sudah lebih dulu beredar di tangan creator tetap jadi keuntungan buat brand kamu. Creator jadi terdorong posting sebanyak-banyaknya — bukan cuma dari kiriman baru — karena tiap video nambah poin mereka, dan poin itu bisa mereka tukar jadi kesempatan kenaikan komisi.' } },
+    { icon:'📦', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Pengiriman', sub:'Setelah approve, tentukan tanggal janji pengiriman produknya di sini.', rules:[
+      'Isi tanggal janji pengiriman (estimasi) di sini',
+      'Konfirmasi barang BENERAN sudah dikirim dilakukan di menu Logistik yang terpisah',
+      'Hitungan 3 hari buat creator baru mulai jalan begitu CREATOR konfirmasi sudah terima barangnya — bukan dari tanggal kamu kirim'
+    ], note:null },
+    { icon:'🚚', color:'linear-gradient(135deg,#6C4FA0,#8B6FC7)', title:'Logistik', sub:'Centang begitu barang beneran sudah dikirim.', rules:[
+      'Isi nomor resi, lalu tandai "Sudah Dikirim"',
+      'Creator wajib upload foto konfirmasi begitu barang sampai — dari situ kamu otomatis dapat notif',
+      'Sebelum ada konfirmasi itu, wajar belum ada laporan SOW — barangnya kemungkinan emang belum sampai'
+    ], note:null },
+    { icon:'🎉', color:'linear-gradient(135deg,#1E8A80,#E8A419)', title:'Siap Jalan!', sub:'Kalau lupa, buka lagi tutorial ini lewat menu Tutorial di halaman brand.', rules:null }
+  ]
+};
+
+let tut2Role = null;
+let tut2Idx = 0;
+
+function tut2RuleColor(i){
+  const colors = ['#E8185A','#C2185B','#1E8A80','#6C4FA0','#E8A419'];
+  return colors[i % colors.length];
+}
+function tut2RulesHtml(s){
+  if(!s.rules) return '';
+  return s.rules.map(function(r, i){
+    return '<div class="tut2-rule"><div class="num" style="background:'+tut2RuleColor(i)+'">'+(i+1)+'</div><div>'+escHtml(r)+'</div></div>';
+  }).join('');
+}
+function tut2NoteHtml(s){
+  if(!s.note) return '';
+  return '<div class="tut2-note"><div class="nt">💡 '+escHtml(s.note.title)+'</div><div class="nb">'+escHtml(s.note.body)+'</div></div>';
+}
+
+function openTutorial2(role){
+  tut2Role = role;
+  tut2Idx = 0;
+  document.getElementById('tut2-overlay').classList.add('open');
+  document.getElementById('tut2Side').style.display = '';
+  document.getElementById('tut2SideTitle').textContent = role === 'creator' ? 'Tutorial Creator' : 'Tutorial Brand';
+  tutorial2Render();
+}
+
+function tutorial2Render(){
+  const slides = TUTORIAL2_SLIDES[tut2Role];
+  const s = slides[tut2Idx];
+  const total = slides.length;
+
+  const body = document.getElementById('tut2Body');
+  let html = '';
+  if(s.rules){
+    html += '<div class="tut2-icon" style="background:'+s.color+'">'+s.icon+'</div>';
+  }
+  html += '<h2 class="tut2-title">'+escHtml(s.title)+'</h2><p class="tut2-sub">'+escHtml(s.sub)+'</p>';
+  if(s.rules){
+    html += '<div class="tut2-rules">'+tut2RulesHtml(s)+'</div>'+tut2NoteHtml(s);
+  } else {
+    html += '<div class="tut2-empty-icon">'+s.icon+'</div>';
+  }
+  body.innerHTML = html;
+
+  document.getElementById('tut2ProgressFill').style.width = ((tut2Idx+1)/total*100) + '%';
+  document.getElementById('tut2Back').style.visibility = tut2Idx === 0 ? 'hidden' : 'visible';
+  document.getElementById('tut2Next').textContent = tut2Idx === total - 1 ? 'Mulai Sekarang' : 'Lanjut';
+
+  const nav = document.getElementById('tut2Nav');
+  nav.innerHTML = slides.map(function(sl, i){
+    return '<div class="tut2-nav-item'+(i===tut2Idx?' active':'')+'" onclick="tutorial2JumpTo('+i+')"><div class="ic">'+sl.icon+'</div>'+escHtml(sl.title)+'</div>';
+  }).join('');
+}
+
+function tutorial2JumpTo(i){ tut2Idx = i; tutorial2Render(); }
+function tutorial2Next(){
+  const total = TUTORIAL2_SLIDES[tut2Role].length;
+  if(tut2Idx < total - 1){ tut2Idx++; tutorial2Render(); }
+  else { closeTutorial2(); }
+}
+function tutorial2Prev(){ if(tut2Idx > 0){ tut2Idx--; tutorial2Render(); } }
+
+async function closeTutorial2(){
+  const role = tut2Role;
+  document.getElementById('tut2-overlay').classList.remove('open');
+  if(role === 'creator' && currentSession.memberId){
+    await db.from('members').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.memberId);
+    showRewardPopup();
+  } else if(role === 'brand' && currentSession.brandId){
+    await db.from('brands').update({ tutorial_completed_at: new Date().toISOString() }).eq('id', currentSession.brandId);
+  }
+}
+
 function srFotoDipilih(input){
   var box = document.getElementById('sr-foto-box');
   var f = input.files && input.files[0];
@@ -7161,5 +7354,26 @@ function showSimpleInfo(text){
   box.innerHTML = '<span style="flex:1">'+text+'</span><span style="cursor:pointer;font-weight:900;flex-shrink:0" onclick="this.parentElement.remove()">✕</span>';
 }
 </script>
+<!-- ============ TUTORIAL SLIDES v2 (creator & brand, phone + web) ============ -->
+<div class="tut2-overlay" id="tut2-overlay">
+  <div class="tut2-card">
+    <div class="tut2-side" id="tut2Side">
+      <div class="tut2-side-title" id="tut2SideTitle">Tutorial</div>
+      <div id="tut2Nav"></div>
+    </div>
+    <div class="tut2-main">
+      <div class="tut2-header-row">
+        <div class="tut2-progress"><div class="fill" id="tut2ProgressFill"></div></div>
+        <button class="tut2-skip" onclick="closeTutorial2()">Lewati ✕</button>
+      </div>
+      <div class="tut2-body" id="tut2Body"></div>
+      <div class="tut2-bottom">
+        <button class="tut2-btn ghost" id="tut2Back" onclick="tutorial2Prev()">←</button>
+        <button class="tut2-btn primary" id="tut2Next" onclick="tutorial2Next()">Lanjut</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
