@@ -208,6 +208,57 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .tag-comm{background:var(--teal-light);color:#116B4F}
 .deadline-note{font-size:11px;color:var(--red);font-weight:600}
 .video-ref{display:flex;gap:6px;margin-top:6px}
+/* ===== Tampilan brand & produk (baru) ===== */
+#brand-list-scroll{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){#brand-list-scroll{grid-template-columns:1fr 1fr}}
+.brand-list-item{margin:0 !important;padding:14px !important;border-radius:18px !important;transition:transform 140ms cubic-bezier(.23,1,.32,1),box-shadow 140ms ease}
+.brand-list-item:active{transform:scale(.98)}
+.bl-row{display:flex;align-items:center;gap:14px;cursor:pointer}
+.bl-avatar{width:58px;height:58px;border-radius:16px;object-fit:cover;flex-shrink:0;background:var(--pink-pale)}
+.bl-initial{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;flex-shrink:0}
+.bl-name{font-weight:800;font-size:15px;color:var(--dark);line-height:1.25}
+.bl-count{font-size:12px;color:var(--gray-text);margin-top:2px}
+.bl-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.bl-pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--pink-pale);color:var(--pink)}
+.bl-pill.comm{background:#E3F4EA;color:#186B3B}
+.bl-arrow{font-size:20px;color:var(--pink);font-weight:800}
+.pd-card{border-radius:20px !important;padding:16px !important}
+.pd-title{font-weight:800;font-size:16px;color:var(--dark);line-height:1.35;margin:4px 0 6px}
+.pd-meta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.pd-meta span{font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--pink-pale);color:var(--dark)}
+.pd-meta span.komisi{background:#E3F4EA;color:#186B3B}
+.pd-vref{margin:10px 0 4px}
+.pd-vref-label{font-size:12px;font-weight:800;color:var(--dark);margin-bottom:6px}
+.pd-vref-box{position:relative;display:flex;justify-content:center;background:#2A1B26;border-radius:14px;overflow:hidden}
+.pd-vref-box video{display:block;height:230px;width:auto;max-width:100%;background:#2A1B26}
+.pd-vref-tabs{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.pd-vref-tabs button{border:1px solid var(--border);background:#fff;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:700;color:var(--dark);cursor:pointer}
+.pd-vref-tabs button.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.sow-title{font-size:14px;font-weight:800;color:var(--dark);margin:14px 0 2px}
+.sow-sub{font-size:12px;color:var(--gray-text);margin-bottom:8px}
+.sow-opt{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--border);border-radius:16px;padding:14px 14px;margin-bottom:9px;cursor:pointer;background:#fff;transition:border-color 140ms ease,background 140ms ease}
+.sow-opt input{width:22px;height:22px;accent-color:var(--pink);flex-shrink:0;margin-top:2px}
+.sow-opt b{display:block;font-size:15.5px;color:var(--dark);margin-bottom:3px}
+.sow-opt span{font-size:12.5px;color:var(--gray-text);line-height:1.45}
+.sow-opt.on{border-color:var(--pink);background:var(--pink-pale)}
+.sow-agree{display:flex;gap:10px;align-items:flex-start;margin:10px 0 12px;font-size:13px;font-weight:700;color:var(--dark);cursor:pointer}
+.sow-agree input{width:20px;height:20px;accent-color:var(--pink);flex-shrink:0;margin-top:1px}
+.pd-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pd-actions .btn{flex:1;min-width:140px}
+.request-sample-btn[disabled]{opacity:.45;cursor:not-allowed}
+.sr-cta{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:2px dashed var(--pink);border-radius:16px;padding:12px 14px;margin-bottom:14px;cursor:pointer;font-family:inherit;transition:transform 140ms cubic-bezier(.23,1,.32,1)}
+.sr-cta:active{transform:scale(.98)}
+.sr-cta-ic{font-size:24px;flex-shrink:0}
+.sr-cta-tx{flex:1;min-width:0}
+.sr-cta-tx b{display:block;font-size:14px;color:var(--dark)}
+.sr-cta-tx small{display:block;font-size:11.5px;color:var(--gray-text);line-height:1.4;margin-top:2px}
+.bf-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.bf-chips{display:flex;gap:6px;flex-wrap:wrap}
+.bf-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--dark);cursor:pointer;font-family:inherit;transition:background 140ms ease,border-color 140ms ease}
+.bf-chip.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.bf-sort{display:inline-flex;background:var(--pink-pale);border-radius:999px;padding:3px}
+.bf-sort button{border:0;background:transparent;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gray-text);cursor:pointer;font-family:inherit}
+.bf-sort button.on{background:#fff;color:var(--pink);box-shadow:0 1px 4px rgba(194,18,75,.15)}
 .video-thumb{width:38px;height:60px;background:var(--dark);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
 .sow-big{font-size:24px;font-weight:800;color:var(--teal);margin:4px 0}
 .status-item{border-radius:10px;padding:10px;margin-bottom:6px;font-size:12px}
@@ -648,19 +699,28 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="quota-label">Kamu bisa ambil sample dari <b>maks 3 brand berbeda</b> sekaligus (2 SKU/brand). Kuota otomatis kebuka lagi kalau tugas di satu brand udah kelar semua 🎉</div>
   </div>
 
-  <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="openSelfReportModal()">📸 Udah Punya Produknya? Ajukan di Sini</button>
+  <button type="button" class="sr-cta" onclick="openSelfReportModal()">
+    <span class="sr-cta-ic">📸</span>
+    <span class="sr-cta-tx"><b>Sudah punya produknya sendiri?</b><small>Laporkan di sini supaya videomu tetap dapat poin. Ini bukan tempat minta sample.</small></span>
+    <span class="bl-arrow">›</span>
+  </button>
 
   <div id="c2-brandlist">
     <div class="field" style="margin-bottom:10px">
       <input id="brand-search" placeholder="🔍 Cari nama brand..." oninput="filterBrandList(this.value)">
     </div>
-    <div class="field-row" style="margin-bottom:12px">
-      <select id="brand-filter" onchange="filterBrandList(document.getElementById('brand-search').value)" style="font-size:12px">
-        <option value="all">Semua Kategori</option>
-        <option value="hot">🔥 Hot Product</option>
-        <option value="comm">💰 High Commission</option>
-      </select>
-      <select style="font-size:12px"><option>Urutkan: A-Z</option><option>Urutkan: Terbaru</option></select>
+    <input type="hidden" id="brand-filter" value="all">
+    <input type="hidden" id="brand-sort" value="az">
+    <div class="bf-bar">
+      <div class="bf-chips">
+        <button type="button" class="bf-chip on" data-f="all" onclick="pilihFilterBrand(this)">Semua</button>
+        <button type="button" class="bf-chip" data-f="hot" onclick="pilihFilterBrand(this)">🔥 Hot</button>
+        <button type="button" class="bf-chip" data-f="comm" onclick="pilihFilterBrand(this)">💰 Komisi tinggi</button>
+      </div>
+      <div class="bf-sort">
+        <button type="button" class="on" data-s="az" onclick="pilihUrutBrand(this)">A–Z</button>
+        <button type="button" data-s="baru" onclick="pilihUrutBrand(this)">Terbaru</button>
+      </div>
     </div>
     <div class="size-note" style="margin-bottom:8px" id="brand-count-note">Memuat daftar brand...</div>
 
@@ -3247,7 +3307,7 @@ async function loadBrandList(){
   const note = document.getElementById('brand-count-note');
   note.textContent = 'Memuat daftar brand...';
 
-  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
+  const { data, error } = await db.from('brands').select('id, nama_brand, logo_url, is_frozen, created_at, brand_products(id, tag_hot, tag_high_commission)').eq('is_active', true).order('nama_brand', { ascending: true });
 
   if(error){
     note.textContent = 'Gagal memuat brand.';
@@ -3286,13 +3346,17 @@ function renderBrandList(brands){
     const initial = b.nama_brand.charAt(0).toUpperCase();
     const color = colors[i % colors.length];
     const avatarHtml = b.logo_url
-      ? '<img src="'+b.logo_url+'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0">'
-      : '<div style="width:44px;height:44px;border-radius:12px;background:'+color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">'+initial+'</div>';
+      ? '<img class="bl-avatar" src="'+b.logo_url+'" alt="">'
+      : '<div class="bl-initial" style="background:'+color+'">'+initial+'</div>';
+    let pillHtml = '';
+    if(hasHot) pillHtml += '<span class="bl-pill">🔥 Hot</span>';
+    if(hasComm) pillHtml += '<span class="bl-pill comm">💰 Komisi tinggi</span>';
+    if(b.is_frozen) pillHtml += '<span class="bl-pill">🧊 Freeze</span>';
     return '<div class="card brand-list-item" style="'+(b.is_frozen?'opacity:.55;filter:grayscale(1)':'')+'" onclick="openBrandDetail(\''+b.id+'\', \''+b.nama_brand.replace(/'/g,"\\'")+'\', '+(b.logo_url?"'"+b.logo_url+"'":'null')+')">'
-      + '<div style="display:flex;align-items:center;gap:12px;cursor:pointer">'
+      + '<div class="bl-row">'
       + avatarHtml
-      + '<div style="flex:1"><b>'+b.nama_brand+'</b><div class="card-sub" style="margin:0">'+products.length+' produk tersedia'+tagText+(b.is_frozen?' · 🧊 Freeze':'')+'</div></div>'
-      + '<div>›</div></div></div>';
+      + '<div style="flex:1;min-width:0"><div class="bl-name">'+b.nama_brand+'</div><div class="bl-count">'+products.length+' produk tersedia</div>'+(pillHtml?'<div class="bl-pills">'+pillHtml+'</div>':'')+'</div>'
+      + '<div class="bl-arrow">›</div></div></div>';
   }).join('');
   note.textContent = 'Menampilkan ' + brands.length + ' dari ' + allBrandsCache.length + ' brand';
   totalNote.textContent = 'Total ' + allBrandsCache.length + ' brand aktif';
@@ -3309,7 +3373,24 @@ function filterBrandList(query){
     if(tagFilter === 'comm') matchesTag = products.some(function(p){ return p.tag_high_commission; });
     return matchesName && matchesTag;
   });
+  const urut = (document.getElementById('brand-sort') || {}).value || 'az';
+  if(urut === 'baru'){
+    filtered.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
+  } else {
+    filtered.sort(function(a,b){ return a.nama_brand.localeCompare(b.nama_brand); });
+  }
   renderBrandList(filtered);
+}
+
+function pilihFilterBrand(btn){
+  document.querySelectorAll('.bf-chip').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  document.getElementById('brand-filter').value = btn.dataset.f;
+  filterBrandList(document.getElementById('brand-search').value);
+}
+function pilihUrutBrand(btn){
+  document.querySelectorAll('.bf-sort button').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  document.getElementById('brand-sort').value = btn.dataset.s;
+  filterBrandList(document.getElementById('brand-search').value);
 }
 
 async function openBrandDetail(brandId, brandName, logoUrl){
@@ -3354,7 +3435,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
     if(p.tag_hot) tagHtml += '<span class="tag tag-hot">🔥 Hot Product</span>';
     const hargaText = p.harga ? 'Rp' + Number(p.harga).toLocaleString('id-ID') : '-';
     const komisiText = p.komisi_percent !== null && p.komisi_percent !== undefined ? p.komisi_percent+'%' : '-';
-    const infoHtml = '<div style="display:flex;gap:10px;margin:6px 0;font-size:13px;font-weight:700;color:var(--dark)"><span>💵 '+hargaText+'</span><span>•</span><span>Komisi '+komisiText+'</span></div>';
+    const infoHtml = '<div class="pd-meta"><span>💵 '+hargaText+'</span><span class="komisi">Komisi '+komisiText+'</span></div>';
     if(p.tag_high_commission) tagHtml += '<span class="tag tag-comm">💰 High Commission</span>';
 
     const fotos = p.foto_urls || [];
@@ -3379,14 +3460,15 @@ async function openBrandDetail(brandId, brandName, logoUrl){
     const videos = p.video_referensi_urls || [];
     let videoHtml = '';
     if(videos.length > 0){
-      videoHtml = '<div class="video-ref">' + videos.map(function(v,i){
-        return '<div class="video-thumb" onclick="playInlineVideoReal(this,\''+v+'\')">▶</div>';
-      }).join('') + '</div>'
-      + '<div class="size-note">Video referensi terputar langsung di halaman ini — klik salah satu di atas</div>'
-      + '<div class="inline-video-wrap-real" style="display:none;margin-top:8px"><video controls style="width:100%;border-radius:10px;max-height:220px"></video></div>';
+      const tabs = videos.length > 1
+        ? '<div class="pd-vref-tabs">' + videos.map(function(v,i){ return '<button type="button" class="'+(i===0?'on':'')+'" onclick="pdVrefPick(this,\''+v+'\')">Video '+(i+1)+'</button>'; }).join('') + '</div>'
+        : '';
+      videoHtml = '<div class="pd-vref"><div class="pd-vref-label">🎬 Contoh video dari brand</div>'
+        + '<div class="pd-vref-box"><video muted loop playsinline controls preload="none" data-src="'+videos[0]+'"></video></div>'
+        + tabs + '</div>';
     }
 
-    return '<div class="card" data-product-id="'+p.id+'" style="'+(brandFrozen||p.is_frozen?'opacity:.5;filter:grayscale(1)':'')+'">'
+    return '<div class="card pd-card" data-product-id="'+p.id+'" style="'+(brandFrozen||p.is_frozen?'opacity:.5;filter:grayscale(1)':'')+'">'
       + fotoHtml
       + '<div class="card-title">'+p.nama_produk+'</div>'
       + (p.is_frozen && !brandFrozen ? '<div class="card-sub" style="background:var(--pink-pale);border-radius:10px;padding:8px 10px;margin:4px 0">🧊 Produk ini lagi di-freeze sementara.</div>' : '')
@@ -3394,17 +3476,18 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + infoHtml
       + '<div class="card-sub" style="margin-top:6px">Wajib upload laporan setelah kamu konfirmasi "Barang Sudah Sampai" di menu Cek Status ya 😎</div>'
       + videoHtml
-      + '<div class="field" style="margin-top:8px"><label>Tipe SOW</label>'
-      + '<select class="sow-select" onchange="toggleLive(this)">'
-      + '<option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT (3 VT)</option>'
-      + '<option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option>'
-      + '<option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live saja</option>'
-      + '</select></div>'
+      + '<div class="sow-title">Pilih kewajibanmu</div>'
+      + '<div class="sow-sub">Ini yang harus kamu selesaikan kalau request disetujui. Baca dulu sebelum pilih.</div>'
+      + '<label class="sow-opt"><input type="radio" class="sow-radio" name="sow-'+p.id+'" value="VT" onchange="pdSowChange(this)"><div><b>VT saja</b><span>3 video, paling lambat 3 hari setelah kamu konfirmasi barang sampai. Tanpa live.</span></div></label>'
+      + '<label class="sow-opt"><input type="radio" class="sow-radio" name="sow-'+p.id+'" value="VT_LIVE" onchange="pdSowChange(this)"><div><b>VT & Live</b><span>3 video, ditambah 3 sesi live minimal 2 jam di tanggal yang berbeda.</span></div></label>'
+      + '<label class="sow-opt"><input type="radio" class="sow-radio" name="sow-'+p.id+'" value="LIVE" onchange="pdSowChange(this)"><div><b>Live saja</b><span>3 sesi live minimal 2 jam di tanggal yang berbeda. Tanpa video.</span></div></label>'
+      + '<label class="sow-agree"><input type="checkbox" class="sow-agree-cb" onchange="pdSowChange(this)">Aku sudah baca kewajibannya dan siap menyelesaikan.</label>'
       + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
-+ '<button class="btn btn-outline btn-sm" style="margin-top:6px;filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
-+ '<button class="btn btn-teal btn-sm request-sample-btn" data-brand-id="'+brandId+'" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(p.is_frozen?'disabled style="opacity:.4" title="Produk ini lagi di-freeze sementara, request sample dimatikan dulu."':(frozenBrandIds.has(brandId)?'disabled style="opacity:.4" title="Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini."':'')))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
++ '<div class="pd-actions"><button class="btn btn-outline btn-sm" style="filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
++ '<button class="btn btn-teal btn-sm request-sample-btn" data-brand-id="'+brandId+'" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(p.is_frozen?'disabled style="opacity:.4" title="Produk ini lagi di-freeze sementara, request sample dimatikan dulu."':(frozenBrandIds.has(brandId)?'disabled style="opacity:.4" title="Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini."':'')))+' data-locked="1" disabled onclick="requestSample(\''+p.id+'\', this)">Request Sample</button></div>'
       + '</div>';
   }).join('');
+  pdVrefAmati(container);
 }
 
 function pfNav(btn, dir){
@@ -3445,8 +3528,11 @@ async function requestSample(productId, btn){
   }
 
   const card = btn.closest('.card');
-  const sowSelect = card.querySelector('.sow-select');
-  const tipeSow = sowSelect.value;
+  const sowPicked = card.querySelector('.sow-radio:checked');
+  const sowAgree = card.querySelector('.sow-agree-cb');
+  if(!sowPicked){ alert('Pilih dulu kewajiban (VT saja, VT & Live, atau Live saja).'); return; }
+  if(!sowAgree || !sowAgree.checked){ alert('Centang dulu pernyataan bahwa kamu sudah baca kewajibannya.'); return; }
+  const tipeSow = sowPicked.value;
 
   // Jadwal live nggak diisi di sini lagi — baru diisi setelah creator konfirmasi barang sampai (menu Cek Status).
   const jadwalLive = null;
@@ -3583,6 +3669,52 @@ async function loadMyQuota(){
     usedLabel.textContent = used + ' terpakai';
     sisaLabel.textContent = sisa + ' tersedia';
   }
+}
+
+// ===== Produk: pilih SOW + wajib setuju, video referensi =====
+function pdSowChange(el){
+  var card = el.closest('.card');
+  if(!card) return;
+  card.querySelectorAll('.sow-opt').forEach(function(o){
+    var r = o.querySelector('.sow-radio');
+    o.classList.toggle('on', !!(r && r.checked));
+  });
+  var picked = card.querySelector('.sow-radio:checked');
+  var agree = card.querySelector('.sow-agree-cb');
+  var btn = card.querySelector('.request-sample-btn');
+  if(!btn) return;
+  var terkunciAlasanLain = !!btn.getAttribute('title');
+  btn.disabled = terkunciAlasanLain || !(picked && agree && agree.checked);
+  var liveNote = card.querySelector('.live-schedule-note');
+  if(liveNote) liveNote.style.display = (picked && (picked.value==='LIVE' || picked.value==='VT_LIVE')) ? 'block' : 'none';
+}
+function pdVrefPick(btn, url){
+  var wrap = btn.closest('.pd-vref');
+  wrap.querySelectorAll('.pd-vref-tabs button').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  var v = wrap.querySelector('video');
+  v.dataset.src = url; v.src = url;
+  v.play().catch(function(){});
+}
+// Video baru dimuat saat kartunya kelihatan di layar, dan berhenti saat digulir lewat.
+function pdVrefAmati(container){
+  var vids = container.querySelectorAll('.pd-vref video');
+  if(!vids.length) return;
+  if(!('IntersectionObserver' in window)){
+    vids.forEach(function(v){ v.src = v.dataset.src; });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      var v = e.target;
+      if(e.isIntersecting && e.intersectionRatio >= 0.6){
+        if(!v.src) v.src = v.dataset.src;
+        v.play().catch(function(){});
+      } else {
+        v.pause();
+      }
+    });
+  }, { threshold: [0, 0.6] });
+  vids.forEach(function(v){ io.observe(v); });
 }
 
 function toggleLive(sel){
