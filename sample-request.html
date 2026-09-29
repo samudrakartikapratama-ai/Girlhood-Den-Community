@@ -889,6 +889,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i5'); loadHotProductsManage(); populateHpBrandSelect();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" onclick="openModal('m-i6'); loadKodeBrand();"><div class="icon-emoji">🔑</div><div class="icon-label">Kode Brand</div></div>
     <div class="icon-card" onclick="openModal('m-i9'); loadCreatorCodes();"><div class="icon-emoji">🪄</div><div class="icon-label">Kode Creator</div></div>
+    <div class="icon-card" onclick="openModal('m-i-gmv'); muatRiwayatGmv();"><div class="icon-emoji">📈</div><div class="icon-label">Upload GMV</div></div>
     <div class="icon-card" onclick="openModal('m-i12'); loadKelolaPoin();"><div class="icon-emoji">⭐</div><div class="icon-label">Kelola Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i13'); loadKelolaBanner();"><div class="icon-emoji">🖼️</div><div class="icon-label">Kelola Banner</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
@@ -1441,6 +1442,28 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="field" style="margin:10px 0"><input id="creator-codes-search" placeholder="🔍 Cari nama, @username, nomor, atau kode..." oninput="renderCreatorCodes(this.value)"></div>
   <div id="creator-codes-count" class="card-sub" style="margin-bottom:6px"></div>
   <div id="creator-codes-list" style="max-height:60vh;overflow:auto;border:1px solid var(--border);border-radius:12px"><div class="card-sub" style="padding:10px">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-i-gmv"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i-gmv')">‹ ✕</button>
+  <div class="modal-title">📈 Upload GMV dari TAP</div>
+  <div class="card-sub">Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.</div>
+  <label id="gmv-drop" style="display:block;margin-top:12px;border:2px dashed var(--pink);border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--pink-pale)"
+    ondragover="event.preventDefault();this.style.background='#FDE2E7'" ondragleave="this.style.background='var(--pink-pale)'"
+    ondrop="event.preventDefault();this.style.background='var(--pink-pale)';if(event.dataTransfer.files[0]) bacaFileGmv(event.dataTransfer.files[0])">
+    <div style="font-size:30px">📂</div>
+    <div style="font-weight:800;margin-top:4px">Tarik file export TAP ke sini</div>
+    <div class="card-sub">atau klik untuk memilih file (.xlsx atau .csv)</div>
+    <input type="file" id="gmv-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="if(this.files[0]) bacaFileGmv(this.files[0])">
+  </label>
+  <div id="gmv-periode" style="display:none;margin-top:12px">
+    <div class="field-row">
+      <div class="field"><label>Periode mulai</label><input type="date" id="gmv-mulai" onchange="previewGmv()"></div>
+      <div class="field"><label>Periode selesai</label><input type="date" id="gmv-selesai" onchange="previewGmv()"></div>
+    </div>
+  </div>
+  <div id="gmv-hasil" style="margin-top:10px"></div>
+  <div style="font-weight:800;margin-top:18px;margin-bottom:6px">Riwayat upload</div>
+  <div id="gmv-riwayat"><div class="card-sub">Memuat...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-i12"><div class="modal-box" style="max-width:640px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i12')">‹ ✕</button>
@@ -8497,6 +8520,142 @@ function renderCreatorCodes(q){
     + '<thead><tr style="position:sticky;top:0;background:var(--pink-pale);z-index:1"><th style="padding:8px;text-align:left">Creator</th><th style="padding:8px;text-align:left">TikTok</th><th style="padding:8px;text-align:left">Kode</th></tr></thead>'
     + '<tbody>' + baris + '</tbody></table>';
 }
+// ===== Upload GMV dari TAP =====
+window._gmvRows = null; window._gmvFileName = '';
+function muatSheetJs(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise(function(ok, gagal){
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = function(){ ok(); }; sc.onerror = function(){ gagal(new Error('Gagal memuat pembaca Excel')); };
+    document.head.appendChild(sc);
+  });
+}
+function angkaRupiah(v){
+  if(typeof v === 'number') return v;
+  const t = String(v || '').replace(/[^0-9,.-]/g, '');
+  if(!t || t === '-') return 0;
+  // Format Indonesia: titik = ribuan, koma = desimal
+  return Math.round(Number(t.replace(/\./g, '').replace(',', '.')) || 0);
+}
+async function bacaFileGmv(file){
+  const hasil = document.getElementById('gmv-hasil');
+  hasil.innerHTML = '<div class="card-sub">Membaca file...</div>';
+  try {
+    await muatSheetJs();
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const baris = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    let hi = -1;
+    for(let i = 0; i < Math.min(baris.length, 30); i++){
+      if(baris[i].some(function(c){ return /creator name|creator username|nama kreator|nama creator/i.test(String(c)); })){ hi = i; break; }
+    }
+    if(hi < 0) throw new Error('Kolom nama creator tidak ditemukan. Pastikan export dari TAP memakai dimensi Creator.');
+    const h = baris[hi].map(function(c){ return String(c).trim(); });
+    const cari = function(re, kecuali){ return h.findIndex(function(x){ return re.test(x) && !(kecuali && kecuali.test(x)); }); };
+    const iUser = cari(/creator name|creator username|nama kreator|nama creator/i);
+    const iVideo = cari(/video.*gmv|gmv.*video/i);
+    const iLive = cari(/live.*gmv|gmv.*live/i);
+    const iTotal = cari(/gmv/i, /video|live|refund|settled|link/i);
+    const iTgl = cari(/^date$|^tanggal$|periode|period/i);
+    if(iVideo < 0 && iLive < 0 && iTotal < 0) throw new Error('Kolom GMV tidak ditemukan di file ini.');
+    const perUser = {};
+    let periode = '';
+    for(let i = hi + 1; i < baris.length; i++){
+      const r = baris[i];
+      const u = String(r[iUser] || '').trim();
+      if(!u || /^summary$|^total$|^--$/i.test(u) || /^summary$/i.test(String(r[0] || ''))) continue;
+      if(!periode && iTgl >= 0) periode = String(r[iTgl] || '');
+      // Export per produk dijumlahkan per creator di sini, jadi yang dikirim ke server ringkas.
+      const k = u.replace(/^@/, '').toLowerCase();
+      const p = perUser[k] || (perUser[k] = { username: k, video: 0, live: 0, total: 0 });
+      p.video += iVideo >= 0 ? angkaRupiah(r[iVideo]) : 0;
+      p.live += iLive >= 0 ? angkaRupiah(r[iLive]) : 0;
+      p.total += iTotal >= 0 ? angkaRupiah(r[iTotal]) : 0;
+    }
+    const rows = Object.keys(perUser).map(function(k){ return perUser[k]; });
+    if(rows.length === 0) throw new Error('Tidak ada baris creator di file ini.');
+    const m = String(periode).match(/(\d{4}-\d{2}-\d{2})\D+(\d{4}-\d{2}-\d{2})/);
+    document.getElementById('gmv-periode').style.display = 'block';
+    if(m){ document.getElementById('gmv-mulai').value = m[1]; document.getElementById('gmv-selesai').value = m[2]; }
+    window._gmvRows = rows; window._gmvFileName = file.name;
+    previewGmv();
+  } catch(e){
+    hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(e.message || String(e)) + '</div>';
+  }
+}
+function rupiahSingkat(n){
+  n = Number(n || 0);
+  if(n >= 1e9) return 'Rp' + (n / 1e9).toFixed(1).replace('.', ',') + ' M';
+  if(n >= 1e6) return 'Rp' + (n / 1e6).toFixed(1).replace('.', ',') + ' jt';
+  return 'Rp' + n.toLocaleString('id-ID');
+}
+async function kirimGmv(action){
+  const auth = await getInternalAuthHeader();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/internal-import-gmv', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+    body: JSON.stringify({ action: action, periodeMulai: document.getElementById('gmv-mulai').value, periodeSelesai: document.getElementById('gmv-selesai').value, rows: window._gmvRows, namaFile: window._gmvFileName })
+  });
+  return await res.json();
+}
+async function previewGmv(){
+  const hasil = document.getElementById('gmv-hasil');
+  if(!window._gmvRows) return;
+  if(!document.getElementById('gmv-mulai').value || !document.getElementById('gmv-selesai').value){
+    hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">Periode tidak terbaca dari file. Isi tanggal mulai dan selesai di atas.</div>';
+    return;
+  }
+  hasil.innerHTML = '<div class="card-sub">Mencocokkan creator...</div>';
+  let j;
+  try { j = await kirimGmv('preview'); } catch(e){ hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; return; }
+  if(!j.valid){ hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal membaca data.') + '</div>'; return; }
+  const kotak = function(angka, label, warna){ return '<div style="flex:1;min-width:110px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:' + (warna || 'var(--dark)') + '">' + angka + '</div><div class="card-sub" style="font-size:11px">' + label + '</div></div>'; };
+  let html = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + kotak(j.cocok.length, 'creator cocok', '#1D9E75')
+    + kotak(j.totalPoin.toLocaleString('id-ID'), 'total poin dibagikan', 'var(--pink)')
+    + kotak(rupiahSingkat(j.totalGmv), 'GMV creator kita')
+    + kotak(j.tidak.length, 'username tidak dikenal', j.tidak.length ? '#9A6A00' : null)
+    + '</div>';
+  if(j.tumpangTindih) html += '<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#FDE2E7;color:#C2124B;font-weight:700;font-size:12.5px">⛔ Periode ini bertabrakan dengan upload sebelumnya (' + escHtml(j.tumpangTindih) + '). Upload per minggu tanpa tanggal yang bertumpuk supaya poin tidak dobel.</div>';
+  else if(j.pernahDiupload) html += '<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#FDF1D8;color:#9A6A00;font-size:12.5px">Periode ini sudah pernah diupload. Kalau disimpan lagi, hanya <b>selisihnya</b> yang dibukukan sebagai koreksi — poin tidak dobel.</div>';
+  html += '<div style="font-weight:800;margin:14px 0 6px">Poin per creator</div><div style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:12px">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="position:sticky;top:0;background:var(--pink-pale)"><th style="padding:7px;text-align:left">Creator</th><th style="padding:7px;text-align:right">Video</th><th style="padding:7px;text-align:right">Live</th><th style="padding:7px;text-align:right">Poin</th></tr></thead><tbody>'
+    + j.cocok.map(function(r){ return '<tr style="border-top:1px solid var(--border)"><td style="padding:7px"><b>' + escHtml(r.nama || '-') + '</b><div class="card-sub" style="font-size:11px">@' + escHtml(r.username) + '</div></td><td style="padding:7px;text-align:right">' + rupiahSingkat(r.video) + '</td><td style="padding:7px;text-align:right">' + rupiahSingkat(r.live) + '</td><td style="padding:7px;text-align:right;font-weight:800;color:var(--pink)">' + r.poin.toLocaleString('id-ID') + '</td></tr>'; }).join('')
+    + '</tbody></table></div>';
+  if(j.tidak.length){
+    html += '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:12.5px">' + j.tidak.length + ' username di file tidak terdaftar di website (tidak dapat poin)</summary><div class="card-sub" style="font-size:11.5px;margin-top:6px;line-height:1.7">'
+      + j.tidak.map(function(r){ return '@' + escHtml(r.username) + ' <span style="color:#9A6A00">(' + rupiahSingkat(r.total) + ')</span>'; }).join(' · ')
+      + '</div><div class="card-sub" style="font-size:11px;margin-top:6px">Biasanya karena creator belum daftar, atau link TikTok di profil website berbeda dengan username di TAP.</div></details>';
+  }
+  const bisa = j.aktif && !j.tumpangTindih && j.cocok.length > 0;
+  html += '<button class="btn btn-primary" style="width:100%;margin-top:14px" ' + (bisa ? '' : 'disabled') + ' onclick="simpanGmv(this)">' + (j.aktif ? 'Simpan & bagikan ' + j.totalPoin.toLocaleString('id-ID') + ' poin' : 'Bisa dibagikan mulai aturan baru aktif (30 September)') + '</button>';
+  hasil.innerHTML = html;
+}
+async function simpanGmv(btn){
+  if(!confirm('Bagikan poin penjualan untuk periode ' + document.getElementById('gmv-mulai').value + ' s/d ' + document.getElementById('gmv-selesai').value + '? Creator langsung menerima notifikasi.')) return;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  let j;
+  try { j = await kirimGmv('simpan'); } catch(e){ btn.disabled = false; btn.textContent = 'Coba lagi'; alert('Gagal menghubungi server.'); return; }
+  if(!j.valid){ btn.disabled = false; btn.textContent = 'Coba lagi'; alert(j.error || 'Gagal menyimpan.'); return; }
+  document.getElementById('gmv-hasil').innerHTML = '<div style="padding:14px;border-radius:12px;background:#E3F6EF;color:#1D9E75;font-weight:800;text-align:center">✅ ' + j.creatorDapatPoin + ' creator menerima total ' + Number(j.totalPoin).toLocaleString('id-ID') + ' poin.</div>';
+  window._gmvRows = null; document.getElementById('gmv-file').value = '';
+  muatRiwayatGmv();
+}
+async function muatRiwayatGmv(){
+  const el = document.getElementById('gmv-riwayat');
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-import-gmv', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: JSON.stringify({ action: 'riwayat' }) });
+    const j = await res.json();
+    if(!j.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal memuat riwayat.') + '</div>'; return; }
+    if(!j.rows.length){ el.innerHTML = '<div class="card-sub">Belum pernah ada upload.</div>'; return; }
+    el.innerHTML = j.rows.map(function(r){
+      return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px"><div><b>' + r.periode_mulai + ' → ' + r.periode_selesai + '</b><div class="card-sub" style="font-size:11px">' + escHtml(r.nama_file || '-') + ' · diupload ' + new Date(r.created_at).toLocaleString('id-ID', { timeZone:'Asia/Jakarta' }) + '</div></div><div style="text-align:right"><b style="color:var(--pink)">' + Number(r.total_poin || 0).toLocaleString('id-ID') + ' poin</b><div class="card-sub" style="font-size:11px">' + r.creator_cocok + ' creator</div></div></div>';
+    }).join('');
+  } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
+}
+
 async function loadCreatorCodes(){
 
 const container = document.getElementById('creator-codes-list');
