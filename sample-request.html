@@ -6465,15 +6465,13 @@ async function getActiveBrandIds(){
         activeBrandIds.add(bId);
         return;
       }
-      const liveDone = r.jadwal_live && r.jadwal_live.sesi3 && new Date(r.jadwal_live.sesi3).getTime() < Date.now();
+      // LIVE-only nggak pernah nahan slot; VT_LIVE tuntas begitu 3 VT approved (sama dengan aturan database).
       if(r.tipe_sow_dipilih === 'LIVE'){
-        if(liveDone) return;
-        activeBrandIds.add(bId);
         return;
       }
       if(r.tipe_sow_dipilih === 'VT_LIVE'){
         const count = vtCounts[r.id] || 0;
-        if(count >= 3 && liveDone) return;
+        if(count >= 3) return;
         activeBrandIds.add(bId);
         return;
       }
