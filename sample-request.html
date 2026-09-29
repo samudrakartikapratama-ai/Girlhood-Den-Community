@@ -1594,13 +1594,50 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div>
 
-<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:900px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
+<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:980px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
   <div class="modal-title">📇 Database Creator</div>
-  <div class="field" style="margin-bottom:8px"><input id="creatordb-search" placeholder="🔍 Cari nama, @username, nomor HP, atau kode..." oninput="filterCreatorDatabase(this.value)"></div>
-  <div id="creatordb-chips" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:8px"></div>
+  <div class="field" style="margin-bottom:8px"><input id="creatordb-search" placeholder="🔍 Cari nama, @username, nomor HP, atau kode..." oninput="window._dbHal=1;filterCreatorDatabase(this.value)"></div>
+  <style>
+    .cdb-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+    .cdb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    @media (max-width:520px){.cdb-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+    .cdb-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 10px 0;text-align:center;display:flex;flex-direction:column;overflow:visible}
+    .cdb-card.beku{border-color:#F3B6C4;background:#FFF9FA}
+    .cdb-more{position:absolute;top:8px;right:8px;border:1px solid var(--border);background:#fff;border-radius:8px;width:28px;height:22px;font-size:12px;line-height:1;cursor:pointer;color:var(--gray-text)}
+    .cdb-menu{display:none;position:absolute;top:34px;right:8px;z-index:20;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(74,43,71,.18);min-width:150px;text-align:left;overflow:hidden}
+    .cdb-menu.open{display:block}
+    .cdb-menu button{display:block;width:100%;border:none;background:none;text-align:left;padding:9px 12px;font-size:12.5px;cursor:pointer;color:var(--dark)}
+    .cdb-menu button:hover{background:var(--pink-pale)}
+    .cdb-foto{width:84px;height:84px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;background:var(--pink-pale);border:3px solid #fff;box-shadow:0 0 0 2px var(--pink-pale)}
+    .cdb-card.beku .cdb-foto{filter:grayscale(.7)}
+    .cdb-nama{font-weight:800;font-size:13.5px;margin-top:8px;color:var(--dark);line-height:1.25;word-break:break-word}
+    .cdb-user{font-size:12px;margin-top:2px}
+    .cdb-user a{color:var(--pink);font-weight:700;text-decoration:none}
+    .cdb-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:8px 0 10px}
+    .cdb-tag{font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;background:#F1EEF3;color:#6B5E70;white-space:nowrap}
+    .cdb-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border);margin:auto -10px 0}
+    .cdb-stats div{padding:8px 2px;font-size:10px;color:var(--gray-text)}
+    .cdb-stats div+div{border-left:1px solid var(--border)}
+    .cdb-stats b{display:block;font-size:13px;color:var(--dark)}
+    .cdb-pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px;font-size:12px;color:var(--gray-text)}
+    .cdb-pager button{border:1px solid var(--border);background:#fff;border-radius:8px;width:30px;height:28px;cursor:pointer}
+    .cdb-pager button:disabled{opacity:.4;cursor:default}
+  </style>
+  <div class="cdb-top">
+    <div id="creatordb-chips" style="display:flex;gap:6px;overflow-x:auto"></div>
+    <label style="font-size:12px;color:var(--gray-text);display:flex;align-items:center;gap:6px;white-space:nowrap">Urutkan
+      <select id="creatordb-sort" style="width:auto;padding:6px 8px;font-size:12px" onchange="window._dbHal=1;filterCreatorDatabase(document.getElementById('creatordb-search').value)">
+        <option value="baru">Terbaru gabung</option>
+        <option value="nama">Nama A–Z</option>
+        <option value="video">Video terbanyak</option>
+        <option value="request">Request terbanyak</option>
+      </select>
+    </label>
+  </div>
   <select id="creatordb-filter" style="display:none"><option value="verified">verified</option></select>
   <div class="size-note" id="creatordb-count" style="margin-bottom:8px">Memuat data...</div>
-  <div id="creatordb-rows" style="max-height:65vh;overflow-y:auto;padding-right:2px"><div class="card-sub">Memuat data...</div></div>
+  <div id="creatordb-rows" style="max-height:66vh;overflow-y:auto;padding:2px"><div class="card-sub">Memuat data...</div></div>
+  <div id="creatordb-pager" class="cdb-pager"></div>
 </div></div>
 
 <div class="modal-bg" id="m-i14"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i14')">‹ ✕</button>
@@ -8266,7 +8303,18 @@ async function loadCreatorDatabase(){
   countEl.textContent = 'Memuat data...';
   rowsEl.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
-  const { data, error } = await db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login, is_frozen').order('created_at', { ascending: false });
+  const [memRes, statRes] = await Promise.all([
+    db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login, is_frozen, foto_selfie_url, verified_at, created_at').order('created_at', { ascending: false }),
+    db.rpc('internal_creator_stats')
+  ]);
+  const data = memRes.data, error = memRes.error;
+  const angka = {};
+  (statRes.data || []).forEach(function(x){ angka[x.member_id] = x; });
+  (data || []).forEach(function(m){
+    const a = angka[m.id] || {};
+    m.total_video = Number(a.total_video || 0);
+    m.total_request = Number(a.total_request || 0);
+  });
 
   if(error){
     countEl.textContent = '';
@@ -8276,51 +8324,79 @@ async function loadCreatorDatabase(){
   }
 
   __creatorDbCache = data || [];
+  window._dbHal = 1;
   filterCreatorDatabase(document.getElementById('creatordb-search').value);
 }
+
+function fotoKecil(url){
+  if(!url) return '';
+  // Pakai versi kecil (±5 KB) dari penyimpanan, bukan foto asli, supaya halaman ringan.
+  return String(url).replace('/storage/v1/object/public/', '/storage/v1/render/image/public/').replace(/\+/g, '%2B') + '?width=200&height=200&resize=cover&quality=70';
+}
+function tglGabung(m){
+  const t = m.verified_at || m.created_at;
+  if(!t) return '-';
+  return new Date(t).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'2-digit', timeZone:'Asia/Jakarta' });
+}
+function toggleCdbMenu(ev, id){
+  ev.stopPropagation();
+  document.querySelectorAll('.cdb-menu.open').forEach(function(el){ if(el.id !== 'cdbm-' + id) el.classList.remove('open'); });
+  const el = document.getElementById('cdbm-' + id);
+  if(el) el.classList.toggle('open');
+}
+document.addEventListener('click', function(){ document.querySelectorAll('.cdb-menu.open').forEach(function(el){ el.classList.remove('open'); }); });
+function salinTeks(t, pesan){ navigator.clipboard.writeText(t); showToast(pesan || 'Disalin'); }
 
 function renderCreatorDatabase(list){
   const countEl = document.getElementById('creatordb-count');
   const rowsEl = document.getElementById('creatordb-rows');
-  countEl.textContent = 'Menampilkan ' + list.length + ' dari ' + __creatorDbCache.length + ' creator';
+  const pagerEl = document.getElementById('creatordb-pager');
+  const PER = 24;
+  const totalHal = Math.max(1, Math.ceil(list.length / PER));
+  if(!window._dbHal || window._dbHal > totalHal) window._dbHal = 1;
+  const mulai = (window._dbHal - 1) * PER;
+  const halIni = list.slice(mulai, mulai + PER);
 
+  countEl.textContent = list.length + ' creator ditemukan dari ' + __creatorDbCache.length;
   if(list.length === 0){
     rowsEl.innerHTML = '<div class="card-sub" style="padding:12px 0">Tidak ada creator yang cocok.</div>';
+    pagerEl.innerHTML = '';
     return;
   }
-  const gayaStatus = {
-    verified: { t:'Terverifikasi', bg:'#E3F6EF', c:'#1D9E75' },
-    pending:  { t:'Menunggu verifikasi', bg:'#FDF1D8', c:'#9A6A00' },
-    rejected: { t:'Ditolak', bg:'#EFEFEF', c:'#777' }
-  };
-  const tampil = list.slice(0, window._dbTampil || 60);
-  rowsEl.innerHTML = tampil.map(function(m){
-    const st = gayaStatus[m.status] || { t: m.status || '-', bg:'#EFEFEF', c:'#777' };
+  const labelStatus = { verified:'Terverifikasi', pending:'Menunggu', rejected:'Ditolak' };
+  rowsEl.innerHTML = '<div class="cdb-grid">' + halIni.map(function(m){
     const u = usernameDariLink(m.tiktok_profile_link);
-    const akun = u
-      ? '<a href="https://www.tiktok.com/@' + encodeURIComponent(u) + '" target="_blank" rel="noopener" style="color:var(--pink);font-weight:800">@' + escHtml(u) + '</a>'
-      : (m.tiktok_profile_link ? '<a href="' + escHtml(m.tiktok_profile_link) + '" target="_blank" rel="noopener" style="color:var(--pink)">Link TikTok ↗</a>' : '<span class="card-sub">TikTok belum diisi</span>');
-    const chip = function(t, bg, c){ return '<span style="font-size:10.5px;font-weight:700;background:' + bg + ';color:' + c + ';border-radius:999px;padding:2px 8px;white-space:nowrap">' + t + '</span>'; };
-    const chips = chip(st.t, st.bg, st.c) + (m.is_frozen ? ' ' + chip('🧊 Dibekukan', '#FDE2E7', '#C2124B') : '');
-    const gmv = m.gmv_30hari ? 'Rp' + Number(m.gmv_30hari).toLocaleString('id-ID') : '-';
-    const kode = m.kode_login
-      ? '<code style="font-size:11px">' + escHtml(m.kode_login) + '</code> <button class="btn-mini-copy" onclick="navigator.clipboard.writeText(\'' + escHtml(m.kode_login) + '\'); showToast(\'Kode disalin\')">📋</button>'
-      : '<span class="card-sub">belum ada kode</span>';
-    const freezeBtn = m.status === 'verified'
-      ? '<button class="btn btn-sm" style="font-size:11px;padding:6px 10px;border:none;font-weight:700;white-space:nowrap;background:' + (m.is_frozen ? '#E3F6EF;color:#1D9E75' : 'var(--pink-pale);color:var(--pink)') + '" onclick="toggleFreezeCreator(\'' + m.id + '\',\'' + (m.nama || '-').replace(/'/g, "\\'") + '\',' + (m.is_frozen ? 'true' : 'false') + ',this)">' + (m.is_frozen ? '🔥 Buka beku' : '🧊 Bekukan') + '</button>'
-      : '';
-    return '<div style="border:1px solid var(--border);border-left:4px solid ' + (m.is_frozen ? '#C2124B' : st.c) + ';border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff;display:flex;gap:10px;align-items:flex-start">'
-      + '<div style="flex:1;min-width:0">'
-      +   '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><b style="font-size:13.5px">' + escHtml(m.nama || '-') + '</b>' + chips + '</div>'
-      +   '<div style="font-size:12.5px;margin-top:4px">' + akun + ' <span class="card-sub">· ' + escHtml(m.no_hp || '-') + '</span></div>'
-      +   '<div class="card-sub" style="font-size:11.5px;margin-top:4px">Kode: ' + kode + '</div>'
-      +   '<div class="card-sub" style="font-size:11px;margin-top:2px">' + escHtml(m.level || '-') + ' · GMV saat daftar ' + gmv + '</div>'
-      + '</div>'
-      + freezeBtn
+    const namaAman = (m.nama || '-').replace(/'/g, "\\'");
+    const inisial = String(m.nama || '?').trim().charAt(0).toUpperCase();
+    const foto = m.foto_selfie_url
+      ? '<img class="cdb-foto" loading="lazy" src="' + fotoKecil(m.foto_selfie_url) + '" data-asli="' + escHtml(m.foto_selfie_url) + '" onerror="if(this.dataset.asli && this.src!==this.dataset.asli){this.src=this.dataset.asli}" alt="">'
+      : '<div class="cdb-foto" style="display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:var(--pink)">' + escHtml(inisial) + '</div>';
+    const tags = '<span class="cdb-tag">' + escHtml(m.level || 'Lv -') + '</span>'
+      + '<span class="cdb-tag" style="' + (m.status === 'verified' ? 'background:#E3F6EF;color:#1D9E75' : m.status === 'pending' ? 'background:#FDF1D8;color:#9A6A00' : '') + '">' + (labelStatus[m.status] || m.status || '-') + '</span>'
+      + (m.is_frozen ? '<span class="cdb-tag" style="background:#FDE2E7;color:#C2124B">🧊 Beku</span>' : '');
+    const menu = '<div class="cdb-menu" id="cdbm-' + m.id + '" onclick="event.stopPropagation()">'
+      + (m.kode_login ? '<button onclick="salinTeks(\'' + escHtml(m.kode_login) + '\', \'Kode login disalin\')">📋 Salin kode login</button>' : '')
+      + '<button onclick="salinTeks(\'' + escHtml(m.no_hp || '') + '\', \'Nomor disalin\')">📱 Salin nomor HP</button>'
+      + (u ? '<button onclick="window.open(\'https://www.tiktok.com/@' + encodeURIComponent(u) + '\', \'_blank\')">🎵 Buka TikTok</button>' : '')
+      + (m.status === 'verified' ? '<button style="color:' + (m.is_frozen ? '#1D9E75' : '#C2124B') + '" onclick="toggleFreezeCreator(\'' + m.id + '\',\'' + namaAman + '\',' + (m.is_frozen ? 'true' : 'false') + ',this)">' + (m.is_frozen ? '🔥 Buka beku' : '🧊 Bekukan') + '</button>' : '')
       + '</div>';
-  }).join('') + (list.length > tampil.length
-    ? '<div style="text-align:center;margin:6px 0 10px"><button class="btn btn-outline btn-sm" onclick="window._dbTampil=(window._dbTampil||60)+60;filterCreatorDatabase(document.getElementById(\'creatordb-search\').value)">Tampilkan 60 lagi (' + (list.length - tampil.length) + ' tersisa)</button></div>'
-    : '');
+    return '<div class="cdb-card' + (m.is_frozen ? ' beku' : '') + '">'
+      + '<button class="cdb-more" title="Aksi" onclick="toggleCdbMenu(event,\'' + m.id + '\')">•••</button>' + menu
+      + foto
+      + '<div class="cdb-nama">' + escHtml(m.nama || '-') + '</div>'
+      + '<div class="cdb-user">' + (u ? '<a href="https://www.tiktok.com/@' + encodeURIComponent(u) + '" target="_blank" rel="noopener">@' + escHtml(u) + '</a>' : '<span class="card-sub">TikTok belum diisi</span>') + '</div>'
+      + '<div class="cdb-tags">' + tags + '</div>'
+      + '<div class="cdb-stats">'
+      +   '<div><b>' + (m.total_video || 0) + '</b>Video</div>'
+      +   '<div><b>' + (m.total_request || 0) + '</b>Request</div>'
+      +   '<div><b>' + tglGabung(m) + '</b>Gabung</div>'
+      + '</div>'
+      + '</div>';
+  }).join('') + '</div>';
+
+  pagerEl.innerHTML = '<span>' + (mulai + 1) + '–' + Math.min(mulai + PER, list.length) + ' dari ' + list.length + '</span>'
+    + '<button ' + (window._dbHal <= 1 ? 'disabled' : '') + ' onclick="window._dbHal--;filterCreatorDatabase(document.getElementById(\'creatordb-search\').value);document.getElementById(\'creatordb-rows\').scrollTop=0">‹</button>'
+    + '<button ' + (window._dbHal >= totalHal ? 'disabled' : '') + ' onclick="window._dbHal++;filterCreatorDatabase(document.getElementById(\'creatordb-search\').value);document.getElementById(\'creatordb-rows\').scrollTop=0">›</button>';
 }
 
 async function toggleFreezeCreator(memberId, nama, isFrozen, btn){
@@ -8377,11 +8453,19 @@ function filterCreatorDatabase(keyword){
     chipsEl.innerHTML = pilihan.map(function(p){
       const n = semua.filter(function(m){ return p.f(m) && cocokKata(m); }).length;
       const on = p.k === window._dbStatus;
-      return '<button onclick="window._dbStatus=\'' + p.k + '\';window._dbTampil=60;filterCreatorDatabase(document.getElementById(\'creatordb-search\').value)" style="flex-shrink:0;border:1.5px solid ' + (on ? 'var(--pink)' : 'var(--border)') + ';background:' + (on ? 'var(--pink)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--dark)') + ';border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">' + p.t + ' (' + n + ')</button>';
+      return '<button onclick="window._dbStatus=\'' + p.k + '\';window._dbHal=1;filterCreatorDatabase(document.getElementById(\'creatordb-search\').value)" style="flex-shrink:0;border:1.5px solid ' + (on ? 'var(--pink)' : 'var(--border)') + ';background:' + (on ? 'var(--pink)' : '#fff') + ';color:' + (on ? '#fff' : 'var(--dark)') + ';border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">' + p.t + ' (' + n + ')</button>';
     }).join('');
   }
   const aktif = pilihan.find(function(p){ return p.k === window._dbStatus; }) || pilihan[0];
-  renderCreatorDatabase(semua.filter(function(m){ return aktif.f(m) && cocokKata(m); }));
+  const urut = (document.getElementById('creatordb-sort') || {}).value || 'baru';
+  const hasil = semua.filter(function(m){ return aktif.f(m) && cocokKata(m); });
+  hasil.sort(function(a, b){
+    if(urut === 'nama') return String(a.nama || '').localeCompare(String(b.nama || ''), 'id');
+    if(urut === 'video') return (b.total_video || 0) - (a.total_video || 0);
+    if(urut === 'request') return (b.total_request || 0) - (a.total_request || 0);
+    return new Date(b.verified_at || b.created_at || 0) - new Date(a.verified_at || a.created_at || 0);
+  });
+  renderCreatorDatabase(hasil);
 }
 
 function usernameDariLink(link){
