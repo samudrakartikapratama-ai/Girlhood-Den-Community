@@ -851,6 +851,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator(); loadTierCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" id="ic-gmv-dash" onclick="handleGmvDashClick()"><div class="icon-emoji">📈</div><div class="icon-label">Dashboard GMV</div><div style="position:absolute;top:-7px;left:-7px;background:#17577F;color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Diamond+</div><div id="ic-gmv-dash-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" onclick="openModal('m-c9'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
   </div>
 </div>
@@ -1499,6 +1500,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="gmv-hasil" style="margin-top:10px"></div>
   <div style="font-weight:800;margin-top:18px;margin-bottom:6px">Riwayat upload</div>
   <div id="gmv-riwayat"><div class="card-sub">Memuat...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c-gmv"><div class="modal-box" style="max-width:480px;background:var(--gray)"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-gmv')">‹ ✕</button>
+  <div class="modal-title">📈 Dashboard GMV</div>
+  <div class="card-sub" style="margin-bottom:12px">Penjualan kamu lewat link Girlhood Den</div>
+  <div id="c-gmv-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c-tangga"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-tangga')">‹ ✕</button>
@@ -5334,6 +5341,7 @@ async function logout(){
     setTimeout(function(){ checkMonthlyRecap(); }, 1400);
     updateReportVtLockState();
     updateEndorsementLockState();
+    updateGmvDashLockState();
     applyCreatorAvatar();
   }
   if(role === 'brand'){
@@ -9113,6 +9121,140 @@ async function handleEndorsementClick(){
   updateEndorsementLockState();
   openModal('m-c-endorsement');
   loadCreatorEndorsementJobs();
+}
+
+// ===== Dashboard GMV pribadi (Diamond ke atas) =====
+async function tierCreatorSekarang(){
+  if(!currentSession.memberId) return 'Bronze';
+  const { data } = await db.from('members').select('tier').eq('id', currentSession.memberId).maybeSingle();
+  return (data && data.tier) || 'Bronze';
+}
+async function bolehDashboardGmv(){
+  const t = await tierCreatorSekarang();
+  return t === 'Diamond' || t === 'Solitaire';
+}
+async function updateGmvDashLockState(){
+  const card = document.getElementById('ic-gmv-dash');
+  const lockIcon = document.getElementById('ic-gmv-dash-lock');
+  if(!card || !currentSession.memberId) return;
+  const boleh = await bolehDashboardGmv();
+  card.classList.toggle('locked', !boleh);
+  card.style.opacity = boleh ? '1' : '.45';
+  if(lockIcon) lockIcon.style.display = boleh ? 'none' : 'flex';
+}
+async function handleGmvDashClick(){
+  const boleh = await bolehDashboardGmv();
+  updateGmvDashLockState();
+  if(!boleh){
+    alert('Dashboard GMV kebuka mulai tier Diamond. Naikkan penjualan lewat link Girlhood Den buat naik tier ya.');
+    return;
+  }
+  openModal('m-c-gmv');
+  loadGmvDashboard();
+}
+function rpPendek(n){
+  n = Number(n || 0);
+  if(n >= 1e9) return 'Rp' + (n/1e9).toFixed(2).replace('.', ',') + ' M';
+  if(n >= 1e6) return 'Rp' + (n/1e6).toFixed(1).replace('.', ',').replace(',0','') + ' jt';
+  if(n >= 1e3) return 'Rp' + Math.round(n/1e3) + ' rb';
+  return 'Rp' + n.toLocaleString('id-ID');
+}
+async function loadGmvDashboard(){
+  const el = document.getElementById('c-gmv-content');
+  el.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  const mid = currentSession.memberId;
+  const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const now = new Date();
+  const ymd = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  const [y, m] = ymd.split('-').map(Number);
+  const awalBulan = y + '-' + String(m).padStart(2,'0') + '-01';
+  const bulanLaluM = m === 1 ? 12 : m - 1, bulanLaluY = m === 1 ? y - 1 : y;
+  const awalBulanLalu = bulanLaluY + '-' + String(bulanLaluM).padStart(2,'0') + '-01';
+
+  const [perRes, tierRes, cfgRes, meRes, prodRes] = await Promise.all([
+    db.from('gmv_creator_periode').select('periode_mulai, periode_selesai, gmv_video, gmv_live, gmv_total, poin').eq('member_id', mid).order('periode_mulai', { ascending: false }).limit(16),
+    db.from('gmv_tier_snapshot').select('settled_gmv, periode_selesai').eq('member_id', mid).order('periode_selesai', { ascending: false }).limit(1),
+    db.from('tier_config').select('nama, urutan, min_gmv').order('urutan'),
+    db.from('members').select('tier').eq('id', mid).maybeSingle(),
+    db.from('creator_product_sales').select('nama_produk, nama_brand, gmv, orders, periode').eq('member_id', mid).gte('periode', awalBulan).order('gmv', { ascending: false }).limit(50)
+  ]);
+  const rows = (perRes.data || []).slice().sort(function(a,b){ return a.periode_mulai < b.periode_mulai ? -1 : 1; });
+  if(!rows.length){
+    el.innerHTML = '<div class="card-sub">Belum ada data penjualan kamu di sistem. Data masuk tiap Senin dari upload TikTok Shop — cek lagi minggu depan ya.</div>';
+    return;
+  }
+  const dalamBulan = function(r, awal){ return r.periode_mulai >= awal && r.periode_mulai < (awal === awalBulan ? '9999' : awalBulan); };
+  const iniBulan = rows.filter(function(r){ return dalamBulan(r, awalBulan); });
+  const laluBulan = rows.filter(function(r){ return dalamBulan(r, awalBulanLalu); });
+  const sum = function(arr, k){ return arr.reduce(function(s, r){ return s + Number(r[k] || 0); }, 0); };
+  const gmvIni = sum(iniBulan, 'gmv_total'), gmvLalu = sum(laluBulan, 'gmv_total'), poinIni = sum(iniBulan, 'poin');
+  let bandingHtml = '';
+  if(gmvLalu > 0){
+    const pct = Math.round((gmvIni - gmvLalu) / gmvLalu * 100);
+    bandingHtml = '<span style="background:' + (pct >= 0 ? '#1D9E75' : '#A30E3F') + ';border-radius:6px;padding:2px 7px;font-weight:800">' + (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(pct) + '%</span><span style="opacity:.85">dibanding ' + bulanNama[bulanLaluM-1] + '</span>';
+  } else {
+    bandingHtml = '<span style="opacity:.85">Belum ada data ' + bulanNama[bulanLaluM-1] + ' untuk dibandingkan</span>';
+  }
+
+  // grafik 8 minggu terakhir (stack video + live)
+  const delapan = rows.slice(-8);
+  const maxT = Math.max.apply(null, delapan.map(function(r){ return Number(r.gmv_total || 0) || (Number(r.gmv_video||0) + Number(r.gmv_live||0)); }).concat([1]));
+  const H = 130, W = 340;
+  const slot = Math.floor((W - 16) / Math.max(delapan.length, 1)), bw = Math.min(30, slot - 8);
+  let bars = '';
+  delapan.forEach(function(r, i){
+    const v = Number(r.gmv_video || 0), l = Number(r.gmv_live || 0);
+    const hv = Math.round(v / maxT * (H - 6)), hl = Math.round(l / maxT * (H - 6));
+    const x = 8 + i * slot + Math.round((slot - bw) / 2);
+    const [yy, mm, dd] = String(r.periode_mulai).split('-');
+    bars += '<rect x="' + x + '" y="' + (H - hl) + '" width="' + bw + '" height="' + hl + '" rx="4" fill="#2F5DA8"></rect>'
+      + '<rect x="' + x + '" y="' + (H - hl - hv) + '" width="' + bw + '" height="' + hv + '" rx="4" fill="#C2124B"></rect>'
+      + '<text x="' + (x + bw/2) + '" y="' + (H + 16) + '" font-size="10" text-anchor="middle" fill="#6E5A6C">' + Number(dd) + '/' + Number(mm) + '</text>';
+  });
+
+  // produk terlaris bulan ini (kalau ada data per produk)
+  const agg = {};
+  (prodRes.data || []).forEach(function(p){
+    const k = (p.nama_produk || '-') + '|' + (p.nama_brand || '-');
+    agg[k] = agg[k] || { nama: p.nama_produk || '-', brand: p.nama_brand || '-', gmv: 0, orders: 0 };
+    agg[k].gmv += Number(p.gmv || 0); agg[k].orders += Number(p.orders || 0);
+  });
+  const top = Object.values(agg).sort(function(a,b){ return b.gmv - a.gmv; }).slice(0, 3);
+  const topHtml = top.length
+    ? top.map(function(p, i){ return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:26px;height:26px;border-radius:50%;background:var(--pink-pale);color:var(--pink);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + (i+1) + '</div><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(p.nama) + '</div><div style="font-size:11px;color:var(--gray-text)">' + escHtml(p.brand) + (p.orders ? ' · ' + p.orders + ' pesanan' : '') + '</div></div><span style="font-weight:800;font-size:12.5px">' + rpPendek(p.gmv) + '</span></div>'; }).join('')
+    : '<div class="card-sub">Rincian per produk belum tersedia untuk bulan ini.</div>';
+
+  // progres tier
+  const cfg = cfgRes.data || [];
+  const tierNow = (meRes.data && meRes.data.tier) || 'Bronze';
+  const idx = cfg.findIndex(function(t){ return t.nama === tierNow; });
+  const berikut = cfg[idx + 1];
+  const snap = tierRes.data && tierRes.data[0];
+  let tierHtml = '';
+  if(berikut){
+    const settled = snap ? Number(snap.settled_gmv || 0) : 0;
+    const persen = Math.max(3, Math.min(100, Math.round(settled / berikut.min_gmv * 100)));
+    tierHtml = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700"><span>Menuju ' + berikut.nama + ' (90 hari)</span><span style="color:' + (TIER_WARNA[berikut.nama] || TIER_WARNA.Bronze)[1] + '">' + rpPendek(Math.max(0, berikut.min_gmv - settled)) + ' lagi</span></div>'
+      + '<div style="height:10px;border-radius:999px;background:#F1ECF1;overflow:hidden;margin-top:6px"><div style="width:' + persen + '%;height:10px;background:' + (TIER_WARNA[berikut.nama] || TIER_WARNA.Bronze)[1] + '"></div></div>'
+      + '<div class="card-sub" style="font-size:11px;margin-top:4px">GMV terbayar 90 hari: ' + rpPendek(settled) + ' dari ' + rpPendek(berikut.min_gmv) + '</div>';
+  } else {
+    tierHtml = '<div class="card-sub">Kamu di tier tertinggi. Pertahankan penjualanmu!</div>';
+  }
+
+  el.innerHTML = '<div style="background:var(--dark);color:#fff;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px">'
+    + '<div style="font-size:11px;font-weight:800;opacity:.8;letter-spacing:.04em">BULAN INI · ' + bulanNama[m-1].toUpperCase() + '</div>'
+    + '<div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:34px;line-height:1">' + rpPendek(gmvIni) + '</div>'
+    + '<div style="display:flex;gap:8px;align-items:center;font-size:12px">' + bandingHtml + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">'
+    + '<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:8px"><div style="font-size:10px;opacity:.8">Poin dari GMV</div><div style="font-weight:800;font-size:15px">+' + poinIni + '</div></div>'
+    + '<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:8px"><div style="font-size:10px;opacity:.8">Minggu tercatat</div><div style="font-weight:800;font-size:15px">' + iniBulan.length + '</div></div>'
+    + '</div></div>'
+    + '<div style="background:#fff;border-radius:18px;padding:14px;margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800;font-size:14px">' + delapan.length + ' minggu terakhir</span><span style="font-size:11px;color:var(--gray-text)">GMV per minggu</span></div>'
+    + '<svg viewBox="0 0 ' + W + ' ' + (H + 22) + '" width="100%" style="display:block;margin-top:8px;font-family:Nunito,sans-serif">' + bars + '</svg>'
+    + '<div style="display:flex;gap:14px;font-size:11px;margin-top:6px"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#C2124B"></span>Video</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#2F5DA8"></span>Live</span></div></div>'
+    + '<div style="background:#fff;border-radius:18px;padding:14px;margin-top:12px"><div style="font-weight:800;font-size:14px;margin-bottom:10px">Produk terlaris kamu bulan ini</div>' + topHtml + '</div>'
+    + '<div style="background:#fff;border-radius:18px;padding:14px;margin-top:12px">' + tierHtml + '</div>'
+    + '<div class="card-sub" style="font-size:11px;margin-top:10px;line-height:1.5">Angka diperbarui tiap Senin dari data TikTok Shop. Yang dihitung hanya penjualan lewat link Girlhood Den.</div>';
 }
 
 async function updateReportVtLockState(){
