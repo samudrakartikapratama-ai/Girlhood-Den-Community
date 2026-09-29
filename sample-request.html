@@ -1067,8 +1067,9 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-c5"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c5')">‹ ✕</button>
   <div class="modal-title">🔥 Hot Product Live</div>
-  <div class="card-sub">15 produk terbaik — langsung ambil link, tanpa approval.</div>
-  <div id="hp-creator-list"><div class="card-sub">Memuat data...</div></div>
+  <div class="card-sub">15 produk paling laku. Langsung salin link, tanpa approval.</div>
+  <div style="display:flex;gap:8px;align-items:center;background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin:10px 0 12px;font-size:12px;font-weight:700;color:var(--pink)">⚡ Dipilih tim Girlhood Den dari produk yang paling laku di komunitas</div>
+  <div id="hp-creator-list" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c6')">‹ ✕</button>
@@ -5964,32 +5965,55 @@ async function removeHotProduct(id){
 
 async function loadHotProductsCreator(){
   const container = document.getElementById('hp-creator-list');
-  container.innerHTML = '<div class="card-sub">Memuat data...</div>';
+  container.innerHTML = '<div class="card-sub" style="grid-column:1/-1">Memuat data...</div>';
 
-  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, brands(nama_brand), brand_products(foto_urls)').order('ranking', { ascending: true });
+  const { data, error } = await db.from('hot_products').select('id, nama_produk, link_affiliate, ranking, brands(nama_brand), brand_products(foto_urls, komisi_percent, harga)').order('ranking', { ascending: true });
 
   if(error){
-    container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
+    container.innerHTML = '<div class="card-sub" style="grid-column:1/-1;color:var(--red)">Gagal memuat data.</div>';
     showDbError('memuat hot product live', error);
     return;
   }
-
   if(!data || data.length === 0){
-    container.innerHTML = '<div class="card-sub">Belum ada produk Hot Product Live saat ini.</div>';
+    container.innerHTML = '<div class="card-sub" style="grid-column:1/-1">Belum ada produk Hot Product Live saat ini.</div>';
     return;
   }
 
-  container.innerHTML = data.map(function(hp){
-    const fotos = (hp.brand_products && hp.brand_products.foto_urls) || [];
-    const photoHtml = fotos.length > 0
-      ? '<img src="'+fotos[0]+'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0" alt="'+hp.nama_produk+'">'
-      : '<div style="width:56px;height:56px;border-radius:10px;background:var(--pink-light);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">✨</div>';
-    return '<div class="card"><div style="display:flex;gap:12px">'
-      + photoHtml
-      + '<div><b>'+hp.nama_produk+'</b> — '+(hp.brands?hp.brands.nama_brand:'-')+'<br><span class="tag tag-hot">🔥 Hot Product</span><br>'
-      + '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="navigator.clipboard.writeText(\''+(hp.link_affiliate||'')+'\');alert(\'Link disalin!\')">Ambil Link</button></div>'
+  const rankWarna = { 1: ['#FBF0CC', '#7A5A00'], 2: ['#E7E7EC', '#4A4A58'], 3: ['#F6E8DD', '#7F4E2B'] };
+  container.innerHTML = data.map(function(hp, idx){
+    const bp = hp.brand_products || {};
+    const fotos = bp.foto_urls || [];
+    const rank = hp.ranking || (idx + 1);
+    const w = rankWarna[rank] || ['#FFFFFF', 'var(--dark)'];
+    const komisi = bp.komisi_percent ? String(bp.komisi_percent).replace(/%$/, '') + '%' : '';
+    const hargaNum = Number(String(bp.harga || '').replace(/[^0-9]/g, ''));
+    const harga = hargaNum > 0 ? 'Rp' + hargaNum.toLocaleString('id-ID') : '';
+    const fotoHtml = fotos.length > 0
+      ? '<img src="' + fotos[0] + '" alt="' + escHtml(hp.nama_produk || '') + '" style="width:100%;height:150px;object-fit:cover;display:block;background:var(--pink-pale)">'
+      : '<div style="width:100%;height:150px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:30px">✨</div>';
+    return '<div style="background:#fff;border:1px solid var(--gray-mid);border-radius:16px;overflow:hidden;display:flex;flex-direction:column">'
+      + '<div style="position:relative">' + fotoHtml
+      + '<div style="position:absolute;top:8px;left:8px;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:' + w[0] + ';color:' + w[1] + ';font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(62,35,64,.18)">#' + rank + '</div></div>'
+      + '<div style="padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;flex:1">'
+      + '<div style="display:flex;gap:4px;flex-wrap:wrap">'
+      + '<span style="font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 7px;background:var(--gray);color:var(--dark)">' + escHtml((hp.brands && hp.brands.nama_brand) || '-') + '</span>'
+      + (komisi ? '<span style="font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 7px;background:#FBEFD2;color:#6B4A00">Komisi ' + escHtml(komisi) + '</span>' : '')
+      + '</div>'
+      + '<div style="font-size:12.5px;font-weight:800;line-height:1.3;height:33px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="' + escHtml(hp.nama_produk || '') + '">' + escHtml(hp.nama_produk || '') + '</div>'
+      + (harga ? '<div style="font-size:11px;color:var(--gray-text)">' + harga + '</div>' : '')
+      + '<button class="btn btn-primary" style="margin-top:auto;width:100%;height:44px;border-radius:12px;font-size:13px" data-link="' + escHtml(hp.link_affiliate || '') + '" onclick="salinLinkHot(this)">Salin Link</button>'
       + '</div></div>';
   }).join('');
+}
+async function salinLinkHot(btn){
+  const link = btn.getAttribute('data-link') || '';
+  if(!link){ showToast('Link produk ini belum ada. Kabari tim ya.'); return; }
+  try { await navigator.clipboard.writeText(link); } catch(e){
+    const ta = document.createElement('textarea'); ta.value = link; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  const asli = btn.textContent; btn.textContent = '✓ Disalin'; btn.disabled = true;
+  showToast('Link disalin — tempel di keranjang kuning kamu');
+  setTimeout(function(){ btn.textContent = asli; btn.disabled = false; }, 1800);
 }
 
 // Satu-satunya daftar kategori produk. Dipakai barengan sama form internal (isi kategori)
