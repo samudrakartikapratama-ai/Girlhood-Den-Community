@@ -10524,7 +10524,12 @@ async function loadSelfReportVtQueue(){
         + '<div class="sr-card-head"><div><div class="who">'+r.creatorName+'</div><div class="prod">'+r.produkName+'</div></div>'
         + '<div class="datebadge">Submit: '+tgl+'</div></div>'
         + '<div class="sr-vt-link-box">🔗 <a href="'+r.videoUrl+'" target="_blank">'+r.videoUrl+'</a>'
-        + '<div class="cutoff">Batas maksimal video: <b>H-1 dari pengajuan → '+cutoffDisplay+'</b>. Klik link buat cek tanggal aslinya.</div></div>'
+        + '<div class="cutoff">Batas maksimal video: <b>H-1 dari pengajuan → '+cutoffDisplay+'</b>.'
+        + (r.videoPostedAt
+            ? ' Diposting: <b>' + new Date(r.videoPostedAt).toLocaleString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + '</b> '
+              + (r.videoLama ? '<span style="color:var(--red);font-weight:800">LEWAT BATAS</span>' : '<span style="color:#146B50;font-weight:800">masuk batas</span>')
+            : ' Tanggal posting belum terbaca — klik link buat cek manual.')
+        + '</div></div>'
         + '<div class="sr-btn-row">'
         + '<button class="sr-btn sr-btn-approve" onclick="decideVtSelfReport(\''+r.vtId+'\',\'approve\')">✓ Setujui + Kasih Poin</button>'
         + '<button class="sr-btn sr-btn-reject" onclick="toggleSrVtReject(\''+r.vtId+'\')">✕ Tolak</button>'
