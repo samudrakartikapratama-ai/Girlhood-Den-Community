@@ -817,7 +817,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
     <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" style="border-color:var(--pink)" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div style="position:absolute;top:-7px;left:-7px;background:var(--pink);color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Batas 3 hari</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
-    <div class="icon-card" onclick="openModal('m-c-endorsement'); loadCreatorEndorsementJobs();"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div></div>
+    <div class="icon-card" id="ic-endorsement" onclick="handleEndorsementClick()"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div><div id="ic-endorsement-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
@@ -5303,6 +5303,7 @@ async function logout(){
     setTimeout(function(){ checkMandatoryEducation(); }, 800);
     setTimeout(function(){ checkMonthlyRecap(); }, 1400);
     updateReportVtLockState();
+    updateEndorsementLockState();
     applyCreatorAvatar();
   }
   if(role === 'brand'){
@@ -9030,6 +9031,35 @@ async function handleReportVtClick(){
   checkVersionNotif();
   openModal('m-c4');
   loadVtReportPage();
+}
+
+// Menu Endorsement hanya terbuka kalau creator punya job endorsement yang campaign-nya sudah aktif (status 'locked').
+async function cekPunyaEndorsementAktif(){
+  if(!currentSession.memberId) return false;
+  const { data, error } = await db.from('endorsement_campaign_creators')
+    .select('id, endorsement_campaigns!inner(status)')
+    .eq('member_id', currentSession.memberId).eq('endorsement_campaigns.status', 'locked').limit(1);
+  return !error && data && data.length > 0;
+}
+async function updateEndorsementLockState(){
+  const card = document.getElementById('ic-endorsement');
+  const lockIcon = document.getElementById('ic-endorsement-lock');
+  if(!card || !currentSession.memberId) return;
+  const ada = await cekPunyaEndorsementAktif();
+  card.classList.toggle('locked', !ada);
+  card.style.opacity = ada ? '1' : '.45';
+  if(lockIcon) lockIcon.style.display = ada ? 'none' : 'flex';
+}
+async function handleEndorsementClick(){
+  const ada = await cekPunyaEndorsementAktif();
+  if(!ada){
+    updateEndorsementLockState();
+    alert('Menu ini kebuka kalau ada brand yang milih kamu buat campaign endorsement. Terus jualan dan posting yang rapi ya, brand milih dari data performa kamu.');
+    return;
+  }
+  updateEndorsementLockState();
+  openModal('m-c-endorsement');
+  loadCreatorEndorsementJobs();
 }
 
 async function updateReportVtLockState(){
