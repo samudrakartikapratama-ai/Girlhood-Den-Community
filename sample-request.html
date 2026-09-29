@@ -821,7 +821,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-hotproduct" onclick="openModal('m-c5'); loadHotProductsCreator();"><div class="icon-emoji">🔥</div><div class="icon-label">Hot Product Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
-    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
+    <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator(); loadTierCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
     <div class="icon-card" onclick="openModal('m-c9'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
   </div>
 </div>
@@ -1101,6 +1101,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-c8"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c8')">‹ ✕</button>
   <div class="modal-title">⭐ Poin Kamu</div>
+  <div id="c8-tier" style="margin-bottom:12px"></div>
   <div id="c8-poin-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
@@ -1446,7 +1447,11 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-i-gmv"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i-gmv')">‹ ✕</button>
   <div class="modal-title">📈 Upload GMV dari TAP</div>
-  <div class="card-sub">Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 8px">
+    <button id="gmv-mode-mingguan" onclick="pilihModeGmv('mingguan')" style="border:1.5px solid var(--pink);background:var(--pink);color:#fff;border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">Mingguan · poin<div style="font-size:11px;font-weight:600;opacity:.9">Tiap Senin, data 7 hari</div></button>
+    <button id="gmv-mode-tier" onclick="pilihModeGmv('tier')" style="border:1.5px solid var(--border);background:#fff;color:var(--dark);border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">90 hari · tier<div style="font-size:11px;font-weight:600;opacity:.8">Awal bulan, data 90 hari</div></button>
+  </div>
+  <div class="card-sub" id="gmv-penjelasan">Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator + Product</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.</div>
   <label id="gmv-drop" style="display:block;margin-top:12px;border:2px dashed var(--pink);border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--pink-pale)"
     ondragover="event.preventDefault();this.style.background='#FDE2E7'" ondragleave="this.style.background='var(--pink-pale)'"
     ondrop="event.preventDefault();this.style.background='var(--pink-pale)';if(event.dataTransfer.files[0]) bacaFileGmv(event.dataTransfer.files[0])">
@@ -1464,6 +1469,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div id="gmv-hasil" style="margin-top:10px"></div>
   <div style="font-weight:800;margin-top:18px;margin-bottom:6px">Riwayat upload</div>
   <div id="gmv-riwayat"><div class="card-sub">Memuat...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c-tangga"><div class="modal-box" style="max-width:480px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-tangga')">‹ ✕</button>
+  <div class="modal-title">🏅 Tangga Tier</div>
+  <div class="card-sub" style="margin-bottom:10px">Naik tier dari penjualan 90 hari lewat link Girlhood Den (yang sudah terbayar). Makin tinggi tier, makin banyak akses.</div>
+  <div id="tangga-naik" style="margin-bottom:12px"></div>
+  <div id="tangga-list"><div class="card-sub">Memuat...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-i12"><div class="modal-box" style="max-width:640px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i12')">‹ ✕</button>
@@ -8559,6 +8571,7 @@ async function bacaFileGmv(file){
     const iLive = cari(/live.*gmv|gmv.*live/i);
     const iTotal = cari(/gmv/i, /video|live|refund|settled|link/i);
     const iTgl = cari(/^date$|^tanggal$|periode|period/i);
+    const iSettled = cari(/settled/i);
     if(iVideo < 0 && iLive < 0 && iTotal < 0) throw new Error('Kolom GMV tidak ditemukan di file ini.');
     const perUser = {};
     let periode = '';
@@ -8569,7 +8582,8 @@ async function bacaFileGmv(file){
       if(!periode && iTgl >= 0) periode = String(r[iTgl] || '');
       // Export per produk dijumlahkan per creator di sini, jadi yang dikirim ke server ringkas.
       const k = u.replace(/^@/, '').toLowerCase();
-      const p = perUser[k] || (perUser[k] = { username: k, video: 0, live: 0, total: 0 });
+      const p = perUser[k] || (perUser[k] = { username: k, video: 0, live: 0, total: 0, settled: 0 });
+      p.settled += iSettled >= 0 ? angkaRupiah(r[iSettled]) : 0;
       p.video += iVideo >= 0 ? angkaRupiah(r[iVideo]) : 0;
       p.live += iLive >= 0 ? angkaRupiah(r[iLive]) : 0;
       p.total += iTotal >= 0 ? angkaRupiah(r[iTotal]) : 0;
@@ -8599,9 +8613,20 @@ async function kirimGmv(action){
   });
   return await res.json();
 }
+window._gmvMode = 'mingguan';
+function pilihModeGmv(m){
+  window._gmvMode = m;
+  const aktif = function(id, on){ const b = document.getElementById(id); b.style.background = on ? 'var(--pink)' : '#fff'; b.style.color = on ? '#fff' : 'var(--dark)'; b.style.borderColor = on ? 'var(--pink)' : 'var(--border)'; };
+  aktif('gmv-mode-mingguan', m === 'mingguan'); aktif('gmv-mode-tier', m === 'tier');
+  document.getElementById('gmv-penjelasan').innerHTML = m === 'tier'
+    ? 'Awal bulan, export data <b>90 hari terakhir</b> dari TAP (dimensi <b>Creator</b>, dengan kolom <b>Settled GMV</b>). Tier dihitung dari GMV yang sudah terbayar. Naik tier langsung berlaku; turun tier hanya diterapkan tanggal 1–7.'
+    : 'Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator + Product</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.';
+  if(window._gmvRows) previewGmv();
+}
 async function previewGmv(){
   const hasil = document.getElementById('gmv-hasil');
   if(!window._gmvRows) return;
+  if(window._gmvMode === 'tier') return previewTier();
   if(!document.getElementById('gmv-mulai').value || !document.getElementById('gmv-selesai').value){
     hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">Periode tidak terbaca dari file. Isi tanggal mulai dan selesai di atas.</div>';
     return;
@@ -8642,6 +8667,40 @@ async function simpanGmv(btn){
   window._gmvRows = null; document.getElementById('gmv-file').value = '';
   muatRiwayatGmv();
 }
+async function previewTier(){
+  const hasil = document.getElementById('gmv-hasil');
+  if(!document.getElementById('gmv-mulai').value || !document.getElementById('gmv-selesai').value){
+    hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">Periode tidak terbaca dari file. Isi tanggal mulai dan selesai di atas.</div>';
+    return;
+  }
+  hasil.innerHTML = '<div class="card-sub">Menghitung tier...</div>';
+  let j;
+  try { j = await kirimGmv('preview_tier'); } catch(e){ hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; return; }
+  if(!j.valid){ hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal menghitung tier.') + '</div>'; return; }
+  const warna = { Solitaire:['#ECE5F8','#4B2F8F'], Diamond:['#DDEEF9','#17577F'], Gold:['#FBF0CC','#7A5A00'], Bronze:['#F6E8DD','#7F4E2B'] };
+  let html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' + ['Solitaire','Diamond','Gold','Bronze'].map(function(t){
+    return '<div style="border-radius:12px;padding:10px;text-align:center;background:' + warna[t][0] + '"><div style="font-size:20px;font-weight:800;color:' + warna[t][1] + '">' + (j.perTier[t] || 0) + '</div><div style="font-size:11px;font-weight:800;color:' + warna[t][1] + '">' + t + '</div></div>';
+  }).join('') + '</div>';
+  html += '<div class="card-sub" style="margin-top:8px">' + j.ringkas.naik + ' naik tier · ' + j.ringkas.turun + ' turun tier' + (j.ringkas.ditahan ? ' · <b>' + j.ringkas.ditahan + ' turun ditahan</b> (turun tier hanya diterapkan tanggal 1–7)' : '') + ' · data ' + j.hari + ' hari</div>';
+  const arahLabel = { naik:'<b style="color:#146B50">naik</b>', turun:'<b style="color:#A30E3F">turun</b>', turun_ditahan:'<span style="color:#9A6A00">turun ditahan</span>', tetap:'<span class="card-sub">tetap</span>' };
+  const tampil = j.hasil.filter(function(h){ return h.settled > 0 || h.arah !== 'tetap'; }).slice(0, 150);
+  html += '<div style="font-weight:800;margin:14px 0 6px">Creator dengan penjualan</div><div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:12px">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="position:sticky;top:0;background:var(--pink-pale)"><th style="padding:7px;text-align:left">Creator</th><th style="padding:7px;text-align:right">GMV terbayar 90 hari</th><th style="padding:7px;text-align:left">Tier</th></tr></thead><tbody>'
+    + tampil.map(function(h){ return '<tr style="border-top:1px solid var(--border)"><td style="padding:7px"><b>' + escHtml(h.nama || '-') + '</b><div class="card-sub" style="font-size:11px">@' + escHtml(h.username || '-') + '</div></td><td style="padding:7px;text-align:right">' + rupiahSingkat(h.settled) + '</td><td style="padding:7px">' + escHtml(h.tier_lama) + ' → <b>' + escHtml(h.tier_terap) + '</b> · ' + (arahLabel[h.arah] || '') + '</td></tr>'; }).join('')
+    + '</tbody></table></div>';
+  html += '<button class="btn btn-primary" style="width:100%;margin-top:14px" ' + (j.aktif ? '' : 'disabled') + ' onclick="simpanTier(this)">' + (j.aktif ? 'Terapkan tier' : 'Bisa diterapkan mulai aturan baru aktif (30 September)') + '</button>';
+  hasil.innerHTML = html;
+}
+async function simpanTier(btn){
+  if(!confirm('Terapkan tier dari data ' + document.getElementById('gmv-mulai').value + ' s/d ' + document.getElementById('gmv-selesai').value + '? Creator yang naik atau turun tier langsung mendapat notifikasi.')) return;
+  btn.disabled = true; btn.textContent = 'Menerapkan...';
+  let j;
+  try { j = await kirimGmv('simpan_tier'); } catch(e){ btn.disabled = false; btn.textContent = 'Coba lagi'; alert('Gagal menghubungi server.'); return; }
+  if(!j.valid){ btn.disabled = false; btn.textContent = 'Coba lagi'; alert(j.error || 'Gagal menerapkan tier.'); return; }
+  document.getElementById('gmv-hasil').innerHTML = '<div style="padding:14px;border-radius:12px;background:#E3F6EF;color:#1D9E75;font-weight:800;text-align:center">✅ Tier diterapkan: ' + j.naik + ' naik, ' + j.turun + ' turun' + (j.ditahan ? ', ' + j.ditahan + ' turun ditahan sampai awal bulan' : '') + '.</div>';
+  window._gmvRows = null; document.getElementById('gmv-file').value = '';
+  muatRiwayatGmv();
+}
 async function muatRiwayatGmv(){
   const el = document.getElementById('gmv-riwayat');
   try {
@@ -8651,7 +8710,7 @@ async function muatRiwayatGmv(){
     if(!j.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal memuat riwayat.') + '</div>'; return; }
     if(!j.rows.length){ el.innerHTML = '<div class="card-sub">Belum pernah ada upload.</div>'; return; }
     el.innerHTML = j.rows.map(function(r){
-      return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px"><div><b>' + r.periode_mulai + ' → ' + r.periode_selesai + '</b><div class="card-sub" style="font-size:11px">' + escHtml(r.nama_file || '-') + ' · diupload ' + new Date(r.created_at).toLocaleString('id-ID', { timeZone:'Asia/Jakarta' }) + '</div></div><div style="text-align:right"><b style="color:var(--pink)">' + Number(r.total_poin || 0).toLocaleString('id-ID') + ' poin</b><div class="card-sub" style="font-size:11px">' + r.creator_cocok + ' creator</div></div></div>';
+      return '<div style="border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px"><div><span style="font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-right:6px;background:' + (r.jenis === 'tier_90hari' ? '#DDEEF9;color:#17577F' : 'var(--pink-pale);color:var(--pink)') + '">' + (r.jenis === 'tier_90hari' ? 'TIER' : 'POIN') + '</span><b>' + r.periode_mulai + ' → ' + r.periode_selesai + '</b><div class="card-sub" style="font-size:11px">' + escHtml(r.nama_file || '-') + ' · diupload ' + new Date(r.created_at).toLocaleString('id-ID', { timeZone:'Asia/Jakarta' }) + '</div></div><div style="text-align:right"><b style="color:var(--pink)">' + (r.jenis === 'tier_90hari' ? rupiahSingkat(r.total_gmv) : Number(r.total_poin || 0).toLocaleString('id-ID') + ' poin') + '</b><div class="card-sub" style="font-size:11px">' + r.creator_cocok + ' creator</div></div></div>';
     }).join('');
   } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
 }
@@ -9053,6 +9112,75 @@ async function loadWeeklyLeaderboard(){
   } catch(e){
     el.innerHTML = '<div class="card-sub">Gagal menghubungi server, coba lagi ya.</div>';
   }
+}
+
+const TIER_WARNA = { Solitaire:['#ECE5F8','#4B2F8F'], Diamond:['#DDEEF9','#17577F'], Gold:['#FBF0CC','#7A5A00'], Bronze:['#F6E8DD','#7F4E2B'] };
+function badgeTier(nama, ukuran){
+  const w = TIER_WARNA[nama] || TIER_WARNA.Bronze; const u = ukuran || 52;
+  return '<div style="width:' + u + 'px;height:' + u + 'px;border-radius:' + Math.round(u * 0.3) + 'px;background:' + w[0] + ';display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="' + Math.round(u * 0.58) + '" height="' + Math.round(u * 0.58) + '" viewBox="0 0 24 24" fill="none" stroke="' + w[1] + '" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"></path><path d="M3 9h18M9 3l3 6 3-6M12 21 9 9m3 12 3-12"></path></svg></div>';
+}
+function rpTier(n){ n = Number(n || 0); if(n >= 1e9) return 'Rp' + (n/1e9).toFixed(1).replace('.', ',') + ' M'; if(n >= 1e6) return 'Rp' + Math.round(n/1e6) + ' jt'; return 'Rp' + n.toLocaleString('id-ID'); }
+async function loadTierCreator(){
+  const el = document.getElementById('c8-tier');
+  if(!el || !currentSession.memberId) return;
+  const [meRes, cfgRes, snapRes] = await Promise.all([
+    db.from('members').select('tier').eq('id', currentSession.memberId).maybeSingle(),
+    db.from('tier_config').select('*').order('urutan'),
+    db.from('gmv_tier_snapshot').select('settled_gmv, periode_selesai').eq('member_id', currentSession.memberId).order('periode_selesai', { ascending: false }).limit(1)
+  ]);
+  const cfg = cfgRes.data || [];
+  if(!cfg.length){ el.innerHTML = ''; return; }
+  const tierNow = (meRes.data && meRes.data.tier) || 'Bronze';
+  const idx = cfg.findIndex(function(t){ return t.nama === tierNow; });
+  const kini = cfg[idx] || cfg[0], berikut = cfg[idx + 1];
+  const snap = snapRes.data && snapRes.data[0];
+  const w = TIER_WARNA[kini.nama] || TIER_WARNA.Bronze;
+  let prog = '';
+  if(berikut){
+    if(snap){
+      const persen = Math.max(3, Math.min(100, Math.round(snap.settled_gmv / berikut.min_gmv * 100)));
+      const sisa = Math.max(0, berikut.min_gmv - snap.settled_gmv);
+      prog = '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-top:10px"><span>Menuju ' + berikut.nama + '</span><span style="color:' + TIER_WARNA[berikut.nama][1] + '">' + rpTier(sisa) + ' lagi</span></div>'
+        + '<div style="height:10px;border-radius:999px;background:#F1ECF1;overflow:hidden;margin-top:6px"><div style="width:' + persen + '%;height:10px;background:' + TIER_WARNA[berikut.nama][1] + '"></div></div>'
+        + '<div class="card-sub" style="font-size:11px;margin-top:4px">GMV terbayar 90 hari kamu: ' + rpTier(snap.settled_gmv) + '. Diperbarui tiap awal bulan.</div>';
+    } else {
+      prog = '<div class="card-sub" style="font-size:11.5px;margin-top:8px">Butuh penjualan ' + rpTier(berikut.min_gmv) + ' dalam 90 hari lewat link Girlhood Den untuk naik ke ' + berikut.nama + '.</div>';
+    }
+  } else {
+    prog = '<div class="card-sub" style="font-size:11.5px;margin-top:8px">Kamu di tier tertinggi. Pertahankan penjualanmu!</div>';
+  }
+  const akses = [];
+  cfg.forEach(function(t, i){ (t.akses || []).forEach(function(a){ if(!/^Semua akses/.test(a)) akses.push({ teks: a, buka: i <= idx, tier: t.nama }); }); });
+  el.innerHTML = '<div style="border:1.5px solid ' + w[1] + '33;border-radius:16px;padding:14px;background:#fff">'
+    + '<div style="display:flex;gap:12px;align-items:center">' + badgeTier(kini.nama, 56)
+    + '<div><div style="font-size:11px;font-weight:800;color:' + w[1] + '">TIER KAMU</div><div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:24px;line-height:1;color:var(--dark)">' + kini.nama + '</div><div class="card-sub" style="font-size:11px">Dari penjualan 90 hari lewat link Girlhood Den</div></div></div>'
+    + prog
+    + '<div style="font-weight:800;font-size:13px;margin:12px 0 6px">Akses kamu</div>'
+    + akses.map(function(a){ return '<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin-bottom:5px;opacity:' + (a.buka ? '1' : '.55') + '">' + (a.buka ? '<span style="color:#146B50;font-weight:800">✓</span>' : '<span style="color:#6E5A6C">🔒</span>') + '<span>' + escHtml(a.teks) + (a.buka ? '' : ' <span class="card-sub" style="font-size:11px">· terbuka di ' + a.tier + '</span>') + '</span></div>'; }).join('')
+    + '<button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="openModal(\'m-c-tangga\'); loadTanggaTier();">Lihat Tangga Tier</button>'
+    + '</div>';
+}
+async function loadTanggaTier(){
+  const list = document.getElementById('tangga-list'), naikEl = document.getElementById('tangga-naik');
+  const [cfgRes, meRes, naikRes] = await Promise.all([
+    db.from('tier_config').select('*').order('urutan', { ascending: false }),
+    db.from('members').select('tier').eq('id', currentSession.memberId).maybeSingle(),
+    db.rpc('tier_naik_bulan_ini')
+  ]);
+  const tierNow = (meRes.data && meRes.data.tier) || 'Bronze';
+  const naik = naikRes.data || [];
+  naikEl.innerHTML = naik.length
+    ? '<div style="font-weight:800;font-size:13px;margin-bottom:6px">Naik tier bulan ini</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + naik.map(function(n){ const w = TIER_WARNA[n.tier] || TIER_WARNA.Bronze; return '<span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:999px;padding:3px 10px 3px 3px"><span style="width:22px;height:22px;border-radius:50%;background:' + w[0] + ';color:' + w[1] + ';font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">' + n.tier.charAt(0) + '</span>' + escHtml(n.nama) + '</span>'; }).join('') + '</div>'
+    : '';
+  list.innerHTML = (cfgRes.data || []).map(function(t){
+    const w = TIER_WARNA[t.nama] || TIER_WARNA.Bronze, kamu = t.nama === tierNow;
+    return '<div style="border:' + (kamu ? '2px solid var(--pink)' : '1px solid var(--border)') + ';border-radius:16px;padding:12px;margin-bottom:10px;background:#fff">'
+      + '<div style="display:flex;gap:12px;align-items:center">' + badgeTier(t.nama, 46)
+      + '<div style="flex:1"><div style="display:flex;gap:8px;align-items:center"><span style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:18px;color:' + w[1] + '">' + t.nama + '</span>' + (kamu ? '<span style="font-size:10.5px;font-weight:800;color:#fff;background:var(--pink);border-radius:6px;padding:2px 7px">Kamu di sini</span>' : '') + '</div>'
+      + '<div class="card-sub" style="font-size:12px">' + (t.min_gmv > 0 ? 'GMV terbayar 90 hari ≥ ' + rpTier(t.min_gmv) : 'Semua creator terverifikasi') + '</div></div></div>'
+      + '<div style="margin-top:8px">' + (t.akses || []).map(function(a){ return '<div style="font-size:12.5px;margin-bottom:4px"><span style="color:' + w[1] + ';font-weight:800">✓</span> ' + escHtml(a) + '</div>'; }).join('') + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 async function loadPoinCreator(){
