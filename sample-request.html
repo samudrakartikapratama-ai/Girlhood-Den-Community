@@ -945,7 +945,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-c1')"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/tutorial.png" alt="Tutorial & Daftar"><div class="icon-label">Tutorial &amp; Daftar</div></div>
     
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
-    <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Campaign"><div class="icon-label">Campaign</div></div>
+    <div class="icon-card" id="ic-campaign" onclick="openModal('m-c2'); backToBrandList(); loadBrandList(); loadMyQuota();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/campaign.png" alt="Request Sample"><div class="icon-label">Request Sample</div></div>
+    <div class="icon-card" id="ic-selfreport" onclick="openSelfReportModal()"><div class="icon-emoji">📸</div><div class="icon-label">Report Produk Milikmu</div></div>
     <div class="icon-card" id="ic-cekstatus" onclick="openModal('m-c3'); loadCekStatus(); showFlowPopup('c');"><div class="icon-emoji">🔍</div><div class="icon-label">Cek Status</div></div>
     <div class="icon-card" id="ic-reportvt" style="border-color:var(--pink)" onclick="handleReportVtClick()"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/reportvt.png" alt="Report VT"><div class="icon-label">Report VT</div><div style="position:absolute;top:-7px;left:-7px;background:var(--pink);color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Batas 3 hari</div><div id="ic-reportvt-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" id="ic-endorsement" onclick="handleEndorsementClick()"><div style="font-size:28px;line-height:1">🚀</div><div class="icon-label">Endorsement</div><div id="ic-endorsement-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
@@ -1114,8 +1115,8 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div></div>
 
 <div class="modal-bg" id="m-c2"><div class="modal-box" style="max-width:920px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c2')">‹ ✕</button>
-  <div class="modal-title">🛍️ Campaign</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+  <div class="modal-title">🛍️ Request Sample</div>
+  <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px">
     <div class="quota-box" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:center">
       <div class="quota-label">Kuota Brand Kamu <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.3);color:#fff;font-size:11px;font-weight:900;cursor:pointer;vertical-align:middle" onclick="showSimpleInfo('Kamu boleh pegang <b>maksimal 3 brand</b> bersamaan. Kalau salah satu brand videonya udah lengkap semua, slot-nya kosong lagi dan bisa diisi brand baru. Kalau ada brand yang videonya belum diposting sampai 5 hari, brand itu doang yang kekunci — brand lain tetap aman.')">!</span></div>
       <div class="quota-num" id="quota-num">-</div>
@@ -1125,12 +1126,6 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div style="display:flex;justify-content:space-between;font-size:9.5px;color:rgba(255,255,255,.85)">
         <span id="quota-bar-sisa-label">3 tersedia</span><span id="quota-bar-used-label">0 terpakai</span>
       </div>
-    </div>
-    <div style="background:var(--gray);border:1.5px solid var(--gray-mid);border-radius:16px;padding:16px;display:flex;flex-direction:column;justify-content:center;text-align:center;cursor:pointer" onclick="openSelfReportModal()">
-      <div style="font-size:26px;margin-bottom:4px">📸</div>
-      <div style="font-weight:800;color:var(--dark);font-size:13.5px;margin-bottom:4px">Sudah Punya Produknya Sendiri?</div>
-      <div style="font-size:11px;color:var(--gray-text);margin-bottom:10px;line-height:1.4">Laporkan produk yang udah kamu beli/punya, biar bisa langsung lanjut ke tahap video — nggak perlu nunggu dikirim.</div>
-      <button class="btn btn-outline btn-sm" style="width:100%;pointer-events:none">Laporkan Produk Sekarang</button>
     </div>
   </div>
 
@@ -5749,7 +5744,7 @@ async function cekGerbangVerifikasi(){
 }
 
 function pasangGembokMenu(){
-  const dikunci = ['Campaign', 'Report VT', 'Poin', 'Cek Status', 'Endorsement', 'Papan Skor'];
+  const dikunci = ['Request Sample', 'Report Produk', 'Report VT', 'Poin', 'Cek Status', 'Endorsement', 'Papan Skor'];
   // penting: cuma menu creator. Kalau pakai querySelectorAll global, menu brand dan internal
   // (Kelola Poin, Leaderboard, Eskalasi Draft) ikut kegembok padahal beda peran.
   const area = document.getElementById('app-creator');
