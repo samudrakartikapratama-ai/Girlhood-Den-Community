@@ -1671,7 +1671,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   </div>
 </div>
 
-<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:980px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i10')">‹ ✕</button>
+<div class="modal-bg" id="m-i10"><div class="modal-box" style="max-width:980px"><button class="modal-close" title="Kembali" onclick="tutupDatabaseCreator()">‹ ✕</button>
   <div class="modal-title">📇 Database Creator</div>
   <div class="field" style="margin-bottom:8px"><input id="creatordb-search" placeholder="🔍 Cari nama, @username, nomor HP, atau kode..." oninput="window._dbHal=1;filterCreatorDatabase(this.value)"></div>
   <style>
@@ -1699,6 +1699,19 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     .cdb-pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px;font-size:12px;color:var(--gray-text)}
     .cdb-pager button{border:1px solid var(--border);background:#fff;border-radius:8px;width:30px;height:28px;cursor:pointer}
     .cdb-pager button:disabled{opacity:.4;cursor:default}
+    .cdb-card.diubah{border:2px solid #E8A419;box-shadow:0 0 0 3px #FFF3D6}
+    .cdb-tb{border-top:1px dashed var(--border);margin:0 -10px;padding:10px 10px 12px;display:flex;flex-direction:column;gap:6px;text-align:left}
+    .cdb-tb-lbl{font-size:10.5px;font-weight:800;color:var(--gray-text);letter-spacing:.02em}
+    .cdb-tb select{width:100%;min-height:36px;padding:4px 8px;font-size:12.5px;font-weight:700;border-radius:10px;border:1.5px solid var(--border);background:#fff}
+    .cdb-tb-badges{display:flex;flex-direction:column;gap:5px}
+    .cdb-tb-chip{min-height:34px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:11.5px;font-weight:800;color:var(--gray-text);cursor:pointer;text-align:left;padding:0 10px}
+    .cdb-tb-chip.on.lp{background:#A30E3F;border-color:#A30E3F;color:#fff}
+    .cdb-tb-chip.on.svm{background:#6B7FD7;border-color:#6B7FD7;color:#fff}
+    .cdb-tb-info{font-size:10px;color:var(--gray-text)}
+    .cdb-savebar{display:none;position:sticky;top:0;z-index:30;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#FFF3D6;border:1.5px solid #E8A419;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+    .cdb-savebar.show{display:flex}
+    .cdb-savebar b{font-size:13px;color:#6B4A00}
+    .cdb-savebar button{min-height:40px;border-radius:10px;font-weight:800;font-size:13px;padding:0 14px;cursor:pointer}
   </style>
   <div class="cdb-top">
     <div id="creatordb-chips" style="display:flex;gap:6px;overflow-x:auto"></div>
@@ -1708,11 +1721,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <option value="nama">Nama A–Z</option>
         <option value="video">Video terbanyak</option>
         <option value="request">Request terbanyak</option>
+        <option value="tier">Tier tertinggi</option>
       </select>
     </label>
   </div>
   <select id="creatordb-filter" style="display:none"><option value="verified">verified</option></select>
   <div class="size-note" id="creatordb-count" style="margin-bottom:8px">Memuat data...</div>
+  <div class="cdb-savebar" id="creatordb-savebar"><b id="creatordb-savebar-teks"></b><div style="display:flex;gap:8px"><button type="button" style="border:1.5px solid var(--border);background:#fff;color:var(--dark)" onclick="batalDraftTB()">Batalkan</button><button type="button" style="border:none;background:#A30E3F;color:#fff" onclick="simpanSemuaTB(this)">Simpan semua</button></div></div>
   <div id="creatordb-rows" style="max-height:66vh;overflow-y:auto;padding:2px"><div class="card-sub">Memuat data...</div></div>
   <div id="creatordb-pager" class="cdb-pager"></div>
 </div></div>
@@ -8383,7 +8398,7 @@ async function loadCreatorDatabase(){
   rowsEl.innerHTML = '<div class="card-sub">Memuat data...</div>';
 
   const [memRes, statRes] = await Promise.all([
-    db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login, is_frozen, foto_selfie_url, verified_at, created_at').order('created_at', { ascending: false }),
+    db.from('members').select('id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, status, kode_login, is_frozen, foto_selfie_url, verified_at, created_at, tier, badge_live_performance, badge_short_video_maker, tier_badge_diubah_at, tier_badge_diubah_oleh').order('created_at', { ascending: false }),
     db.rpc('internal_creator_stats')
   ]);
   const data = memRes.data, error = memRes.error;
@@ -8459,7 +8474,7 @@ function renderCreatorDatabase(list){
       + (u ? '<button onclick="window.open(\'https://www.tiktok.com/@' + encodeURIComponent(u) + '\', \'_blank\')">🎵 Buka TikTok</button>' : '')
       + (m.status === 'verified' ? '<button style="color:' + (m.is_frozen ? '#1D9E75' : '#C2124B') + '" onclick="toggleFreezeCreator(\'' + m.id + '\',\'' + namaAman + '\',' + (m.is_frozen ? 'true' : 'false') + ',this)">' + (m.is_frozen ? '🔥 Buka beku' : '🧊 Bekukan') + '</button>' : '')
       + '</div>';
-    return '<div class="cdb-card' + (m.is_frozen ? ' beku' : '') + '">'
+    return '<div class="cdb-card' + (m.is_frozen ? ' beku' : '') + (window._tbDraft[m.id] ? ' diubah' : '') + '" data-id="' + m.id + '">'
       + '<button class="cdb-more" title="Aksi" onclick="toggleCdbMenu(event,\'' + m.id + '\')">•••</button>' + menu
       + foto
       + '<div class="cdb-nama">' + escHtml(m.nama || '-') + '</div>'
@@ -8470,6 +8485,7 @@ function renderCreatorDatabase(list){
       +   '<div><b>' + (m.total_request || 0) + '</b>Request</div>'
       +   '<div><b>' + tglGabung(m) + '</b>Gabung</div>'
       + '</div>'
+      + (m.status === 'verified' ? htmlTierBadge(m) : '')
       + '</div>';
   }).join('') + '</div>';
 
@@ -8512,6 +8528,89 @@ async function toggleFreezeCreator(memberId, nama, isFrozen, btn){
   }
 }
 
+// ===== Tier & badge manual (internal) =====
+window._tbDraft = window._tbDraft || {};
+const TB_TIER = ['Bronze','Gold','Diamond','Solitaire'];
+function tbNilai(m){
+  const d = window._tbDraft[m.id];
+  return {
+    tier: d ? d.tier : (m.tier || 'Bronze'),
+    lp: d ? d.lp : !!m.badge_live_performance,
+    svm: d ? d.svm : !!m.badge_short_video_maker
+  };
+}
+function tbCariMember(id){ return (__creatorDbCache || []).find(function(x){ return x.id === id; }); }
+function ubahDraftTB(id, kolom, nilai){
+  const m = tbCariMember(id); if(!m) return;
+  const v = tbNilai(m);
+  if(kolom === 'tier') v.tier = nilai;
+  if(kolom === 'lp') v.lp = !v.lp;
+  if(kolom === 'svm') v.svm = !v.svm;
+  const sama = v.tier === (m.tier || 'Bronze') && v.lp === !!m.badge_live_performance && v.svm === !!m.badge_short_video_maker;
+  if(sama) delete window._tbDraft[id]; else window._tbDraft[id] = v;
+  const kartu = document.querySelector('.cdb-card[data-id="' + id + '"]');
+  if(kartu){
+    kartu.classList.toggle('diubah', !sama);
+    const lp = kartu.querySelector('.cdb-tb-chip.lp'); if(lp) lp.classList.toggle('on', v.lp);
+    const svm = kartu.querySelector('.cdb-tb-chip.svm'); if(svm) svm.classList.toggle('on', v.svm);
+  }
+  updateSaveBarTB();
+}
+function updateSaveBarTB(){
+  const bar = document.getElementById('creatordb-savebar'); if(!bar) return;
+  const n = Object.keys(window._tbDraft).length;
+  bar.classList.toggle('show', n > 0);
+  const t = document.getElementById('creatordb-savebar-teks');
+  if(t) t.textContent = n + ' creator diubah, belum disimpan';
+}
+function batalDraftTB(){
+  if(!confirm('Batalkan semua perubahan tier & badge yang belum disimpan?')) return;
+  window._tbDraft = {};
+  updateSaveBarTB();
+  filterCreatorDatabase(document.getElementById('creatordb-search').value);
+}
+async function simpanSemuaTB(btn){
+  const ids = Object.keys(window._tbDraft);
+  if(ids.length === 0) return;
+  const perubahan = ids.map(function(id){ const d = window._tbDraft[id]; return { id: id, tier: d.tier, lp: d.lp, svm: d.svm }; });
+  btn.disabled = true; const teksAwal = btn.textContent; btn.textContent = 'Menyimpan...';
+  const { data, error } = await db.rpc('internal_simpan_tier_badge', { perubahan: perubahan });
+  btn.disabled = false; btn.textContent = teksAwal;
+  if(error){ showDbError('menyimpan tier & badge', error); return; }
+  // Ambil ulang hanya baris yang barusan disimpan, supaya kartu menampilkan data server tanpa memuat ulang semua creator.
+  const segar = await db.from('members').select('id, tier, badge_live_performance, badge_short_video_maker, tier_badge_diubah_at, tier_badge_diubah_oleh').in('id', ids);
+  (segar.data || []).forEach(function(x){ const m = tbCariMember(x.id); if(m) Object.assign(m, x); });
+  if(segar.error){ ids.forEach(function(id){ const m = tbCariMember(id); const d = window._tbDraft[id]; if(m){ m.tier = d.tier; m.badge_live_performance = d.lp; m.badge_short_video_maker = d.svm; } }); }
+  window._tbDraft = {};
+  updateSaveBarTB();
+  filterCreatorDatabase(document.getElementById('creatordb-search').value);
+  showToast(((data && data.disimpan) || ids.length) + ' creator tersimpan');
+}
+function tutupDatabaseCreator(){
+  if(Object.keys(window._tbDraft).length > 0 && !confirm('Ada perubahan tier & badge yang belum disimpan. Tutup tanpa menyimpan?')) return;
+  window._tbDraft = {};
+  updateSaveBarTB();
+  closeModal('m-i10');
+}
+function htmlTierBadge(m){
+  const v = tbNilai(m);
+  const info = m.tier_badge_diubah_at
+    ? '<div class="cdb-tb-info">Diubah ' + escHtml(m.tier_badge_diubah_oleh || 'internal') + ' · ' + new Date(m.tier_badge_diubah_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', timeZone:'Asia/Jakarta' }) + '</div>'
+    : '';
+  return '<div class="cdb-tb" onclick="event.stopPropagation()">'
+    + '<div class="cdb-tb-lbl">TIER</div>'
+    + '<select aria-label="Tier" onchange="ubahDraftTB(\'' + m.id + '\',\'tier\',this.value)">'
+    +   TB_TIER.map(function(t){ return '<option' + (t === v.tier ? ' selected' : '') + '>' + t + '</option>'; }).join('')
+    + '</select>'
+    + '<div class="cdb-tb-lbl">BADGE</div>'
+    + '<div class="cdb-tb-badges">'
+    +   '<button type="button" class="cdb-tb-chip lp' + (v.lp ? ' on' : '') + '" onclick="ubahDraftTB(\'' + m.id + '\',\'lp\')">● Live Performance</button>'
+    +   '<button type="button" class="cdb-tb-chip svm' + (v.svm ? ' on' : '') + '" onclick="ubahDraftTB(\'' + m.id + '\',\'svm\')">▶ Short Video Maker</button>'
+    + '</div>'
+    + info
+    + '</div>';
+}
+
 window._dbStatus = window._dbStatus || 'verified';
 function filterCreatorDatabase(keyword){
   const kw = (keyword || '').toLowerCase().replace(/^@/, '').trim();
@@ -8542,6 +8641,7 @@ function filterCreatorDatabase(keyword){
     if(urut === 'nama') return String(a.nama || '').localeCompare(String(b.nama || ''), 'id');
     if(urut === 'video') return (b.total_video || 0) - (a.total_video || 0);
     if(urut === 'request') return (b.total_request || 0) - (a.total_request || 0);
+    if(urut === 'tier') return TB_TIER.indexOf(tbNilai(b).tier) - TB_TIER.indexOf(tbNilai(a).tier);
     return new Date(b.verified_at || b.created_at || 0) - new Date(a.verified_at || a.created_at || 0);
   });
   renderCreatorDatabase(hasil);
