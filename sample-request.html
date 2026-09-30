@@ -1857,9 +1857,9 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     </div>
 
     <div id="pf-wiz-step-2" style="display:none">
-      <div class="card-sub" style="margin-bottom:6px">Creator yang match produk ini</div>
-      <div id="pf-matches" style="background:var(--gray);border-radius:12px;padding:10px"><div class="card-sub">Pilih produk dulu.</div></div>
-      <div class="card-sub" style="margin-top:8px;font-size:10.5px">🔗 Terhubung = creator ini udah connect akun TikTok mereka ke platform kami.</div>
+      <div style="font-size:16px;font-weight:800;color:var(--dark);margin-bottom:6px">Top creator Girlhood Den</div>
+      <div style="font-size:12px;line-height:1.5;color:#6B4A00;background:#FFF3D6;border-radius:10px;padding:8px 10px;margin-bottom:10px">Sementara: ini creator teratas yang kemungkinan bisa membawakan produkmu. Tim kami bantu pilih yang paling cocok setelah proposal masuk.</div>
+      <div id="pf-matches" style="background:var(--gray);border-radius:12px;padding:10px"><div class="card-sub">Memuat top creator...</div></div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-outline btn-sm" style="flex:1" onclick="pfGoToWizardStep(1)">‹ Kembali</button>
         <button class="btn btn-primary btn-sm" style="flex:2" onclick="pfGoToWizardStep(3)">Lanjut: Isi Budget & Objective</button>
@@ -2913,39 +2913,35 @@ function pfConnectedBadge(isConnected){
 
 async function loadPlayfieldMatches(){
   const wrap = document.getElementById('pf-matches');
-  if(!pfSelectedProductId){ wrap.innerHTML = '<div class="card-sub">Pilih produk dulu.</div>'; return; }
-  wrap.innerHTML = '<div class="card-sub">Mencari creator yang match...</div>';
-  const { catByMember, brandByMember } = await pfBuildCreatorCategoryMap();
-  const memberIds = Object.keys(catByMember).filter(function(mid){
-    const top3 = pfTopN(catByMember[mid], 3);
-    return top3.indexOf(pfSelectedKategori) !== -1;
-  });
-  if(!memberIds.length){
-    wrap.innerHTML = '<div class="card-sub">Belum ada creator yang match kategori "' + (pfSelectedKategori || '-') + '".</div>';
-    return;
-  }
-  const { data: membersRaw } = await db.from('members').select('id, nama, tiktok_connected_at').in('id', memberIds);
-  const connectedSet = pfGetConnectedSet(membersRaw);
-  const members = (membersRaw || []).slice().sort(function(a,b){
-    const aC = connectedSet.has(a.id) ? 1 : 0, bC = connectedSet.has(b.id) ? 1 : 0;
-    return bC - aC;
-  });
-  wrap.innerHTML = '';
-  pfLastMatches = members || [];
-  (members || []).forEach(function(m){
-    const cats = pfTopN(catByMember[m.id], 3).join(', ');
-    const brs = pfTopN(brandByMember[m.id] || {}, 3).join(', ');
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border-radius:12px;border:1px solid var(--gray-mid);padding:10px;margin-bottom:8px';
-    card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-      + '<div style="width:32px;height:32px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink)">' + pfInitials(m.nama) + '</div>'
-      + '<div style="font-size:13px;font-weight:700">' + (m.nama || '-') + pfConnectedBadge(connectedSet.has(m.id)) + '</div></div>'
-      + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top kategori: ' + cats + '</div>'
-      + '<div class="pf-peek" style="font-size:11px;color:var(--gray-text);filter:blur(4px);transition:filter .15s">Top brand: ' + brs + '</div>';
-    card.addEventListener('mouseenter', function(){ card.querySelectorAll('.pf-peek').forEach(function(p){ p.style.filter='blur(0px)'; }); });
-    card.addEventListener('mouseleave', function(){ card.querySelectorAll('.pf-peek').forEach(function(p){ p.style.filter='blur(4px)'; }); });
-    wrap.appendChild(card);
-  });
+  wrap.innerHTML = '<div class="card-sub">Memuat top creator...</div>';
+  const { data, error } = await db.rpc('brand_top_creator_per_tier');
+  if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat top creator.</div>'; return; }
+  const perTier = {};
+  (data || []).forEach(function(r){ (perTier[r.tier] = perTier[r.tier] || []).push(r); });
+  pfLastMatches = (data || []).map(function(r){ return { nama: r.nama }; });
+  window._pfTopTier = perTier;
+  const pertama = ['Solitaire','Diamond','Gold','Bronze'].find(function(t){ return (perTier[t] || []).length; }) || 'Bronze';
+  pfTampilTier(pertama);
+}
+function pfTampilTier(tierAktif){
+  const wrap = document.getElementById('pf-matches');
+  const perTier = window._pfTopTier || {};
+  const warna = { Solitaire:'#4B2F8F', Diamond:'#17577F', Gold:'#7A5A00', Bronze:'#7F4E2B' };
+  const tabs = ['Solitaire','Diamond','Gold','Bronze'].map(function(t){
+    const on = t === tierAktif;
+    return '<button type="button" onclick="pfTampilTier(\'' + t + '\')" style="min-height:38px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:800;cursor:pointer;border:1.5px solid ' + warna[t] + ';background:' + (on ? warna[t] : '#fff') + ';color:' + (on ? '#fff' : warna[t]) + '">' + t + '</button>';
+  }).join('');
+  const list = perTier[tierAktif] || [];
+  const isi = list.length ? list.map(function(r){
+    return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-mid);border-radius:12px;padding:10px 12px;margin-bottom:6px">'
+      + '<div style="width:22px;font-weight:800;color:var(--gray-text)">' + r.peringkat + '</div>'
+      + '<div style="width:34px;height:34px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--pink);flex-shrink:0">' + pfInitials(r.nama) + '</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(r.nama || '-') + '</div>'
+      + '<div style="font-size:11.5px;color:var(--gray-text)">' + (r.username ? '@' + escHtml(r.username) + ' · ' : '') + r.jumlah_video + ' video disetujui</div></div>'
+      + '<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;border:1.5px solid ' + warna[tierAktif] + ';color:' + warna[tierAktif] + '">' + tierAktif + '</span>'
+      + '</div>';
+  }).join('') : '<div class="card-sub" style="padding:10px 2px">Belum ada creator di tier ' + tierAktif + '.</div>';
+  wrap.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + tabs + '</div>' + isi;
 }
 
 async function sendEndorsementProposal(){
