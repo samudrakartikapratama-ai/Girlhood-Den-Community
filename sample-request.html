@@ -1302,7 +1302,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-i-live"><div class="modal-box" style="max-width:620px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i-live')">‹ ✕</button>
   <div class="modal-title">🔴 Rencana Live per Brand</div>
-  <div class="card-sub" style="margin-bottom:10px">7 hari ke depan. Klik brand untuk lihat siapa yang live. Yang fokus 1 brand layak ditawarkan dukungan ads ke brand.</div>
+  <div class="card-sub" style="margin-bottom:10px">14 hari ke depan. Klik brand untuk lihat siapa yang live. Yang fokus 1 brand layak ditawarkan dukungan ads ke brand.</div>
   <div id="i-live-list"></div>
 </div></div>
 
@@ -5291,7 +5291,7 @@ async function loadInternalRencanaLive(){
   wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
   const { data, error } = await db.rpc('internal_rencana_live');
   if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat.</div>'; return; }
-  if(!data || !data.length){ wrap.innerHTML = '<div class="rl-kosong">📅<div>Belum ada jadwal live 7 hari ke depan.</div></div>'; return; }
+  if(!data || !data.length){ wrap.innerHTML = '<div class="rl-kosong">📅<div>Belum ada jadwal live 14 hari ke depan.</div></div>'; return; }
   const per = {}; const urut = [];
   data.forEach(function(r){ if(!per[r.brand_id]){ per[r.brand_id] = { nama: r.brand_nama, rows: [] }; urut.push(r.brand_id); } per[r.brand_id].rows.push(r); });
   urut.sort(function(a, b){ return per[b].rows.length - per[a].rows.length; });
