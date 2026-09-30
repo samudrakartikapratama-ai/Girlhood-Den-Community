@@ -1514,7 +1514,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="dates" id="rp-period-dates">—</div>
       </div>
     </div>
-    <button class="rp-cta" onclick="closeRewardPopup(); openModal('m-c8'); typeof showPoinTab === 'function' && showPoinTab('hadiah');">Lihat & Tukar Poin Sekarang</button>
+    <button class="rp-cta" onclick="closeRewardPopup(); openModal('m-c8'); loadPoinCreator(); loadTierCreator(); showPoinTab('hadiah');">Lihat & Tukar Poin Sekarang</button>
   </div>
 </div>
 
@@ -9988,6 +9988,16 @@ function htmlAvatar(url, nama, tier, size){
   if(url) return '<img src="' + fotoKecil(url) + '" data-asli="' + escHtml(url) + '" alt="" loading="lazy" style="' + st + 'object-fit:cover" onerror="if(this.dataset.asli && this.src!==this.dataset.asli){this.src=this.dataset.asli}">';
   return '<span style="' + st + 'display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:' + Math.round(size * 0.36) + 'px;color:' + w[1] + '">' + ini + '</span>';
 }
+// Buka menu Poin langsung ke katalog hadiah (dipakai tombol popup hadiah).
+function showPoinTab(tujuan){
+  if(tujuan !== 'hadiah') return;
+  let coba = 0;
+  const t = setInterval(function(){
+    const el = document.getElementById('c8-katalog');
+    if(el){ clearInterval(t); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    else if(++coba > 40){ clearInterval(t); }
+  }, 150);
+}
 function htmlChipTier(tier){
   const w = TIER_WARNA[tier] || TIER_WARNA.Bronze;
   return '<span class="bdg-chip" style="background:' + w[0] + ';color:' + w[1] + '">' + escHtml(tier || 'Bronze') + '</span>';
@@ -10176,7 +10186,7 @@ async function loadPoinCreator(){
       html += '</div><div style="font-size:11px;opacity:.8;text-align:center;margin-top:10px">Periode mulai ' + escHtml(String(summary.weekStart)) + '</div></div>';
     }
 
-    html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px"><div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:18px;color:var(--dark)">Katalog hadiah</div><div style="font-size:11.5px;font-weight:800;color:var(--pink);background:var(--pink-pale);border-radius:999px;padding:3px 10px">Poin kamu: ' + rewardsData.saldo + '</div></div>';
+    html += '<div id="c8-katalog" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px"><div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:18px;color:var(--dark)">Katalog hadiah</div><div style="font-size:11.5px;font-weight:800;color:var(--pink);background:var(--pink-pale);border-radius:999px;padding:3px 10px">Poin kamu: ' + rewardsData.saldo + '</div></div>';
     html += '<div class="card-sub" style="margin-bottom:10px">Semua hadiah tampil supaya targetnya jelas. Tukar 1× per bulan.</div>';
     if(!rewardsData.rewards || rewardsData.rewards.length === 0){
       html += '<div class="card-sub">Belum ada hadiah yang didaftarkan.</div>';
