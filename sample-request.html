@@ -802,6 +802,96 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .nb-btn{min-height:38px;border:none;border-radius:10px;background:var(--pink);color:#fff;font-weight:800;font-size:12.5px;padding:0 14px;cursor:pointer}
 .nb-kosong{text-align:center;padding:30px 10px;font-size:28px;color:var(--gray-text)}
 .nb-kosong div{font-size:13px;margin-top:6px}
+.rl-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:12px 0}
+.rl-tabs button{min-height:40px;border:none;border-radius:9px;background:transparent;font-weight:800;font-size:13px;color:var(--gray-text);cursor:pointer}
+.rl-tabs button.on{background:var(--pink);color:#fff}
+.rl-lbl{font-size:13px;font-weight:800;color:var(--dark);margin:14px 0 6px}
+.rl-cari input{width:100%;min-height:44px;border-radius:12px;box-sizing:border-box}
+.rl-hasil{display:flex;flex-direction:column;gap:6px;margin-top:6px;max-height:220px;overflow-y:auto}
+.rl-hasil-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;text-align:left}
+.rl-hasil-item.on{border-color:var(--pink);background:var(--pink-pale)}
+.rl-hasil-brand{font-size:10.5px;font-weight:800;background:#F1ECF1;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.rl-hasil-nama{flex:1;font-size:12.5px;font-weight:700;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl-hasil-plus{font-weight:800;color:var(--pink);font-size:16px}
+.rl-produk{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rl-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:4px 4px 4px 10px}
+.rl-chip button{width:24px;height:24px;border-radius:50%;border:none;background:#F1ECF1;cursor:pointer;font-size:13px}
+.rl-mix{margin-top:10px;border:1.5px solid #E8A419;background:#FFF8E8;border-radius:14px;padding:12px;font-size:12.5px;line-height:1.5;color:var(--dark)}
+.rl-mix b{display:block;color:#6B4A00;margin-bottom:4px}
+.rl-cek{display:flex;align-items:center;gap:8px;font-weight:700;margin-top:8px;min-height:40px;cursor:pointer}
+.rl-cek input{width:20px;height:20px}
+.rl-sesi-baris{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.rl-sesi-baris input{min-height:42px;border-radius:10px;padding:0 8px;box-sizing:border-box}
+.rl-sesi-baris .rl-s-tgl{flex:1.4;min-width:130px}
+.rl-sesi-baris .rl-s-mulai,.rl-sesi-baris .rl-s-selesai{flex:1;min-width:90px}
+.rl-s-sd{font-size:12px;color:var(--gray-text)}
+.rl-s-hapus{width:36px;height:36px;border-radius:50%;border:none;background:#F1ECF1;cursor:pointer;font-size:16px}
+.rl-btn-garis{width:100%;min-height:42px;border-radius:12px;border:1.5px dashed #C9B3C2;background:#fff;color:var(--pink);font-weight:800;cursor:pointer;margin:2px 0 10px}
+.rl-info,.jl2-info{font-size:12px;line-height:1.5;background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin-bottom:10px;color:var(--dark)}
+.jl2-warn{font-size:12px;line-height:1.5;background:#FFF8E8;border:1.5px solid #E8A419;border-radius:12px;padding:10px 12px;margin:8px 0 10px}
+.rl-kosong{text-align:center;padding:28px 10px;font-size:28px;color:var(--gray-text)}
+.rl-kosong div{font-size:13px;margin-top:6px}
+.rl-kartu{border:1.5px solid var(--border);border-left:5px solid #6B7FD7;border-radius:14px;padding:12px;margin-bottom:10px;background:#fff}
+.rl-kartu-atas{display:flex;justify-content:space-between;gap:8px;font-size:13px;line-height:1.5}
+.rl-status{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;height:fit-content;white-space:nowrap}
+.rl-kartu-produk{font-size:12px;color:var(--gray-text);margin-top:6px;line-height:1.45}
+.rl-mixtag{font-size:10.5px;font-weight:800;background:#F1ECF1;color:#6E5A6C;border-radius:999px;padding:2px 8px}
+.rl-kartu-aksi{display:flex;gap:8px;margin-top:10px}
+.rl-kartu-aksi button{flex:1;min-height:40px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-weight:800;cursor:pointer}
+.rl-kartu-aksi button.batal{color:var(--red);border-color:#F3B6C4}
+.jl2{border:1.5px solid #F3B6C4 !important;background:#FFFBFC !important}
+.jl2-kepala{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px}
+.jl2-ikon{font-size:18px}
+.jl2-sesi{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--border)}
+.jl2-sesi span{color:var(--gray-text);width:46px}
+.jl2-sesi b{flex:1}
+.jl2-sesi em{font-style:normal;font-size:11px;font-weight:800;background:#ECEFFB;color:#34418C;border-radius:999px;padding:2px 8px}
+.jl2-sesi em.ok{background:#E4F4EE;color:#0F6E50}
+.jl2-note{font-size:12px;margin-top:8px;color:var(--dark)}
+.bl-baris{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border:1.5px solid var(--border);border-radius:12px;margin-bottom:6px;background:#fff}
+.bl-nama{font-size:13.5px;font-weight:800;color:var(--dark)}
+.bl-tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px;margin-top:3px}
+.bl-tag.fokus{background:#E4F4EE;color:#0F6E50}
+.bl-tag.mix{background:#F1ECF1;color:#6E5A6C}
+.bl-jam{font-size:13.5px;font-weight:800;color:var(--pink);white-space:nowrap}
+.il-brand{border:1.5px solid var(--border);border-radius:14px;margin-bottom:8px;background:#fff;overflow:hidden}
+.il-brand[open]{border-color:var(--pink)}
+.il-brand summary{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px;cursor:pointer;list-style:none;font-weight:800}
+.il-brand summary::-webkit-details-marker{display:none}
+.il-nama{flex:1}
+.il-jml{font-size:11px;font-weight:800;background:var(--pink);color:#fff;border-radius:999px;padding:3px 9px}
+.il-baris{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--border);font-size:12.5px}
+.il-jam{text-align:right;font-weight:800;white-space:nowrap}
+.ps-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:10px 0}
+.ps-tab{min-height:42px;border:none;border-radius:9px;background:transparent;font-weight:800;font-size:13px;color:var(--gray-text);cursor:pointer}
+.ps-tab.on{background:var(--pink);color:#fff}
+.ps-baris{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #F1ECF1;border-radius:12px;margin-bottom:6px;background:#fff}
+.ps-baris.aku{border-color:var(--pink);background:var(--pink-pale)}
+.ps-rank{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#3E2340;flex-shrink:0}
+.ps-nama{flex:1;font-weight:800;font-size:13px;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ps-nilai{font-weight:800;font-size:12.5px;color:var(--pink);white-space:nowrap}
+.ps-saya{font-size:12.5px;background:#F6EEF3;border-radius:12px;padding:10px 12px;margin:10px 0}
+.ref-kartu{border:2px solid var(--pink);border-radius:16px;padding:14px;background:#fff;margin-top:6px}
+.ref-judul{font-weight:800;font-size:15px;color:var(--dark)}
+.ref-sub{font-size:12px;color:var(--gray-text);line-height:1.5;margin:4px 0 10px}
+.ref-kode{display:flex;align-items:center;gap:8px;background:var(--pink-pale);border-radius:12px;padding:6px 6px 6px 14px}
+.ref-kode span{flex:1;font-weight:800;font-size:18px;letter-spacing:.06em;color:var(--dark)}
+.ref-kode button{min-height:40px;border:none;border-radius:10px;background:var(--pink);color:#fff;font-weight:800;padding:0 16px;cursor:pointer}
+.ref-share{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;border-radius:12px;background:#1D9E75;color:#fff !important;font-weight:800;text-decoration:none}
+.misi-kartu{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;background:#fff}
+.misi-kartu.ok{border-color:var(--teal)}
+.misi-ikon{width:36px;height:36px;border-radius:10px;background:#F6F1F4;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.misi-judul{font-weight:800;font-size:12.5px;color:var(--dark)}
+.misi-sub{font-size:11px;color:var(--gray-text);line-height:1.4}
+.misi-poin{font-weight:800;font-size:12.5px;color:var(--teal);text-align:right;white-space:nowrap}
+.sow-live-tips{font-size:12px;line-height:1.5;background:#FFF8E8;border-radius:10px;padding:8px 10px;margin-top:8px}
+.sow-qty{border:1.5px solid #A30E3F;border-radius:12px;padding:10px 12px;margin-top:8px;background:#fff}
+.sow-qty-atas{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sow-qty-stepper{display:flex;align-items:center;gap:4px}
+.sow-qty-stepper button{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:18px;font-weight:800;cursor:pointer}
+.sow-qty-n{width:34px;text-align:center;font-weight:800;font-size:17px}
+.pieces-diminta{font-size:12px;font-weight:800;color:#A30E3F;margin-top:6px}
+.appr-besar{margin:0 16px 0;padding:10px 12px;border:1.5px solid #E8A419;background:#FFF8E8;border-radius:12px;font-size:12.5px;line-height:1.5}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -874,11 +964,12 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div class="icon-emoji" style="animation:none"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF5A00" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto;height:100%"><path d="M12 22c-4.4 0-8-3.2-8-7.6 0-3.6 2.6-6 3.9-8.4 1.2 1.9 2 3.3 2.1 5 1.6-.9 2.6-2.8 2.6-5.6C16.4 8 20 10.7 20 14.4 20 18.8 16.4 22 12 22z"></path><path d="M12 22c-2 0-3.6-1.5-3.6-3.6 0-1.9 1.4-3 2.2-4.4.7 1.1 1.2 1.9 1.3 2.9.9-.6 1.5-1.6 1.5-3 1.4 1.3 2.2 2.6 2.2 4.5 0 2.1-1.6 3.6-3.6 3.6z"></path></svg></div>
       <div class="icon-label" style="color:var(--pink)">Hot Product Live</div>
     </div>
+    <div class="icon-card" id="ic-rencana-live" onclick="openRencanaLive()"><div class="icon-emoji">📅</div><div class="icon-label">Rencana Live</div></div>
     <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator(); loadTierCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
     <div class="icon-card" id="ic-gmv-dash" onclick="handleGmvDashClick()"><div class="icon-emoji">📈</div><div class="icon-label">Dashboard GMV</div><div style="position:absolute;top:-7px;left:-7px;background:#17577F;color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Diamond+</div><div id="ic-gmv-dash-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
-    <div class="icon-card" onclick="openModal('m-c9'); loadWeeklyLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
+    <div class="icon-card" onclick="openModal('m-c9'); loadPapanSkor('gmv');"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
   </div>
 </div>
 
@@ -926,6 +1017,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" id="ic-notif-brand" onclick="openModal('m-b6'); loadNotificationsBrand();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     
     <div class="icon-card" onclick="openPlayfield()"><div style="font-size:28px;line-height:1">🎮</div><div class="icon-label">Creator Playfield</div></div>
+    <div class="icon-card" onclick="openModal('m-b-live'); loadBrandRencanaLive();"><div style="font-size:28px;line-height:1">🔴</div><div class="icon-label">Creator akan Live</div></div>
     <div class="icon-card" onclick="openModal('m-b-pk'); loadProductKnowledgeCatalog();"><div style="font-size:28px;line-height:1">📚</div><div class="icon-label">Product Knowledge</div></div>
     <div class="icon-card" onclick="openModal('m-b-draftreview'); loadBrandDraftReviews();"><div style="font-size:28px;line-height:1">🎬</div><div class="icon-label">Review Draft</div></div>
   </div>
@@ -950,6 +1042,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" onclick="openOwnerGate()"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
+    <div class="icon-card" onclick="openModal('m-i-live'); loadInternalRencanaLive();"><div class="icon-emoji">🔴</div><div class="icon-label">Rencana Live</div></div>
     <div class="icon-card" onclick="openModal('m-i15'); loadSelfReportPending();"><div class="icon-emoji">📸</div><div class="icon-label">Self Report</div><span class="notif-dot" id="sr-menu-badge" style="display:none"></span></div>
     <div class="icon-card" onclick="openModal('m-i16'); loadLeaderboard();"><div class="icon-emoji">🏆</div><div class="icon-label">Leaderboard Poin</div></div>
     <div class="icon-card" onclick="openModal('m-i17'); loadRevokeList();"><div class="icon-emoji">↩️</div><div class="icon-label">Revoke Keputusan</div></div>
@@ -963,7 +1056,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 <!-- ================= MODALS: CREATOR ================= -->
 <div class="modal-bg" id="m-register"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-register')">‹ ✕</button>
   <div class="modal-title">📝 Daftar Jadi Member</div>
-  <div class="card-sub">Isi data di bawah, tim internal akan verifikasi lalu kasih kode masuk kamu.</div>
+  <div class="card-sub">Isi data di bawah, tim internal akan verifikasi lalu kasih kode masuk kamu. <b>Semua kolom wajib diisi, kecuali kode referral.</b></div>
   <div class="card">
     <div class="field"><label>Nama Lengkap</label><input id="reg-nama" placeholder="Nama kamu"></div>
     <div class="field"><label>No WhatsApp</label>
@@ -977,7 +1070,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
     <div class="field-row"><div class="field"><label>Level</label><select id="reg-level"><option>Lv 4</option><option>Lv 1</option><option>Lv 2</option><option>Lv 3</option><option>Lv 5</option><option>Lv 6</option><option>Lv 7</option><option>Lv 8</option></select></div><div class="field"><label>GMV 30 Hari</label><input id="reg-gmv" placeholder="1.000.000" oninput="fmtGMV(this)"></div></div>
     <div class="field"><label>Alamat Lengkap</label><textarea id="reg-alamat" rows="2"></textarea></div>
     <div class="field-row"><div class="field"><label>Patokan</label><input id="reg-patokan" placeholder="Dekat Indomaret"></div><div class="field"><label>Kode Pos</label><input id="reg-kodepos" placeholder="40123"></div></div>
-    <div class="field"><label>Kode Referral <span style="font-weight:400;color:var(--gray-text)">(opsional, dari creator yang ngajak kamu)</span></label><input id="reg-kode-referral" placeholder="Contoh: GHD/26LG/08QGR/851-04" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="field"><label>Kode Referral <span style="font-weight:400;color:var(--gray-text)">(opsional, dari creator yang ngajak kamu)</span></label><input id="reg-kode-referral" placeholder="Contoh: GD1A2B3C" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
     <div class="field"><label>Foto Selfie</label>
       <input type="file" id="reg-foto-file" accept="image/*" onchange="previewSelfie(this)">
       <div class="size-note">Maksimal file 10MB</div>
@@ -1162,9 +1255,46 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 </div></div>
 
 <div class="modal-bg" id="m-c9"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c9')">‹ ✕</button>
-  <div class="modal-title">🏆 Papan Skor Mingguan</div>
-  <div class="card-sub" style="margin-bottom:10px">Ranking poin minggu ini (reset tiap Jumat). Makin konsisten aktif & nyelesain misi, makin tinggi posisimu.</div>
+  <div class="modal-title">🏆 Papan Skor</div>
+  <div class="card-sub">Peringkat bulan ini. Reset tiap tanggal 1.</div>
+  <div class="ps-tabs"><button type="button" class="ps-tab on" data-t="gmv" onclick="loadPapanSkor('gmv')">Top GMV</button><button type="button" class="ps-tab" data-t="pengajak" onclick="loadPapanSkor('pengajak')">Top Pengajak</button></div>
+  <div class="card-sub" id="ps-intro" style="background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin-bottom:10px"></div>
   <div id="c9-leaderboard-content"><div class="card-sub">Memuat data...</div></div>
+</div></div>
+
+<div class="modal-bg" id="m-c-live"><div class="modal-box" style="max-width:560px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-live')">‹ ✕</button>
+  <div class="modal-title">📅 Rencana Live</div>
+  <div class="card-sub">Kabari brand dan tim sebelum kamu live pakai produk milikmu sendiri. Live dari sample brand dijadwalkan di menu Cek Status.</div>
+  <div class="rl-tabs"><button type="button" id="rl-tab-buat" class="on" onclick="rlTab('buat')">Buat rencana</button><button type="button" id="rl-tab-saya" onclick="rlTab('saya')">Rencana saya</button></div>
+  <div id="rl-view-buat">
+    <div class="rl-lbl">Produk yang kamu bawa <span style="font-weight:600;color:var(--gray-text)">(bebas, sesuai etalase)</span></div>
+    <div class="rl-cari"><input id="rl-cari" placeholder="🔍 Cari nama produk atau brand..." oninput="rlCariProduk(this.value)"></div>
+    <div id="rl-hasil" class="rl-hasil"></div>
+    <div id="rl-produk" class="rl-produk"></div>
+    <div id="rl-mix" class="rl-mix" style="display:none">
+      <b id="rl-mix-judul"></b>
+      Boleh kok. Cuma, brand biasanya kasih dukungan <b style="display:inline;color:inherit;margin:0">ads atau voucher</b> untuk live yang fokus ke produk mereka saja. Kalau mau peluang didukung, pilih produk dari satu brand.
+      <label class="rl-cek"><input type="checkbox" id="rl-mix-ok"> Oke, tetap bawa semua produk ini</label>
+    </div>
+    <div class="rl-lbl">Jadwal sesi <span style="font-weight:600;color:var(--gray-text)">(paling lambat H-1)</span></div>
+    <div id="rl-sesi"></div>
+    <button type="button" class="rl-btn-garis" onclick="rlTambahSesi()">+ Tambah sesi</button>
+    <div class="rl-info"><b>Tips:</b> traffic Live biasanya lebih bagus kalau kamu posting video produknya dulu sebelum live dimulai.<br><b>Poin:</b> mengisi rencana tidak dapat poin. Poin datang dari penjualan Live, 1,5 poin per Rp100 ribu, masuk tiap Senin.</div>
+    <button type="button" class="btn btn-primary" style="width:100%;min-height:48px" id="rl-simpan" onclick="rlSimpan(this)">Kirim ke brand &amp; tim</button>
+  </div>
+  <div id="rl-view-saya" style="display:none"><div id="rl-list"></div></div>
+</div></div>
+
+<div class="modal-bg" id="m-b-live"><div class="modal-box" style="max-width:520px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b-live')">‹ ✕</button>
+  <div class="modal-title">🔴 Creator akan Live</div>
+  <div class="card-sub">Creator yang akan membawa produkmu, 14 hari ke depan. Mau dukung live yang fokus ke brand kamu dengan voucher atau ads? Hubungi AE Girlhood Den.</div>
+  <div id="b-live-list" style="margin-top:6px"></div>
+</div></div>
+
+<div class="modal-bg" id="m-i-live"><div class="modal-box" style="max-width:620px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i-live')">‹ ✕</button>
+  <div class="modal-title">🔴 Rencana Live per Brand</div>
+  <div class="card-sub" style="margin-bottom:10px">7 hari ke depan. Klik brand untuk lihat siapa yang live. Yang fokus 1 brand layak ditawarkan dukungan ads ke brand.</div>
+  <div id="i-live-list"></div>
 </div></div>
 
 <div class="modal-bg" id="m-c-endorsement"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-endorsement')">‹ ✕</button>
@@ -4119,6 +4249,7 @@ function notifIcon(kategori){
   if(kategori === 'request') return '🆕';
   if(kategori === 'urgent') return '⚠️';
   if(kategori === 'poin') return '⭐';
+  if(kategori === 'upcoming_live') return '🔴';
   return '🔔';
 }
 
@@ -4384,6 +4515,15 @@ async function submitRegistration(){
     alert('Isi link atau username TikTok yang valid.');
     return;
   }
+  const kurang = [];
+  if(!gmvRaw) kurang.push('GMV 30 hari');
+  if(!alamat) kurang.push('alamat');
+  if(!patokan) kurang.push('patokan');
+  if(!kodePos) kurang.push('kode pos');
+  if(kurang.length){
+    alert('Lengkapi dulu: ' + kurang.join(', ') + '. Semua kolom wajib diisi, kecuali kode referral.');
+    return;
+  }
 
   const fileInput = document.getElementById('reg-foto-file');
   const file = fileInput.files[0];
@@ -4508,7 +4648,8 @@ async function checkFreezeStatus(){
     if(done >= required) return;
     const brandId = r.brand_products ? r.brand_products.brand_id : null;
     if(!brandId) return;
-    const anchor = selfReportAnchorMap[r.id] || confirmMap[brandId];
+    if(selfReportAnchorMap[r.id]) return; // self-report bukan utang
+    const anchor = confirmMap[brandId];
     if(!anchor) return; // Belum konfirmasi terima barang & bukan self-report = H+3 belum mulai, jangan freeze
     if(new Date(anchor) < fiveDaysAgo) newFrozenBrandIds.add(brandId);
   });
@@ -4541,7 +4682,7 @@ function formatTanggalSingkat(iso){
 const SOW_BADGE = {
   VT: '<span class="sow-badge vt">VIDEO · 3 video</span>',
   VT_LIVE: '<span class="sow-badge vt_live">VIDEO + LIVE</span>',
-  LIVE: '<span class="sow-badge live">LIVE</span>'
+  LIVE: '<span class="sow-badge live">LIVE · 3 sesi</span>'
 };
 const PIECES_RECO = '💡 Rekomendasi: kirim <b>&gt;1 pieces</b> untuk creator VT+Live/Live, biar produknya tetap ada buat etalase pas dia jualan — nggak abis kepake konten doang.';
 
@@ -4557,7 +4698,7 @@ async function loadApprovalRows(){
   try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
+    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, jumlah_diminta, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .in('status', ['requested','approved','rejected'])
     .eq('sumber', 'sow')
@@ -4604,7 +4745,7 @@ async function loadApprovalRows(){
       const showPiecesReco = (r.tipe_sow_dipilih === 'VT_LIVE' || r.tipe_sow_dipilih === 'LIVE');
       if(r.status === 'requested'){
         aksiCell = '<div class="aksi-buttons">'
-          + '<div><label class="pieces-label">Jumlah dikirim (pcs)</label><br><input type="number" min="1" class="pieces-input" placeholder="cth: 2"></div>'
+          + '<div>' + (r.jumlah_diminta ? '<div class="pieces-diminta">Diminta creator: ' + r.jumlah_diminta + ' pcs</div>' : '') + '<label class="pieces-label">Jumlah dikirim (pcs)</label><br><input type="number" min="1" class="pieces-input" placeholder="cth: 2"' + (r.jumlah_diminta ? ' value="' + r.jumlah_diminta + '"' : '') + '></div>'
           + (showPiecesReco ? '<div class="pieces-reco">'+PIECES_RECO+'</div>' : '')
           + '<button class="btn btn-teal btn-sm appr-btn" onclick="lockAksi(\''+r.id+'\', this,\'kirim\')" style="margin-top:8px">✅ Kirim</button>'
           + '<button class="btn btn-outline btn-sm appr-btn" style="margin-top:6px;border-color:var(--red);color:var(--red)" onclick="showRejectNote(this)">❌ Tolak</button>'
@@ -4632,6 +4773,7 @@ async function loadApprovalRows(){
     }).join('');
 
     const adaLive = g.items.some(function(r){ return r.tipe_sow_dipilih === 'LIVE' || r.tipe_sow_dipilih === 'VT_LIVE'; });
+    const besar = g.items.filter(function(r){ return r.jumlah_diminta; }).length > 3 || g.items.some(function(r){ return (r.jumlah_diminta || 0) > 3; });
     const klaim = (m.level || m.gmv_30hari) ? '<span class="appr-klaim">Pengakuan saat daftar: '+escHtml(m.level||'-')+(m.gmv_30hari ? ' · '+gmvText+'/30 hari' : '')+'</span>' : '';
     return '<div class="appr-group'+(adaLive?' ada-live':'')+'" data-search-name="'+escHtml((m.nama||'').toLowerCase())+'">'
       + '<div class="appr-group-head">'
@@ -4645,6 +4787,7 @@ async function loadApprovalRows(){
         + '<div class="appr-group-meta">📍 '+escHtml(m.alamat||'-')+'</div></div>'
         + '<div class="appr-group-date">🗓️ '+tanggalLabel+'</div>'
       + '</div>'
+      + (besar ? '<div class="appr-besar" style="margin-top:12px"><b>Permintaan besar untuk Live.</b> Kalau tidak bisa sebanyak itu, ubah angka "Jumlah dikirim" per produk sebelum klik Kirim.</div>' : '')
       + itemsHtml
       + '</div>';
   }).join('');
@@ -4877,98 +5020,335 @@ async function loadDeliveryPrompts(){
   }).join('');
 }
 
+// ================= ATURAN BARU: helper umum =================
+function rlIsoWib(tgl, jam){ return tgl && jam ? tgl + 'T' + jam + ':00+07:00' : null; }
+function rlFmtTgl(iso){ return new Date(iso).toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Jakarta' }); }
+function rlFmtJam(iso){ return new Date(iso).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }); }
+function rlBesokStr(){ return new Date(Date.now() + 86400000 + 7*3600000).toISOString().slice(0,10); }
+function rlBarisSesi(sesi, durasiDefaultJam){
+  const tgl = sesi ? new Date(new Date(sesi.mulai).getTime() + 7*3600000).toISOString().slice(0,10) : '';
+  const mulai = sesi ? new Date(new Date(sesi.mulai).getTime() + 7*3600000).toISOString().slice(11,16) : '19:00';
+  const selesai = sesi ? new Date(new Date(sesi.selesai).getTime() + 7*3600000).toISOString().slice(11,16) : (durasiDefaultJam ? String(19 + durasiDefaultJam).padStart(2,'0') + ':00' : '21:00');
+  return '<div class="rl-sesi-baris">'
+    + '<input type="date" class="rl-s-tgl" min="' + rlBesokStr() + '" value="' + tgl + '" aria-label="Tanggal">'
+    + '<input type="time" class="rl-s-mulai" value="' + mulai + '" aria-label="Jam mulai" onchange="rlJamOtomatis(this,' + (durasiDefaultJam || 0) + ')">'
+    + '<span class="rl-s-sd">s/d</span>'
+    + '<input type="time" class="rl-s-selesai" value="' + selesai + '" aria-label="Jam selesai">'
+    + '<button type="button" class="rl-s-hapus" aria-label="Hapus sesi" onclick="this.parentNode.remove()">×</button>'
+    + '</div>';
+}
+function rlJamOtomatis(el, durasi){
+  if(!durasi) return;
+  const p = el.value.split(':'); if(p.length < 2) return;
+  const h = (Number(p[0]) + durasi) % 24;
+  const sel = el.parentNode.querySelector('.rl-s-selesai');
+  if(sel) sel.value = String(h).padStart(2,'0') + ':' + p[1];
+}
+function rlBacaSesiDari(wrap){
+  const hasil = []; let salah = '';
+  wrap.querySelectorAll('.rl-sesi-baris').forEach(function(b){
+    const tgl = b.querySelector('.rl-s-tgl').value, m = b.querySelector('.rl-s-mulai').value, s = b.querySelector('.rl-s-selesai').value;
+    if(!tgl || !m || !s){ salah = 'Lengkapi tanggal, jam mulai, dan jam selesai tiap sesi.'; return; }
+    const mulai = new Date(rlIsoWib(tgl, m));
+    let akhir = new Date(rlIsoWib(tgl, s));
+    if(akhir <= mulai) akhir = new Date(akhir.getTime() + 86400000); // lewat tengah malam
+    hasil.push({ mulai: mulai.toISOString(), selesai: akhir.toISOString() });
+  });
+  hasil.sort(function(a,b){ return new Date(a.mulai) - new Date(b.mulai); });
+  return { sesi: hasil, salah: salah };
+}
+function rlPesanError(e){
+  const t = (e && e.message) || String(e || '');
+  const m = t.match(/(?:JADWAL_TIDAK_VALID|JADWAL_DI_LUAR_BATAS|JADWAL_TERKUNCI|RENCANA_TIDAK_VALID|AKUN_DIFREEZE):\s*(.*)$/);
+  if(m) return m[1];
+  if(/RENCANA_MIX_BELUM_SETUJU/.test(t)) return 'Centang dulu "Oke, tetap bawa semua produk ini".';
+  return 'Gagal menyimpan: ' + t;
+}
+
+// ================= Rencana Live (produk milik sendiri) =================
+window._rlProduk = [];
+window._rlEditId = null;
+function openRencanaLive(){ openModal('m-c-live'); rlTab('buat'); rlReset(); }
+function rlTab(t){
+  document.getElementById('rl-view-buat').style.display = t === 'buat' ? 'block' : 'none';
+  document.getElementById('rl-view-saya').style.display = t === 'saya' ? 'block' : 'none';
+  document.getElementById('rl-tab-buat').classList.toggle('on', t === 'buat');
+  document.getElementById('rl-tab-saya').classList.toggle('on', t === 'saya');
+  if(t === 'saya') loadRencanaLiveSaya();
+}
+function rlReset(){
+  window._rlProduk = []; window._rlEditId = null;
+  document.getElementById('rl-sesi').innerHTML = rlBarisSesi(null, 0);
+  document.getElementById('rl-cari').value = '';
+  document.getElementById('rl-hasil').innerHTML = '';
+  document.getElementById('rl-mix-ok').checked = false;
+  document.getElementById('rl-simpan').textContent = 'Kirim ke brand & tim';
+  rlRenderProduk();
+}
+function rlTambahSesi(){ document.getElementById('rl-sesi').insertAdjacentHTML('beforeend', rlBarisSesi(null, 0)); }
+let rlCariTunda = null;
+function rlCariProduk(q){
+  clearTimeout(rlCariTunda);
+  rlCariTunda = setTimeout(async function(){
+    const wrap = document.getElementById('rl-hasil');
+    q = (q || '').trim();
+    if(q.length < 2){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
+    const pola = '%' + q.replace(/[%_]/g, '') + '%';
+    const [byNama, byBrand] = await Promise.all([
+      db.from('brand_products').select('id, nama_produk, brand_id, brands!inner(nama_brand)').eq('is_frozen', false).ilike('nama_produk', pola).limit(15),
+      db.from('brand_products').select('id, nama_produk, brand_id, brands!inner(nama_brand)').eq('is_frozen', false).ilike('brands.nama_brand', pola).limit(15)
+    ]);
+    const semua = {}; [].concat(byNama.data || [], byBrand.data || []).forEach(function(p){ semua[p.id] = p; });
+    const list = Object.keys(semua).map(function(k){ return semua[k]; }).slice(0, 20);
+    if(!list.length){ wrap.innerHTML = '<div class="card-sub">Produk tidak ditemukan.</div>'; return; }
+    wrap.innerHTML = list.map(function(p){
+      const dipilih = window._rlProduk.some(function(x){ return x.id === p.id; });
+      return '<button type="button" class="rl-hasil-item' + (dipilih ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" data-nama="' + escHtml(p.nama_produk || '-') + '" data-brand="' + escHtml(p.brand_id) + '" data-brandnama="' + escHtml(p.brands ? p.brands.nama_brand : '-') + '" onclick="rlPilihProduk(this)">'
+        + '<span class="rl-hasil-brand">' + escHtml(p.brands ? p.brands.nama_brand : '-') + '</span><span class="rl-hasil-nama">' + escHtml(p.nama_produk || '-') + '</span><span class="rl-hasil-plus">' + (dipilih ? '✓' : '+') + '</span></button>';
+    }).join('');
+  }, 250);
+}
+function rlPilihProduk(btn){
+  const id = btn.dataset.id;
+  const i = window._rlProduk.findIndex(function(x){ return x.id === id; });
+  if(i >= 0) window._rlProduk.splice(i, 1);
+  else window._rlProduk.push({ id: id, nama: btn.dataset.nama, brandId: btn.dataset.brand, brandNama: btn.dataset.brandnama });
+  btn.classList.toggle('on', i < 0);
+  btn.querySelector('.rl-hasil-plus').textContent = i < 0 ? '✓' : '+';
+  rlRenderProduk();
+}
+function rlHapusProduk(id){ window._rlProduk = window._rlProduk.filter(function(x){ return x.id !== id; }); rlRenderProduk(); rlCariProduk(document.getElementById('rl-cari').value); }
+function rlRenderProduk(){
+  const wrap = document.getElementById('rl-produk');
+  wrap.innerHTML = window._rlProduk.length
+    ? window._rlProduk.map(function(p){ return '<span class="rl-chip"><b>' + escHtml(p.brandNama) + '</b> ' + escHtml(p.nama) + '<button type="button" aria-label="Hapus" onclick="rlHapusProduk(\'' + escHtml(p.id) + '\')">×</button></span>'; }).join('')
+    : '<div class="card-sub">Belum ada produk dipilih. Cari dan ketuk produk di atas.</div>';
+  const brands = Array.from(new Set(window._rlProduk.map(function(p){ return p.brandId; })));
+  const mix = document.getElementById('rl-mix');
+  mix.style.display = brands.length > 1 ? 'block' : 'none';
+  document.getElementById('rl-mix-judul').textContent = 'Kamu bawa produk dari ' + brands.length + ' brand sekaligus';
+}
+async function rlSimpan(btn){
+  if(!window._rlProduk.length){ showToast('Pilih minimal 1 produk dulu.'); return; }
+  const b = rlBacaSesiDari(document.getElementById('rl-sesi'));
+  if(b.salah){ showToast(b.salah); return; }
+  if(!b.sesi.length){ showToast('Isi minimal 1 sesi live.'); return; }
+  btn.disabled = true; const awal = btn.textContent; btn.textContent = 'Mengirim...';
+  const { data, error } = await db.rpc('creator_simpan_rencana_live', {
+    p_id: window._rlEditId, p_sesi: b.sesi, p_produk: window._rlProduk.map(function(p){ return p.id; }), p_mix_ok: document.getElementById('rl-mix-ok').checked
+  });
+  btn.disabled = false; btn.textContent = awal;
+  if(error){ alert(rlPesanError(error)); return; }
+  const nama = (currentSession.memberData && currentSession.memberData.nama) || 'Creator';
+  const ringkas = b.sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ');
+  const brandIds = (data && data.brand_ids) || [];
+  for(const bid of brandIds){
+    await logNotification('upcoming_live', { brandId: bid, memberId: currentSession.memberId, detail: nama + (window._rlEditId ? ' mengubah rencana live: ' : ' berencana live bawa produkmu: ') + ringkas });
+  }
+  showToast(window._rlEditId ? 'Rencana live diperbarui' : 'Rencana live terkirim ke brand & tim');
+  rlReset(); rlTab('saya');
+}
+async function loadRencanaLiveSaya(){
+  const wrap = document.getElementById('rl-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  const { data, error } = await db.from('live_plans').select('id, sesi, produk_ids, mix_brand, created_at').eq('member_id', currentSession.memberId).is('dibatalkan_at', null).order('created_at', { ascending: false }).limit(30);
+  if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat.</div>'; return; }
+  if(!data || !data.length){ wrap.innerHTML = '<div class="rl-kosong">📅<div>Belum ada rencana live.</div></div>'; return; }
+  const ids = Array.from(new Set([].concat.apply([], data.map(function(d){ return d.produk_ids || []; }))));
+  const { data: prods } = await db.from('brand_products').select('id, nama_produk, brand_id, brands(nama_brand)').in('id', ids);
+  const pm = {}; (prods || []).forEach(function(p){ pm[p.id] = p; });
+  window._rlCache = {};
+  wrap.innerHTML = data.map(function(d){
+    window._rlCache[d.id] = d;
+    const akhir = Math.max.apply(null, (d.sesi || []).map(function(s){ return new Date(s.selesai).getTime(); }));
+    const lewat = akhir < Date.now();
+    const bisaUbah = (d.sesi || []).every(function(s){ return new Date(s.mulai).getTime() > Date.now() + 12*3600000; });
+    const produk = (d.produk_ids || []).map(function(id){ const p = pm[id]; return p ? (p.brands ? p.brands.nama_brand + ' · ' : '') + p.nama_produk : null; }).filter(Boolean);
+    return '<div class="rl-kartu" style="border-left-color:' + (lewat ? '#B8A6B4' : '#6B7FD7') + '">'
+      + '<div class="rl-kartu-atas"><b>' + (d.sesi || []).map(function(s){ return rlFmtTgl(s.mulai) + ' · ' + rlFmtJam(s.mulai) + '–' + rlFmtJam(s.selesai); }).join('<br>') + '</b>'
+      + '<span class="rl-status" style="background:' + (lewat ? '#F1ECF1;color:#6E5A6C' : '#ECEFFB;color:#34418C') + '">' + (lewat ? 'Selesai' : 'Terjadwal') + '</span></div>'
+      + '<div class="rl-kartu-produk">' + produk.slice(0, 4).map(escHtml).join(', ') + (produk.length > 4 ? ' +' + (produk.length - 4) + ' lainnya' : '') + (d.mix_brand ? ' <span class="rl-mixtag">Mix Brand</span>' : '') + '</div>'
+      + (!lewat && bisaUbah ? '<div class="rl-kartu-aksi"><button type="button" onclick="rlUbah(\'' + d.id + '\')">Ubah</button><button type="button" class="batal" onclick="rlBatal(\'' + d.id + '\')">Batalkan</button></div>' : '')
+      + '</div>';
+  }).join('');
+  window._rlProdukMap = pm;
+}
+function rlUbah(id){
+  const d = (window._rlCache || {})[id]; if(!d) return;
+  rlTab('buat');
+  window._rlEditId = id;
+  const pm = window._rlProdukMap || {};
+  window._rlProduk = (d.produk_ids || []).map(function(pid){ const p = pm[pid] || {}; return { id: pid, nama: p.nama_produk || '-', brandId: p.brand_id, brandNama: p.brands ? p.brands.nama_brand : '-' }; });
+  document.getElementById('rl-sesi').innerHTML = (d.sesi || []).map(function(s){ return rlBarisSesi(s, 0); }).join('');
+  document.getElementById('rl-mix-ok').checked = !!d.mix_brand;
+  document.getElementById('rl-simpan').textContent = 'Simpan perubahan';
+  rlRenderProduk();
+}
+async function rlBatal(id){
+  if(!confirm('Batalkan rencana live ini?')) return;
+  const { error } = await db.rpc('creator_batal_rencana_live', { p_id: id });
+  if(error){ alert(rlPesanError(error)); return; }
+  showToast('Rencana dibatalkan'); loadRencanaLiveSaya();
+}
+
+// ================= Jadwal SOW Live (sample dari brand) =================
 async function loadJadwalLivePrompts(){
   const container = document.getElementById('jadwal-live-prompts');
-  if(!container || !currentSession.memberId){ if(container) container.innerHTML=''; return; }
-
+  if(!container || !currentSession.memberId){ if(container) container.innerHTML = ''; return; }
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, jadwal_live, brand_products!inner(brand_id, brands(nama_brand))')
-    .eq('member_id', currentSession.memberId)
-    .eq('status', 'approved')
-    .in('tipe_sow_dipilih', ['LIVE','VT_LIVE'])
-    .is('jadwal_live', null);
-
-  if(error || !data || data.length === 0){ container.innerHTML = ''; return; }
-
-  const { data: confirmations } = await db.from('delivery_confirmations')
-    .select('brand_id, confirmed_at')
-    .eq('member_id', currentSession.memberId);
-  const confirmedBrands = {};
-  (confirmations||[]).forEach(function(c){
-    if(!confirmedBrands[c.brand_id] || new Date(c.confirmed_at) > new Date(confirmedBrands[c.brand_id])){
-      confirmedBrands[c.brand_id] = c.confirmed_at;
-    }
-  });
-
-  const groups = {};
+    .select('id, tipe_sow_dipilih, jadwal_live, brand_products!inner(brand_id, nama_produk, brands(nama_brand))')
+    .eq('member_id', currentSession.memberId).eq('status', 'approved').in('tipe_sow_dipilih', ['LIVE','VT_LIVE']);
+  if(error || !data || !data.length){ container.innerHTML = ''; return; }
+  const { data: conf } = await db.from('delivery_confirmations').select('brand_id, confirmed_at').eq('member_id', currentSession.memberId);
+  const konf = {}; (conf || []).forEach(function(c){ if(!konf[c.brand_id] || new Date(c.confirmed_at) > new Date(konf[c.brand_id])) konf[c.brand_id] = c.confirmed_at; });
+  const grup = {};
   data.forEach(function(r){
-    const bp = r.brand_products;
-    if(!bp || !confirmedBrands[bp.brand_id]) return; // belum konfirmasi terima, belum boleh jadwalin dulu
-    if(!groups[bp.brand_id]){
-      groups[bp.brand_id] = { brandName: bp.brands ? bp.brands.nama_brand : '-', confirmedAt: confirmedBrands[bp.brand_id], requestIds: [] };
-    }
-    groups[bp.brand_id].requestIds.push(r.id);
+    const bp = r.brand_products; if(!bp) return;
+    const j = r.jadwal_live;
+    const formatLama = j && !Array.isArray(j.sesi);
+    if(formatLama) return; // jadwal lama tidak diubah
+    if(r.tipe_sow_dipilih === 'VT_LIVE' && !konf[bp.brand_id]) return; // VT & Live lama tetap dijadwalkan setelah barang sampai
+    const g = grup[bp.brand_id] || (grup[bp.brand_id] = { nama: bp.brands ? bp.brands.nama_brand : '-', ids: [], produk: [], jadwal: null });
+    g.ids.push(r.id); g.produk.push(bp.nama_produk);
+    if(j && Array.isArray(j.sesi)) g.jadwal = j;
   });
-
-  const brandIds = Object.keys(groups);
-  if(brandIds.length === 0){ container.innerHTML = ''; return; }
-
-  container.innerHTML = brandIds.map(function(bId){
-    const g = groups[bId];
-    const minDt = getMinLiveDateTime(g.confirmedAt);
-    return '<div class="card" style="background:var(--pink-pale);border:1.5px solid var(--amber)">'
-      + '<div style="font-weight:800;color:var(--amber-dark)">🎥 Jadwalin Live buat '+g.brandName+'</div>'
-      + '<div class="card-sub" style="margin:4px 0 8px">Barang udah kamu terima — jadwalin 3 sesi live-nya (min. 2 jam/sesi, tanggal beda-beda). Ini nge-cover semua produk dari brand ini sekaligus.</div>'
-      + '<div class="jl-baris"><span class="jl-label">Sesi 1</span><input type="datetime-local" class="jl-s1" min="'+minDt+'"></div>'
-      + '<div class="jl-baris"><span class="jl-label">Sesi 2</span><input type="datetime-local" class="jl-s2" min="'+minDt+'"></div>'
-      + '<div class="jl-baris"><span class="jl-label">Sesi 3</span><input type="datetime-local" class="jl-s3" min="'+minDt+'"></div>'
-      + '<button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%" data-brand-id="'+bId+'" data-request-ids="'+g.requestIds.join(',')+'" onclick="saveJadwalLive(this)">✅ Simpan Jadwal</button>'
+  const keys = Object.keys(grup);
+  if(!keys.length){ container.innerHTML = ''; return; }
+  container.innerHTML = keys.map(function(bid){
+    const g = grup[bid], k = konf[bid], j = g.jadwal;
+    const kepala = '<div class="jl2-kepala"><span class="jl2-ikon">🔴</span><div><b>Jadwal Live · ' + escHtml(g.nama) + '</b><div class="card-sub">' + g.produk.map(escHtml).join(', ') + '</div></div></div>';
+    if(j && j.dikunci){
+      const akhir = Math.max.apply(null, j.sesi.map(function(s){ return new Date(s.selesai).getTime(); }));
+      return '<div class="card jl2">' + kepala
+        + j.sesi.map(function(s, i){ const lewat = new Date(s.selesai) < new Date(); return '<div class="jl2-sesi"><span>Sesi ' + (i+1) + '</span><b>' + rlFmtTgl(s.mulai) + ' · ' + rlFmtJam(s.mulai) + '–' + rlFmtJam(s.selesai) + '</b><em class="' + (lewat ? 'ok' : '') + '">' + (lewat ? 'Selesai' : 'Terjadwal') + '</em></div>'; }).join('')
+        + '<div class="jl2-note">' + (akhir < Date.now() ? '✅ SOW Live selesai. Slot brand ini sudah kosong lagi.' : '🔒 Jadwal terkunci karena barang sudah kamu terima. SOW selesai setelah sesi terakhir.') + '</div></div>';
+    }
+    let aturan;
+    if(k){
+      const b3 = new Date(new Date(k).getTime() + 3*86400000), b5 = new Date(new Date(k).getTime() + 5*86400000);
+      aturan = '<div class="jl2-warn">Barang sudah kamu terima. Ini <b>kesempatan terakhir</b> atur jadwal: sesi 1 paling lambat <b>' + rlFmtTgl(b3.toISOString()) + '</b>, semua sesi mulai paling lambat <b>' + rlFmtTgl(b5.toISOString()) + '</b>. Setelah disimpan, jadwal terkunci.</div>';
+    } else {
+      aturan = '<div class="jl2-info">Minimal 3 sesi, tiap sesi 2 jam, maksimal 1 sesi per hari. Jadwal masih bisa diubah sampai kamu konfirmasi barang diterima. Sesi 1 nanti paling lambat 3 hari dan semua sesi paling lambat 5 hari setelah barang diterima.</div>';
+    }
+    const baris = (j ? j.sesi : [null, null, null]).map(function(s){ return rlBarisSesi(s, 2); }).join('');
+    return '<div class="card jl2">' + kepala + aturan
+      + '<div class="jl2-baris" data-ids="' + g.ids.join(',') + '" data-brand="' + escHtml(bid) + '" data-brandnama="' + escHtml(g.nama) + '">' + baris + '</div>'
+      + '<button type="button" class="rl-btn-garis" onclick="this.previousElementSibling.insertAdjacentHTML(\'beforeend\', rlBarisSesi(null, 2))">+ Tambah sesi</button>'
+      + '<div class="jl2-info" style="margin-top:8px"><b>Tips:</b> traffic Live biasanya lebih bagus kalau kamu posting video produknya dulu sebelum live dimulai.</div>'
+      + '<button type="button" class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;min-height:44px" onclick="saveJadwalLive(this)">' + (k ? '🔒 Simpan & kunci jadwal' : (j ? 'Simpan perubahan jadwal' : 'Simpan jadwal')) + '</button>'
       + '</div>';
   }).join('');
 }
-
 async function saveJadwalLive(btn){
-  const card = btn.closest('.card');
-  const s1 = card.querySelector('.jl-s1').value.trim();
-  const s2 = card.querySelector('.jl-s2').value.trim();
-  const s3 = card.querySelector('.jl-s3').value.trim();
-  if(!s1 || !s2 || !s3){
-    alert('Isi jadwal Live 3 sesi dulu ya.');
-    return;
-  }
-  if(new Date(s1).getTime() >= new Date(s2).getTime() || new Date(s2).getTime() >= new Date(s3).getTime()){
-    alert('Jadwal live harus urut maju: Sesi 1 lebih awal dari Sesi 2, Sesi 2 lebih awal dari Sesi 3.');
-    return;
-  }
-  const d1 = s1.slice(0,10), d2 = s2.slice(0,10), d3 = s3.slice(0,10);
-  if(d1===d2 || d2===d3 || d1===d3){
-    alert('Tiap sesi live harus di TANGGAL yang berbeda. Satu tanggal cuma bisa dipakai untuk 1 sesi.');
-    return;
-  }
+  const wrap = btn.closest('.card').querySelector('.jl2-baris');
+  const b = rlBacaSesiDari(wrap);
+  if(b.salah){ alert(b.salah); return; }
+  if(b.sesi.length < 3){ alert('Minimal 3 sesi live.'); return; }
+  btn.disabled = true; const awal = btn.textContent; btn.textContent = 'Menyimpan...';
+  const { data, error } = await db.rpc('creator_simpan_jadwal_live', { p_request_ids: wrap.dataset.ids.split(','), p_sesi: b.sesi });
+  btn.disabled = false; btn.textContent = awal;
+  if(error){ alert(rlPesanError(error)); return; }
+  const nama = (currentSession.memberData && currentSession.memberData.nama) || 'Creator';
+  await logNotification('upcoming_live', { brandId: wrap.dataset.brand, memberId: currentSession.memberId,
+    detail: nama + ' ' + (data && data.dikunci ? 'mengunci jadwal Live: ' : 'menjadwalkan Live: ') + b.sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ') });
+  showToast(data && data.dikunci ? 'Jadwal tersimpan & terkunci' : 'Jadwal live tersimpan');
+  loadJadwalLivePrompts(); loadMyQuota();
+}
 
-  const requestIds = btn.dataset.requestIds.split(',');
-  const brandId = btn.dataset.brandId;
-  btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.textContent = 'Menyimpan...';
+// ================= Brand: Creator akan Live =================
+async function loadBrandRencanaLive(){
+  const wrap = document.getElementById('b-live-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  const { data, error } = await db.rpc('brand_rencana_live');
+  if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat.</div>'; return; }
+  if(!data || !data.length){ wrap.innerHTML = '<div class="rl-kosong">📅<div>Belum ada creator yang menjadwalkan live dalam 14 hari ke depan.</div></div>'; return; }
+  const perHari = {}; const urut = [];
+  data.forEach(function(r){ const k = rlFmtTgl(r.mulai); if(!perHari[k]){ perHari[k] = []; urut.push(k); } perHari[k].push(r); });
+  wrap.innerHTML = urut.map(function(k){
+    return '<div class="nb-hari">' + k + '</div>' + perHari[k].map(function(r){
+      return '<div class="bl-baris"><div><div class="bl-nama">' + escHtml(r.member_nama || '-') + '</div>'
+        + '<span class="bl-tag ' + (r.mix_brand ? 'mix' : 'fokus') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus brand kamu') + '</span></div>'
+        + '<div class="bl-jam">' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
+    }).join('');
+  }).join('');
+}
 
-  const { error } = await db.from('sample_requests').update({ jadwal_live: { sesi1: s1, sesi2: s2, sesi3: s3 } }).in('id', requestIds);
-  if(error){
-    showDbError('simpan jadwal live', error);
-    btn.disabled = false; btn.textContent = originalText;
-    return;
-  }
+// ================= Internal: Rencana Live per brand =================
+async function loadInternalRencanaLive(){
+  const wrap = document.getElementById('i-live-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  const { data, error } = await db.rpc('internal_rencana_live');
+  if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat.</div>'; return; }
+  if(!data || !data.length){ wrap.innerHTML = '<div class="rl-kosong">📅<div>Belum ada jadwal live 7 hari ke depan.</div></div>'; return; }
+  const per = {}; const urut = [];
+  data.forEach(function(r){ if(!per[r.brand_id]){ per[r.brand_id] = { nama: r.brand_nama, rows: [] }; urut.push(r.brand_id); } per[r.brand_id].rows.push(r); });
+  urut.sort(function(a, b){ return per[b].rows.length - per[a].rows.length; });
+  wrap.innerHTML = urut.map(function(bid, i){
+    const g = per[bid];
+    return '<details class="il-brand"' + (i === 0 ? ' open' : '') + '><summary><span class="il-nama">' + escHtml(g.nama || '-') + '</span><span class="il-jml">' + g.rows.length + ' sesi</span></summary>'
+      + g.rows.map(function(r){
+        return '<div class="il-baris"><div><b>' + escHtml(r.member_nama || '-') + '</b><div class="card-sub">' + escHtml(r.jalur) + ' · <span style="color:' + (r.mix_brand ? '#6E5A6C' : '#0F6E50') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus 1 brand') + '</span></div></div>'
+          + '<div class="il-jam">' + rlFmtTgl(r.mulai) + '<br>' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
+      }).join('') + '</details>';
+  }).join('');
+}
 
-  const fmtNotif = function(d){ return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short'}); };
-  await logNotification('upcoming_live', {
-    brandId: brandId,
-    memberId: currentSession.memberId,
-    detail: (currentSession.memberData ? currentSession.memberData.nama : 'Creator') + ' udah jadwalin Live: '+fmtNotif(s1)+', '+fmtNotif(s2)+', '+fmtNotif(s3)
-  });
+// ================= Papan Skor: Top GMV & Top Pengajak =================
+window._psTab = 'gmv';
+async function loadPapanSkor(jenis){
+  window._psTab = jenis || window._psTab || 'gmv';
+  document.querySelectorAll('.ps-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.t === window._psTab); });
+  const wrap = document.getElementById('c9-leaderboard-content');
+  const intro = document.getElementById('ps-intro');
+  intro.innerHTML = window._psTab === 'gmv'
+    ? 'Penjualan lewat link Girlhood Den bulan ini, dari data TikTok yang masuk tiap Senin.'
+    : 'Ajak teman gabung. Begitu temanmu menuntaskan sample pertamanya, kamu dapat <b>+50 poin</b> dan naik di papan ini.';
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  const [top, saya] = await Promise.all([db.rpc('papan_skor', { p_jenis: window._psTab }), db.rpc('papan_skor_saya', { p_jenis: window._psTab })]);
+  if(top.error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat papan skor.</div>'; return; }
+  const medal = ['#F5C542', '#D9DCE3', '#D8A06B'];
+  const nilai = function(v){ return window._psTab === 'gmv' ? rpPendek(Number(v)) : Number(v) + ' teman'; };
+  const rows = (top.data || []).slice(0, 10);
+  let html = rows.length ? rows.map(function(r, i){
+    const aku = r.member_id === currentSession.memberId;
+    return '<div class="ps-baris' + (aku ? ' aku' : '') + '"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + r.peringkat + '</span>'
+      + '<span class="ps-nama">' + escHtml(r.nama || '-') + (aku ? ' (kamu)' : '') + '</span><span class="ps-nilai">' + nilai(r.nilai) + '</span></div>';
+  }).join('') : '<div class="rl-kosong">🏆<div>' + (window._psTab === 'gmv' ? 'Belum ada data penjualan bulan ini.' : 'Belum ada teman yang menuntaskan sample bulan ini.') + '</div></div>';
+  const s = (saya.data || [])[0];
+  html += '<div class="ps-saya">' + (s ? 'Posisi kamu: <b>#' + s.peringkat + '</b> · ' + nilai(s.nilai) : (window._psTab === 'gmv' ? 'Kamu belum masuk papan bulan ini. Jualan lewat link Girlhood Den dulu yuk.' : 'Kamu belum masuk papan bulan ini.')) + '</div>';
+  if(window._psTab === 'pengajak') html += await htmlKartuReferral();
+  wrap.innerHTML = html;
+}
+async function htmlKartuReferral(){
+  const { data } = await db.from('members').select('kode_referral').eq('id', currentSession.memberId).maybeSingle();
+  const kode = (data && data.kode_referral) || '-';
+  const teks = 'Yuk gabung Girlhood Den Community, komunitas creator affiliate TikTok. Daftar di https://girlhoodden.com dan pakai kode referral aku: ' + kode;
+  return '<div class="ref-kartu"><div class="ref-judul">🤝 Ajak teman, dapat +50 poin</div>'
+    + '<div class="ref-sub">Poin cair begitu temanmu menuntaskan sample pertamanya (video atau live). Tidak dihitung ke batas 60 poin bulanan.</div>'
+    + '<div class="ref-kode"><span>' + escHtml(kode) + '</span><button type="button" onclick="navigator.clipboard.writeText(\'' + escHtml(kode) + '\');showToast(\'Kode disalin\')">Salin</button></div>'
+    + '<a class="ref-share" href="https://wa.me/?text=' + encodeURIComponent(teks) + '" target="_blank" rel="noopener">Bagikan lewat WhatsApp</a></div>';
+}
 
-  alert('Jadwal live tersimpan! 🎉');
-  loadJadwalLivePrompts();
-  loadMyQuota();
+// ================= SOW Video / Live di kartu produk =================
+window._lpBadge = null;
+async function cekBadgeLiveSaya(){
+  if(window._lpBadge !== null) return window._lpBadge;
+  const { data } = await db.from('members').select('badge_live_performance').eq('id', currentSession.memberId).maybeSingle();
+  window._lpBadge = !!(data && data.badge_live_performance);
+  return window._lpBadge;
+}
+async function sowExtra(card, tipe){
+  const tips = card.querySelector('.sow-live-tips');
+  if(tips) tips.style.display = tipe === 'LIVE' ? 'block' : 'none';
+  const qty = card.querySelector('.sow-qty');
+  if(!qty) return;
+  if(tipe !== 'LIVE'){ qty.style.display = 'none'; return; }
+  qty.style.display = (await cekBadgeLiveSaya()) ? 'block' : 'none';
+}
+function sowQtyUbah(btn, d){
+  const el = btn.parentNode.querySelector('.sow-qty-n');
+  el.textContent = Math.min(50, Math.max(1, Number(el.textContent) + d));
 }
 
 let deliveryCamStream = null;
@@ -5500,6 +5880,7 @@ async function logout(){
     updateEndorsementLockState();
     updateGmvDashLockState();
     applyCreatorAvatar();
+    db.rpc('creator_cek_referral_saya').then(function(){}, function(){});
   }
   if(role === 'brand'){
     var el = document.getElementById('brand-topbar-name');
@@ -6429,13 +6810,14 @@ async function openBrandDetail(brandId, brandName, logoUrl){
       + '<div class="card-sub" style="margin:-2px 0 4px">Ini kewajiban yang kamu ambil kalau request disetujui. Baca dulu sebelum pilih.</div>'
       + '<input type="hidden" class="sow-select" value="">'
       + '<div class="sow-opts">'
-      +   sowOptionHtml('VT', 'VT saja', '3 video testimoni, maksimal 3 hari setelah kamu konfirmasi barang sampai. Tidak ada kewajiban live.')
-      +   sowOptionHtml('VT_LIVE', 'VT & Live', '3 video testimoni, ditambah 3 sesi live minimal 2 jam di tanggal yang berbeda.')
-      +   sowOptionHtml('LIVE', 'Live saja', '3 sesi live minimal 2 jam di tanggal yang berbeda. Tidak ada kewajiban video.')
+      +   sowOptionHtml('VT', 'Video', '3 video testimoni, maksimal 3 hari setelah kamu konfirmasi barang sampai.')
+      +   sowOptionHtml('LIVE', 'Live', 'Minimal 3 sesi live, 2 jam per sesi, maksimal 1 sesi per hari. Tanpa kewajiban video.')
       + '</div>'
       + '<label class="sow-agree"><input type="checkbox" class="sow-agree-check" onchange="sowRefreshBtn(this)"> <span>Aku sudah baca kewajibannya dan siap menyelesaikan.</span></label>'
       + '</div>'
-      + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi belakangan — begitu barang beneran sampai, konfirmasi dulu di Cek Status, baru menu jadwalin live-nya kebuka.</div></div>'
+      + '<div class="live-schedule-note" style="display:none"><div class="size-note" style="margin:6px 0">🎥 Jadwal live diisi di Cek Status setelah request disetujui. Bisa diubah sampai barang kamu terima. Setelah itu sesi 1 paling lambat 3 hari dan semua sesi paling lambat 5 hari.</div></div>'
+      + '<div class="sow-live-tips" style="display:none"><b>Tips:</b> traffic Live biasanya lebih bagus kalau kamu posting video produknya dulu sebelum live dimulai.</div>'
+      + '<div class="sow-qty" style="display:none"><div class="sow-qty-atas"><div><b style="font-size:13px">● Live Performance: minta jumlah</b><div class="card-sub">Opsional. Brand yang memutuskan jumlah akhirnya.</div></div><div class="sow-qty-stepper"><button type="button" aria-label="Kurangi" onclick="sowQtyUbah(this,-1)">−</button><span class="sow-qty-n">1</span><button type="button" aria-label="Tambah" onclick="sowQtyUbah(this,1)">+</button></div></div></div>'
 + '<button class="btn btn-outline btn-sm" style="margin-top:6px;filter:none;opacity:1" onclick="navigator.clipboard.writeText(\''+(p.link_affiliate||'')+'\');alert(\'Link disalin!\')">📋 Salin Link Produk</button>'
 + '<button class="btn btn-teal btn-sm request-sample-btn" data-brand-id="'+brandId+'" '+(brandFrozen?'disabled style="opacity:.4" title="Brand ini lagi di-freeze sementara, request sample dimatikan dulu."':(p.is_frozen?'disabled style="opacity:.4" title="Produk ini lagi di-freeze sementara, request sample dimatikan dulu."':(frozenBrandIds.has(brandId)?'disabled style="opacity:.4" title="Brand ini ada VT yang belum di-post lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini."':'')))+' onclick="requestSample(\''+p.id+'\', this)">Request Sample</button>'
       + '</div>';
@@ -6565,6 +6947,8 @@ async function requestSample(productId, btn){
 
   // Jadwal live nggak diisi di sini lagi — baru diisi setelah creator konfirmasi barang sampai (menu Cek Status).
   const jadwalLive = null;
+  const qtyBox = card.querySelector('.sow-qty');
+  const jumlahDiminta = (tipeSow === 'LIVE' && qtyBox && qtyBox.style.display !== 'none') ? Number(qtyBox.querySelector('.sow-qty-n').textContent) : null;
 
   const { data: prodBrand } = await db.from('brand_products').select('brand_id').eq('id', productId).single();
   const targetBrandId = prodBrand ? prodBrand.brand_id : null;
@@ -6582,6 +6966,7 @@ async function requestSample(productId, btn){
     brand_product_id: productId,
     tipe_sow_dipilih: tipeSow,
     jadwal_live: jadwalLive,
+    jumlah_diminta: jumlahDiminta,
     status: 'requested'
   }).select('id');
 
@@ -6592,7 +6977,9 @@ async function requestSample(productId, btn){
     if(error.message && error.message.includes('QUOTA_BRAND_PENUH')){
       alert('Kuota 3 brand kamu masih penuh. Selesaikan dulu brand yang sedang aktif sebelum ambil brand baru.');
     } else if(error.message && error.message.includes('QUOTA_SKU_PENUH')){
-      alert('Kuota produk di brand ini sudah penuh (maksimal 2 SKU satuan, atau 1 paket bundling).');
+      alert(((error.message.split('QUOTA_SKU_PENUH:')[1]) || 'Kuota produk di brand ini sudah penuh.').trim());
+    } else if(error.message && error.message.includes('SOW_TIDAK_TERSEDIA')){
+      alert('Pilih salah satu: Video atau Live.');
     } else if(error.message && error.message.includes('VT_NUNGGAK_5_HARI')){
       alert('Brand ini ada video yang belum kamu posting lewat dari 5 hari sejak barang diterima. Selesaikan dulu di Report VT sebelum request produk baru dari brand ini.');
     } else if(error.message && error.message.includes('PRODUK_DIFREEZE')){
@@ -6656,8 +7043,15 @@ async function getActiveBrandIds(){
         activeBrandIds.add(bId);
         return;
       }
-      // LIVE-only nggak pernah nahan slot; VT_LIVE tuntas begitu 3 VT approved (sama dengan aturan database).
+      // SOW Live: nahan slot sampai sesi terakhir lewat (atau selama belum dijadwalkan). Jadwal format lama dianggap selesai.
       if(r.tipe_sow_dipilih === 'LIVE'){
+        const j = r.jadwal_live;
+        if(j && Array.isArray(j.sesi)){
+          const akhir = Math.max.apply(null, j.sesi.map(function(x){ return new Date(x.selesai).getTime(); }));
+          if(akhir >= Date.now()) activeBrandIds.add(bId);
+          return;
+        }
+        if(!j) activeBrandIds.add(bId);
         return;
       }
       if(r.tipe_sow_dipilih === 'VT_LIVE'){
@@ -6773,9 +7167,9 @@ function vrefPick(btn, url){
 const SOW_KEWAJIBAN = {
   VT: ['3 video testimoni', 'Batas 3 hari setelah konfirmasi barang sampai', 'Wajib pakai link affiliate Girlhood Den'],
   VT_LIVE: ['3 video testimoni', '3 sesi live, minimal 2 jam per sesi, tanggal berbeda', 'Batas 3 hari setelah konfirmasi barang sampai', 'Wajib pakai link affiliate Girlhood Den'],
-  LIVE: ['3 sesi live, minimal 2 jam per sesi, tanggal berbeda', 'Wajib pakai link affiliate Girlhood Den']
+  LIVE: ['Minimal 3 sesi live, 2 jam per sesi, maksimal 1 sesi per hari', 'Isi jadwal di Cek Status setelah disetujui', 'Sesi 1 paling lambat 3 hari & semua sesi paling lambat 5 hari setelah barang diterima', 'Wajib pakai link affiliate Girlhood Den']
 };
-const SOW_LABEL = { VT: 'VT saja', VT_LIVE: 'VT & Live', LIVE: 'Live saja' };
+const SOW_LABEL = { VT: 'Video', VT_LIVE: 'VT & Live', LIVE: 'Live' };
 
 function sowOptionHtml(tipe, judul, deskripsi){
   return '<button type="button" class="sow-opt" aria-pressed="false" data-sow="' + tipe + '" onclick="pilihSow(this)">'
@@ -6791,6 +7185,7 @@ function pilihSow(btn){
   var hidden = card.querySelector('.sow-select');
   hidden.value = btn.getAttribute('data-sow');
   toggleLive(hidden);
+  sowExtra(card, hidden.value);
   var check = card.querySelector('.sow-agree-check');
   if(check) check.checked = false;
   sowRefreshBtn(btn);
@@ -9640,43 +10035,26 @@ async function loadPoinCreator(){
 
     let html = '';
     html += '<div class="poin-hero"><div class="ph-star">⭐</div><div class="ph-lbl">POIN BULAN INI</div><div class="ph-num">'+summary.totalBulanIni+'</div>';
-    html += '<div class="ph-streak">🔥 Streak login: '+summary.streak+' hari berturut-turut</div></div>';
+    html += '<div class="ph-streak">Poin aktivitas kecil, poin penjualan besar. Jualan lewat link Girlhood Den = poin paling banyak.</div></div>';
 
-    const { data: misiRules } = await db.from('point_rules').select('kategori, nama, poin').in('kategori', ['buka_aplikasi','login_streak','sow_tuntas','ajak_referral']);
-    const poinByKategori = {};
-    (misiRules || []).forEach(function(r){ poinByKategori[r.kategori] = r.poin; });
-
-    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">🎯 Misi Aktif</div>';
+    const { data: misiRules } = await db.from('point_rules').select('kategori, poin, is_active').in('kategori', ['report_vt','sow_tuntas','login_streak','ajak_referral','event_post']);
+    const pk = {}; (misiRules || []).forEach(function(r){ pk[r.kategori] = r.poin; });
+    const kartuMisi = function(ikon, judul, sub, poin, ok){
+      return '<div class="misi-kartu' + (ok ? ' ok' : '') + '"><div class="misi-ikon">' + (ok ? '✅' : ikon) + '</div>'
+        + '<div style="flex:1;min-width:0"><div class="misi-judul">' + judul + '</div><div class="misi-sub">' + sub + '</div></div>'
+        + '<div class="misi-poin">' + poin + '</div></div>';
+    };
+    html += '<div class="card-sub" style="font-weight:700;margin-top:16px">🎯 Cara dapat poin</div>';
     html += '<div class="card-sub" style="margin-bottom:8px">Semua otomatis kecatat, gak perlu lapor manual.</div>';
     html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">';
-
-    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(summary.checkedInToday?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
-      + '<div style="font-size:18px;flex-shrink:0">'+(summary.checkedInToday?'✅':'📲')+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Buka Aplikasi Hari Ini</div><div style="font-size:10.5px;color:var(--gray-text)">'+(summary.checkedInToday?'Udah dapet hari ini':'Buka & login buat dapet poin')+'</div></div>'
-      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.buka_aplikasi||1)+'</div>'
-      + '</div>';
-
-    const loginDone = summary.streak >= 7;
-    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(loginDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
-      + '<div style="font-size:18px;flex-shrink:0">'+(loginDone?'✅':'🔥')+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Login 7 Hari Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.streak,7)+'/7 hari</div></div>'
-      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.login_streak||10)+'</div>'
-      + '</div>';
-
-    const sowDone = summary.sowStreak >= 3;
-    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid '+(sowDone?'var(--teal)':'var(--border)')+';border-radius:12px;padding:10px 12px">'
-      + '<div style="font-size:18px;flex-shrink:0">'+(sowDone?'✅':'📦')+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Tuntas 3 SOW Berturut-turut</div><div style="font-size:10.5px;color:var(--gray-text)">Progress: '+Math.min(summary.sowStreak,3)+'/3 SOW tepat waktu</div></div>'
-      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.sow_tuntas||25)+'</div>'
-      + '</div>';
-
-    html += '<div style="display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px">'
-      + '<div style="font-size:18px;flex-shrink:0">🤝</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12px;color:var(--dark)">Ajak Teman Jadi Creator</div><div style="font-size:10.5px;color:var(--gray-text)">'+summary.referralCount+' teman lolos verifikasi &middot; kode referral kamu: '+(currentSession.memberData && currentSession.memberData.kode_login ? currentSession.memberData.kode_login : '-')+'</div></div>'
-      + '<div style="text-align:right;flex-shrink:0;font-weight:800;font-size:12px;color:var(--teal)">+'+(poinByKategori.ajak_referral||50)+'/orang</div>'
-      + '</div>';
-
+    html += kartuMisi('💰', 'Jualan lewat link Girlhood Den', 'Video 1 poin, Live 1,5 poin per Rp100 ribu. Masuk tiap Senin.', 'Paling besar', false);
+    html += kartuMisi('🎬', 'Report VT', 'Tiap video disetujui. Request sample mulai video ke-4. Maks 60 poin/bulan termasuk event.', '+' + (pk.report_vt || 3), false);
+    html += kartuMisi('📦', 'Tuntas SOW', '3 video dalam 3 hari sejak barang sampai.', '+' + (pk.sow_tuntas || 25), false);
+    html += kartuMisi('📅', 'Posting saat event', 'Payday 25–28 dan tanggal kembar ±2 hari.', '+' + (pk.event_post || 5), false);
+    const streakOk = summary.streak >= 7;
+    html += kartuMisi('🔥', 'Login 7 hari pertama', 'Sekali seumur akun. Progress: ' + Math.min(summary.streak, 7) + '/7 hari.', '+' + (pk.login_streak || 10), streakOk);
     html += '</div>';
+    html += await htmlKartuReferral();
 
     html += '<div class="card-sub" style="font-weight:700;margin-top:6px">Aktivitas Terbaru</div>';
     if(!summary.recent || summary.recent.length===0){
