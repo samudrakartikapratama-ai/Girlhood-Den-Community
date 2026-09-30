@@ -978,6 +978,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .rl-fokus{display:none;font-size:11.5px;font-weight:800;color:#0F6E50;background:#E4F4EE;border-radius:999px;padding:4px 10px;margin-top:8px}
 .rl-step{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:var(--dark);margin:16px 0 8px}
 .rl-step i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.ide2{border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.ide2-atas{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ide2-no{font-size:11px;font-weight:800;color:#fff;background:var(--pink);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.ide2-atas b{font-size:14.5px;color:var(--dark);line-height:1.35}
+.ide2-hook{background:#FFF8E8;border-radius:12px;padding:12px 14px}
+.ide2-hook span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#8A5A00;margin-bottom:6px}
+.ide2-hook p{margin:0;font-size:14.5px;line-height:1.6;color:var(--dark);font-weight:700}
+.ide2-hook button{margin-top:10px;min-height:34px;padding:0 14px;border-radius:999px;border:1.5px solid #E8A419;background:#fff;color:#8A5A00;font-weight:800;font-size:12px;cursor:pointer}
+.ide2-alur{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.ide2-alur summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--pink);min-height:34px;display:flex;align-items:center}
+.ide2-alur ol{margin:6px 0 0;padding:0;list-style:none;counter-reset:l}
+.ide2-alur li{counter-increment:l;position:relative;padding:0 0 12px 36px;font-size:13.5px;line-height:1.6;color:var(--dark)}
+.ide2-alur li:before{content:counter(l);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--pink-pale);color:var(--pink);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+.ide2-cta{margin-top:8px;font-size:12.5px;font-weight:800;color:#0F6E50;background:#E4F4EE;border-radius:10px;padding:8px 12px;line-height:1.5}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -10115,6 +10129,11 @@ function ideFormat(f){
   document.querySelectorAll('.ide-fmt').forEach(function(b){ b.classList.toggle('on', b.dataset.f === f); });
   window._ideFormat = f;
 }
+function salinIde(i, btn){
+  const x = (window._ideData || [])[i]; if(!x) return;
+  navigator.clipboard.writeText(x.hook);
+  btn.textContent = 'Tersalin ✓'; setTimeout(function(){ btn.textContent = 'Salin hook'; }, 1500);
+}
 async function mintaIdeKonten(btn){
   if(!window._ideProduk) return;
   btn.disabled = true; const awal = btn.textContent; btn.textContent = 'AI lagi mikir...';
@@ -10129,13 +10148,16 @@ async function mintaIdeKonten(btn){
     });
     const j = await res.json();
     if(!j.valid){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal membuat ide.') + '</div>'; return; }
+    window._ideData = j.ide;
     wrap.innerHTML = j.ide.map(function(x, i){
-      return '<div class="ide-kartu"><div class="ide-no">' + (i + 1) + '</div><div style="flex:1;min-width:0">'
-        + '<div class="ide-judul">' + escHtml(x.judul || ('Ide ' + (i + 1))) + '</div>'
-        + '<div class="ide-hook">🎣 ' + escHtml(x.hook) + '</div>'
-        + '<ol class="ide-alur">' + (x.alur || []).map(function(a){ return '<li>' + escHtml(a) + '</li>'; }).join('') + '</ol>'
-        + (x.cta ? '<div class="ide-cta">🛒 ' + escHtml(x.cta) + '</div>' : '')
-        + '</div></div>';
+      const alur = x.alur || [];
+      return '<div class="ide2">'
+        + '<div class="ide2-atas"><span class="ide2-no">Ide ' + (i + 1) + '</span><b>' + escHtml(x.judul || '') + '</b></div>'
+        + '<div class="ide2-hook"><span>Hook 3 detik pertama</span><p>“' + escHtml(x.hook) + '”</p>'
+        + '<button type="button" onclick="salinIde(' + i + ', this)">Salin hook</button></div>'
+        + (alur.length ? '<details class="ide2-alur"><summary>Lihat alur video (' + alur.length + ' langkah)</summary><ol>' + alur.map(function(a){ return '<li>' + escHtml(a) + '</li>'; }).join('') + '</ol></details>' : '')
+        + (x.cta ? '<div class="ide2-cta">🛒 ' + escHtml(x.cta) + '</div>' : '')
+        + '</div>';
     }).join('') + (j.adaMateri ? '' : '<div class="card-sub" style="margin-top:6px">Brand belum mengisi materi produk, jadi ide ini masih umum.</div>');
     document.getElementById('ide-sisa').textContent = 'Sisa ' + j.sisa + ' kali hari ini';
   } catch(e){
