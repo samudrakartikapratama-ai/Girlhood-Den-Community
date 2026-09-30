@@ -787,6 +787,21 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .pf-ss-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--gray-mid);background:#fff}
 .pf-ss-item img{width:100%;height:100%;object-fit:cover;display:block}
 .pf-ss-item button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(62,35,64,.8);color:#fff;font-size:14px;line-height:1;cursor:pointer}
+.nb-hari{font-size:12px;font-weight:800;color:var(--gray-text);text-transform:uppercase;letter-spacing:.04em;margin:16px 2px 8px}
+.nb-hari:first-child{margin-top:10px}
+.nb-kartu{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--gray-mid);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.nb-kartu.nb-req{border:1.5px solid #F3B6C4;background:#FFFBFC}
+.nb-ikon{width:38px;height:38px;border-radius:12px;background:#F6F1F4;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.nb-judul{font-size:14.5px;font-weight:800;color:var(--dark)}
+.nb-teks{font-size:13.5px;font-weight:700;color:var(--dark);line-height:1.4}
+.nb-sub{font-size:12px;color:var(--gray-text);margin-top:2px}
+.nb-jam{font-size:11.5px;color:var(--gray-text);white-space:nowrap;padding-top:2px}
+.nb-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 10px}
+.nb-chip{font-size:11.5px;font-weight:700;background:#fff;border:1px solid var(--gray-mid);border-radius:999px;padding:3px 9px;color:var(--dark)}
+.nb-chip-lagi{background:#F6F1F4;color:var(--gray-text)}
+.nb-btn{min-height:38px;border:none;border-radius:10px;background:var(--pink);color:#fff;font-weight:800;font-size:12.5px;padding:0 14px;cursor:pointer}
+.nb-kosong{text-align:center;padding:30px 10px;font-size:28px;color:var(--gray-text)}
+.nb-kosong div{font-size:13px;margin-top:6px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1265,7 +1280,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 
 <div class="modal-bg" id="m-b6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-b6')">‹ ✕</button>
   <div class="modal-title">🔔 Notifikasi</div>
-  <div class="card-sub">Semua perubahan dari tim internal soal produk & campaign kamu, digabung di sini.</div>
+  <div class="card-sub">Request sample baru dan kabar dari tim Girlhood Den.</div>
   <div id="b6-notif-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
@@ -4239,32 +4254,68 @@ async function loadNotificationsBrand(){
     .eq('brand_id', currentSession.brandId)
     .contains('audience', ['brand'])
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(80);
 
   if(error){
     container.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat notifikasi.</div>';
     return;
   }
-
   if(!data || data.length === 0){
-    container.innerHTML = '<div class="card-sub">Belum ada notifikasi.</div>';
+    container.innerHTML = '<div class="nb-kosong">🔕<div>Belum ada notifikasi.</div></div>';
     return;
   }
 
   const memberIds = Array.from(new Set(data.map(function(n){ return n.member_id; }).filter(Boolean)));
-  let memberNames = {};
+  const memberNames = {};
   if(memberIds.length > 0){
     const { data: members } = await db.from('members').select('id, nama').in('id', memberIds);
-    (members||[]).forEach(function(m){ memberNames[m.id] = m.nama; });
+    (members || []).forEach(function(m){ memberNames[m.id] = m.nama; });
   }
 
-  container.innerHTML = data.map(function(n){
-    const memberName = n.member_id && memberNames[n.member_id] ? memberNames[n.member_id] : null;
-    return '<div class="card"><div style="display:flex;gap:8px;align-items:flex-start">'
-      + '<div style="font-size:18px">' + notifIcon(n.kategori) + '</div>'
-      + '<div style="flex:1"><div>' + n.detail_text + (memberName ? ' <span class="card-sub">(' + memberName + ')</span>' : '') + '</div>'
-      + '<div class="card-sub" style="margin-top:2px">' + notifTimeAgo(n.created_at) + '</div></div>'
-      + '</div></div>';
+  // Kelompokkan per hari (WIB). Notifikasi "request sample baru" di hari yang sama digabung jadi satu kartu.
+  const kunciHari = function(iso){ return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); };
+  const hariIni = kunciHari(new Date().toISOString());
+  const kemarin = kunciHari(new Date(Date.now() - 86400000).toISOString());
+  const labelHari = function(k){
+    if(k === hariIni) return 'Hari ini';
+    if(k === kemarin) return 'Kemarin';
+    return new Date(k + 'T00:00:00+07:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' });
+  };
+  const hari = []; const perHari = {};
+  data.forEach(function(n){
+    const k = kunciHari(n.created_at);
+    if(!perHari[k]){ perHari[k] = { req: [], lain: [] }; hari.push(k); }
+    if(/request sample baru/i.test(n.detail_text || '')) perHari[k].req.push(n); else perHari[k].lain.push(n);
+  });
+  const jam = function(iso){ return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }); };
+
+  container.innerHTML = hari.map(function(k){
+    const g = perHari[k];
+    let html = '<div class="nb-hari">' + labelHari(k) + '</div>';
+    if(g.req.length){
+      const nama = Array.from(new Set(g.req.map(function(n){ return memberNames[n.member_id] || 'Creator'; })));
+      const tampil = nama.slice(0, 6);
+      html += '<div class="nb-kartu nb-req">'
+        + '<div class="nb-ikon" style="background:#FCEFF4">📦</div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div class="nb-judul">' + g.req.length + ' request sample baru</div>'
+        +   '<div class="nb-chips">' + tampil.map(function(x){ return '<span class="nb-chip">' + escHtml(x) + '</span>'; }).join('')
+        +     (nama.length > tampil.length ? '<span class="nb-chip nb-chip-lagi">+' + (nama.length - tampil.length) + ' lainnya</span>' : '') + '</div>'
+        +   '<button type="button" class="nb-btn" onclick="closeModal(\'m-b6\'); openModal(\'m-b1\'); loadApprovalRows();">Buka Approval →</button>'
+        + '</div>'
+        + '<div class="nb-jam">' + jam(g.req[0].created_at) + '</div>'
+        + '</div>';
+    }
+    html += g.lain.map(function(n){
+      const nm = n.member_id && memberNames[n.member_id] ? memberNames[n.member_id] : null;
+      return '<div class="nb-kartu">'
+        + '<div class="nb-ikon">' + notifIcon(n.kategori) + '</div>'
+        + '<div style="flex:1;min-width:0"><div class="nb-teks">' + escHtml(n.detail_text || '-') + '</div>'
+        + (nm ? '<div class="nb-sub">' + escHtml(nm) + '</div>' : '') + '</div>'
+        + '<div class="nb-jam">' + jam(n.created_at) + '</div>'
+        + '</div>';
+    }).join('');
+    return html;
   }).join('');
 }
 
