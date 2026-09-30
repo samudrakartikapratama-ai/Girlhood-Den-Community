@@ -3117,7 +3117,7 @@ function pfTampilTier(tierAktif){
   const isi = list.length ? list.map(function(r){
     return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-mid);border-radius:12px;padding:10px 12px;margin-bottom:6px">'
       + '<div style="width:22px;font-weight:800;color:var(--gray-text)">' + r.peringkat + '</div>'
-      + '<div style="width:34px;height:34px;border-radius:50%;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--pink);flex-shrink:0">' + pfInitials(r.nama) + '</div>'
+      + htmlAvatar(r.foto, r.nama, r.tier, 42)
       + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(r.nama || '-') + '</div>'
       + '<div style="font-size:11.5px;color:var(--gray-text)">' + (r.username ? '@' + escHtml(r.username) + ' · ' : '') + r.jumlah_video + ' video disetujui</div>'
       + ((r.badge_live_performance || r.badge_short_video_maker) ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">' + htmlChipBadge(r) + '</div>' : '') + '</div>'
@@ -4231,7 +4231,7 @@ function applyCreatorAvatar(){
   const m = currentSession.memberData || {};
   const foto = m.foto_selfie_url;
   if(foto){
-    frame.innerHTML = '<img src="'+foto+'" alt="Foto profil '+(m.nama||'')+'" onerror="this.parentElement.textContent=ticInitials(currentSession.memberData&&currentSession.memberData.nama);">';
+    frame.innerHTML = '<img src="'+fotoKecil(foto)+'" data-asli="'+escHtml(foto)+'" alt="Foto profil '+escHtml(m.nama||'')+'" onerror="if(this.dataset.asli && this.src!==this.dataset.asli){this.src=this.dataset.asli}else{this.parentElement.textContent=ticInitials(currentSession.memberData&&currentSession.memberData.nama);}">';
   } else {
     frame.textContent = ticInitials(m.nama || '?');
   }
@@ -4708,7 +4708,7 @@ async function loadApprovalRows(){
   try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, jumlah_diminta, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat, tier, badge_live_performance, badge_short_video_maker), brand_products!inner(nama_produk, brand_id)')
+    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, jumlah_diminta, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat, tier, badge_live_performance, badge_short_video_maker, foto_selfie_url), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .in('status', ['requested','approved','rejected'])
     .eq('sumber', 'sow')
@@ -4787,7 +4787,7 @@ async function loadApprovalRows(){
     const klaim = (m.level || m.gmv_30hari) ? '<span class="appr-klaim">Pengakuan saat daftar: '+escHtml(m.level||'-')+(m.gmv_30hari ? ' · '+gmvText+'/30 hari' : '')+'</span>' : '';
     return '<div class="appr-group'+(adaLive?' ada-live':'')+'" data-search-name="'+escHtml((m.nama||'').toLowerCase())+'">'
       + '<div class="appr-group-head">'
-        + '<div style="flex:1;min-width:220px"><div class="appr-group-name">'+escHtml(m.nama||'-')+'</div>'
+        + '<div style="flex:1;min-width:220px;display:flex;gap:14px;align-items:flex-start">' + htmlAvatar(m.foto_selfie_url, m.nama, m.tier, 58) + '<div style="flex:1;min-width:0"><div class="appr-group-name">'+escHtml(m.nama||'-')+'</div>'
         + '<div class="appr-group-meta">'
           + (m.tiktok_profile_link ? '<a class="appr-profil-btn" href="'+escHtml(m.tiktok_profile_link)+'" target="_blank" rel="noopener">Lihat profil ↗</a>' : '')
           + (adaLive ? '<span class="appr-live-chip">Ada request Live</span>' : '')
@@ -4795,7 +4795,7 @@ async function loadApprovalRows(){
           + klaim
         + '</div>'
         + '<div class="appr-group-meta">📞 '+escHtml(m.no_hp||'-')+'</div>'
-        + '<div class="appr-group-meta">📍 '+escHtml(m.alamat||'-')+'</div></div>'
+        + '<div class="appr-group-meta">📍 '+escHtml(m.alamat||'-')+'</div></div></div>'
         + '<div class="appr-group-date">🗓️ '+tanggalLabel+'</div>'
       + '</div>'
       + (besar ? '<div class="appr-besar" style="margin-top:12px"><b>Permintaan besar untuk Live.</b> Kalau tidak bisa sebanyak itu, ubah angka "Jumlah dikirim" per produk sebelum klik Kirim.</div>' : '')
@@ -5278,8 +5278,8 @@ async function loadBrandRencanaLive(){
   data.forEach(function(r){ const k = rlFmtTgl(r.mulai); if(!perHari[k]){ perHari[k] = []; urut.push(k); } perHari[k].push(r); });
   wrap.innerHTML = urut.map(function(k){
     return '<div class="nb-hari">' + k + '</div>' + perHari[k].map(function(r){
-      return '<div class="bl-baris"><div><div class="bl-nama">' + escHtml(r.member_nama || '-') + '</div>'
-        + '<span class="bl-tag ' + (r.mix_brand ? 'mix' : 'fokus') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus brand kamu') + '</span></div>'
+      return '<div class="bl-baris"><div style="display:flex;gap:10px;align-items:center">' + htmlAvatar(r.foto, r.member_nama, r.tier, 42) + '<div><div class="bl-nama">' + escHtml(r.member_nama || '-') + '</div>'
+        + '<span class="bl-tag ' + (r.mix_brand ? 'mix' : 'fokus') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus brand kamu') + '</span></div></div>'
         + '<div class="bl-jam">' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
     }).join('');
   }).join('');
@@ -5299,7 +5299,7 @@ async function loadInternalRencanaLive(){
     const g = per[bid];
     return '<details class="il-brand"' + (i === 0 ? ' open' : '') + '><summary><span class="il-nama">' + escHtml(g.nama || '-') + '</span><span class="il-jml">' + g.rows.length + ' sesi</span></summary>'
       + g.rows.map(function(r){
-        return '<div class="il-baris"><div><b>' + escHtml(r.member_nama || '-') + '</b><div class="card-sub">' + escHtml(r.jalur) + ' · <span style="color:' + (r.mix_brand ? '#6E5A6C' : '#0F6E50') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus 1 brand') + '</span></div></div>'
+        return '<div class="il-baris"><div style="display:flex;gap:10px;align-items:center">' + htmlAvatar(r.foto, r.member_nama, r.tier, 36) + '<div><b>' + escHtml(r.member_nama || '-') + '</b><div class="card-sub">' + escHtml(r.jalur) + ' · <span style="color:' + (r.mix_brand ? '#6E5A6C' : '#0F6E50') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus 1 brand') + '</span></div></div></div>'
           + '<div class="il-jam">' + rlFmtTgl(r.mulai) + '<br>' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
       }).join('') + '</details>';
   }).join('');
@@ -5323,7 +5323,7 @@ async function loadPapanSkor(jenis){
   const rows = (top.data || []).slice(0, 10);
   let html = rows.length ? rows.map(function(r, i){
     const aku = r.member_id === currentSession.memberId;
-    return '<div class="ps-baris' + (aku ? ' aku' : '') + '"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + r.peringkat + '</span>'
+    return '<div class="ps-baris' + (aku ? ' aku' : '') + '"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + r.peringkat + '</span>' + htmlAvatar(r.foto, r.nama, r.tier, 36)
       + '<span class="ps-nama">' + escHtml(r.nama || '-') + (aku ? ' (kamu)' : '') + '</span><span class="ps-nilai">' + nilai(r.nilai) + '</span></div>';
   }).join('') : '<div class="rl-kosong">🏆<div>' + (window._psTab === 'gmv' ? 'Belum ada data penjualan bulan ini.' : 'Belum ada teman yang menuntaskan sample bulan ini.') + '</div></div>';
   const s = (saya.data || [])[0];
@@ -9961,6 +9961,14 @@ async function loadWeeklyLeaderboard(){
 const TIER_WARNA = { Solitaire:['#ECE5F8','#4B2F8F'], Diamond:['#DDEEF9','#17577F'], Gold:['#FBF0CC','#7A5A00'], Bronze:['#F6E8DD','#7F4E2B'] };
 
 // ===== Tampilan tier & badge =====
+function htmlAvatar(url, nama, tier, size){
+  size = size || 40;
+  const w = TIER_WARNA[tier] || TIER_WARNA.Bronze;
+  const ini = escHtml(String(nama || '?').trim().split(/\s+/).map(function(x){ return x.charAt(0); }).slice(0, 2).join('').toUpperCase());
+  const st = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2.5px ' + w[1] + ';background:' + w[0] + ';';
+  if(url) return '<img src="' + fotoKecil(url) + '" data-asli="' + escHtml(url) + '" alt="" loading="lazy" style="' + st + 'object-fit:cover" onerror="if(this.dataset.asli && this.src!==this.dataset.asli){this.src=this.dataset.asli}">';
+  return '<span style="' + st + 'display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:' + Math.round(size * 0.36) + 'px;color:' + w[1] + '">' + ini + '</span>';
+}
 function htmlChipTier(tier){
   const w = TIER_WARNA[tier] || TIER_WARNA.Bronze;
   return '<span class="bdg-chip" style="background:' + w[0] + ';color:' + w[1] + '">' + escHtml(tier || 'Bronze') + '</span>';
@@ -9982,11 +9990,17 @@ function htmlBadgeSaya(m){
 async function renderCreatorEmblem(){
   const el = document.getElementById('creator-emblem');
   if(!el || !currentSession.memberId) return;
-  const { data } = await db.from('members').select('tier, badge_live_performance, badge_short_video_maker').eq('id', currentSession.memberId).maybeSingle();
+  const { data } = await db.from('members').select('tier, badge_live_performance, badge_short_video_maker, foto_selfie_url, nama').eq('id', currentSession.memberId).maybeSingle();
   if(!data){ el.innerHTML = ''; return; }
   const w = TIER_WARNA[data.tier] || TIER_WARNA.Bronze;
   const frame = document.getElementById('avatar-frame');
-  if(frame) frame.style.boxShadow = '0 0 0 3px ' + w[1];
+  if(frame){
+    frame.style.boxShadow = '0 0 0 3px ' + w[1];
+    if(data.foto_selfie_url && !frame.querySelector('img')){
+      frame.innerHTML = '<img src="' + fotoKecil(data.foto_selfie_url) + '" data-asli="' + escHtml(data.foto_selfie_url) + '" alt="Foto profil" onerror="if(this.dataset.asli && this.src!==this.dataset.asli){this.src=this.dataset.asli}">';
+      frame.classList.add('show');
+    }
+  }
   el.innerHTML = '<span class="ce-pill" style="background:' + w[0] + ';color:' + w[1] + '">' + escHtml(data.tier || 'Bronze') + '</span>'
     + (data.badge_live_performance ? '<span class="ce-pill" style="background:#FDE7EE;color:#A30E3F" title="Live Performance">● Live</span>' : '')
     + (data.badge_short_video_maker ? '<span class="ce-pill" style="background:#E8EBFB;color:#34418C" title="Short Video Maker">▶ Video</span>' : '');
