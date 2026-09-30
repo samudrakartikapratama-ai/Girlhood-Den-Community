@@ -1699,7 +1699,7 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
         <div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>
         <div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori"></select></div>
         <div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>
-        <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>
+        <div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">Video</option><option value="LIVE">Live</option></select></div>
         <div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan">Satuan (max 2 SKU per brand)</option><option value="bundling">Bundling (habiskan kuota brand ini)</option></select></div>
         <div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>
         <div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>
@@ -4152,7 +4152,9 @@ const TUTORIAL2_SLIDES = {
     { icon:'👋', color:'linear-gradient(135deg,#E8185A,#F06A9C)', title:'Yuk Kenalan Dulu', sub:'5 menit doang. Biar kamu nggak bingung pas mulai campaign, dan poin kamu maksimal.', rules:null },
     { icon:'🛍️', color:'linear-gradient(135deg,#E8185A,#C2185B)', title:'Request Sample', sub:'Menu buat minta produk ke brand.', rules:[
       'Maksimal pegang 3 brand barengan',
+      'Pilih kewajiban: Video (3 video) atau Live (minimal 3 sesi)',
       'Tiap brand: pilih 2 produk satuan, atau 1 paket — nggak bisa gabung dua-duanya',
+      'Punya badge Live Performance dan pilih Live? Boleh sampai 10 produk dan minta jumlah lebih',
       'Belum posting video lebih dari 5 hari? Cuma brand itu yang dikunci, brand lain tetap aman',
       'Produk atau brand yang lagi di-freeze nggak bisa diminta',
       'Status masih "Menunggu"? Boleh dibatalin sendiri, kuota langsung balik',
@@ -4160,7 +4162,8 @@ const TUTORIAL2_SLIDES = {
       'Brand nggak jawab dalam 7 hari, permintaan otomatis ditutup dan kuota balik'
     ], note:null },
     { icon:'🔍', color:'linear-gradient(135deg,#1E8A80,#159086)', title:'Cek Status & Kuota', sub:'Pantau progress tiap request kamu di sini.', rules:[
-      'Barang sampai → kamu punya 3 hari buat posting biar dapat bonus poin',
+      'Video: barang sampai → kamu punya 3 hari buat posting biar dapat bonus poin',
+      'Live: isi jadwal di sini setelah disetujui. Setelah barang sampai, jadwal terkunci',
       'Lewat 3 hari? Masih boleh posting, cuma bonusnya hangus',
       'Lewat 5 hari belum posting sama sekali? Brand itu dikunci sementara buat request baru',
       'Semua status — dibatalin, ditutup, disetujui — kelihatan jelas di sini'
@@ -4172,7 +4175,14 @@ const TUTORIAL2_SLIDES = {
       'Satu video hanya untuk satu produk, tidak bisa dipakai dua kali',
       'Video tambahan tetap dapat poin, dengan batas 60 poin per bulan'
     ], note:null },
-    { icon:'📸', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Self Report', sub:'Buat produk yang UDAH kamu punya SENDIRI sebelum ikut campaign ini — bukan dari Request Sample.', rules:[
+    { icon:'🔴', color:'linear-gradient(135deg,#A30E3F,#E8185A)', title:'SOW Live', sub:'Kalau kamu pilih Live saat Request Sample.', rules:[
+      'Minimal 3 sesi, 2 jam per sesi, maksimal 1 sesi per hari',
+      'Isi jadwal di Cek Status setelah request disetujui. Masih bisa diubah sampai barang diterima',
+      'Setelah barang diterima: sesi 1 paling lambat 3 hari, semua sesi paling lambat 5 hari, lalu jadwal terkunci',
+      'Slot brand kamu kepakai sampai sesi terakhir selesai',
+      'Tips: posting video produknya dulu sebelum live, biar traffic naik'
+    ], note:null },
+    { icon:'📸', color:'linear-gradient(135deg,#E8A419,#F0C24D)', title:'Report Produk Milikmu', sub:'Buat produk yang UDAH kamu punya SENDIRI sebelum ikut campaign ini — bukan dari Request Sample.', rules:[
       'Ajukan duluan: upload foto bukti produknya SEBELUM kamu bikin video',
       'Tim internal review foto itu dulu',
       'Foto ditolak? Upload ulang aja, otomatis ganti yang lama',
@@ -4189,7 +4199,15 @@ const TUTORIAL2_SLIDES = {
       'Posting di tanggal 25–28 (payday) = +5 poin, dan 2 hari sebelum sampai 2 hari sesudah tanggal kembar (misalnya 10.10) = +5 poin',
       'Poin dari video, payday, dan tanggal kembar maksimal 60 poin per bulan. Selebihnya harus dari penjualan',
       'Poin kembali ke 0 setiap tanggal 1, jadi segera ditukar',
-      'Tukar hadiah cuma 1 kali per bulan. Daftar hadiah dan poin yang dibutuhkan ada di menu Poin'
+      'Tukar hadiah cuma 1 kali per bulan. Daftar hadiah dan poin yang dibutuhkan ada di menu Poin',
+      'Login 7 hari pertama berturut-turut = +10 poin, sekali seumur akun',
+      'Ajak teman pakai kode referral kamu = +50 poin begitu temanmu menuntaskan sample pertamanya'
+    ], note:null },
+    { icon:'🏅', color:'linear-gradient(135deg,#4B2F8F,#E8185A)', title:'Tier, Badge & Rencana Live', sub:'Makin laku, makin banyak akses.', rules:[
+      'Tier (Bronze, Gold, Diamond, Solitaire) dari penjualan 90 hari lewat link Girlhood Den, diperbarui tiap bulan',
+      'Badge Live Performance: jualan Live terbukti, boleh minta sample lebih saat pilih Live',
+      'Badge Short Video Maker: jualan video terbukti, tampil ke brand',
+      'Mau live pakai produk sendiri? Isi Rencana Live paling lambat H-1 supaya brand tahu'
     ], note:null },
     { icon:'🎉', color:'linear-gradient(135deg,#E8185A,#E8A419)', title:'Siap Mulai!', sub:'Kalau lupa aturan, buka lagi tutorial ini kapan aja lewat menu Tutorial.', rules:null }
   ],
@@ -4888,7 +4906,8 @@ async function loadApprovalRows(){
 
     const adaLive = g.items.some(function(r){ return r.tipe_sow_dipilih === 'LIVE' || r.tipe_sow_dipilih === 'VT_LIVE'; });
     const besar = g.items.filter(function(r){ return r.jumlah_diminta; }).length > 3 || g.items.some(function(r){ return (r.jumlah_diminta || 0) > 3; });
-    const klaim = (m.level || m.gmv_30hari) ? '<span class="appr-klaim">Pengakuan saat daftar: '+escHtml(m.level||'-')+(m.gmv_30hari ? ' · '+gmvText+'/30 hari' : '')+'</span>' : '';
+    // Data ketikan creator saat daftar tidak ditampilkan ke brand. Nanti diganti Items sold dari Partner Center.
+    const klaim = '';
     return '<div class="appr-group'+(adaLive?' ada-live':'')+'" data-search-name="'+escHtml((m.nama||'').toLowerCase())+'">'
       + '<div class="appr-group-head">'
         + '<div style="flex:1;min-width:220px;display:flex;gap:14px;align-items:flex-start">' + htmlAvatar(m.foto_selfie_url, m.nama, m.tier, 58) + '<div style="flex:1;min-width:0"><div class="appr-group-name">'+escHtml(m.nama||'-')+'</div>'
@@ -7725,7 +7744,7 @@ async function renderPakaiProdukSendiri(container){
   const blok = document.createElement('div');
   blok.className = 'punya-sendiri-box';
   blok.innerHTML = '<div class="punya-sendiri-head"><b>🛍️ Dibawakan pakai produk milik creator sendiri</b></div>'
-    + '<div class="card-sub" style="margin-bottom:10px">Creator ini sudah punya produkmu sebelumnya dan memilih membawakannya lagi lewat Girlhood Den. Kamu <b>nggak perlu kirim apa pun</b> — mereka tetap wajib setor 3 VT, dan dapat poin ekstra dari kami sebagai gantinya. Buat kamu: tambahan konten dan GMV tanpa biaya sample.</div>'
+    + '<div class="card-sub" style="margin-bottom:10px">Creator ini sudah punya produkmu sebelumnya dan memilih membawakannya lagi lewat Girlhood Den. Kamu <b>nggak perlu kirim apa pun</b>. Tidak ada target jumlah video; setiap video yang mereka setor tetap tercatat. Buat kamu: tambahan konten dan GMV tanpa biaya sample.</div>'
     + isi;
   container.appendChild(blok);
 }
@@ -8222,7 +8241,7 @@ async function editBrand(brandId){
       + '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" value="'+(p.harga!==null&&p.harga!==undefined?p.harga:'')+'"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" value="'+(p.komisi_percent!==null&&p.komisi_percent!==undefined?p.komisi_percent:'')+'"></div></div>'
             + '<div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori">'+kategoriOptionsHtml(p.kategori||'')+'</select></div>'
             + '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple>'+((p.foto_urls||[]).length>0 ? '<div style="background:var(--teal-pale,#e3f6ef);color:var(--teal,#1D9E75);font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;margin-top:5px">✅ '+(p.foto_urls.length)+' foto TERSIMPAN AMAN (kotak di atas emang selalu kosong walau file lama masih ada — itu wajar). Pilih file cuma kalau mau GANTI.</div>' : '<div class="size-note">Belum ada foto.</div>')+' <div class="size-note">Max 3 foto, 5MB/foto</div></div>'
-      + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow==='VT'?' selected':'')+'>VT</option><option value="VT_LIVE"'+(p.tipe_sow==='VT_LIVE'?' selected':'')+'>VT & Live</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
+      + '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT"'+(p.tipe_sow!=='LIVE'?' selected':'')+'>Video</option><option value="LIVE"'+(p.tipe_sow==='LIVE'?' selected':'')+'>Live</option></select></div>'
       + '<div class="field"><label>Tipe Produk</label><select class="pb-tipe"><option value="satuan"'+(p.tipe_produk!=='bundling'?' selected':'')+'>Satuan (max 2 SKU per brand)</option><option value="bundling"'+(p.tipe_produk==='bundling'?' selected':'')+'>Bundling (habiskan kuota brand ini)</option></select></div>'
       + '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple>'+((p.video_referensi_urls||[]).length>0 ? '<div style="background:var(--teal-pale,#e3f6ef);color:var(--teal,#1D9E75);font-weight:800;font-size:11px;padding:6px 10px;border-radius:8px;margin-top:5px">✅ '+(p.video_referensi_urls.length)+' video TERSIMPAN AMAN (kotak di atas emang selalu kosong walau file lama masih ada — itu wajar). Pilih file cuma kalau mau GANTI.</div>' : '<div class="size-note">Belum ada video.</div>')+' <div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>'
       + '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"'+(p.tag_hot?' checked':'')+'> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"'+(p.tag_high_commission?' checked':'')+'> 💰 High Commission</label></div>';
@@ -9653,7 +9672,7 @@ function addProductBlock(){
     '<div class="field-row"><div class="field"><label>Harga (Rp)</label><input class="pb-harga" placeholder="150000"></div><div class="field"><label>Komisi (%)</label><input class="pb-komisi" placeholder="15"></div></div>'+
     '<div class="field"><label>Kategori <span style="font-weight:400;color:var(--gray-text)">(dipakai buat filter kategori di menu creator)</span></label><select class="pb-kategori">'+kategoriOptionsHtml('')+'</select></div>'+
     '<div class="field"><label>Foto Produk (bisa pilih beberapa)</label><input type="file" class="pb-foto" accept="image/*" multiple><div class="size-note">Max 3 foto, 5MB/foto</div></div>'+
-    '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">VT</option><option value="VT_LIVE">VT & Live</option><option value="LIVE">Live</option></select></div>'+
+    '<div class="field"><label>Tipe SOW</label><select class="pb-sow"><option value="VT">Video</option><option value="LIVE">Live</option></select></div>'+
     '<div class="field"><label>Referensi Video (bisa pilih beberapa)</label><input type="file" class="pb-video" accept="video/*" multiple><div class="size-note">Max 3 video, 1 menit &amp; 5MB/video</div></div>'+
     '<div class="field" style="display:flex;gap:16px"><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-hot" style="width:auto"> 🔥 Hot Product</label><label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" class="pb-comm" style="width:auto"> 💰 High Commission</label></div>';
   container.appendChild(block);
@@ -11027,8 +11046,9 @@ async function loadPoinRedeemList(){
 }
 
 const POIN_KATEGORI_LABEL = {
-  verifikasi:'Lolos Verifikasi', sow_tuntas:'Tuntas SOW 3x Berturut', report_vt:'Report VT Melebihi SOW',
-  event_post:'Posting Saat Event', buka_aplikasi:'Buka Aplikasi Harian', login_streak:'Login 7 Hari Berturut',
+  verifikasi:'Lolos Verifikasi', sow_tuntas:'Tuntas SOW', report_vt:'Report VT',
+  event_post:'Posting Saat Event', buka_aplikasi:'Buka Aplikasi (aturan lama)', login_streak:'Login 7 Hari Pertama',
+  ajak_referral:'Ajak Teman (Referral)', gmv_penjualan:'Penjualan (GMV)',
   pelanggaran_ingkar:'Pelanggaran (Ingkar Janji)', gmv_juara1:'Juara 1 GMV Mingguan', gmv_juara2:'Juara 2 GMV Mingguan',
   gmv_juara3:'Juara 3 GMV Mingguan', redeem_hadiah:'Tukar Hadiah', refund_redeem:'Refund Penukaran'
 };
