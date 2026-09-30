@@ -949,6 +949,35 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .il-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:0 0 10px}
 .il-tab{min-height:40px;border:none;border-radius:9px;background:transparent;font-weight:800;color:var(--gray-text);cursor:pointer}
 .il-tab.on{background:var(--pink);color:#fff}
+.jl-strip{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.jl-hari{flex:0 0 58px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;color:var(--dark)}
+.jl-hari span{font-size:11px;color:var(--gray-text)}
+.jl-hari b{font-size:19px;line-height:1.1}
+.jl-hari em{font-style:normal;font-size:10px;color:var(--gray-text)}
+.jl-hari.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.jl-hari.on span,.jl-hari.on em{color:#fff}
+.jl-sesi{border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:8px;background:#fff}
+.jl-sesi-atas{display:flex;align-items:center;gap:8px}
+.jl-sesi-atas b{flex:1;font-size:13.5px}
+.jl-sesi-atas span{font-size:13px;font-weight:800;color:var(--pink)}
+.jl-hapus{width:28px;height:28px;border-radius:50%;border:none;background:#F1ECF1;cursor:pointer;font-size:15px}
+.jl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.jl-chip{min-height:32px;padding:0 12px;border-radius:999px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:800;color:var(--dark);cursor:pointer}
+.jl-chip.on{background:var(--pink-pale);border-color:var(--pink);color:var(--pink)}
+.jl-atur{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--gray-text)}
+.jl-atur input{min-height:38px;border-radius:10px;padding:0 8px}
+.jl-kosong{font-size:12.5px;color:var(--gray-text);background:#FCF7FA;border:1.5px dashed #E6D6E1;border-radius:12px;padding:12px;text-align:center;margin-top:6px}
+.jl-ringkas{font-size:12px;font-weight:800;color:var(--dark);background:#F6F1F4;border-radius:10px;padding:8px 12px;margin-top:10px}
+.rl-pkartu-wrap{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.rl-pkartu{position:relative;flex:0 0 112px;border:1.5px solid var(--pink);border-radius:14px;padding:6px;background:#fff}
+.rl-pkartu img,.rl-pkartu-ph{width:100%;height:78px;object-fit:cover;border-radius:10px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:24px}
+.rl-pkartu-brand{font-size:10.5px;font-weight:800;color:var(--pink);margin-top:5px}
+.rl-pkartu-nama{font-size:11.5px;font-weight:700;color:var(--dark);line-height:1.3;max-height:30px;overflow:hidden}
+.rl-pkartu button{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(62,35,64,.8);color:#fff;cursor:pointer;font-size:13px}
+.rl-hasil-foto{width:38px;height:38px;border-radius:8px;object-fit:cover;background:var(--pink-pale);flex-shrink:0}
+.rl-fokus{display:none;font-size:11.5px;font-weight:800;color:#0F6E50;background:#E4F4EE;border-radius:999px;padding:4px 10px;margin-top:8px}
+.rl-step{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:var(--dark);margin:16px 0 8px}
+.rl-step i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--pink);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1320,20 +1349,20 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div class="card-sub">Kabari brand dan tim sebelum kamu live pakai produk milikmu sendiri. Live dari sample brand dijadwalkan di menu Cek Status.</div>
   <div class="rl-tabs"><button type="button" id="rl-tab-buat" class="on" onclick="rlTab('buat')">Buat rencana</button><button type="button" id="rl-tab-saya" onclick="rlTab('saya')">Rencana saya</button></div>
   <div id="rl-view-buat">
-    <div class="rl-lbl">Produk yang kamu bawa <span style="font-weight:600;color:var(--gray-text)">(bebas, sesuai etalase)</span></div>
+    <div class="rl-step"><i>1</i> Produk yang kamu bawa</div>
     <div class="rl-cari"><input id="rl-cari" placeholder="🔍 Cari nama produk atau brand..." oninput="rlCariProduk(this.value)"></div>
     <div id="rl-hasil" class="rl-hasil"></div>
     <div id="rl-produk" class="rl-produk"></div>
+    <span id="rl-fokus" class="rl-fokus">Fokus 1 brand · peluang dapat dukungan ads</span>
     <div id="rl-mix" class="rl-mix" style="display:none">
       <b id="rl-mix-judul"></b>
       Boleh kok. Cuma, brand biasanya kasih dukungan <b style="display:inline;color:inherit;margin:0">ads atau voucher</b> untuk live yang fokus ke produk mereka saja. Kalau mau peluang didukung, pilih produk dari satu brand.
       <label class="rl-cek"><input type="checkbox" id="rl-mix-ok"> Oke, tetap bawa semua produk ini</label>
     </div>
-    <div class="rl-lbl">Jadwal sesi <span style="font-weight:600;color:var(--gray-text)">(paling lambat H-1)</span></div>
-    <div id="rl-sesi"></div>
-    <button type="button" class="rl-btn-garis" onclick="rlTambahSesi()">+ Tambah sesi</button>
+    <div class="rl-step"><i>2</i> Pilih tanggal &amp; jam <span style="font-weight:600;color:var(--gray-text);font-size:12px">(paling lambat H-1)</span></div>
+    <div id="rl-jl"></div>
     <div class="rl-info"><b>Tips:</b> traffic Live biasanya lebih bagus kalau kamu posting video produknya dulu sebelum live dimulai.<br><b>Poin:</b> mengisi rencana tidak dapat poin. Poin datang dari penjualan Live, 1,5 poin per Rp100 ribu, masuk tiap Senin.</div>
-    <button type="button" class="btn btn-primary" style="width:100%;min-height:48px" id="rl-simpan" onclick="rlSimpan(this)">Kirim ke brand &amp; tim</button>
+    <button type="button" class="btn btn-primary" style="width:100%;min-height:48px" id="rl-simpan" onclick="rlSimpan(this)">Kirim rencana</button>
   </div>
   <div id="rl-view-saya" style="display:none"><div id="rl-list"></div></div>
 </div></div>
@@ -5151,11 +5180,11 @@ function rlTab(t){
 }
 function rlReset(){
   window._rlProduk = []; window._rlEditId = null;
-  document.getElementById('rl-sesi').innerHTML = rlBarisSesi(null, 0);
+  rlJlBaru([]);
   document.getElementById('rl-cari').value = '';
   document.getElementById('rl-hasil').innerHTML = '';
   document.getElementById('rl-mix-ok').checked = false;
-  document.getElementById('rl-simpan').textContent = 'Kirim ke brand & tim';
+  document.getElementById('rl-simpan').textContent = 'Kirim rencana';
   rlRenderProduk();
 }
 function rlTambahSesi(){ document.getElementById('rl-sesi').insertAdjacentHTML('beforeend', rlBarisSesi(null, 0)); }
@@ -5169,16 +5198,18 @@ function rlCariProduk(q){
     wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
     const pola = '%' + q.replace(/[%_]/g, '') + '%';
     const [byNama, byBrand] = await Promise.all([
-      db.from('brand_products').select('id, nama_produk, brand_id, brands!inner(nama_brand)').eq('is_frozen', false).ilike('nama_produk', pola).limit(15),
-      db.from('brand_products').select('id, nama_produk, brand_id, brands!inner(nama_brand)').eq('is_frozen', false).ilike('brands.nama_brand', pola).limit(15)
+      db.from('brand_products').select('id, nama_produk, brand_id, foto_urls, brands!inner(nama_brand)').eq('is_frozen', false).ilike('nama_produk', pola).limit(15),
+      db.from('brand_products').select('id, nama_produk, brand_id, foto_urls, brands!inner(nama_brand)').eq('is_frozen', false).ilike('brands.nama_brand', pola).limit(15)
     ]);
     const semua = {}; [].concat(byNama.data || [], byBrand.data || []).forEach(function(p){ semua[p.id] = p; });
     const list = Object.keys(semua).map(function(k){ return semua[k]; }).slice(0, 20);
     if(!list.length){ wrap.innerHTML = '<div class="card-sub">Produk tidak ditemukan.</div>'; return; }
     wrap.innerHTML = list.map(function(p){
       const dipilih = window._rlProduk.some(function(x){ return x.id === p.id; });
-      return '<button type="button" class="rl-hasil-item' + (dipilih ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" data-nama="' + escHtml(p.nama_produk || '-') + '" data-brand="' + escHtml(p.brand_id) + '" data-brandnama="' + escHtml(p.brands ? p.brands.nama_brand : '-') + '" onclick="rlPilihProduk(this)">'
-        + '<span class="rl-hasil-brand">' + escHtml(p.brands ? p.brands.nama_brand : '-') + '</span><span class="rl-hasil-nama">' + escHtml(p.nama_produk || '-') + '</span><span class="rl-hasil-plus">' + (dipilih ? '✓' : '+') + '</span></button>';
+      const foto = Array.isArray(p.foto_urls) && p.foto_urls[0] ? p.foto_urls[0] : '';
+      return '<button type="button" class="rl-hasil-item' + (dipilih ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" data-nama="' + escHtml(p.nama_produk || '-') + '" data-brand="' + escHtml(p.brand_id) + '" data-brandnama="' + escHtml(p.brands ? p.brands.nama_brand : '-') + '" data-foto="' + escHtml(foto) + '" onclick="rlPilihProduk(this)">'
+        + (foto ? '<img class="rl-hasil-foto" src="' + fotoKecil(foto) + '" alt="" loading="lazy">' : '<span class="rl-hasil-foto"></span>')
+        + '<span style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start"><span class="rl-hasil-brand">' + escHtml(p.brands ? p.brands.nama_brand : '-') + '</span><span class="rl-hasil-nama">' + escHtml(p.nama_produk || '-') + '</span></span><span class="rl-hasil-plus">' + (dipilih ? '✓' : '+') + '</span></button>';
     }).join('');
   }, 250);
 }
@@ -5186,7 +5217,7 @@ function rlPilihProduk(btn){
   const id = btn.dataset.id;
   const i = window._rlProduk.findIndex(function(x){ return x.id === id; });
   if(i >= 0) window._rlProduk.splice(i, 1);
-  else window._rlProduk.push({ id: id, nama: btn.dataset.nama, brandId: btn.dataset.brand, brandNama: btn.dataset.brandnama });
+  else window._rlProduk.push({ id: id, nama: btn.dataset.nama, brandId: btn.dataset.brand, brandNama: btn.dataset.brandnama, foto: btn.dataset.foto || '' });
   btn.classList.toggle('on', i < 0);
   btn.querySelector('.rl-hasil-plus').textContent = i < 0 ? '✓' : '+';
   rlRenderProduk();
@@ -5195,26 +5226,31 @@ function rlHapusProduk(id){ window._rlProduk = window._rlProduk.filter(function(
 function rlRenderProduk(){
   const wrap = document.getElementById('rl-produk');
   wrap.innerHTML = window._rlProduk.length
-    ? window._rlProduk.map(function(p){ return '<span class="rl-chip"><b>' + escHtml(p.brandNama) + '</b> ' + escHtml(p.nama) + '<button type="button" aria-label="Hapus" onclick="rlHapusProduk(\'' + escHtml(p.id) + '\')">×</button></span>'; }).join('')
-    : '<div class="card-sub">Belum ada produk dipilih. Cari dan ketuk produk di atas.</div>';
+    ? '<div class="rl-pkartu-wrap">' + window._rlProduk.map(function(p){
+        return '<div class="rl-pkartu">' + (p.foto ? '<img src="' + fotoKecil(p.foto) + '" alt="" loading="lazy">' : '<div class="rl-pkartu-ph">🛍️</div>')
+          + '<div class="rl-pkartu-brand">' + escHtml(p.brandNama) + '</div><div class="rl-pkartu-nama">' + escHtml(p.nama) + '</div>'
+          + '<button type="button" aria-label="Hapus produk" onclick="rlHapusProduk(\'' + escHtml(p.id) + '\')">×</button></div>';
+      }).join('') + '</div>'
+    : '<div class="jl-kosong">Belum ada produk. Cari lalu ketuk produk di atas.</div>';
   const brands = Array.from(new Set(window._rlProduk.map(function(p){ return p.brandId; })));
   const mix = document.getElementById('rl-mix');
   mix.style.display = brands.length > 1 ? 'block' : 'none';
   document.getElementById('rl-mix-judul').textContent = 'Kamu bawa produk dari ' + brands.length + ' brand sekaligus';
+  const fokus = document.getElementById('rl-fokus');
+  if(fokus) fokus.style.display = brands.length === 1 ? 'inline-block' : 'none';
 }
 async function rlSimpan(btn){
   if(!window._rlProduk.length){ showToast('Pilih minimal 1 produk dulu.'); return; }
-  const b = rlBacaSesiDari(document.getElementById('rl-sesi'));
-  if(b.salah){ showToast(b.salah); return; }
-  if(!b.sesi.length){ showToast('Isi minimal 1 sesi live.'); return; }
+  const sesi = jlBaca('rl-jl');
+  if(!sesi.length){ showToast('Pilih minimal 1 tanggal live.'); return; }
   btn.disabled = true; const awal = btn.textContent; btn.textContent = 'Mengirim...';
   const { data, error } = await db.rpc('creator_simpan_rencana_live', {
-    p_id: window._rlEditId, p_sesi: b.sesi, p_produk: window._rlProduk.map(function(p){ return p.id; }), p_mix_ok: document.getElementById('rl-mix-ok').checked
+    p_id: window._rlEditId, p_sesi: sesi, p_produk: window._rlProduk.map(function(p){ return p.id; }), p_mix_ok: document.getElementById('rl-mix-ok').checked
   });
   btn.disabled = false; btn.textContent = awal;
   if(error){ alert(rlPesanError(error)); return; }
   const nama = (currentSession.memberData && currentSession.memberData.nama) || 'Creator';
-  const ringkas = b.sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ');
+  const ringkas = sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ');
   const brandIds = (data && data.brand_ids) || [];
   for(const bid of brandIds){
     await logNotification('upcoming_live', { brandId: bid, memberId: currentSession.memberId, detail: nama + (window._rlEditId ? ' mengubah rencana live: ' : ' berencana live bawa produkmu: ') + ringkas });
@@ -5252,8 +5288,8 @@ function rlUbah(id){
   rlTab('buat');
   window._rlEditId = id;
   const pm = window._rlProdukMap || {};
-  window._rlProduk = (d.produk_ids || []).map(function(pid){ const p = pm[pid] || {}; return { id: pid, nama: p.nama_produk || '-', brandId: p.brand_id, brandNama: p.brands ? p.brands.nama_brand : '-' }; });
-  document.getElementById('rl-sesi').innerHTML = (d.sesi || []).map(function(s){ return rlBarisSesi(s, 0); }).join('');
+  window._rlProduk = (d.produk_ids || []).map(function(pid){ const p = pm[pid] || {}; return { id: pid, nama: p.nama_produk || '-', brandId: p.brand_id, brandNama: p.brands ? p.brands.nama_brand : '-', foto: Array.isArray(p.foto_urls) && p.foto_urls[0] ? p.foto_urls[0] : '' }; });
+  rlJlBaru(d.sesi || []);
   document.getElementById('rl-mix-ok').checked = !!d.mix_brand;
   document.getElementById('rl-simpan').textContent = 'Simpan perubahan';
   rlRenderProduk();
@@ -5279,16 +5315,16 @@ async function loadJadwalLivePrompts(){
   data.forEach(function(r){
     const bp = r.brand_products; if(!bp) return;
     const j = r.jadwal_live;
-    const formatLama = j && !Array.isArray(j.sesi);
-    if(formatLama) return; // jadwal lama tidak diubah
-    if(r.tipe_sow_dipilih === 'VT_LIVE' && !konf[bp.brand_id]) return; // VT & Live lama tetap dijadwalkan setelah barang sampai
+    if(j && !Array.isArray(j.sesi)) return;
+    if(r.tipe_sow_dipilih === 'VT_LIVE' && !konf[bp.brand_id]) return;
     const g = grup[bp.brand_id] || (grup[bp.brand_id] = { nama: bp.brands ? bp.brands.nama_brand : '-', ids: [], produk: [], jadwal: null });
     g.ids.push(r.id); g.produk.push(bp.nama_produk);
     if(j && Array.isArray(j.sesi)) g.jadwal = j;
   });
   const keys = Object.keys(grup);
   if(!keys.length){ container.innerHTML = ''; return; }
-  container.innerHTML = keys.map(function(bid){
+  const init = [];
+  container.innerHTML = keys.map(function(bid, idx){
     const g = grup[bid], k = konf[bid], j = g.jadwal;
     const kepala = '<div class="jl2-kepala"><span class="jl2-ikon">🔴</span><div><b>Jadwal Live · ' + escHtml(g.nama) + '</b><div class="card-sub">' + g.produk.map(escHtml).join(', ') + '</div></div></div>';
     if(j && j.dikunci){
@@ -5297,34 +5333,36 @@ async function loadJadwalLivePrompts(){
         + j.sesi.map(function(s, i){ const lewat = new Date(s.selesai) < new Date(); return '<div class="jl2-sesi"><span>Sesi ' + (i+1) + '</span><b>' + rlFmtTgl(s.mulai) + ' · ' + rlFmtJam(s.mulai) + '–' + rlFmtJam(s.selesai) + '</b><em class="' + (lewat ? 'ok' : '') + '">' + (lewat ? 'Selesai' : 'Terjadwal') + '</em></div>'; }).join('')
         + '<div class="jl2-note">' + (akhir < Date.now() ? '✅ SOW Live selesai. Slot brand ini sudah kosong lagi.' : '🔒 Jadwal terkunci karena barang sudah kamu terima. SOW selesai setelah sesi terakhir.') + '</div></div>';
     }
-    let aturan;
+    const cid = 'jl-sow-' + idx;
+    let aturan, mulaiDari, sampai;
     if(k){
       const b3 = new Date(new Date(k).getTime() + 3*86400000), b5 = new Date(new Date(k).getTime() + 5*86400000);
-      aturan = '<div class="jl2-warn">Barang sudah kamu terima. Ini <b>kesempatan terakhir</b> atur jadwal: sesi 1 paling lambat <b>' + rlFmtTgl(b3.toISOString()) + '</b>, semua sesi mulai paling lambat <b>' + rlFmtTgl(b5.toISOString()) + '</b>. Setelah disimpan, jadwal terkunci.</div>';
+      aturan = '<div class="jl2-warn">Barang sudah kamu terima. Ini <b>kesempatan terakhir</b>: sesi 1 paling lambat <b>' + rlFmtTgl(b3.toISOString()) + '</b>, semua sesi paling lambat <b>' + rlFmtTgl(b5.toISOString()) + '</b>. Setelah disimpan, jadwal terkunci.</div>';
+      mulaiDari = new Date(); sampai = b5;
     } else {
-      aturan = '<div class="jl2-info">Minimal 3 sesi, tiap sesi 2 jam, maksimal 1 sesi per hari. Jadwal masih bisa diubah sampai kamu konfirmasi barang diterima. Sesi 1 nanti paling lambat 3 hari dan semua sesi paling lambat 5 hari setelah barang diterima.</div>';
+      aturan = '<div class="jl2-info">Pilih minimal <b>3 tanggal</b> (1 sesi per hari, 2 jam per sesi). Masih bisa diubah sampai kamu konfirmasi barang diterima.</div>';
+      mulaiDari = new Date(Date.now() + 86400000); sampai = new Date(Date.now() + 21*86400000);
     }
-    const baris = (j ? j.sesi : [null, null, null]).map(function(s){ return rlBarisSesi(s, 2); }).join('');
+    init.push({ id: cid, mulaiDari: mulaiDari, sampai: sampai, sesi: j ? j.sesi : [] });
     return '<div class="card jl2">' + kepala + aturan
-      + '<div class="jl2-baris" data-ids="' + g.ids.join(',') + '" data-brand="' + escHtml(bid) + '" data-brandnama="' + escHtml(g.nama) + '">' + baris + '</div>'
-      + '<button type="button" class="rl-btn-garis" onclick="this.previousElementSibling.insertAdjacentHTML(\'beforeend\', rlBarisSesi(null, 2))">+ Tambah sesi</button>'
-      + '<div class="jl2-info" style="margin-top:8px"><b>Tips:</b> traffic Live biasanya lebih bagus kalau kamu posting video produknya dulu sebelum live dimulai.</div>'
-      + '<button type="button" class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;min-height:44px" onclick="saveJadwalLive(this)">' + (k ? '🔒 Simpan & kunci jadwal' : (j ? 'Simpan perubahan jadwal' : 'Simpan jadwal')) + '</button>'
+      + '<div id="' + cid + '" class="jl-wrap" data-ids="' + g.ids.join(',') + '" data-brand="' + escHtml(bid) + '"></div>'
+      + '<div class="jl2-info" style="margin-top:8px">💡 Posting video produknya dulu sebelum live, biar traffic naik.</div>'
+      + '<button type="button" class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;min-height:46px" onclick="saveJadwalLive(this, \'' + cid + '\')">' + (k ? '🔒 Simpan & kunci jadwal' : (j ? 'Simpan perubahan jadwal' : 'Simpan jadwal')) + '</button>'
       + '</div>';
   }).join('');
+  init.forEach(function(x){ jlInit(x.id, { durasi: 2, minSesi: 3, mulaiDari: x.mulaiDari, sampai: x.sampai, sesi: x.sesi }); });
 }
-async function saveJadwalLive(btn){
-  const wrap = btn.closest('.card').querySelector('.jl2-baris');
-  const b = rlBacaSesiDari(wrap);
-  if(b.salah){ alert(b.salah); return; }
-  if(b.sesi.length < 3){ alert('Minimal 3 sesi live.'); return; }
+async function saveJadwalLive(btn, cid){
+  const wrap = document.getElementById(cid);
+  const sesi = jlBaca(cid);
+  if(sesi.length < 3){ alert('Pilih minimal 3 tanggal live.'); return; }
   btn.disabled = true; const awal = btn.textContent; btn.textContent = 'Menyimpan...';
-  const { data, error } = await db.rpc('creator_simpan_jadwal_live', { p_request_ids: wrap.dataset.ids.split(','), p_sesi: b.sesi });
+  const { data, error } = await db.rpc('creator_simpan_jadwal_live', { p_request_ids: wrap.dataset.ids.split(','), p_sesi: sesi });
   btn.disabled = false; btn.textContent = awal;
   if(error){ alert(rlPesanError(error)); return; }
   const nama = (currentSession.memberData && currentSession.memberData.nama) || 'Creator';
   await logNotification('upcoming_live', { brandId: wrap.dataset.brand, memberId: currentSession.memberId,
-    detail: nama + ' ' + (data && data.dikunci ? 'mengunci jadwal Live: ' : 'menjadwalkan Live: ') + b.sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ') });
+    detail: nama + ' ' + (data && data.dikunci ? 'mengunci jadwal Live: ' : 'menjadwalkan Live: ') + sesi.map(function(s){ return rlFmtTgl(s.mulai) + ' ' + rlFmtJam(s.mulai); }).join(', ') });
   showToast(data && data.dikunci ? 'Jadwal tersimpan & terkunci' : 'Jadwal live tersimpan');
   loadJadwalLivePrompts(); loadMyQuota();
 }
@@ -10141,6 +10179,76 @@ async function loadRiwayatLive(){
       + '<span style="display:inline-block;margin-top:3px;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px;background:' + w[0] + ';color:' + w[1] + '">' + escHtml(r.status) + '</span></div></div>'
       + '<div class="il-jam">' + rlFmtTgl(r.mulai) + '<br>' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
   }).join('') + '<div class="card-sub" style="margin-top:8px">Status dibaca dari upload GMV mingguan: ada penjualan live di minggu itu = Terlaksana.</div>';
+}
+
+// ===== Pemilih jadwal live: deretan tanggal + jam cepat =====
+window._jl = {};
+const JL_PRESET = { Pagi: ['09:00', '11:00'], Siang: ['13:00', '15:00'], Sore: ['16:00', '18:00'], Malam: ['19:00', '21:00'] };
+function jlKey(d){ return new Date(d.getTime() + 7*3600000).toISOString().slice(0, 10); }
+function jlJam(iso){ return new Date(new Date(iso).getTime() + 7*3600000).toISOString().slice(11, 16); }
+function jlTambahJam(hhmm, jam){ const p = hhmm.split(':'); return String((Number(p[0]) + jam) % 24).padStart(2, '0') + ':' + p[1]; }
+function jlInit(id, opt){
+  const st = { durasi: opt.durasi || 0, mulaiDari: opt.mulaiDari, sampai: opt.sampai, minSesi: opt.minSesi || 1, pilih: {}, atur: null };
+  (opt.sesi || []).forEach(function(s){ st.pilih[jlKey(new Date(s.mulai))] = { m: jlJam(s.mulai), s: jlJam(s.selesai) }; });
+  window._jl[id] = st; jlRender(id);
+}
+function jlRender(id){
+  const st = window._jl[id], el = document.getElementById(id); if(!st || !el) return;
+  const hari = []; let d = new Date(st.mulaiDari.getTime());
+  while(jlKey(d) <= jlKey(st.sampai) && hari.length < 21){ hari.push(jlKey(d)); d = new Date(d.getTime() + 86400000); }
+  const lbl = function(k, o){ return new Date(k + 'T00:00:00+07:00').toLocaleDateString('id-ID', Object.assign({ timeZone: 'Asia/Jakarta' }, o)); };
+  const strip = '<div class="jl-strip">' + hari.map(function(k){
+    return '<button type="button" class="jl-hari' + (st.pilih[k] ? ' on' : '') + '" onclick="jlToggle(\'' + id + '\',\'' + k + '\')"><span>' + lbl(k, { weekday: 'short' }) + '</span><b>' + lbl(k, { day: 'numeric' }) + '</b><em>' + lbl(k, { month: 'short' }) + '</em></button>';
+  }).join('') + '</div>';
+  const keys = Object.keys(st.pilih).sort();
+  const kartu = keys.map(function(k){
+    const v = st.pilih[k];
+    const chips = Object.keys(JL_PRESET).map(function(n){
+      const on = v.m === JL_PRESET[n][0] && (st.durasi ? true : v.s === JL_PRESET[n][1]);
+      return '<button type="button" class="jl-chip' + (on ? ' on' : '') + '" onclick="jlPreset(\'' + id + '\',\'' + k + '\',\'' + n + '\')">' + n + '</button>';
+    }).join('') + '<button type="button" class="jl-chip' + (st.atur === k ? ' on' : '') + '" onclick="jlAtur(\'' + id + '\',\'' + k + '\')">Atur jam</button>';
+    const atur = st.atur === k
+      ? '<div class="jl-atur"><input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',\'' + k + '\',\'m\',this.value)" aria-label="Jam mulai">'
+        + (st.durasi ? '<span>durasi ' + st.durasi + ' jam</span>' : '<span>s/d</span><input type="time" value="' + v.s + '" onchange="jlUbahJam(\'' + id + '\',\'' + k + '\',\'s\',this.value)" aria-label="Jam selesai">') + '</div>'
+      : '';
+    return '<div class="jl-sesi"><div class="jl-sesi-atas"><b>' + lbl(k, { weekday: 'short', day: 'numeric', month: 'short' }) + '</b><span>' + v.m.replace(':', '.') + ' – ' + v.s.replace(':', '.') + '</span>'
+      + '<button type="button" class="jl-hapus" aria-label="Hapus sesi" onclick="jlToggle(\'' + id + '\',\'' + k + '\')">×</button></div>'
+      + '<div class="jl-chips">' + chips + '</div>' + atur + '</div>';
+  }).join('');
+  const kurang = Math.max(0, st.minSesi - keys.length);
+  el.innerHTML = strip
+    + (keys.length ? kartu : '<div class="jl-kosong">Ketuk tanggal di atas untuk menambah sesi' + (st.minSesi > 1 ? ' (minimal ' + st.minSesi + ')' : '') + '.</div>')
+    + '<div class="jl-ringkas">' + keys.length + ' sesi dipilih' + (kurang ? ' · kurang ' + kurang + ' lagi' : '') + '</div>';
+}
+function jlToggle(id, k){
+  const st = window._jl[id];
+  if(st.pilih[k]){ delete st.pilih[k]; if(st.atur === k) st.atur = null; }
+  else st.pilih[k] = { m: '19:00', s: st.durasi ? jlTambahJam('19:00', st.durasi) : '21:00' };
+  jlRender(id);
+}
+function jlPreset(id, k, n){
+  const st = window._jl[id]; const p = JL_PRESET[n];
+  st.pilih[k] = { m: p[0], s: st.durasi ? jlTambahJam(p[0], st.durasi) : p[1] }; st.atur = null; jlRender(id);
+}
+function jlAtur(id, k){ const st = window._jl[id]; st.atur = st.atur === k ? null : k; jlRender(id); }
+function jlUbahJam(id, k, bagian, val){
+  const st = window._jl[id]; if(!val) return;
+  st.pilih[k][bagian] = val;
+  if(bagian === 'm' && st.durasi) st.pilih[k].s = jlTambahJam(val, st.durasi);
+  jlRender(id);
+}
+function jlBaca(id){
+  const st = window._jl[id]; if(!st) return [];
+  return Object.keys(st.pilih).sort().map(function(k){
+    const v = st.pilih[k];
+    const mulai = new Date(k + 'T' + v.m + ':00+07:00');
+    let selesai = new Date(k + 'T' + v.s + ':00+07:00');
+    if(selesai <= mulai) selesai = new Date(selesai.getTime() + 86400000);
+    return { mulai: mulai.toISOString(), selesai: selesai.toISOString() };
+  });
+}
+function rlJlBaru(sesi){
+  jlInit('rl-jl', { mulaiDari: new Date(Date.now() + 86400000), sampai: new Date(Date.now() + 21*86400000), sesi: sesi || [] });
 }
 
 function htmlChipTier(tier){
