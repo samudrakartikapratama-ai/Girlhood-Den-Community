@@ -425,21 +425,27 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .flow-sub{font-size:9px;color:var(--gray-text);margin-top:1px}
 .flow-connector{flex:0 0 26px;height:2px;border-top:2px dashed var(--pink-light);margin-top:20px;position:relative}
 .flow-connector-label{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--pink);white-space:nowrap}
-.appr-group{border:1.5px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
-.appr-group-head{background:var(--pink-pale);padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
-.appr-group-name{font-weight:800;font-size:13.5px;color:var(--dark)}
-.appr-group-meta{font-size:11px;color:var(--gray-text)}
-.appr-group-date{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--pink);background:#fff;padding:3px 9px;border-radius:20px}
-.appr-item{padding:11px 14px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.appr-group{border:1.5px solid var(--border);border-radius:18px;margin-bottom:14px;overflow:hidden;background:#fff}
+.appr-group.ada-live{border:2px solid #A30E3F}
+.appr-group-head{background:var(--pink-pale);padding:14px 16px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 16px}
+.appr-group-name{font-weight:800;font-size:18px;color:var(--dark);line-height:1.25}
+.appr-group-meta{font-size:12.5px;color:var(--gray-text);margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.appr-group-date{margin-left:auto;font-size:12px;font-weight:800;color:var(--pink);background:#fff;padding:5px 11px;border-radius:20px}
+.appr-profil-btn{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid var(--pink);color:var(--pink);background:#fff;font-weight:800;font-size:13px;text-decoration:none}
+.appr-klaim{display:inline-block;font-size:12px;font-weight:700;background:#fff;border:1px solid var(--border);border-radius:999px;padding:4px 11px;color:var(--dark)}
+.appr-live-chip{display:inline-block;font-size:12px;font-weight:800;background:#A30E3F;color:#fff;border-radius:999px;padding:4px 11px}
+.appr-item{padding:14px 16px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
 .appr-item:first-of-type{border-top:none}
-.appr-item-info{flex:1;min-width:160px}
-.appr-item-name{font-weight:700;font-size:12.5px}
-.sow-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px}
-.sow-badge.vt{background:var(--teal-light);color:var(--teal)}
-.sow-badge.vt_live{background:#FDF0D5;color:#8A5A00}
-.sow-badge.live{background:var(--pink-pale);color:var(--pink)}
-.pieces-reco{font-size:10px;color:#8A5A00;background:#FDF0D5;border-radius:8px;padding:5px 8px;margin-top:6px;max-width:230px}
-.pieces-input{width:70px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--gray-mid);font-size:12px;margin-top:6px}
+.appr-item-info{flex:1;min-width:180px}
+.appr-item-name{font-weight:800;font-size:14.5px;line-height:1.35;color:var(--dark)}
+.sow-badge{display:inline-block;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:999px;margin-top:8px;color:#fff}
+.sow-badge.vt{background:#6B7FD7}
+.sow-badge.vt_live{background:#E8A419;color:#3E2340}
+.sow-badge.live{background:#A30E3F}
+.pieces-label{font-size:12px;font-weight:700;color:var(--dark)}
+.pieces-reco{font-size:12px;line-height:1.45;color:#6B4A00;background:#FFF3D6;border-radius:10px;padding:8px 10px;margin-top:8px;max-width:280px}
+.pieces-input{width:110px;height:44px;padding:0 12px;border-radius:12px;border:1.5px solid var(--gray-mid);font-size:15px;font-weight:700;margin-top:6px;box-sizing:border-box}
+.appr-btn{width:100%;min-height:46px;font-size:14px !important;font-weight:800 !important;border-radius:12px !important}
 .video-player-bg{display:none;position:fixed;inset:0;background:rgba(10,6,8,0.92);z-index:500;align-items:center;justify-content:center;padding:14px}
 .video-player-bg.open{display:flex;animation:fadeIn .2s ease}
 .video-player-box{width:100%;max-width:720px;position:relative}
@@ -4388,9 +4394,9 @@ function formatTanggalSingkat(iso){
 }
 
 const SOW_BADGE = {
-  VT: '<span class="sow-badge vt">VT (3 video)</span>',
-  VT_LIVE: '<span class="sow-badge vt_live">VT &amp; Live</span>',
-  LIVE: '<span class="sow-badge live">Live saja</span>'
+  VT: '<span class="sow-badge vt">VIDEO · 3 video</span>',
+  VT_LIVE: '<span class="sow-badge vt_live">VIDEO + LIVE</span>',
+  LIVE: '<span class="sow-badge live">LIVE</span>'
 };
 const PIECES_RECO = '💡 Rekomendasi: kirim <b>&gt;1 pieces</b> untuk creator VT+Live/Live, biar produknya tetap ada buat etalase pas dia jualan — nggak abis kepake konten doang.';
 
@@ -4453,13 +4459,13 @@ async function loadApprovalRows(){
       const showPiecesReco = (r.tipe_sow_dipilih === 'VT_LIVE' || r.tipe_sow_dipilih === 'LIVE');
       if(r.status === 'requested'){
         aksiCell = '<div class="aksi-buttons">'
-          + '<div><label style="font-size:10px;color:var(--gray-text)">Jumlah Pieces</label><br><input type="number" min="1" class="pieces-input" placeholder="cth: 2"></div>'
+          + '<div><label class="pieces-label">Jumlah dikirim (pcs)</label><br><input type="number" min="1" class="pieces-input" placeholder="cth: 2"></div>'
           + (showPiecesReco ? '<div class="pieces-reco">'+PIECES_RECO+'</div>' : '')
-          + '<button class="btn btn-teal btn-sm" onclick="lockAksi(\''+r.id+'\', this,\'kirim\')" style="width:100%;margin-top:6px">✅ Kirim</button>'
-          + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="showRejectNote(this)">❌ Ditolak</button>'
+          + '<button class="btn btn-teal btn-sm appr-btn" onclick="lockAksi(\''+r.id+'\', this,\'kirim\')" style="margin-top:8px">✅ Kirim</button>'
+          + '<button class="btn btn-outline btn-sm appr-btn" style="margin-top:6px;border-color:var(--red);color:var(--red)" onclick="showRejectNote(this)">❌ Tolak</button>'
           + '</div>'
-          + '<div class="reject-note" style="display:none;margin-top:6px;width:220px">'
-          + '<select class="reject-template" style="font-size:11px;width:100%"><option>Yuk Gas pol gedein GMV dulu, setelah itu coba Apply kembali ya jangan patah semangat😎</option><option>Coba tampilin wajah cantik kamu lebih banyak di konten ya ✨</option><option>Fokus dulu yuk di satu kategori favorit kamu 💄</option><option>Yuk tingkatin lagi engagement organik (like/komen/share asli) 🤝</option></select>'
+          + '<div class="reject-note" style="display:none;margin-top:6px;width:100%">'
+          + '<select class="reject-template" style="font-size:12px;width:100%;min-height:40px"><option>Stok produknya lagi kosong, coba request lagi nanti ya 🙏</option><option>Yuk Gas pol gedein GMV dulu, setelah itu coba Apply kembali ya jangan patah semangat😎</option><option>Coba tampilin wajah cantik kamu lebih banyak di konten ya ✨</option><option>Fokus dulu yuk di satu kategori favorit kamu 💄</option><option>Yuk tingkatin lagi engagement organik (like/komen/share asli) 🤝</option></select>'
           + '<textarea class="reject-textarea" placeholder="Catatan internal (creator tidak bisa lihat, max 250 kata)" style="font-size:11px;margin-top:4px;width:100%" rows="2" oninput="countWords(this)"></textarea>'
           + '<div class="word-count">0 / 250 kata</div>'
           + '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:5px;border-color:var(--red);color:var(--red)" onclick="lockAksi(\''+r.id+'\', this,\'tolak\')">Kunci Jawaban: Ditolak</button>'
@@ -4473,18 +4479,25 @@ async function loadApprovalRows(){
       return '<div class="appr-item" data-request-id="'+r.id+'">'
         + '<input type="checkbox" class="row-check" data-request-id="'+r.id+'" style="margin-top:3px"'+(r.status==='requested'?'':' disabled')+'>'
         + '<div class="appr-item-info">'
-          + '<div class="appr-item-name">'+(p.nama_produk||'-')+'</div>'
+          + '<div class="appr-item-name">'+escHtml(p.nama_produk||'-')+'</div>'
           + (SOW_BADGE[r.tipe_sow_dipilih] || '')
         + '</div>'
-        + '<div class="aksi-cell" style="min-width:170px">'+aksiCell+'</div>'
+        + '<div class="aksi-cell" style="min-width:220px;max-width:300px">'+aksiCell+'</div>'
         + '</div>';
     }).join('');
 
-    return '<div class="appr-group" data-search-name="'+(m.nama||'').toLowerCase()+'">'
+    const adaLive = g.items.some(function(r){ return r.tipe_sow_dipilih === 'LIVE' || r.tipe_sow_dipilih === 'VT_LIVE'; });
+    const klaim = (m.level || m.gmv_30hari) ? '<span class="appr-klaim">Pengakuan saat daftar: '+escHtml(m.level||'-')+(m.gmv_30hari ? ' · '+gmvText+'/30 hari' : '')+'</span>' : '';
+    return '<div class="appr-group'+(adaLive?' ada-live':'')+'" data-search-name="'+escHtml((m.nama||'').toLowerCase())+'">'
       + '<div class="appr-group-head">'
-        + '<div><div class="appr-group-name">'+(m.nama||'-')+'</div>'
-        + '<div class="appr-group-meta">'+(m.tiktok_profile_link ? '<a class="tiktok-link" href="'+m.tiktok_profile_link+'" target="_blank">Lihat Profil ↗</a>' : '-')+' · '+(m.no_hp||'-')+' · '+(m.level||'-')+'·'+gmvText+'</div>'
-        + '<div class="appr-group-meta">📍 '+(m.alamat||'-')+'</div></div>'
+        + '<div style="flex:1;min-width:220px"><div class="appr-group-name">'+escHtml(m.nama||'-')+'</div>'
+        + '<div class="appr-group-meta">'
+          + (m.tiktok_profile_link ? '<a class="appr-profil-btn" href="'+escHtml(m.tiktok_profile_link)+'" target="_blank" rel="noopener">Lihat profil ↗</a>' : '')
+          + (adaLive ? '<span class="appr-live-chip">Ada request Live</span>' : '')
+          + klaim
+        + '</div>'
+        + '<div class="appr-group-meta">📞 '+escHtml(m.no_hp||'-')+'</div>'
+        + '<div class="appr-group-meta">📍 '+escHtml(m.alamat||'-')+'</div></div>'
         + '<div class="appr-group-date">🗓️ '+tanggalLabel+'</div>'
       + '</div>'
       + itemsHtml
