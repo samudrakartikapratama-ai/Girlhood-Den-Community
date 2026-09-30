@@ -8497,10 +8497,10 @@ async function submitOwnerPassword(){
     });
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Password salah.'); return; }
-    __creatorDbCache = j.members || [];
-    renderCreatorDatabase(__creatorDbCache);
     closeOwnerGate();
     openModal('m-i10');
+    // Muat dari database langsung (lengkap dengan tier, badge, dan jumlah video/request).
+    loadCreatorDatabase();
   } catch(e){ alert('Gagal menghubungi server.'); }
 }
 async function submitSetupOwnerPassword(){
