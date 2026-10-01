@@ -1149,6 +1149,68 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 .hk-gk-ikut{margin-top:auto;color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:6px 14px}
 .icon-card.hk-kunci-menu{opacity:.6}
 .icon-card.hk-kunci-menu:after{content:"Segera";position:absolute;top:-8px;right:10px;font-size:10px;font-weight:800;background:#534AB7;color:#fff;border-radius:999px;padding:3px 9px}
+.hkf2-lbl{font-size:11px;font-weight:800;color:var(--gray-text);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.hkf2-stp{display:flex;gap:6px;margin:6px 0 14px}.hkf2-stp span{flex:1;height:5px;border-radius:99px;background:#EDE3EA}.hkf2-stp span.on{background:var(--pink)}
+.hkf2-jdl{font-family:'Baloo 2',inherit;font-size:22px;font-weight:800;color:var(--dark);line-height:1.1}
+.hkf2-sub{font-size:12.5px;color:var(--gray-text);margin:4px 0 14px}
+.hkf2-cari,.hkf2-in{width:100%;min-height:46px;border-radius:14px;box-sizing:border-box;margin-bottom:10px}
+.hkf2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:52vh;overflow-y:auto;padding:2px}
+@media(min-width:560px){.hkf2-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.hkf2-pc{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:3px;border:1.5px solid var(--border);border-radius:16px;padding:7px;background:#fff;cursor:pointer;font-family:inherit;transition:border-color .15s,transform .15s}
+.hkf2-pc:active{transform:scale(.98)}
+.hkf2-pc .im{width:100%;aspect-ratio:1/1;border-radius:11px;background:var(--pink-pale);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:4px}
+.hkf2-pc .im img{width:100%;height:100%;object-fit:cover}
+.hkf2-pc b{font-size:12px;font-weight:800;color:var(--dark);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hkf2-pc span{font-size:11px;color:var(--gray-text);font-weight:600}
+.hkf2-pc.on{border-color:var(--pink);background:#FFF7FA;box-shadow:0 0 0 3px rgba(212,83,126,.15)}
+.hkf2-pc .ck{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.hkf2-tray{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;background:#26215C;color:#fff;border-radius:16px;padding:9px 10px;margin-top:12px;font-size:13px}
+.hkf2-th{display:flex}.hkf2-th i{width:30px;height:30px;border-radius:9px;background:#FBEAF0;border:2px solid #26215C;margin-left:-8px;overflow:hidden}.hkf2-th i:first-child{margin-left:0}.hkf2-th i img{width:100%;height:100%;object-fit:cover}
+.hkf2-tray b{flex:1;font-weight:800}
+.hkf2-tray button{min-height:38px;border:none;border-radius:999px;background:var(--pink);color:#fff;font-weight:800;padding:0 18px;cursor:pointer;font-family:inherit}
+.hkf2-tray button:disabled{opacity:.45}
+.hkf2-nav{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 2fr;gap:8px;background:#fff;padding:12px 0 2px;margin-top:12px}
+.hkf2-nav button{min-height:48px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}
+.hkf2-nav .kb{border:1.5px solid var(--border);background:#fff;color:var(--dark)}
+.hkf2-nav .lj{border:none;background:var(--pink);color:#fff}
+.hkf2-k{font-size:12px;font-weight:800;color:var(--dark);margin:14px 0 6px}
+.hkf2-k span{font-weight:600;color:var(--gray-text)}
+.hkf2-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.hkf2-chips button{min-height:38px;border:1.5px solid var(--border);border-radius:999px;background:#fff;padding:0 14px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--dark)}
+.hkf2-chips button.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.hkf2-dua{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hkf2-cek{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin:2px 0 8px}
+.hkf2-cek input{width:20px;height:20px}
+.hkf2-rng{display:flex;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:14px;padding:11px 14px;font-size:14px;background:#fff}
+.hkf2-rng b{flex:1}.hkf2-rng span{font-size:11.5px;color:var(--gray-text);font-weight:700}
+.hkf2-seg{display:grid;background:#F1ECF1;border-radius:14px;padding:4px;gap:4px}
+.hkf2-seg button{min-height:40px;border:none;border-radius:10px;background:transparent;font-weight:800;font-size:12.5px;color:var(--gray-text);cursor:pointer;font-family:inherit}
+.hkf2-seg button.on{background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.hkf2-note{font-size:12px;line-height:1.5;background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin-top:10px}
+.hkf2-lv{position:relative;display:flex;gap:10px;align-items:flex-start;border-radius:16px;padding:12px;margin-bottom:8px}
+.hkf2-lv .n{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.85);color:#412402;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;margin-top:16px}
+.hkf2-lvi{flex:1;display:grid;grid-template-columns:1.3fr 1.5fr .8fr;gap:6px;padding-right:22px}
+.hkf2-lvi label{display:block;font-size:10.5px;font-weight:800;opacity:.85;margin-bottom:3px}
+.hkf2-lvi input{width:100%;min-height:40px;border-radius:10px;border:none;background:rgba(255,255,255,.88);box-sizing:border-box;padding:0 8px;font-weight:700}
+.hkf2-lv .x{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(255,255,255,.7);cursor:pointer}
+@media(max-width:420px){.hkf2-lvi{grid-template-columns:1fr 1fr}.hkf2-lvi div:nth-child(2){grid-column:1/-1;order:3}}
+.hkf2-add{width:100%;min-height:44px;border:1.5px dashed #C9B3C2;border-radius:14px;background:#fff;color:var(--pink);font-weight:800;cursor:pointer;font-family:inherit}
+.hkf2-prev{background:linear-gradient(160deg,#AFA9EC,#6A61CF);border-radius:20px;padding:16px;color:#fff}
+.hkf2-prev .b{font-size:11.5px;font-weight:800;opacity:.85}
+.hkf2-prev .n{font-family:'Baloo 2',inherit;font-size:22px;font-weight:800;line-height:1.1;margin:2px 0}
+.hkf2-prev .s{font-size:12px;opacity:.92}
+.hkf2-prev .ft{display:flex;gap:6px;margin-top:10px}.hkf2-prev .ft i{width:46px;height:46px;border-radius:11px;background:rgba(255,255,255,.7);overflow:hidden}.hkf2-prev .ft i img{width:100%;height:100%;object-fit:cover}
+.hkf2-prev .lv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.hkf2-prev .lv span{font-size:11.5px;font-weight:800;background:rgba(255,255,255,.22);border-radius:999px;padding:4px 10px}
+/* Pilihan Girlhood Den: produk jadi kartu grid seperti form Harta Karun */
+#rek-produk-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:560px){#rek-produk-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#rek-produk-list > .card-sub,#rek-produk-list > .rl-kosong{grid-column:1/-1}
+#rek-produk-list .rek-pkartu{flex-direction:column;align-items:stretch;gap:6px;margin:0;padding:7px;border-radius:16px}
+#rek-produk-list .rek-pfoto{width:100%;height:auto;aspect-ratio:1/1;border-radius:11px;font-size:28px}
+#rek-produk-list .rek-pkartu b{font-size:12px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#rek-produk-list .rek-pil-wrap{flex-direction:column;gap:5px}
+#rek-produk-list .rek-pil{width:100%}
+#rek-produk-list .rek-pkartu.hero,#rek-produk-list .rek-pkartu.baru{box-shadow:0 0 0 3px rgba(232,164,25,.18)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -10618,67 +10680,174 @@ async function hkBrandBatal(id){
   if(error){ alert(hkPesanError(error)); return; }
   showToast('Dibatalkan'); hkBrandList();
 }
+// ---------- FORM BRAND 4 LANGKAH ----------
+window._hkf = null;
+const HKF_BONUS = ['Sample', 'Boost ads', 'Hampers', 'Calon BA', 'Voucher'];
+const HKF_TANGGA = ['#FAEEDA', '#FAC775', '#EF9F27', '#BA7517', '#854F0B'];
+function hkfTglStr(d){ return new Date(d.getTime() + 7*3600000).toISOString().slice(0, 10); }
+function hkfHariIni(){ return hkfTglStr(new Date()); }
+function hkfJumlahHari(a, b){ return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000) + 1; }
+function hkfAngka(v){ return Number(String(v || '').replace(/\D/g, '')) || 0; }
+function hkfRibuan(n){ return n ? Number(n).toLocaleString('id-ID') : ''; }
 async function hkBrandForm(id){
-  const el = document.getElementById('hkb-isi');
   const c = id ? (window._hkBrandCache || []).find(function(x){ return x.id === id; }) : null;
+  const el = document.getElementById('hkb-isi');
+  el.innerHTML = '<div class="card-sub">Memuat produk...</div>';
   const [cfgP, prodRes] = await Promise.all([db.rpc('hk_cfg', { k: 'hk_max_produk' }), db.from('brand_products').select('id, nama_produk, foto_urls, komisi_percent, harga').eq('brand_id', currentSession.brandId).eq('is_frozen', false).order('nama_produk')]);
-  const maxP = Number(cfgP.data || 3);
-  window._hkMaxProduk = maxP;
-  window._hkBrandPilih = c ? c.produk.map(function(p){ return p.id; }) : [];
-  window._hkProdukBrand = prodRes.data || [];
-  const besok = new Date(Date.now() + 7*3600000).toISOString().slice(0, 10);
-  const lv = c ? c.level : [{ target: '', hadiah: '', kuota: '' }];
-  el.innerHTML = '<button type="button" class="rek-back" onclick="hkBrandList()">‹ Kembali</button>'
-    + '<div class="hk-form">'
-    + '<label>Nama Harta Karun</label><input id="hkf-nama" maxlength="80" placeholder="Contoh: Jeju Glow Oktober" value="' + escHtml(c ? c.nama : '') + '">'
-    + '<label>Produk <span>(maksimal ' + maxP + ')</span></label><input id="hkf-cari" placeholder="🔍 Cari produkmu..." oninput="hkRenderPilihProduk()"><div id="hkf-produk" class="hkf-produk"></div>'
-    + '<label>Periode <span>(maksimal 31 hari)</span></label><div class="hkf-dua"><input type="date" id="hkf-mulai" min="' + besok + '" value="' + (c ? c.mulai : '') + '"><input type="date" id="hkf-selesai" min="' + besok + '" value="' + (c ? c.selesai : '') + '"></div>'
-    + '<label class="hkf-cek"><input type="checkbox" id="hkf-payday"' + (c && c.payday ? ' checked' : '') + '> Khusus payday (penjualan dihitung hanya di tanggal periode ini)</label>'
-    + '<label>Dihitung dari penjualan lewat</label><div class="hkf-pil" id="hkf-jalur">' + ['video', 'live', 'keduanya'].map(function(j){ return '<button type="button" data-v="' + j + '" class="' + ((c ? c.jalur : 'keduanya') === j ? 'on' : '') + '" onclick="hkPilihTombol(this)">' + HK_JALUR[j] + '</button>'; }).join('') + '</div>'
-    + '<label>Cara hitung target</label><div class="hkf-pil" id="hkf-mode">' + [['per_creator', 'Per creator'], ['gabungan', 'Gabungan semua peserta']].map(function(m){ return '<button type="button" data-v="' + m[0] + '" class="' + ((c ? c.mode : 'per_creator') === m[0] ? 'on' : '') + '" onclick="hkPilihTombol(this)">' + m[1] + '</button>'; }).join('') + '</div>'
-    + '<label>Target & hadiah</label><div class="hkf-tabel"><div class="hkf-th"><span>Target GMV (Rp)</span><span>Hadiah</span><span>Kuota pemenang</span><span></span></div><div id="hkf-level">' + lv.map(hkLevelBaris).join('') + '</div>'
-    + '<button type="button" class="rl-btn-garis" onclick="hkTambahLevel()">+ Tambah tingkat</button></div>'
-    + '<label>Benefit untuk peserta <span>(opsional)</span></label><div class="hkf-pil hkf-benefit" id="hkf-benefit">' + ['Sample', 'Boost ads', 'Hampers', 'Calon BA', 'Voucher'].map(function(b){ return '<button type="button" data-v="' + b + '" class="' + (c && c.benefit.indexOf(b) >= 0 ? 'on' : '') + '" onclick="this.classList.toggle(\'on\')">' + b + '</button>'; }).join('') + '</div>'
-    + '<input id="hkf-benefit-lain" placeholder="Benefit lain (pisahkan dengan koma)" value="' + escHtml(c ? c.benefit.filter(function(b){ return ['Sample', 'Boost ads', 'Hampers', 'Calon BA', 'Voucher'].indexOf(b) < 0; }).join(', ') : '') + '">'
-    + '<label>Syarat tier creator <span>(opsional)</span></label><select id="hkf-tier"><option value="">Semua tier</option>' + ['Gold', 'Diamond', 'Solitaire'].map(function(t){ return '<option value="' + t + '"' + (c && c.tier_min === t ? ' selected' : '') + '>' + t + ' ke atas</option>'; }).join('') + '</select>'
-    + '<div class="hkf-info">Komisi mengikuti yang sudah diisi AE. Setelah disetujui AE dan tayang, produk dan targetnya terkunci sampai periode selesai.</div>'
-    + '<button type="button" class="hk-btn-utama" onclick="hkBrandKirim(this,' + (c ? '\'' + c.id + '\'' : 'null') + ')">Kirim ke AE untuk disetujui</button>'
-    + '</div>';
-  hkRenderPilihProduk();
+  window._hkf = {
+    id: c ? c.id : null, langkah: 1, maxProduk: Number(cfgP.data || 3), semuaProduk: prodRes.data || [], cari: '',
+    produk: c ? c.produk.map(function(p){ return p.id; }) : [], nama: c ? c.nama : '',
+    mulai: c ? c.mulai : '', selesai: c ? c.selesai : '', payday: c ? !!c.payday : false, cepat: c ? 'atur' : '',
+    jalur: c ? c.jalur : 'keduanya', mode: c ? c.mode : 'per_creator',
+    level: c ? c.level.map(function(l){ return { target: l.target, hadiah: l.hadiah, kuota: l.kuota }; }) : [{ target: 0, hadiah: '', kuota: 0 }],
+    bonus: c ? c.benefit.filter(function(b){ return HKF_BONUS.indexOf(b) >= 0; }) : [], bonusLain: c ? c.benefit.filter(function(b){ return HKF_BONUS.indexOf(b) < 0; }).join(', ') : ''
+  };
+  hkfRender();
 }
-function hkLevelBaris(l){
-  return '<div class="hkf-tr"><input type="number" min="1" class="hkf-target" placeholder="50000000" value="' + (l.target || '') + '"><input class="hkf-hadiah" maxlength="120" placeholder="Hampers" value="' + escHtml(l.hadiah || '') + '"><input type="number" min="1" class="hkf-kuota" placeholder="10" value="' + (l.kuota || '') + '"><button type="button" aria-label="Hapus" onclick="this.parentNode.remove()">×</button></div>';
+function hkfRender(){
+  const f = window._hkf, el = document.getElementById('hkb-isi');
+  const judul = ['Pilih produk andalanmu', 'Kapan dan lewat apa?', 'Susun tangga hadiah', 'Cek sebelum kirim'][f.langkah - 1];
+  const sub = ['Maksimal ' + f.maxProduk + ' produk. Penjualan produk ini yang dihitung.', 'Beri nama, pilih periode, dan cara hitungnya.', 'Makin tinggi penjualannya, makin besar hadiahnya.', 'AE kami akan meninjau sebelum tayang.'][f.langkah - 1];
+  let isi = '';
+  if(f.langkah === 1) isi = hkfLangkah1();
+  if(f.langkah === 2) isi = hkfLangkah2();
+  if(f.langkah === 3) isi = hkfLangkah3();
+  if(f.langkah === 4) isi = hkfLangkah4();
+  el.innerHTML = '<button type="button" class="rek-back" onclick="hkBrandList()">‹ Semua Harta Karun</button>'
+    + '<div class="hkf2-lbl">Langkah ' + f.langkah + ' dari 4</div><div class="hkf2-stp">' + [1, 2, 3, 4].map(function(i){ return '<span class="' + (i <= f.langkah ? 'on' : '') + '"></span>'; }).join('') + '</div>'
+    + '<div class="hkf2-jdl">' + judul + '</div><div class="hkf2-sub">' + sub + '</div>'
+    + '<div id="hkf2-isi">' + isi + '</div>' + hkfBar();
 }
-function hkTambahLevel(){ const w = document.getElementById('hkf-level'); if(w.children.length >= 5){ showToast('Maksimal 5 tingkat'); return; } w.insertAdjacentHTML('beforeend', hkLevelBaris({})); }
-function hkPilihTombol(btn){ btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b === btn); }); }
-function hkRenderPilihProduk(){
-  const q = (document.getElementById('hkf-cari').value || '').toLowerCase();
-  const list = (window._hkProdukBrand || []).filter(function(p){ return !q || String(p.nama_produk).toLowerCase().indexOf(q) >= 0 || window._hkBrandPilih.indexOf(p.id) >= 0; }).slice(0, 40);
-  document.getElementById('hkf-produk').innerHTML = list.map(function(p){
-    const on = window._hkBrandPilih.indexOf(p.id) >= 0;
-    const foto = Array.isArray(p.foto_urls) && p.foto_urls[0] ? '<img src="' + fotoKecil(p.foto_urls[0]) + '" alt="" loading="lazy">' : '<span>🛍️</span>';
-    return '<button type="button" class="hkf-pitem' + (on ? ' on' : '') + '" onclick="hkTogglePilih(\'' + escHtml(p.id) + '\')"><span class="hk-pr-ft">' + foto + '</span><span class="hkf-pnm">' + escHtml(p.nama_produk) + '</span><span class="hkf-pcek">' + (on ? '✓' : '+') + '</span></button>';
-  }).join('') || '<div class="card-sub">Produk tidak ditemukan.</div>';
+function hkfBar(){
+  const f = window._hkf;
+  if(f.langkah === 1){
+    const pilih = f.produk.map(function(id){ return f.semuaProduk.find(function(p){ return p.id === id; }); }).filter(Boolean);
+    return '<div class="hkf2-tray"><div class="hkf2-th">' + pilih.map(function(p){ const ft = Array.isArray(p.foto_urls) && p.foto_urls[0]; return '<i>' + (ft ? '<img src="' + fotoKecil(ft) + '" alt="">' : '') + '</i>'; }).join('') + '</div>'
+      + '<b>' + f.produk.length + ' dari ' + f.maxProduk + ' dipilih</b><button type="button" onclick="hkfLanjut()"' + (f.produk.length ? '' : ' disabled') + '>Lanjut</button></div>';
+  }
+  return '<div class="hkf2-nav"><button type="button" class="kb" onclick="hkfKembali()">Kembali</button>'
+    + (f.langkah < 4 ? '<button type="button" class="lj" onclick="hkfLanjut()">Lanjut</button>' : '<button type="button" class="lj" onclick="hkfKirim(this)">Kirim ke AE</button>') + '</div>';
 }
-function hkTogglePilih(id){
-  const i = window._hkBrandPilih.indexOf(id);
-  if(i >= 0) window._hkBrandPilih.splice(i, 1);
-  else { if(window._hkBrandPilih.length >= window._hkMaxProduk){ showToast('Maksimal ' + window._hkMaxProduk + ' produk'); return; } window._hkBrandPilih.push(id); }
-  hkRenderPilihProduk();
+function hkfLangkah1(){
+  const f = window._hkf, q = f.cari.toLowerCase();
+  const list = f.semuaProduk.filter(function(p){ return !q || String(p.nama_produk).toLowerCase().indexOf(q) >= 0; })
+    .sort(function(a, b){ return (f.produk.indexOf(b.id) >= 0) - (f.produk.indexOf(a.id) >= 0); }).slice(0, 60);
+  return '<input class="hkf2-cari" placeholder="🔍 Cari produk" value="' + escHtml(f.cari) + '" oninput="window._hkf.cari=this.value;hkfGridSaja()">'
+    + '<div class="hkf2-grid" id="hkf2-grid">' + hkfGridHtml(list) + '</div>';
 }
-async function hkBrandKirim(btn, id){
-  const nilaiPil = function(wrap){ const b = document.querySelector('#' + wrap + ' button.on'); return b ? b.dataset.v : ''; };
-  const level = Array.from(document.querySelectorAll('#hkf-level .hkf-tr')).map(function(r){ return { target: Number(r.querySelector('.hkf-target').value), hadiah: r.querySelector('.hkf-hadiah').value.trim(), kuota: Number(r.querySelector('.hkf-kuota').value) }; });
-  const benefit = Array.from(document.querySelectorAll('#hkf-benefit button.on')).map(function(b){ return b.dataset.v; })
-    .concat(document.getElementById('hkf-benefit-lain').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
-  const p = { id: id, nama: document.getElementById('hkf-nama').value.trim(), produk: window._hkBrandPilih, mulai: document.getElementById('hkf-mulai').value, selesai: document.getElementById('hkf-selesai').value,
-    payday: document.getElementById('hkf-payday').checked, jalur: nilaiPil('hkf-jalur'), mode: nilaiPil('hkf-mode'), level: level, benefit: benefit, tier_min: document.getElementById('hkf-tier').value };
-  if(p.nama.length < 3){ alert('Isi nama Harta Karun.'); return; }
-  btn.disabled = true; const awal = btn.textContent; btn.textContent = 'Mengirim...';
-  const { error } = await db.rpc('brand_hk_simpan', { p: p });
-  btn.disabled = false; btn.textContent = awal;
+function hkfGridHtml(list){
+  const f = window._hkf;
+  if(!list.length) return '<div class="card-sub" style="grid-column:1/-1">Produk tidak ditemukan.</div>';
+  return list.map(function(p){
+    const on = f.produk.indexOf(p.id) >= 0;
+    const ft = Array.isArray(p.foto_urls) && p.foto_urls[0];
+    return '<button type="button" class="hkf2-pc' + (on ? ' on' : '') + '" onclick="hkfToggleProduk(\'' + escHtml(p.id) + '\')">'
+      + '<span class="im">' + (ft ? '<img src="' + fotoKecil(ft) + '" alt="" loading="lazy">' : '🛍️') + '</span>'
+      + '<b>' + escHtml(p.nama_produk) + '</b><span>' + (p.komisi_percent != null ? 'Komisi ' + p.komisi_percent + '%' : '') + (p.harga ? ' · ' + hkRp(p.harga) : '') + '</span>'
+      + (on ? '<i class="ck">✓</i>' : '') + '</button>';
+  }).join('');
+}
+function hkfGridSaja(){
+  const f = window._hkf, q = f.cari.toLowerCase();
+  const list = f.semuaProduk.filter(function(p){ return !q || String(p.nama_produk).toLowerCase().indexOf(q) >= 0; }).slice(0, 60);
+  document.getElementById('hkf2-grid').innerHTML = hkfGridHtml(list);
+}
+function hkfToggleProduk(id){
+  const f = window._hkf, i = f.produk.indexOf(id);
+  if(i >= 0) f.produk.splice(i, 1);
+  else { if(f.produk.length >= f.maxProduk){ showToast('Maksimal ' + f.maxProduk + ' produk'); return; } f.produk.push(id); }
+  const cari = document.querySelector('.hkf2-cari'); const pos = cari ? cari.selectionStart : null;
+  document.getElementById('hkf2-grid').innerHTML = hkfGridHtml(f.semuaProduk.filter(function(p){ return !f.cari || String(p.nama_produk).toLowerCase().indexOf(f.cari.toLowerCase()) >= 0; }).slice(0, 60));
+  const bar = document.querySelector('.hkf2-tray'); if(bar) bar.outerHTML = hkfBar();
+}
+function hkfCepat(jenis){
+  const f = window._hkf, now = new Date(Date.now() + 7*3600000), y = now.getUTCFullYear(), m = now.getUTCMonth(), hari = hkfHariIni();
+  f.cepat = jenis; f.payday = false;
+  if(jenis === 'bulan'){ f.mulai = hari; f.selesai = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0, 10); }
+  if(jenis === '14'){ f.mulai = hari; f.selesai = hkfTglStr(new Date(Date.now() + 13*86400000)); }
+  if(jenis === 'payday'){
+    let a = new Date(Date.UTC(y, m, 25)).toISOString().slice(0, 10);
+    if(a < hari) a = new Date(Date.UTC(y, m + 1, 25)).toISOString().slice(0, 10);
+    f.mulai = a; f.selesai = a.slice(0, 8) + '28'; f.payday = true;
+  }
+  hkfRender();
+}
+function hkfLangkah2(){
+  const f = window._hkf;
+  const chip = function(k, t){ return '<button type="button" class="' + (f.cepat === k ? 'on' : '') + '" onclick="hkfCepat(\'' + k + '\')">' + t + '</button>'; };
+  const seg = function(nama, opsi){ return '<div class="hkf2-seg" style="grid-template-columns:repeat(' + opsi.length + ',1fr)">' + opsi.map(function(o){ return '<button type="button" class="' + (f[nama] === o[0] ? 'on' : '') + '" onclick="window._hkf.' + nama + '=\'' + o[0] + '\';hkfRender()">' + o[1] + '</button>'; }).join('') + '</div>'; };
+  const ada = f.mulai && f.selesai;
+  return '<div class="hkf2-k">Nama Harta Karun</div><input class="hkf2-in" maxlength="80" placeholder="Contoh: Jeju Glow Oktober" value="' + escHtml(f.nama) + '" oninput="window._hkf.nama=this.value">'
+    + '<div class="hkf2-k">Periode</div><div class="hkf2-chips">' + chip('bulan', 'Sisa bulan ini') + chip('14', '14 hari') + chip('payday', 'Payday 25–28') + chip('atur', 'Atur sendiri') + '</div>'
+    + (f.cepat === 'atur' ? '<div class="hkf2-dua"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.mulai + '" onchange="window._hkf.mulai=this.value;hkfRender()"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.selesai + '" onchange="window._hkf.selesai=this.value;hkfRender()"></div>'
+      + '<label class="hkf2-cek"><input type="checkbox"' + (f.payday ? ' checked' : '') + ' onchange="window._hkf.payday=this.checked"> Hitung khusus tanggal ini (edisi payday)</label>' : '')
+    + (ada ? '<div class="hkf2-rng">📅 <b>' + hkTgl(f.mulai) + ' – ' + hkTgl(f.selesai) + '</b><span>' + hkfJumlahHari(f.mulai, f.selesai) + ' hari' + (f.payday ? ' · payday' : '') + '</span></div>' : '')
+    + '<div class="hkf2-k">Dihitung dari penjualan lewat</div>' + seg('jalur', [['video', 'Video'], ['live', 'Live'], ['keduanya', 'Keduanya']])
+    + '<div class="hkf2-k">Target dihitung</div>' + seg('mode', [['per_creator', 'Per creator'], ['gabungan', 'Gabungan peserta']])
+    + '<div class="hkf2-note">' + (f.mode === 'gabungan' ? 'Gabungan: semua penjualan peserta dijumlah. Kalau target tembus, hadiah untuk peserta dengan penjualan tertinggi sesuai kuota.' : 'Per creator: setiap creator yang tembus target dapat hadiah, sesuai kuota pemenang.') + '</div>';
+}
+function hkfLangkah3(){
+  const f = window._hkf;
+  const kartu = f.level.map(function(l, i){
+    const w = HKF_TANGGA[Math.min(i, HKF_TANGGA.length - 1)], gelap = i >= 3;
+    return '<div class="hkf2-lv" style="background:' + w + ';color:' + (gelap ? '#fff' : '#412402') + '"><span class="n">' + (i + 1) + '</span>'
+      + '<div class="hkf2-lvi"><div><label>Target GMV</label><input inputmode="numeric" placeholder="50.000.000" value="' + hkfRibuan(l.target) + '" oninput="hkfSetLevel(' + i + ',\'target\',this)"></div>'
+      + '<div><label>Hadiah</label><input maxlength="120" placeholder="Hampers" value="' + escHtml(l.hadiah) + '" oninput="hkfSetLevel(' + i + ',\'hadiah\',this)"></div>'
+      + '<div><label>Pemenang</label><input inputmode="numeric" placeholder="10" value="' + (l.kuota || '') + '" oninput="hkfSetLevel(' + i + ',\'kuota\',this)"></div></div>'
+      + (f.level.length > 1 ? '<button type="button" class="x" aria-label="Hapus tingkat" onclick="window._hkf.level.splice(' + i + ',1);hkfRender()">×</button>' : '') + '</div>';
+  }).join('');
+  return kartu + (f.level.length < 5 ? '<button type="button" class="hkf2-add" onclick="window._hkf.level.push({target:0,hadiah:\'\',kuota:0});hkfRender()">+ Tambah tingkat</button>' : '')
+    + '<div class="hkf2-k">Bonus untuk semua peserta <span>opsional</span></div><div class="hkf2-chips">' + HKF_BONUS.map(function(b){ return '<button type="button" class="' + (f.bonus.indexOf(b) >= 0 ? 'on' : '') + '" onclick="hkfToggleBonus(\'' + b + '\')">' + b + '</button>'; }).join('') + '</div>'
+    + '<input class="hkf2-in" placeholder="Bonus lain (pisahkan dengan koma)" value="' + escHtml(f.bonusLain) + '" oninput="window._hkf.bonusLain=this.value">';
+}
+function hkfSetLevel(i, k, el){
+  const f = window._hkf;
+  if(k === 'hadiah'){ f.level[i].hadiah = el.value; return; }
+  const n = hkfAngka(el.value); f.level[i][k] = n;
+  if(k === 'target'){ const pos = el.value.length - el.selectionStart; el.value = hkfRibuan(n); const p = Math.max(0, el.value.length - pos); el.setSelectionRange(p, p); }
+}
+function hkfToggleBonus(b){ const f = window._hkf, i = f.bonus.indexOf(b); if(i >= 0) f.bonus.splice(i, 1); else f.bonus.push(b); hkfRender(); }
+function hkfBenefit(){ const f = window._hkf; return f.bonus.concat(f.bonusLain.split(',').map(function(s){ return s.trim(); }).filter(Boolean)); }
+function hkfLangkah4(){
+  const f = window._hkf;
+  const pilih = f.produk.map(function(id){ return f.semuaProduk.find(function(p){ return p.id === id; }); }).filter(Boolean);
+  const lv = f.level.slice().sort(function(a, b){ return a.target - b.target; });
+  const brand = (currentSession.brandData && currentSession.brandData.nama_brand) || '';
+  return '<div class="hkf2-prev"><div class="b">' + escHtml(brand) + '</div><div class="n">' + escHtml(f.nama) + '</div>'
+    + '<div class="s">' + hkTgl(f.mulai) + ' – ' + hkTgl(f.selesai) + (f.payday ? ' · Payday' : '') + ' · ' + HK_JALUR[f.jalur] + ' · ' + (f.mode === 'gabungan' ? 'gabungan' : 'per creator') + '</div>'
+    + '<div class="ft">' + pilih.map(function(p){ const ft = Array.isArray(p.foto_urls) && p.foto_urls[0]; return '<i>' + (ft ? '<img src="' + fotoKecil(ft) + '" alt="">' : '') + '</i>'; }).join('') + '</div>'
+    + '<div class="lv">' + lv.map(function(l){ return '<span>' + hkRp(l.target) + ' → ' + escHtml(l.hadiah) + ' ×' + l.kuota + '</span>'; }).join('') + '</div>'
+    + (hkfBenefit().length ? '<div class="s" style="margin-top:8px">Bonus peserta: ' + hkfBenefit().map(escHtml).join(', ') + '</div>' : '') + '</div>'
+    + '<div class="hkf2-note">Begitu tayang, produk dan target terkunci sampai periode selesai. Komisi mengikuti yang sudah diatur AE. Semua tier creator bisa ikut.</div>';
+}
+function hkfCek(langkah){
+  const f = window._hkf;
+  if(langkah === 1 && !f.produk.length) return 'Pilih minimal 1 produk.';
+  if(langkah === 2){
+    if(f.nama.trim().length < 3) return 'Isi nama Harta Karun (minimal 3 huruf).';
+    if(!f.mulai || !f.selesai) return 'Pilih periode.';
+    if(f.selesai < f.mulai) return 'Tanggal selesai harus setelah tanggal mulai.';
+    if(f.mulai < hkfHariIni()) return 'Tanggal mulai tidak boleh di masa lalu.';
+    if(hkfJumlahHari(f.mulai, f.selesai) > 31) return 'Periode maksimal 31 hari.';
+  }
+  if(langkah === 3){
+    for(let i = 0; i < f.level.length; i++){
+      const l = f.level[i];
+      if(!(l.target > 0) || String(l.hadiah || '').trim().length < 2 || !(l.kuota > 0)) return 'Lengkapi tingkat ' + (i + 1) + ': target, hadiah, dan jumlah pemenang.';
+    }
+  }
+  return '';
+}
+function hkfLanjut(){ const f = window._hkf, salah = hkfCek(f.langkah); if(salah){ alert(salah); return; } f.langkah++; hkfRender(); document.getElementById('hkb-isi').scrollIntoView({ block: 'start' }); }
+function hkfKembali(){ const f = window._hkf; if(f.langkah > 1){ f.langkah--; hkfRender(); } }
+async function hkfKirim(btn){
+  const f = window._hkf;
+  btn.disabled = true; btn.textContent = 'Mengirim...';
+  const { error } = await db.rpc('brand_hk_simpan', { p: { id: f.id, nama: f.nama.trim(), produk: f.produk, mulai: f.mulai, selesai: f.selesai, payday: f.payday, jalur: f.jalur, mode: f.mode,
+    level: f.level.slice().sort(function(a, b){ return a.target - b.target; }), benefit: hkfBenefit(), tier_min: '' } });
+  btn.disabled = false; btn.textContent = 'Kirim ke AE';
   if(error){ alert(hkPesanError(error)); return; }
-  showToast('Terkirim ke AE untuk disetujui'); hkBrandList();
+  window._hkf = null; showToast('Terkirim ke AE untuk disetujui'); hkBrandList();
 }
 
 // ---------- DETAIL & RACE (brand / internal / creator) ----------
