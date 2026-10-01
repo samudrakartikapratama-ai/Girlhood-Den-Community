@@ -1212,6 +1212,23 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 #rek-produk-list .rek-pil{width:100%}
 #rek-produk-list .rek-pkartu.hero,#rek-produk-list .rek-pkartu.baru{box-shadow:0 0 0 3px rgba(232,164,25,.18)}
 .jl-pendek{margin-top:8px;font-size:11.5px;font-weight:700;color:#854F0B;background:#FAEEDA;border-radius:10px;padding:6px 10px}
+.rw-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#ECEAF6;border-radius:14px;padding:4px;margin:18px 0 12px}
+.rw-tab{min-height:42px;border:none;border-radius:10px;background:transparent;font-weight:800;font-size:13px;color:#534AB7;cursor:pointer;font-family:inherit}
+.rw-tab.on{background:#fff;color:#26215C;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.rw-kartu{border-radius:20px;padding:14px;margin-bottom:10px}
+.rw-atas{font-size:11.5px;font-weight:700;opacity:.85}
+.rw-hadiah{font-family:'Baloo 2',inherit;font-size:24px;font-weight:800;line-height:1.1;margin-top:6px}
+.rw-syarat{font-size:12.5px;margin-top:4px}
+.rw-syarat b{font-weight:800}
+.rw-produk{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.7);border-radius:12px;padding:6px;margin-top:10px}
+.rw-ft{display:flex}.rw-ft i{width:34px;height:34px;border-radius:9px;background:#fff;overflow:hidden;margin-left:-6px;border:2px solid rgba(255,255,255,.9)}.rw-ft i:first-child{margin-left:0}.rw-ft i img{width:100%;height:100%;object-fit:cover}
+.rw-produk b{font-size:12px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dark)}
+.rw-bawah{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;font-weight:700}
+.rw-bawah button{border:none;color:#fff;border-radius:999px;padding:8px 16px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.rw-segera{text-align:center;background:linear-gradient(160deg,#AFA9EC,#6A61CF);color:#fff;border-radius:20px;padding:22px 18px}
+.rw-segera-ik{font-size:40px;margin-bottom:6px}
+.rw-segera b{display:block;font-family:'Baloo 2',inherit;font-size:19px;font-weight:800}
+.rw-segera span{display:block;font-size:12.5px;opacity:.92;margin-top:4px;line-height:1.5}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2057,6 +2074,7 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
       <input id="new-reward-poin" type="number" placeholder="Poin dibutuhkan">
       <input id="new-reward-stok" type="number" placeholder="Stok (opsional)">
     </div>
+    <div class="field-row"><select id="new-reward-tier"><option value="">Semua tier</option><option value="Gold">Gold ke atas</option><option value="Diamond">Diamond ke atas</option><option value="Solitaire">Solitaire saja</option></select></div>
     <div class="field-row">
       <input id="new-reward-dari" type="date" placeholder="Berlaku dari">
       <input id="new-reward-sampai" type="date" placeholder="Berlaku sampai">
@@ -2078,6 +2096,7 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
         <input id="edit-reward-poin" type="number" placeholder="Poin dibutuhkan">
         <input id="edit-reward-stok" type="number" placeholder="Stok (kosongkan = tak terbatas)">
       </div>
+      <div class="field-row"><select id="edit-reward-tier"><option value="">Semua tier</option><option value="Gold">Gold ke atas</option><option value="Diamond">Diamond ke atas</option><option value="Solitaire">Solitaire saja</option></select></div>
       <div class="field-row">
         <input id="edit-reward-dari" type="date">
         <input id="edit-reward-sampai" type="date">
@@ -10437,6 +10456,7 @@ function htmlAvatar(url, nama, tier, size){
 // Buka menu Poin langsung ke katalog hadiah (dipakai tombol popup hadiah).
 function showPoinTab(tujuan){
   if(tujuan !== 'hadiah') return;
+  setTimeout(function(){ if(typeof rwTab === 'function') rwTab('poin'); }, 400);
   let coba = 0;
   const t = setInterval(function(){
     const el = document.getElementById('c8-katalog');
@@ -11110,6 +11130,40 @@ async function hkUpdateKunciMenu(){
   el.classList.toggle('hk-kunci-menu', data !== 'on');
 }
 
+// ===== Halaman Reward: tab Rewards Girlhood Den (dari Harta Karun) & Redeem Poin =====
+function rwTab(t){
+  document.querySelectorAll('.rw-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
+  const a = document.getElementById('rw-panel-gd'), b = document.getElementById('rw-panel-poin');
+  if(a) a.style.display = t === 'gd' ? 'block' : 'none';
+  if(b) b.style.display = t === 'poin' ? 'block' : 'none';
+}
+async function rwMuatGD(){
+  const el = document.getElementById('rw-panel-gd'); if(!el) return;
+  const { data: buka } = await db.rpc('hk_cfg', { k: 'hk_creator_buka' });
+  if(buka !== 'on'){
+    el.innerHTML = '<div class="rw-segera"><div class="rw-segera-ik">🎁</div><b>Rewards dari brand segera hadir</b><span>Hadiah uang, hampers, sampai calon brand ambassador untuk creator yang tembus target penjualan. Sementara itu, kumpulkan poin dulu di Redeem Poin.</span></div>';
+    return;
+  }
+  let list = [];
+  try { const r = await db.rpc('creator_hk_list'); list = (r.data || []).filter(function(c){ return c.status === 'tayang' && hkSisaHari(c.selesai) >= 0; }); } catch(e){}
+  if(!list.length){ el.innerHTML = '<div class="rw-segera"><div class="rw-segera-ik">🎁</div><b>Belum ada reward aktif</b><span>Reward baru dari brand akan muncul di sini. Cek lagi nanti ya.</span></div>'; return; }
+  let html = '', i = 0;
+  list.forEach(function(c){
+    (c.level || []).slice().sort(function(a, b){ return b.target - a.target; }).forEach(function(l){
+      const w = HK_WARNA[i++ % HK_WARNA.length];
+      const foto = (c.produk || []).slice(0, 3).map(function(p){ return '<i>' + (p.foto ? '<img src="' + fotoKecil(p.foto) + '" alt="">' : '') + '</i>'; }).join('');
+      html += '<div class="rw-kartu" style="background:' + w[0] + ';color:' + w[1] + '">'
+        + '<div class="rw-atas">' + escHtml(c.brand) + ' · ' + (c.payday ? 'payday ' : 'sampai ') + hkTgl(c.selesai) + '</div>'
+        + '<div class="rw-hadiah">' + escHtml(l.hadiah) + '</div>'
+        + '<div class="rw-syarat">Capai GMV <b>' + hkRp(l.target) + '</b> dari ' + (c.produk.length > 1 ? c.produk.length + ' produk ini' : 'produk ini') + (c.mode === 'gabungan' ? ' (gabungan peserta)' : '') + '</div>'
+        + '<div class="rw-produk"><span class="rw-ft">' + foto + '</span><b>' + escHtml((c.produk[0] || {}).nama || '') + (c.produk.length > 1 ? ' +' + (c.produk.length - 1) : '') + '</b></div>'
+        + '<div class="rw-bawah"><span>' + l.kuota + ' pemenang · ' + c.peserta + ' ikut' + (c.saya_ikut ? ' · kamu ' + hkRp(c.gmv_saya) : '') + '</span>'
+        + '<button type="button" style="background:' + w[1] + '" onclick="openModal(\'m-c-hk\');hkDetail(\'' + c.id + '\',\'creator\')">' + (c.saya_ikut ? 'Lihat race' : 'Ikut') + '</button></div></div>';
+    });
+  });
+  el.innerHTML = html;
+}
+
 function htmlChipTier(tier){
   const w = TIER_WARNA[tier] || TIER_WARNA.Bronze;
   return '<span class="bdg-chip" style="background:' + w[0] + ';color:' + w[1] + '">' + escHtml(tier || 'Bronze') + '</span>';
@@ -11298,7 +11352,9 @@ async function loadPoinCreator(){
       html += '</div><div style="font-size:11px;opacity:.8;text-align:center;margin-top:10px">Periode mulai ' + escHtml(String(summary.weekStart)) + '</div></div>';
     }
 
-    html += '<div id="c8-katalog" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px"><div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:18px;color:var(--dark)">Katalog hadiah</div><div style="font-size:11.5px;font-weight:800;color:var(--pink);background:var(--pink-pale);border-radius:999px;padding:3px 10px">Poin kamu: ' + rewardsData.saldo + '</div></div>';
+    html += '<div class="rw-tabs"><button type="button" class="rw-tab" data-t="gd" onclick="rwTab(\'gd\')">Rewards Girlhood Den</button><button type="button" class="rw-tab on" data-t="poin" onclick="rwTab(\'poin\')">Redeem Poin</button></div>';
+    html += '<div id="rw-panel-gd" style="display:none"><div class="card-sub">Memuat...</div></div><div id="rw-panel-poin">';
+    html += '<div id="c8-katalog" style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px"><div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;font-size:18px;color:var(--dark)">Redeem Poin</div><div style="font-size:11.5px;font-weight:800;color:var(--pink);background:var(--pink-pale);border-radius:999px;padding:3px 10px">Poin kamu: ' + rewardsData.saldo + '</div></div>';
     html += '<div class="card-sub" style="margin-bottom:10px">Semua hadiah tampil supaya targetnya jelas. Tukar 1× per bulan.</div>';
     if(!rewardsData.rewards || rewardsData.rewards.length === 0){
       html += '<div class="card-sub">Belum ada hadiah yang didaftarkan.</div>';
@@ -11306,15 +11362,16 @@ async function loadPoinCreator(){
       html += '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">';
       rewardsData.rewards.forEach(function(r){
         const habis = r.stok !== null && r.stok <= 0;
-        const bisa = !habis && rewardsData.saldo >= r.poin_dibutuhkan;
+        const kunci = !!r.terkunci_tier;
+        const bisa = !habis && !kunci && rewardsData.saldo >= r.poin_dibutuhkan;
         const stokTipis = !habis && r.stok !== null && r.stok <= 2;
         const persen = Math.min(100, Math.round(rewardsData.saldo / Math.max(1, r.poin_dibutuhkan) * 100));
         const sisaPoin = Math.max(0, r.poin_dibutuhkan - rewardsData.saldo);
-        const ket = habis ? 'Menunggu stok baru' : bisa ? 'Poin kamu cukup' : 'Kurang ' + sisaPoin.toLocaleString('id-ID') + ' poin lagi';
+        const ket = kunci ? '🔒 Khusus tier ' + r.tier_min + ' ke atas' : habis ? 'Menunggu stok baru' : bisa ? 'Poin kamu cukup' : 'Kurang ' + sisaPoin.toLocaleString('id-ID') + ' poin lagi';
         const fotoHtml = r.foto_url
           ? '<img src="' + r.foto_url + '" alt="' + escHtml(r.nama) + '" style="width:100%;height:120px;object-fit:cover;display:block;background:var(--pink-pale)">'
           : '<div style="width:100%;height:120px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:30px">🎁</div>';
-        html += '<div style="border:1.5px solid ' + (bisa ? '#1D9E75' : 'var(--gray-mid)') + ';border-radius:16px;overflow:hidden;background:#fff;display:flex;flex-direction:column;opacity:' + (habis ? '.7' : '1') + '">'
+        html += '<div style="border:1.5px solid ' + (bisa ? '#1D9E75' : 'var(--gray-mid)') + ';border-radius:16px;overflow:hidden;background:#fff;display:flex;flex-direction:column;opacity:' + (habis || kunci ? '.6' : '1') + '">'
           + '<div style="position:relative">' + fotoHtml
           + (habis ? '<div style="position:absolute;inset:0;background:rgba(62,35,64,.55);display:flex;align-items:center;justify-content:center"><span style="background:#fff;color:#3E2340;font-weight:800;font-size:11px;border-radius:999px;padding:4px 10px">Stok habis</span></div>' : '')
           + (bisa ? '<div style="position:absolute;top:8px;left:8px;background:#1D9E75;color:#fff;font-weight:800;font-size:10.5px;border-radius:999px;padding:3px 8px">Bisa ditukar</div>' : '')
@@ -11336,7 +11393,7 @@ async function loadPoinCreator(){
     if(rewardsData.sudahTukarBulanIni){
       html += '<div class="card-sub" style="text-align:center;background:var(--pink-pale);border-radius:12px;padding:14px">✅ Kamu udah pakai jatah tukar poin bulan ini. Jatah baru muncul lagi tanggal 1 bulan depan.</div>';
     } else {
-      const eligibleRewards = (rewardsData.rewards||[]).filter(function(r){ return rewardsData.saldo >= r.poin_dibutuhkan && r.stok > 0; });
+      const eligibleRewards = (rewardsData.rewards||[]).filter(function(r){ return !r.terkunci_tier && rewardsData.saldo >= r.poin_dibutuhkan && (r.stok === null || r.stok > 0); });
       html += '<div style="border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">';
       html += '<div style="font-weight:800;font-size:12.5px;margin-bottom:8px">🎁 Tukar dengan Hadiah</div>';
       if(eligibleRewards.length === 0){
@@ -11359,9 +11416,11 @@ async function loadPoinCreator(){
       }
     }
 
+    html += '</div>';
     html += '<div class="card-sub" style="font-weight:700;margin-top:16px">Daftar Semua Poin</div><div id="poin-rules-list"><div class="card-sub">Memuat...</div></div>';
 
     el.innerHTML = html;
+    rwMuatGD();
 
     // Muat daftar aturan poin (baca langsung, RLS mengizinkan semua yang login)
     const { data: rules } = await db.from('point_rules').select('*').eq('is_active', true).order('urutan');
@@ -11685,7 +11744,7 @@ async function loadPoinHadiahList(){
     j.rewards.forEach(function(r){
       const berlaku = (r.berlaku_dari||'—')+' s/d '+(r.berlaku_sampai||'—');
       html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.foto_url?'<img src="'+r.foto_url+'">':'🎁')+'</div>'+
-        '<div class="prc-main"><div class="t">'+r.nama+(r.is_active?'':' (nonaktif)')+'</div><div class="s">Stok: '+(r.stok===null?'∞':r.stok)+' · '+berlaku+'</div></div>'+
+        '<div class="prc-main"><div class="t">'+r.nama+(r.is_active?'':' (nonaktif)')+'</div><div class="s">Stok: '+(r.stok===null?'∞':r.stok)+' · '+berlaku+(r.tier_min?' · '+r.tier_min+'+':' · semua tier')+'</div></div>'+
         '<div class="prc-cost">'+r.poin_dibutuhkan+' pts</div>'+
         '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick=\'openEditRewardPopup('+JSON.stringify(r)+')\' title="Edit">✏️</div>'+
         '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="deleteRewardInternal(\''+r.id+'\')" title="Hapus">🗑</div></div>';
@@ -11706,6 +11765,7 @@ function openEditRewardPopup(r){
   document.getElementById('edit-reward-dari').value = r.berlaku_dari || '';
   document.getElementById('edit-reward-sampai').value = r.berlaku_sampai || '';
   document.getElementById('edit-reward-aktif').checked = !!r.is_active;
+  document.getElementById('edit-reward-tier').value = r.tier_min || '';
   document.getElementById('edit-reward-popup-bg').classList.add('open');
 }
 function closeEditRewardPopup(){
@@ -11737,7 +11797,7 @@ async function saveEditReward(){
     const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
       body: JSON.stringify({
-        action:'update', id, nama, poin_dibutuhkan, foto_url,
+        action:'update', id, nama, poin_dibutuhkan, foto_url, tier_min: document.getElementById('edit-reward-tier').value,
         stok: stokVal === '' ? null : parseInt(stokVal, 10),
         berlaku_dari: berlaku_dari || null, berlaku_sampai: berlaku_sampai || null,
         is_active
@@ -11773,7 +11833,7 @@ async function createRewardInternal(){
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'create', nama, foto_url, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null })
+      body: JSON.stringify({ action:'create', nama, foto_url, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null, tier_min: document.getElementById('new-reward-tier').value })
     });
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Gagal menambah hadiah.'); return; }
@@ -11783,6 +11843,7 @@ async function createRewardInternal(){
     document.getElementById('new-reward-stok').value='';
     document.getElementById('new-reward-dari').value='';
     document.getElementById('new-reward-sampai').value='';
+    document.getElementById('new-reward-tier').value='';
     loadPoinHadiahList();
   } catch(e){ alert('Gagal menghubungi server.'); }
 }
