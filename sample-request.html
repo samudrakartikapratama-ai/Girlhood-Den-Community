@@ -1997,7 +1997,7 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 8px">
     <button id="gmv-mode-mingguan" onclick="pilihModeGmv('mingguan')" style="border:1.5px solid var(--pink);background:var(--pink);color:#fff;border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">Mingguan · poin<div style="font-size:11px;font-weight:600;opacity:.9">Tiap Senin, data 7 hari</div></button>
     <button id="gmv-mode-tier" onclick="pilihModeGmv('tier')" style="border:1.5px solid var(--border);background:#fff;color:var(--dark);border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">90 hari · tier<div style="font-size:11px;font-weight:600;opacity:.8">Awal bulan, data 90 hari</div></button>
-    <button id="gmv-mode-hk" onclick="pilihModeGmv('hk')" style="border:1.5px solid var(--border);background:#fff;color:var(--dark);border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">Harta Karun · final<div style="font-size:11px;font-weight:600;opacity:.8">Data persis periode Harta Karun</div></button>
+    <button id="gmv-mode-hk" onclick="pilihModeGmv('hk')" style="border:1.5px solid var(--border);background:#fff;color:var(--dark);border-radius:12px;padding:10px;font-weight:800;cursor:pointer;text-align:left">Harta Karun<div style="font-size:11px;font-weight:600;opacity:.8">Sesuai tanggal brand</div></button>
   </div>
   <div class="card-sub" id="gmv-penjelasan">Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator + Product</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.</div>
   <label id="gmv-drop" style="display:block;margin-top:12px;border:2px dashed var(--pink);border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--pink-pale)"
@@ -9757,7 +9757,7 @@ function pilihModeGmv(m){
   const aktif = function(id, on){ const b = document.getElementById(id); b.style.background = on ? 'var(--pink)' : '#fff'; b.style.color = on ? '#fff' : 'var(--dark)'; b.style.borderColor = on ? 'var(--pink)' : 'var(--border)'; };
   aktif('gmv-mode-mingguan', m === 'mingguan'); aktif('gmv-mode-tier', m === 'tier'); aktif('gmv-mode-hk', m === 'hk');
   document.getElementById('gmv-penjelasan').innerHTML = m === 'hk'
-    ? 'Setelah periode Harta Karun selesai, export TAP dimensi <b>Creator + Product</b> untuk <b>tanggal persis periode Harta Karun-nya</b> (misalnya 1–31 Okt, atau 25–28 untuk payday), lalu tarik ke sini. File ini jadi angka final untuk menetapkan pemenang. Tidak membagikan poin.'
+    ? 'Tarik TAP dimensi <b>Creator + Product</b> mulai <b>tanggal mulai Harta Karun</b> sampai hari ini, lalu upload di sini untuk update race. Setelah periode selesai, tarik sampai <b>tanggal selesainya</b> untuk angka final. Tidak membagikan poin.'
     : m === 'tier'
     ? 'Awal bulan, export data <b>90 hari terakhir</b> dari TAP (dimensi <b>Creator</b>, dengan kolom <b>Settled GMV</b>). Tier dihitung dari GMV yang sudah terbayar. Naik tier langsung berlaku; turun tier hanya diterapkan tanggal 1–7.'
     : 'Setiap Senin, export data minggu lalu dari TAP (Analytics → Custom report, dimensi <b>Creator + Product</b>), lalu tarik filenya ke sini. Sistem menghitung poin penjualan: setiap Rp100 ribu dari video = 1 poin, dari Live = 1,5 poin.';
@@ -10874,8 +10874,8 @@ async function hkDetail(id, peran){
           : '<span class="hk-chip" style="background:' + (w.status === 'dikirim' ? '#E1F5EE;color:#085041' : '#FAEEDA;color:#854F0B') + '">' + (w.status === 'dikirim' ? 'Terkirim' : 'Menunggu kirim') + '</span>') + '</div>';
     }).join('');
   }
-  html += '<div class="hk-judul">🏁 Race <span>' + (c.data_final ? 'angka final' : 'angka sementara · update tiap Senin') + '</span></div>' + hkKlasemenHtml(rows, { semua: peran !== 'creator', tandaIkut: peran !== 'creator' });
-  if(peran === 'internal' && c.status === 'tayang' && sisa < 0 && !c.data_final) html += '<div class="hkf2-note" style="margin-top:12px">Sebelum menetapkan pemenang, upload file TAP untuk periode <b>' + hkTgl(c.mulai) + ' – ' + hkTgl(c.selesai) + '</b> di Upload GMV, mode <b>Harta Karun · final</b>.</div>';
+  html += '<div class="hk-judul">🏁 Race <span>' + (c.data_final ? 'angka final' : (c.data_sampai ? 'data s/d ' + hkTgl(c.data_sampai) : 'menunggu upload data')) + '</span></div>' + hkKlasemenHtml(rows, { semua: peran !== 'creator', tandaIkut: peran !== 'creator' });
+  if(peran === 'internal' && c.status === 'tayang' && sisa < 0 && !c.data_final) html += '<div class="hkf2-note" style="margin-top:12px">Sebelum menetapkan pemenang, upload file TAP untuk periode <b>' + hkTgl(c.mulai) + ' – ' + hkTgl(c.selesai) + '</b> di Upload GMV, mode <b>Harta Karun</b>.</div>';
   if(peran === 'internal' && c.status === 'tayang' && sisa < 0) html += '<button type="button" class="hk-btn-utama" onclick="hkTetapkanPemenang(this,\'' + c.id + '\')">🏆 Tetapkan pemenang</button>';
   if(peran === 'creator' && c.status === 'tayang' && !c.saya_ikut && sisa >= 0) html += '<button type="button" class="hk-btn-utama" onclick="hkIkut(this,\'' + c.id + '\')">Ikut tantangan ini</button>';
   el.innerHTML = html;
@@ -11054,7 +11054,7 @@ async function previewHk(){
   if(!j.valid){ hasil.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal membaca data.') + '</div>'; return; }
   hasil.innerHTML = '<div style="padding:12px;border-radius:12px;background:#fff;border:1px solid var(--border);font-size:13px">'
     + '<b>' + j.barisProduk.toLocaleString('id-ID') + '</b> baris penjualan per produk terbaca.<br>'
-    + (j.hartaKarun.length ? 'Jadi angka final untuk Harta Karun: <b>' + j.hartaKarun.map(escHtml).join(', ') + '</b>' : '<span style="color:#9A6A00">Belum ada Harta Karun dengan periode persis sama dan produk yang cocok. Cek lagi tanggal mulai dan selesainya.</span>')
+    + (j.hartaKarun.length ? 'Dipakai untuk Harta Karun: <b>' + j.hartaKarun.map(escHtml).join(', ') + '</b>' : '<span style="color:#9A6A00">Tidak ada Harta Karun yang tanggal mulainya sama dengan file ini. Tarik TAP mulai dari tanggal mulai Harta Karun.</span>')
     + '<div class="card-sub" style="margin-top:6px">File ini tidak membagikan poin. Upload ulang periode yang sama akan menggantikan data sebelumnya.</div></div>'
     + '<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="simpanHkGmv(this)">Simpan data Harta Karun</button>';
 }
