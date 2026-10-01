@@ -1799,9 +1799,9 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 
 <div class="popup-bg" id="creator-frozen-popup" style="display:none;position:fixed;inset:0;background:rgba(74,43,71,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:22px;padding:28px 22px;text-align:center;max-width:340px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,.2)">
-    <div style="width:56px;height:56px;border-radius:16px;background:#fde2e2;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">😔</div>
-    <h1 style="font-size:16px;color:var(--dark);margin-bottom:8px">Akun Kamu Lagi Dibekukan</h1>
-    <p style="font-size:12px;color:var(--gray-text);line-height:1.6;margin-bottom:18px">Ada pelanggaran yang perlu diselesaikan dulu, jadi sementara kamu belum bisa akses aplikasi. Hubungi tim Girlhood Den buat tau alasan &amp; langkah selanjutnya.</p>
+    <div style="width:56px;height:56px;border-radius:16px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">🔑</div>
+    <h1 style="font-size:16px;color:var(--dark);margin-bottom:8px">Kode Belum Bisa Dipakai</h1>
+    <p style="font-size:12px;color:var(--gray-text);line-height:1.6;margin-bottom:18px">Kode ini sedang tidak aktif. Kalau ada pertanyaan, hubungi tim Girlhood Den ya.</p>
     <button onclick="window.open('https://wa.me/','_blank')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--pink);color:#fff;font-weight:800;font-size:12.5px;cursor:pointer;margin-bottom:8px">💬 Hubungi Tim Girlhood Den</button>
     <button onclick="document.getElementById('creator-frozen-popup').style.display='none'" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--gray-text);font-weight:700;font-size:12.5px;cursor:pointer">Tutup</button>
   </div>
@@ -7439,7 +7439,7 @@ async function requestSample(productId, btn){
     } else if(error.message && error.message.includes('PRODUK_DIFREEZE')){
       alert('Produk ini lagi di-freeze sementara, request sample dimatikan dulu. Coba lagi nanti ya.');
     } else if(error.message && error.message.includes('AKUN_DIFREEZE')){
-      alert('Akun kamu lagi dibekukan sementara, nggak bisa request sample. Hubungi tim Girlhood Den buat info lebih lanjut.');
+      alert('Request sample sedang tidak bisa diajukan dari akun ini. Hubungi tim Girlhood Den.');
     } else {
       showDbError('request sample', error);
     }
