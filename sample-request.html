@@ -1044,6 +1044,21 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .rek2-tempel{position:absolute;top:10px;right:10px;z-index:2;font-size:10px;font-weight:800;letter-spacing:.06em;color:#fff;border-radius:999px;padding:3px 9px}
 .rek2-tempel.hero{background:#E8A419}
 .rek2-tempel.baru{background:#534AB7}
+/* Tombol pilih file di seluruh aplikasi */
+input[type=file]{font-family:inherit;font-size:12.5px;color:var(--gray-text);max-width:100%}
+input[type=file]::file-selector-button{border:0;background:var(--pink);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:999px;margin-right:10px;cursor:pointer}
+/* Langkah ambil sample */
+.how-steps{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:14px 14px 8px;margin-bottom:12px}
+.how-title{font-size:14px;font-weight:800;color:var(--dark);margin-bottom:10px}
+.how-list{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:720px){.how-list{grid-template-columns:1fr 1fr}}
+.how-item{display:flex;gap:10px;align-items:flex-start;padding-bottom:6px}
+.how-no{width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-item b{display:block;font-size:13px;color:var(--dark)}
+.how-item span{display:block;font-size:11.5px;color:var(--gray-text);line-height:1.45}
+.pd-meta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.pd-meta span{font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--pink-pale);color:var(--dark)}
+.pd-meta span.komisi{background:#E3F4EA;color:#186B3B}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1295,6 +1310,15 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
       <div style="display:flex;align-items:center;gap:10px">
         <div id="brand-detail-avatar" style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pink-light),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">G</div>
         <div><b id="brand-detail-name">-</b></div>
+      </div>
+    </div>
+    <div class="how-steps">
+      <div class="how-title">📋 Cara ambil sample</div>
+      <div class="how-list">
+        <div class="how-item"><div class="how-no">1</div><div><b>Pilih Video atau Live, lalu centang setuju</b><span>Baca dulu kewajibannya. Setelah dicentang, tombol Request Sample bisa ditekan.</span></div></div>
+        <div class="how-item"><div class="how-no">2</div><div><b>Tunggu brand menyetujui</b><span>Pantau statusnya di menu Cek Status. Pilih Live? Isi jadwal 3 sesi di sana.</span></div></div>
+        <div class="how-item"><div class="how-no">3</div><div><b>Barang datang? Konfirmasi</b><span>Tekan "Barang Sudah Sampai" di Cek Status begitu paketnya kamu terima.</span></div></div>
+        <div class="how-item"><div class="how-no">4</div><div><b>Video: upload 3 video di Report VT</b><span>Paling lambat 3 hari setelah konfirmasi. Live: jalankan sesuai jadwal yang terkunci.</span></div></div>
       </div>
     </div>
     <div id="brand-products-list"><div class="card-sub">Memuat produk...</div></div>
@@ -7004,7 +7028,7 @@ async function openBrandDetail(brandId, brandName, logoUrl){
     if(p.tag_hot) tagHtml += '<span class="tag tag-hot">🔥 Hot Product</span>';
     const hargaText = p.harga ? 'Rp' + Number(p.harga).toLocaleString('id-ID') : '-';
     const komisiText = p.komisi_percent !== null && p.komisi_percent !== undefined ? p.komisi_percent+'%' : '-';
-    const infoHtml = '<div style="display:flex;gap:10px;margin:6px 0;font-size:13px;font-weight:700;color:var(--dark)"><span>💵 '+hargaText+'</span><span>•</span><span>Komisi '+komisiText+'</span></div>';
+    const infoHtml = '<div class="pd-meta"><span>💵 '+hargaText+'</span><span class="komisi">Komisi '+komisiText+'</span></div>';
     if(p.tag_high_commission) tagHtml += '<span class="tag tag-comm">💰 High Commission</span>';
 
     const fotos = p.foto_urls || [];
