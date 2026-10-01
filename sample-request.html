@@ -992,6 +992,37 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .ide2-alur li{counter-increment:l;position:relative;padding:0 0 12px 36px;font-size:13.5px;line-height:1.6;color:var(--dark)}
 .ide2-alur li:before{content:counter(l);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--pink-pale);color:var(--pink);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
 .ide2-cta{margin-top:8px;font-size:12.5px;font-weight:800;color:#0F6E50;background:#E4F4EE;border-radius:10px;padding:8px 12px;line-height:1.5}
+.rek-langkah{font-size:12px;font-weight:800;color:var(--gray-text);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.rek-cari{width:100%;min-height:44px;border-radius:12px;box-sizing:border-box;margin-bottom:8px}
+.rek-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin-bottom:10px}
+.rek-tabs button{min-height:40px;border:none;border-radius:9px;background:transparent;font-weight:800;font-size:13px;color:var(--gray-text);cursor:pointer}
+.rek-tabs button.on{background:var(--pink);color:#fff}
+.rek-brand{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:8px 12px;margin-bottom:6px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;font-size:13.5px;color:var(--dark);font-family:inherit}
+.rek-brand:hover{border-color:var(--pink)}
+.rek-ini{width:38px;height:38px;border-radius:10px;background:var(--pink-pale);color:var(--pink);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rek-ini.ok{background:#E4F4EE;color:#0F6E50}
+.rek-st{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#F1ECF1;color:var(--gray-text);white-space:nowrap}
+.rek-st.ok{background:#E4F4EE;color:#0F6E50}
+.rek-panah{font-size:20px;color:var(--gray-text)}
+.rek-back{min-height:36px;border:none;background:none;color:var(--pink);font-weight:800;cursor:pointer;padding:0;margin-bottom:6px}
+.rek-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rek-slot{border:1.5px dashed #D9C8D4;border-radius:12px;padding:8px;text-align:center;min-height:54px;display:flex;flex-direction:column;justify-content:center}
+.rek-slot span{font-size:10.5px;font-weight:800;color:var(--gray-text);text-transform:uppercase}
+.rek-slot b{font-size:12px;color:var(--gray-text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rek-slot.isi{border-style:solid}
+.rek-slot.isi.hero{border-color:#E8A419;background:#FFF8E8}
+.rek-slot.isi.baru{border-color:#6B4A86;background:#F2ECF7}
+.rek-slot.isi b{color:var(--dark);font-weight:800}
+.rek-pkartu{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--border);border-radius:14px;padding:10px;margin-bottom:8px;background:#fff}
+.rek-pkartu.hero{border-color:#E8A419}
+.rek-pkartu.baru{border-color:#6B4A86}
+.rek-pfoto{width:56px;height:56px;border-radius:10px;background:var(--pink-pale);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.rek-pfoto img{width:100%;height:100%;object-fit:cover}
+.rek-pil-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rek-pil{min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:800;color:var(--dark);cursor:pointer;font-family:inherit}
+.rek-pil.hero.on{background:#E8A419;border-color:#E8A419;color:#fff}
+.rek-pil.baru.on{background:#6B4A86;border-color:#6B4A86;color:#fff}
+.rek-simpan-bar{position:sticky;bottom:0;background:#fff;padding:10px 0 2px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2076,14 +2107,24 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
   <div style="background:var(--amber);color:var(--amber-dark);border-radius:12px;padding:10px;margin-top:12px;font-size:12px;font-weight:600">⚠️ Jangan dinyalakan sebelum otorisasi TikTok disetujui. Kalau dinyalakan sekarang, semua creator nggak bisa request sample.</div>
 </div></div>
 
-<div class="modal-bg" id="m-i20"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i20')">‹ ✕</button>
+<div class="modal-bg" id="m-i20"><div class="modal-box" style="max-width:640px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i20')">‹ ✕</button>
   <div class="modal-title">🏆 Pilihan Girlhood Den</div>
-  <div class="card-sub">Maksimal 2 Hero + 1 Produk Baru per brand. Tampil paling atas di halaman brand (menu Campaign) buat creator. Berlaku sampai akhir bulan, lewat itu hilang sendiri.</div>
-  <div class="field" style="margin-top:10px"><label>Pilih Brand</label><select id="rek-brand-select" onchange="loadRekomendasiProduk()"><option value="">Memuat brand...</option></select></div>
-  <div id="rek-info" class="card-sub" style="margin-top:4px"></div>
-  <div id="rek-produk-list" style="margin-top:10px"></div>
-  <div id="rek-status" style="margin-top:8px"></div>
-  <button class="btn btn-primary" id="rek-simpan-btn" style="margin-top:10px;display:none" onclick="simpanRekomendasi()">Simpan &amp; tayangkan</button>
+  <div class="card-sub">Maksimal 2 Hero + 1 Produk Baru per brand. Tampil paling atas di halaman brand (menu Request Sample) untuk creator, sampai akhir bulan.</div>
+  <div id="rek-step1" style="margin-top:12px">
+    <div class="rek-langkah">Langkah 1 · Pilih brand</div>
+    <input id="rek-cari" class="rek-cari" placeholder="🔍 Cari brand..." oninput="renderRekBrands()">
+    <div class="rek-tabs"><button type="button" id="rek-tab-belum" class="on" onclick="rekSetFilter('belum')">Belum dipilih</button><button type="button" id="rek-tab-sudah" onclick="rekSetFilter('sudah')">Sudah</button></div>
+    <div id="rek-brand-list"></div>
+  </div>
+  <div id="rek-step2" style="display:none;margin-top:12px">
+    <button type="button" class="rek-back" onclick="rekKembali()">‹ Semua brand</button>
+    <div class="rek-langkah">Langkah 2 · <span id="rek-brand-nama"></span></div>
+    <div class="card-sub" id="rek-info" style="margin-bottom:8px"></div>
+    <div class="rek-slots" id="rek-slots"></div>
+    <div id="rek-produk-list" style="margin-top:10px"></div>
+    <div id="rek-status" style="margin-top:8px"></div>
+    <div class="rek-simpan-bar"><button class="btn btn-primary" id="rek-simpan-btn" style="width:100%;min-height:48px" onclick="simpanRekomendasi()">Simpan &amp; tayangkan</button></div>
+  </div>
 </div></div>
 
 <div class="modal-bg" id="m-i19"><div class="modal-box" style="max-width:760px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i19')">‹ ✕</button>
@@ -2541,13 +2582,17 @@ async function loadGerbangVerifikasi(nyalakan){
   }
 }
 
+
+
+let rekBrandsCache = [];
+let rekBrandAktif = null;
+let rekFilter = 'belum';
 async function loadRekomendasiBrands(){
-  const sel = document.getElementById('rek-brand-select');
-  sel.innerHTML = '<option value="">Memuat brand...</option>';
-  document.getElementById('rek-produk-list').innerHTML = '';
-  document.getElementById('rek-info').textContent = '';
-  document.getElementById('rek-status').innerHTML = '';
-  document.getElementById('rek-simpan-btn').style.display = 'none';
+  rekBrandAktif = null;
+  document.getElementById('rek-step1').style.display = 'block';
+  document.getElementById('rek-step2').style.display = 'none';
+  const wrap = document.getElementById('rek-brand-list');
+  wrap.innerHTML = '<div class="card-sub">Memuat brand...</div>';
   try {
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
@@ -2555,24 +2600,55 @@ async function loadRekomendasiBrands(){
       body: JSON.stringify({ action: 'brands' })
     });
     const j = await res.json();
-    if(!j.valid){ sel.innerHTML = '<option value="">' + (j.error || 'Gagal memuat brand') + '</option>'; return; }
-    sel.innerHTML = '<option value="">-- Pilih brand --</option>' + (j.rows || []).map(function(b){
-      return '<option value="' + b.id + '">' + escHtml(b.nama) + (b.jumlahPilihan > 0 ? ' (' + b.jumlahPilihan + ' dipilih)' : '') + '</option>';
-    }).join('');
+    if(!j.valid){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal memuat brand') + '</div>'; return; }
+    rekBrandsCache = j.rows || [];
+    renderRekBrands();
   } catch(e){
-    sel.innerHTML = '<option value="">Gagal menghubungi server</option>';
+    wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
   }
 }
-
+function rekSetFilter(f){ rekFilter = f; renderRekBrands(); }
+function renderRekBrands(){
+  const q = (document.getElementById('rek-cari').value || '').trim().toLowerCase();
+  const belum = rekBrandsCache.filter(function(b){ return !b.jumlahPilihan; });
+  const sudah = rekBrandsCache.filter(function(b){ return b.jumlahPilihan; });
+  document.getElementById('rek-tab-belum').textContent = 'Belum dipilih · ' + belum.length;
+  document.getElementById('rek-tab-sudah').textContent = 'Sudah · ' + sudah.length;
+  document.getElementById('rek-tab-belum').classList.toggle('on', rekFilter === 'belum');
+  document.getElementById('rek-tab-sudah').classList.toggle('on', rekFilter === 'sudah');
+  const list = (rekFilter === 'belum' ? belum : sudah).filter(function(b){ return !q || String(b.nama || '').toLowerCase().indexOf(q) !== -1; });
+  const wrap = document.getElementById('rek-brand-list');
+  if(!list.length){ wrap.innerHTML = '<div class="rl-kosong">🏷️<div>' + (q ? 'Brand tidak ditemukan.' : (rekFilter === 'belum' ? 'Semua brand sudah dipilih. Mantap!' : 'Belum ada brand yang dipilih bulan ini.')) + '</div></div>'; return; }
+  wrap.innerHTML = list.map(function(b){
+    const ini = String(b.nama || '?').trim().split(/\s+/).map(function(x){ return x.charAt(0); }).slice(0, 2).join('').toUpperCase();
+    const status = b.jumlahPilihan
+      ? '<span class="rek-st ok">' + b.hero + ' Hero' + (b.baru ? ' · 1 Baru' : '') + '</span>'
+      : '<span class="rek-st">Belum dipilih</span>';
+    return '<button type="button" class="rek-brand" onclick="bukaRekBrand(\'' + escHtml(b.id) + '\')">'
+      + '<span class="rek-ini' + (b.jumlahPilihan ? ' ok' : '') + '">' + escHtml(ini) + '</span>'
+      + '<span style="flex:1;min-width:0;text-align:left"><b>' + escHtml(b.nama || '-') + '</b><span class="card-sub" style="display:block">' + (b.jumlahProduk || 0) + ' produk aktif</span></span>'
+      + status + '<span class="rek-panah">›</span></button>';
+  }).join('');
+}
+function bukaRekBrand(id){
+  rekBrandAktif = rekBrandsCache.find(function(b){ return b.id === id; }) || { id: id, nama: '' };
+  document.getElementById('rek-step1').style.display = 'none';
+  document.getElementById('rek-step2').style.display = 'block';
+  document.getElementById('rek-brand-nama').textContent = rekBrandAktif.nama || '';
+  loadRekomendasiProduk();
+}
+function rekKembali(){
+  document.getElementById('rek-step1').style.display = 'block';
+  document.getElementById('rek-step2').style.display = 'none';
+  renderRekBrands();
+}
 async function loadRekomendasiProduk(){
-  const brandId = document.getElementById('rek-brand-select').value;
+  const brandId = rekBrandAktif && rekBrandAktif.id;
   const list = document.getElementById('rek-produk-list');
   const info = document.getElementById('rek-info');
-  const btn = document.getElementById('rek-simpan-btn');
   document.getElementById('rek-status').innerHTML = '';
   rekPilihan = { hero: [], baru: null };
-  if(!brandId){ list.innerHTML = ''; info.textContent = ''; btn.style.display = 'none'; return; }
-
+  if(!brandId){ list.innerHTML = ''; info.textContent = ''; return; }
   list.innerHTML = '<div class="card-sub">Memuat produk...</div>';
   try {
     const auth = await getInternalAuthHeader();
@@ -2581,37 +2657,64 @@ async function loadRekomendasiProduk(){
       body: JSON.stringify({ action: 'list', brandId: brandId })
     });
     const j = await res.json();
-    if(!j.valid){ list.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal memuat.') + '</div>'; return; }
-    rekProdukCache = j.rows || [];
+    if(!j.valid){ list.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal memuat.') + '</div>'; return; }
+    rekProdukCache = (j.rows || []).slice().sort(function(a, b){ return (a.frozen - b.frozen) || (b.vt - a.vt); });
     rekPilihan = { hero: (j.pilihan && j.pilihan.hero) || [], baru: (j.pilihan && j.pilihan.baru) || null };
     info.textContent = (j.pilihan && j.pilihan.berlakuSampai)
-      ? 'Pilihan sekarang berlaku sampai ' + j.pilihan.berlakuSampai + ' · dipilih ' + (j.pilihan.dipilihOleh || '-')
-      : 'Brand ini belum punya pilihan bulan ini.';
-    btn.style.display = 'inline-block';
+      ? 'Tayang sampai ' + j.pilihan.berlakuSampai + ' · dipilih ' + (j.pilihan.dipilihOleh || '-')
+      : 'Belum ada pilihan bulan ini. Produk diurutkan dari VT terbanyak.';
     renderRekomendasiProduk();
   } catch(e){
     list.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
   }
 }
-
 function renderRekomendasiProduk(){
+  const nama = function(id){ const p = rekProdukCache.find(function(x){ return x.id === id; }); return p ? p.nama : '-'; };
+  const slot = function(label, id, jenis){
+    return '<div class="rek-slot' + (id ? ' isi ' + jenis : '') + '"><span>' + label + '</span><b>' + (id ? escHtml(nama(id)) : 'kosong') + '</b></div>';
+  };
+  document.getElementById('rek-slots').innerHTML = slot('Hero 1', rekPilihan.hero[0], 'hero') + slot('Hero 2', rekPilihan.hero[1], 'hero') + slot('Produk Baru', rekPilihan.baru, 'baru');
   const list = document.getElementById('rek-produk-list');
-  if(rekProdukCache.length === 0){ list.innerHTML = '<div class="card-sub">Brand ini belum punya produk.</div>'; return; }
+  if(rekProdukCache.length === 0){ list.innerHTML = '<div class="rl-kosong">📦<div>Brand ini belum punya produk.</div></div>'; return; }
   list.innerHTML = rekProdukCache.map(function(p){
     const heroOn = rekPilihan.hero.indexOf(p.id) !== -1;
     const baruOn = rekPilihan.baru === p.id;
     const komisi = (p.komisi !== null && p.komisi !== undefined) ? 'komisi ' + p.komisi + '%' : 'komisi -';
+    const foto = p.foto ? '<img src="' + fotoKecil(p.foto) + '" alt="" loading="lazy">' : '<span>🛍️</span>';
     const tombol = p.frozen
-      ? '<span class="card-sub">di-freeze, nggak bisa dipilih</span>'
-      : '<button type="button" class="rek-btn hero' + (heroOn ? ' on' : '') + '" onclick="toggleRekHero(\'' + p.id + '\')">' + (heroOn ? 'Hero ✓' : 'Jadikan Hero') + '</button>'
-        + '<button type="button" class="rek-btn baru' + (baruOn ? ' on' : '') + '" onclick="toggleRekBaru(\'' + p.id + '\')">' + (baruOn ? 'Produk Baru ✓' : 'Jadikan Produk Baru') + '</button>';
-    return '<div class="rek-row"' + (p.frozen ? ' style="opacity:.55"' : '') + '>'
-      + '<div class="nm"><b>' + escHtml(p.nama || '-') + '</b><div class="card-sub">' + p.vt + ' VT creator · ' + komisi + '</div></div>'
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap">' + tombol + '</div>'
-      + '</div>';
-  }).join('')
-  + '<div class="card-sub" style="margin-top:4px">Terpilih: ' + rekPilihan.hero.length + '/2 Hero'
-  + (rekPilihan.baru ? ' · 1 Produk Baru' : ' · belum ada Produk Baru') + '</div>';
+      ? '<span class="card-sub">Di-freeze, tidak bisa dipilih</span>'
+      : '<button type="button" class="rek-pil hero' + (heroOn ? ' on' : '') + '" onclick="toggleRekHero(\'' + p.id + '\')">' + (heroOn ? '⭐ Hero ✓' : '⭐ Hero') + '</button>'
+        + '<button type="button" class="rek-pil baru' + (baruOn ? ' on' : '') + '" onclick="toggleRekBaru(\'' + p.id + '\')">' + (baruOn ? '🆕 Produk Baru ✓' : '🆕 Produk Baru') + '</button>';
+    return '<div class="rek-pkartu' + (heroOn ? ' hero' : '') + (baruOn ? ' baru' : '') + '"' + (p.frozen ? ' style="opacity:.5"' : '') + '>'
+      + '<div class="rek-pfoto">' + foto + '</div>'
+      + '<div style="flex:1;min-width:0"><b>' + escHtml(p.nama || '-') + '</b><div class="card-sub">' + p.vt + ' VT disetujui · ' + komisi + '</div>'
+      + '<div class="rek-pil-wrap">' + tombol + '</div></div></div>';
+  }).join('');
+}
+async function simpanRekomendasi(){
+  const brandId = rekBrandAktif && rekBrandAktif.id;
+  if(!brandId) return;
+  const btn = document.getElementById('rek-simpan-btn');
+  const status = document.getElementById('rek-status');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const auth = await getInternalAuthHeader();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify({ action: 'save', brandId: brandId, heroIds: rekPilihan.hero, baruId: rekPilihan.baru })
+    });
+    const j = await res.json();
+    if(!j.valid){ status.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(j.error || 'Gagal menyimpan.') + '</div>'; }
+    else {
+      showToast(j.tersimpan === 0 ? 'Pilihan dikosongkan' : 'Tersimpan & tayang sampai ' + j.berlakuSampai);
+      btn.disabled = false; btn.textContent = 'Simpan & tayangkan';
+      loadRekomendasiBrands();
+      return;
+    }
+  } catch(e){
+    status.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Simpan & tayangkan';
 }
 
 function toggleRekHero(id){
@@ -2635,28 +2738,6 @@ function toggleRekBaru(id){
   renderRekomendasiProduk();
 }
 
-async function simpanRekomendasi(){
-  const brandId = document.getElementById('rek-brand-select').value;
-  if(!brandId) return;
-  const btn = document.getElementById('rek-simpan-btn');
-  const status = document.getElementById('rek-status');
-  btn.disabled = true; btn.textContent = 'Menyimpan...';
-  try {
-    const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-brand-recommendations', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth },
-      body: JSON.stringify({ action: 'save', brandId: brandId, heroIds: rekPilihan.hero, baruId: rekPilihan.baru })
-    });
-    const j = await res.json();
-    if(!j.valid){ status.innerHTML = '<div class="card-sub" style="color:var(--red)">' + (j.error || 'Gagal menyimpan.') + '</div>'; }
-    else if(j.tersimpan === 0){ status.innerHTML = '<div class="card-sub">Kosong. Kotak rekomendasi nggak muncul di halaman creator.</div>'; }
-    else { status.innerHTML = '<div class="card-sub" style="color:var(--teal)">Tersimpan &amp; tayang. Berlaku sampai ' + j.berlakuSampai + '.</div>'; }
-    document.getElementById('rek-info').textContent = '';
-  } catch(e){
-    status.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>';
-  }
-  btn.disabled = false; btn.textContent = 'Simpan & tayangkan';
-}
 
 // ===== Hunting Produk: Top 100 dari penjualan creator kita =====
 let phFilter = 'semua';
