@@ -5129,7 +5129,7 @@ async function loadApprovalRows(){
   try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, jumlah_diminta, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat, tier, badge_live_performance, badge_short_video_maker, foto_selfie_url), brand_products!inner(nama_produk, brand_id)')
+    .select('id, status, tipe_sow_dipilih, requested_at, rejection_template, jumlah_pieces, jumlah_diminta, members(id, nama, no_hp, tiktok_profile_link, level, gmv_30hari, alamat, tier, badge_live_performance, badge_short_video_maker, foto_selfie_url, items_terjual_tiktok, items_terjual_at), brand_products!inner(nama_produk, brand_id)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .in('status', ['requested','approved','rejected'])
     .eq('sumber', 'sow')
@@ -5206,8 +5206,11 @@ async function loadApprovalRows(){
 
     const adaLive = g.items.some(function(r){ return r.tipe_sow_dipilih === 'LIVE' || r.tipe_sow_dipilih === 'VT_LIVE'; });
     const besar = g.items.filter(function(r){ return r.jumlah_diminta; }).length > 3 || g.items.some(function(r){ return (r.jumlah_diminta || 0) > 3; });
-    // Data ketikan creator saat daftar tidak ditampilkan ke brand. Nanti diganti Items sold dari Partner Center.
-    const klaim = '';
+    // Items sold di TikTok (kartu Find Creators, Partner Center), diperbarui berkala oleh tim.
+    const klaim = (m.items_terjual_tiktok != null)
+      ? '<span class="appr-klaim">🛒 ' + (m.items_terjual_tiktok >= 1000 ? (m.items_terjual_tiktok / 1000).toFixed(m.items_terjual_tiktok >= 10000 ? 0 : 1).replace('.', ',') + ' rb' : m.items_terjual_tiktok) + ' item terjual di TikTok'
+        + (m.items_terjual_at ? ' · data ' + new Date(m.items_terjual_at).toLocaleDateString('id-ID', { month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : '') + '</span>'
+      : '';
     return '<div class="appr-group'+(adaLive?' ada-live':'')+'" data-search-name="'+escHtml((m.nama||'').toLowerCase())+'">'
       + '<div class="appr-group-head">'
         + '<div style="flex:1;min-width:220px;display:flex;gap:14px;align-items:flex-start">' + htmlAvatar(m.foto_selfie_url, m.nama, m.tier, 58) + '<div style="flex:1;min-width:0"><div class="appr-group-name">'+escHtml(m.nama||'-')+'</div>'
