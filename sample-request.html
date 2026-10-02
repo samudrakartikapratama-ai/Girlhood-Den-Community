@@ -1229,6 +1229,16 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 .rw-segera-ik{font-size:40px;margin-bottom:6px}
 .rw-segera b{display:block;font-family:'Baloo 2',inherit;font-size:19px;font-weight:800}
 .rw-segera span{display:block;font-size:12.5px;opacity:.92;margin-top:4px;line-height:1.5}
+.jl-sub{font-size:11.5px;color:var(--gray-text);margin-top:6px}
+.jl-chip small{font-weight:600;opacity:.7;margin-left:2px}
+.jl-daftar{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.jl-baris{display:flex;align-items:center;gap:8px;background:#F6F1F4;border-radius:10px;padding:6px 8px;font-size:13px}
+.jl-baris b{flex:1;color:var(--pink)}
+.jl-baris em{font-style:normal;font-size:11px;font-weight:700;color:#854F0B}
+.jl-baris.pendek{background:#FAEEDA}
+.jl-baris input{min-height:36px;border-radius:8px;padding:0 6px;flex:1;min-width:0}
+.jl-baris span{font-size:12px;color:var(--gray-text)}
+.jl-mini{border:none;background:#fff;border-radius:999px;padding:5px 10px;font-weight:800;font-size:11.5px;cursor:pointer;font-family:inherit}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -10594,54 +10604,82 @@ function jlRender(id){
   const hari = []; let d = new Date(st.mulaiDari.getTime());
   while(jlKey(d) <= jlKey(st.sampai) && hari.length < 21){ hari.push(jlKey(d)); d = new Date(d.getTime() + 86400000); }
   const lbl = function(k, o){ return new Date(k + 'T00:00:00+07:00').toLocaleDateString('id-ID', Object.assign({ timeZone: 'Asia/Jakarta' }, o)); };
-  const jumlahDi = function(k){ return st.sesi.filter(function(x){ return x.k === k; }).length; };
+  const diHari = function(k){ return jlUrut(st).filter(function(x){ return x.k === k; }); };
   const strip = '<div class="jl-strip">' + hari.map(function(k){
-    const n = jumlahDi(k);
+    const n = diHari(k).length;
     return '<button type="button" class="jl-hari' + (n ? ' on' : '') + '" onclick="jlTanggal(\'' + id + '\',\'' + k + '\')"><span>' + lbl(k, { weekday: 'short' }) + '</span><b>' + lbl(k, { day: 'numeric' }) + '</b><em>' + (st.bebas && n > 1 ? n + ' sesi' : lbl(k, { month: 'short' })) + '</em></button>';
   }).join('') + '</div>';
-  const urut = jlUrut(st);
-  const kartu = urut.map(function(v){
-    const chips = Object.keys(JL_PRESET).map(function(n){
-      const on = v.m === JL_PRESET[n][0] && (st.durasi ? true : v.s === JL_PRESET[n][1]);
-      return '<button type="button" class="jl-chip' + (on ? ' on' : '') + '" onclick="jlPreset(\'' + id + '\',' + v.id + ',\'' + n + '\')">' + n + '</button>';
-    }).join('') + '<button type="button" class="jl-chip' + (st.atur === v.id ? ' on' : '') + '" onclick="jlAtur(\'' + id + '\',' + v.id + ')">Atur jam</button>';
-    const atur = st.atur === v.id
-      ? '<div class="jl-atur"><input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'m\',this.value)" aria-label="Jam mulai">'
-        + (st.durasi ? '<span>durasi ' + st.durasi + ' jam</span>' : '<span>s/d</span><input type="time" value="' + v.s + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'s\',this.value)" aria-label="Jam selesai">') + '</div>'
-      : '';
-    const pendek = st.bebas && jlDurasiMenit(v) < 60;
-    return '<div class="jl-sesi"><div class="jl-sesi-atas"><b>' + lbl(v.k, { weekday: 'short', day: 'numeric', month: 'short' }) + '</b><span>' + v.m.replace(':', '.') + ' – ' + v.s.replace(':', '.') + '</span>'
-      + '<button type="button" class="jl-hapus" aria-label="Hapus sesi" onclick="jlHapus(\'' + id + '\',' + v.id + ')">×</button></div>'
-      + '<div class="jl-chips">' + chips + '</div>' + atur
-      + (pendek ? '<div class="jl-pendek">Kurang dari 1 jam: belum bisa kami bantu dukung ke brand.</div>' : '') + '</div>';
-  }).join('');
+  let kartu = '';
+  if(st.bebas){
+    // Mode bebas: satu kartu per tanggal. Pagi/Siang/Sore/Malam bisa dipilih sekaligus (tiap pilihan = 1 sesi).
+    const tanggal = Array.from(new Set(jlUrut(st).map(function(x){ return x.k; })));
+    kartu = tanggal.map(function(k){
+      const sesi = diHari(k);
+      const chips = Object.keys(JL_PRESET).map(function(n){
+        const on = sesi.some(function(v){ return v.m === JL_PRESET[n][0] && v.s === JL_PRESET[n][1]; });
+        return '<button type="button" class="jl-chip' + (on ? ' on' : '') + '" onclick="jlChipBebas(\'' + id + '\',\'' + k + '\',\'' + n + '\')">' + (on ? '✓ ' : '') + n + ' <small>' + JL_PRESET[n][0].replace(':', '.') + '–' + JL_PRESET[n][1].replace(':', '.') + '</small></button>';
+      }).join('') + '<button type="button" class="jl-chip" onclick="jlTambahCustom(\'' + id + '\',\'' + k + '\')">+ Jam lain</button>';
+      const baris = sesi.map(function(v){
+        const pendek = jlDurasiMenit(v) < 60;
+        const edit = st.atur === v.id;
+        return '<div class="jl-baris' + (pendek ? ' pendek' : '') + '">'
+          + (edit ? '<input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'m\',this.value)" aria-label="Jam mulai"><span>s/d</span><input type="time" value="' + v.s + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'s\',this.value)" aria-label="Jam selesai">'
+            : '<b>' + v.m.replace(':', '.') + ' – ' + v.s.replace(':', '.') + '</b>' + (pendek ? '<em>kurang dari 1 jam</em>' : ''))
+          + '<button type="button" class="jl-mini" onclick="jlAtur(\'' + id + '\',' + v.id + ')">' + (edit ? 'Selesai' : 'Ubah') + '</button>'
+          + '<button type="button" class="jl-hapus" aria-label="Hapus sesi" onclick="jlHapus(\'' + id + '\',' + v.id + ')">×</button></div>';
+      }).join('');
+      return '<div class="jl-sesi"><div class="jl-sesi-atas"><b>' + lbl(k, { weekday: 'short', day: 'numeric', month: 'short' }) + '</b><span>' + sesi.length + ' sesi</span>'
+        + '<button type="button" class="jl-hapus" aria-label="Hapus tanggal" onclick="jlTanggal(\'' + id + '\',\'' + k + '\')">×</button></div>'
+        + '<div class="jl-sub">Pilih satu atau beberapa waktu live di hari ini</div>'
+        + '<div class="jl-chips">' + chips + '</div>' + '<div class="jl-daftar">' + baris + '</div>'
+        + (sesi.some(function(v){ return jlDurasiMenit(v) < 60; }) ? '<div class="jl-pendek">Sesi kurang dari 1 jam belum bisa kami bantu dukung ke brand.</div>' : '') + '</div>';
+    }).join('');
+  } else {
+    kartu = jlUrut(st).map(function(v){
+      const chips = Object.keys(JL_PRESET).map(function(n){
+        const on = v.m === JL_PRESET[n][0];
+        return '<button type="button" class="jl-chip' + (on ? ' on' : '') + '" onclick="jlPreset(\'' + id + '\',' + v.id + ',\'' + n + '\')">' + n + '</button>';
+      }).join('') + '<button type="button" class="jl-chip' + (st.atur === v.id ? ' on' : '') + '" onclick="jlAtur(\'' + id + '\',' + v.id + ')">Atur jam</button>';
+      const atur = st.atur === v.id
+        ? '<div class="jl-atur"><input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'m\',this.value)" aria-label="Jam mulai"><span>durasi ' + st.durasi + ' jam</span></div>' : '';
+      return '<div class="jl-sesi"><div class="jl-sesi-atas"><b>' + lbl(v.k, { weekday: 'short', day: 'numeric', month: 'short' }) + '</b><span>' + v.m.replace(':', '.') + ' – ' + v.s.replace(':', '.') + '</span>'
+        + '<button type="button" class="jl-hapus" aria-label="Hapus sesi" onclick="jlHapus(\'' + id + '\',' + v.id + ')">×</button></div>'
+        + '<div class="jl-chips">' + chips + '</div>' + atur + '</div>';
+    }).join('');
+  }
   const n = st.sesi.length, kurang = Math.max(0, st.minSesi - n);
-  const ringkas = st.maxSesi
-    ? n + ' dari ' + st.maxSesi + ' sesi' + (kurang ? ' · kurang ' + kurang + ' lagi' : ' · lengkap ✓')
-    : n + ' sesi dipilih';
+  const ringkas = st.maxSesi ? n + ' dari ' + st.maxSesi + ' sesi' + (kurang ? ' · kurang ' + kurang + ' lagi' : ' · lengkap ✓') : n + ' sesi dipilih';
   el.innerHTML = strip
-    + (n ? kartu : '<div class="jl-kosong">Ketuk tanggal di atas untuk menambah sesi' + (st.bebas ? '. Ketuk lagi tanggal yang sama untuk menambah sesi di hari itu.' : (st.maxSesi ? ' (tepat ' + st.maxSesi + ' tanggal berbeda)' : '')) + '</div>')
+    + (n ? kartu : '<div class="jl-kosong">Ketuk tanggal di atas untuk menambah sesi' + (st.bebas ? '. Dalam satu hari kamu bisa pilih beberapa waktu live sekaligus.' : (st.maxSesi ? ' (tepat ' + st.maxSesi + ' tanggal berbeda)' : '')) + '</div>')
     + '<div class="jl-ringkas">' + ringkas + '</div>';
 }
 function jlTanggal(id, k){
   const st = window._jl[id];
-  const diHari = st.sesi.filter(function(x){ return x.k === k; });
-  if(!st.bebas){
-    // Mode wajib: 1 sesi per hari. Ketuk lagi = hapus.
-    if(diHari.length){ st.sesi = st.sesi.filter(function(x){ return x.k !== k; }); st.atur = null; jlRender(id); return; }
-    if(st.maxSesi && st.sesi.length >= st.maxSesi){ showToast('Jadwal wajib tepat ' + st.maxSesi + ' sesi. Hapus salah satu dulu.'); return; }
-    st.sesi.push({ id: ++st.nomor, k: k, m: '19:00', s: st.durasi ? jlTambahJam('19:00', st.durasi) : '21:00' });
-    jlRender(id); return;
+  const ada = st.sesi.some(function(x){ return x.k === k; });
+  if(ada){
+    if(st.bebas && st.sesi.filter(function(x){ return x.k === k; }).length > 1 && !confirm('Hapus semua sesi di tanggal ini?')) return;
+    st.sesi = st.sesi.filter(function(x){ return x.k !== k; }); st.atur = null; jlRender(id); return;
   }
-  // Mode bebas: setiap ketukan menambah sesi baru di hari itu, mulai setelah sesi terakhir hari itu.
-  let m = '19:00', s = '21:00';
-  if(diHari.length){
-    const akhir = diHari.map(function(x){ return x.s; }).sort().pop();
-    m = jlTambahJam(akhir, 1); s = jlTambahJam(m, 2);
-    if(jlMenit(m) < jlMenit(akhir)){ showToast('Hari ini sudah penuh. Atur jam sesi yang ada dulu.'); return; }
-  }
-  st.sesi.push({ id: ++st.nomor, k: k, m: m, s: s });
+  if(!st.bebas && st.maxSesi && st.sesi.length >= st.maxSesi){ showToast('Jadwal wajib tepat ' + st.maxSesi + ' sesi. Hapus salah satu dulu.'); return; }
+  st.sesi.push({ id: ++st.nomor, k: k, m: '19:00', s: st.durasi ? jlTambahJam('19:00', st.durasi) : '21:00' });
   jlRender(id);
+}
+function jlChipBebas(id, k, n){
+  const st = window._jl[id], p = JL_PRESET[n];
+  const ada = st.sesi.find(function(v){ return v.k === k && v.m === p[0] && v.s === p[1]; });
+  if(ada){
+    if(st.sesi.filter(function(x){ return x.k === k; }).length === 1){ showToast('Minimal 1 sesi di tanggal ini. Hapus tanggalnya kalau tidak jadi live.'); return; }
+    st.sesi = st.sesi.filter(function(v){ return v !== ada; });
+  } else st.sesi.push({ id: ++st.nomor, k: k, m: p[0], s: p[1] });
+  jlRender(id);
+}
+function jlTambahCustom(id, k){
+  const st = window._jl[id];
+  const akhir = st.sesi.filter(function(x){ return x.k === k; }).map(function(x){ return x.s; }).sort().pop() || '10:00';
+  const m = jlTambahJam(akhir, 1);
+  if(jlMenit(m) < jlMenit(akhir)){ showToast('Hari ini sudah penuh. Ubah jam sesi yang ada dulu.'); return; }
+  const v = { id: ++st.nomor, k: k, m: m, s: jlTambahJam(m, 1) };
+  st.sesi.push(v); st.atur = v.id; jlRender(id);
 }
 function jlHapus(id, sid){ const st = window._jl[id]; st.sesi = st.sesi.filter(function(x){ return x.id !== sid; }); if(st.atur === sid) st.atur = null; jlRender(id); }
 function jlCari(st, sid){ return st.sesi.find(function(x){ return x.id === sid; }); }
