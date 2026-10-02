@@ -1320,6 +1320,10 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 .kh-aktif input{width:20px;height:20px}
 .kh-btns{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px}
 .kh-btns .btn{min-height:46px}
+.stt-tunggu{text-align:center;background:var(--pink-pale);border-radius:20px;padding:22px 16px}
+.stt-tunggu b{display:block;font-family:'Baloo 2',inherit;font-size:17px;font-weight:800;color:var(--dark);margin-top:4px}
+.stt-tunggu span{display:block;font-size:12.5px;color:var(--dark);margin-top:6px;line-height:1.5}
+.stt-tunggu button{margin-top:12px;border:none;background:#fff;color:var(--pink);border-radius:999px;padding:9px 16px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11348,8 +11352,29 @@ async function sttMuat(){
   el.innerHTML = ban + sttTampil(j);
 }
 function sttTombolHubung(teks){
-  return '<a class="stt-hubung" href="' + buildTiktokVideoInsightsAuthUrl(currentSession.memberId) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1 0-5.2c.27 0 .53.04.78.12V9.65a5.7 5.7 0 0 0-.78-.05 5.7 5.7 0 1 0 5.68 5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></svg>' + teks + '</a>';
+  return '<a class="stt-hubung" href="' + buildTiktokVideoInsightsAuthUrl(currentSession.memberId) + '" onclick="return sttHubungkan(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1 0-5.2c.27 0 .53.04.78.12V9.65a5.7 5.7 0 0 0-.78-.05 5.7 5.7 0 1 0 5.68 5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></svg>' + teks + '</a>';
 }
+// Izin TikTok dibuka di jendela terpisah supaya halaman Girlhood Den (dan sesi login creator) tetap terbuka.
+// Penanda "w:" di state membuat server mengembalikan jendela itu dengan &jendela=1; jendela itu menitipkan hasilnya
+// lewat localStorage (tetap jalan walau TikTok memutus hubungan antarjendela), lalu menutup diri.
+function sttHubungkan(a){
+  const u = new URL(a.href);
+  u.searchParams.set('state', 'w:' + (u.searchParams.get('state') || ''));
+  const w = window.open(u.toString(), 'tt_auth', 'width=520,height=760');
+  if(!w) return true; // popup diblokir: lanjut di tab yang sama
+  try { localStorage.removeItem('gd_tt_auth'); } catch(e){}
+  const el = document.getElementById('stt-isi');
+  if(el) el.innerHTML = '<div class="stt-tunggu"><div class="stt-hero-ik">⏳</div><b>Menunggu persetujuan di jendela TikTok</b><span>Login dan setujui izinnya di jendela yang baru terbuka. Halaman ini akan memperbarui sendiri.</span><button type="button" onclick="sttMuat()">Sudah selesai? Muat ulang</button></div>';
+  return false;
+}
+function sttTerimaHasil(raw){
+  let h = null; try { h = JSON.parse(raw || 'null'); } catch(e){}
+  if(!h || Date.now() - (h.t || 0) > 10 * 60 * 1000) return;
+  try { localStorage.removeItem('gd_tt_auth'); } catch(e){}
+  window._sttPesan = h.tt === 'ok' ? { ok: true, teks: 'Akun TikTok berhasil terhubung.' } : { ok: false, teks: h.pesan || 'Gagal menghubungkan akun TikTok.' };
+  if(document.getElementById('m-c-stt') && window.currentSession && currentSession.memberId){ openModal('m-c-stt'); sttMuat(); }
+}
+window.addEventListener('storage', function(e){ if(e.key === 'gd_tt_auth' && e.newValue) sttTerimaHasil(e.newValue); });
 function sttIntro(){
   return '<div class="stt-hero"><div class="stt-hero-ik">📊</div><b>Lihat performa akun & videomu</b><span>Hubungkan akun TikTok-mu sendiri untuk melihat followers, total likes, dan statistik setiap video langsung di Girlhood Den.</span><em>Connect your own TikTok account to see your profile and video statistics.</em></div>'
     + '<div class="stt-akses"><div class="stt-akses-j">Yang kami lihat</div>'
@@ -11392,6 +11417,17 @@ async function sttPutus(){
   const q = new URLSearchParams(location.search);
   if(q.get('statistik') !== '1') return;
   const tt = q.get('tt');
+  // Dibuka sebagai jendela izin: titipkan hasil untuk halaman utama, lalu tutup jendela ini.
+  if(q.get('jendela') === '1'){
+    try { localStorage.setItem('gd_tt_auth', JSON.stringify({ tt: tt, pesan: q.get('pesan') || '', t: Date.now() })); } catch(e){}
+    const selesai = function(){
+      document.body.innerHTML = '<div style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;background:#FFF0F6"><div><div style="font-size:42px">' + (tt === 'ok' ? '✅' : '⚠️') + '</div><h2 style="color:#4A2B47;margin:8px 0">' + (tt === 'ok' ? 'Akun TikTok terhubung' : 'Belum terhubung') + '</h2><p style="color:#4A2B47">Jendela ini akan tertutup. Kalau tidak, tutup saja dan kembali ke Girlhood Den.</p></div></div>';
+      setTimeout(function(){ window.close(); }, 600);
+    };
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', selesai); else selesai();
+    window._sttJendelaIzin = true;
+    return;
+  }
   window._sttPesan = tt === 'ok' ? { ok: true, teks: 'Akun TikTok berhasil terhubung.' } : tt === 'gagal' ? { ok: false, teks: q.get('pesan') || 'Gagal menghubungkan akun TikTok.' } : null;
   let coba = 0;
   const t = setInterval(function(){
