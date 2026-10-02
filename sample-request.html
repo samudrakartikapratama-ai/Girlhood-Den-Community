@@ -1254,35 +1254,6 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 .jl-baris .tp-pil,.jl-atur .tp-pil{width:auto;flex:1;min-height:42px;background:#fff}
 .jl-baris .tp-ik,.jl-atur .tp-ik{width:26px;height:26px;font-size:13px;background:var(--pink-pale)}
 .jl-baris .tp-isi b,.jl-atur .tp-isi b{font-size:14px}
-.stt-hero{text-align:center;background:linear-gradient(160deg,#FFD6E7,#FBEAF0);border-radius:20px;padding:20px 16px;margin-bottom:12px}
-.stt-hero-ik{font-size:38px}
-.stt-hero b{display:block;font-family:'Baloo 2',inherit;font-size:19px;font-weight:800;color:var(--dark);margin-top:4px}
-.stt-hero span{display:block;font-size:13px;color:var(--dark);margin-top:6px;line-height:1.5}
-.stt-hero em{display:block;font-style:normal;font-size:11.5px;color:var(--gray-text);margin-top:6px}
-.stt-akses{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-bottom:12px}
-.stt-akses-j{font-weight:800;color:var(--dark);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-.stt-hubung{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:14px;background:#000;color:#fff;text-decoration:none;font-weight:800;font-size:15px}
-.stt-catatan{text-align:center;font-size:11.5px;color:var(--gray-text);margin-top:8px}
-.stt-galat{background:#FDE8EA;color:#8F1D2C;border-radius:12px;padding:10px 12px;font-size:12.5px;margin-bottom:10px}
-.stt-sb{display:inline-block;background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:800;border-radius:99px;padding:3px 10px;margin-bottom:8px}
-.stt-profil{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.stt-ava{width:58px;height:58px;border-radius:50%;object-fit:cover;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--pink)}
-.stt-profil b{display:block;font-family:'Baloo 2',inherit;font-size:18px;font-weight:800;color:var(--dark)}
-.stt-profil span{display:block;font-size:12px;color:var(--gray-text);margin-top:2px}
-.stt-stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:14px}
-.stt-stat div{background:var(--pink-pale);border-radius:14px;padding:10px 4px;text-align:center}
-.stt-stat b{display:block;font-family:'Baloo 2',inherit;font-size:17px;font-weight:800;color:#4B1528}
-.stt-stat span{font-size:10.5px;font-weight:700;color:#993556}
-.stt-judul{display:flex;justify-content:space-between;align-items:center;font-weight:800;color:var(--dark);margin-bottom:8px}
-.stt-judul button{border:none;background:var(--pink-pale);color:var(--pink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit}
-.stt-vid{display:flex;gap:10px;align-items:center;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:8px;margin-bottom:8px;text-decoration:none;color:inherit}
-.stt-vid img,.stt-vid-k{width:54px;height:72px;border-radius:10px;object-fit:cover;background:var(--pink-pale);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
-.stt-vid div{min-width:0;flex:1}
-.stt-vid b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;font-weight:800;color:var(--dark)}
-.stt-vid em{display:block;font-style:normal;font-size:11px;color:var(--gray-text);margin-top:2px}
-.stt-vid span{display:block;font-size:11.5px;font-weight:700;color:#4B1528;margin-top:4px}
-.stt-putus{width:100%;min-height:44px;margin-top:10px;border:1.5px solid var(--border);background:#fff;border-radius:12px;font-weight:800;color:var(--gray-text);cursor:pointer;font-family:inherit}
-.stt-profil span.stt-ava,.stt-vid span.stt-vid-k{display:flex;align-items:center;justify-content:center;margin:0;font-size:24px;color:inherit}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1363,7 +1334,6 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator(); loadTierCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
     <div class="icon-card" id="ic-gmv-dash" onclick="handleGmvDashClick()"><div class="icon-emoji">📈</div><div class="icon-label">Dashboard GMV</div><div style="position:absolute;top:-7px;left:-7px;background:#17577F;color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Diamond+</div><div id="ic-gmv-dash-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" onclick="openModal('m-c9'); loadPapanSkor('gmv');"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
-    <div class="icon-card" id="ic-statistik-tt" onclick="bukaStatistikTT()"><div class="icon-emoji">📊</div><div class="icon-label">Statistik TikTok</div></div>
   </div>
 </div>
 
@@ -1482,11 +1452,6 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
   <div class="freeze-banner">👋 <b>Hai, Member Girlhood Den!</b><br>Kalau masih ada VT/Live yang belum kamu report ke tim kami, semua menu di sistem ini bakal di-freeze dulu ya. Yuk selesaikan dulu produk yang kamu pegang — makin banyak konten yang kamu buat, makin besar peluang kamu dapetin GMV! 🚀✨</div>
   <div class="card"><div class="card-title">Cara Kerja (4 Langkah)</div><div class="card-sub">1. Daftar Member (sekali, sebelum masuk) → 2. Pilih Campaign & Request Sample → 3. Cek Status → 4. Report VT</div></div>
   <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="closeModal('m-c1'); openTutorial2('creator');">▶ Lihat Tutorial Lengkap</button>
-</div></div>
-
-<div class="modal-bg" id="m-c-stt"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-stt')">‹ ✕</button>
-  <div class="modal-title">📊 Statistik TikTok</div>
-  <div id="stt-isi"><div class="card-sub">Memuat...</div></div>
 </div></div>
 
 <div class="modal-bg" id="m-c-tiktok"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-tiktok')">‹ ✕</button>
@@ -11303,80 +11268,6 @@ function tpPindai(akar){
     setInterval(function(){ document.querySelectorAll('input.tp-asli').forEach(tpSegarkan); }, 800);
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai); else mulai();
-})();
-
-// ===== Statistik TikTok (Login Kit: user.info.basic, user.info.stats, video.list) =====
-function sttAngka(n){ if(n === null || n === undefined) return '–'; n = Number(n); return n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' jt' : n >= 1e4 ? (n / 1e3).toFixed(1).replace('.', ',') + ' rb' : n.toLocaleString('id-ID'); }
-async function sttPanggil(action){
-  const auth = await getInternalAuthHeader();
-  const r = await fetch(SUPABASE_URL + '/functions/v1/creator-fetch-video-insights', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: JSON.stringify({ action: action }) });
-  return r.json();
-}
-function bukaStatistikTT(){ openModal('m-c-stt'); sttMuat(); }
-async function sttMuat(){
-  const el = document.getElementById('stt-isi');
-  el.innerHTML = '<div class="card-sub">Memuat...</div>';
-  let st;
-  try { st = await sttPanggil('status'); } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat. Coba lagi.</div>'; return; }
-  if(!st.valid){ el.innerHTML = '<div class="card-sub">' + escHtml(st.error || 'Gagal memuat.') + '</div>'; return; }
-  if(!st.terhubung){ el.innerHTML = sttIntro(); return; }
-  el.innerHTML = '<div class="card-sub">Mengambil statistik dari TikTok...</div>';
-  const j = await sttPanggil('muat');
-  if(!j.valid){ el.innerHTML = '<div class="stt-galat">' + escHtml(j.error || 'Gagal memuat.') + '</div>' + sttTombolHubung('Hubungkan ulang'); return; }
-  el.innerHTML = sttTampil(j);
-}
-function sttTombolHubung(teks){
-  return '<a class="stt-hubung" href="' + buildTiktokVideoInsightsAuthUrl(currentSession.memberId) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1 0-5.2c.27 0 .53.04.78.12V9.65a5.7 5.7 0 0 0-.78-.05 5.7 5.7 0 1 0 5.68 5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></svg>' + teks + '</a>';
-}
-function sttIntro(){
-  return '<div class="stt-hero"><div class="stt-hero-ik">📊</div><b>Lihat performa akun & videomu</b><span>Hubungkan akun TikTok-mu sendiri untuk melihat followers, total likes, dan statistik setiap video langsung di Girlhood Den.</span><em>Connect your own TikTok account to see your profile and video statistics.</em></div>'
-    + '<div class="stt-akses"><div class="stt-akses-j">Yang kami lihat</div>'
-    + '<div>👤 Profil dasar: nama dan foto profil</div><div>📈 Statistik akun: followers, following, total likes, jumlah video</div><div>🎬 Video publikmu: judul, cover, views, likes, komentar, share</div>'
-    + '<div class="stt-akses-j" style="margin-top:10px">Yang tidak kami lakukan</div>'
-    + '<div>🚫 Tidak posting, tidak mengubah, dan tidak menghapus apa pun di akunmu</div><div>🔓 Izin bisa kamu putuskan kapan saja dari halaman ini</div></div>'
-    + sttTombolHubung('Hubungkan dengan TikTok')
-    + '<div class="stt-catatan">Opsional. Kamu akan diarahkan ke halaman login resmi TikTok.</div>';
-}
-function sttTampil(j){
-  const p = j.profil || {};
-  const ava = p.avatar_url ? '<img src="' + escHtml(p.avatar_url) + '" alt="" class="stt-ava">' : '<span class="stt-ava">👤</span>';
-  let html = (j.sandbox ? '<div class="stt-sb">MODE SANDBOX</div>' : '')
-    + '<div class="stt-profil">' + ava + '<div><b>' + escHtml(p.display_name || 'Akun TikTok') + (p.verified ? ' ✔️' : '') + '</b>' + (p.bio ? '<span>' + escHtml(p.bio) + '</span>' : '') + '</div></div>'
-    + '<div class="stt-stat">'
-    + '<div><b>' + sttAngka(p.followers) + '</b><span>Followers</span></div>'
-    + '<div><b>' + sttAngka(p.following) + '</b><span>Following</span></div>'
-    + '<div><b>' + sttAngka(p.likes) + '</b><span>Total likes</span></div>'
-    + '<div><b>' + sttAngka(p.videos) + '</b><span>Video</span></div></div>'
-    + '<div class="stt-judul">Video terbaru <button type="button" onclick="sttMuat()">🔄 Perbarui</button></div>';
-  const v = j.videos || [];
-  if(!v.length) html += '<div class="card-sub">Belum ada video publik di akun ini.</div>';
-  else html += v.map(function(x){
-    return '<a class="stt-vid" href="' + escHtml(x.link || '#') + '" target="_blank" rel="noopener">'
-      + (x.cover ? '<img src="' + escHtml(x.cover) + '" alt="" loading="lazy">' : '<span class="stt-vid-k">🎬</span>')
-      + '<div><b>' + escHtml(x.title || 'Video TikTok') + '</b>' + (x.dibuat ? '<em>' + new Date(x.dibuat).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) + '</em>' : '')
-      + '<span>👁️ ' + sttAngka(x.views) + ' · ❤️ ' + sttAngka(x.likes) + ' · 💬 ' + sttAngka(x.comments) + ' · ↗️ ' + sttAngka(x.shares) + '</span></div></a>';
-  }).join('');
-  html += '<button type="button" class="stt-putus" onclick="sttPutus()">Putuskan koneksi TikTok</button>';
-  return html;
-}
-async function sttPutus(){
-  if(!confirm('Putuskan koneksi akun TikTok? Statistik tidak akan tampil lagi sampai kamu hubungkan ulang.')) return;
-  const j = await sttPanggil('putus');
-  if(!j.valid){ alert(j.error || 'Gagal memutuskan koneksi.'); return; }
-  showToast('Koneksi TikTok diputuskan'); sttMuat();
-}
-// Setelah kembali dari halaman izin TikTok (?statistik=1), buka statistiknya otomatis begitu creator sudah masuk.
-(function(){
-  if(new URLSearchParams(location.search).get('statistik') !== '1') return;
-  let coba = 0;
-  const t = setInterval(function(){
-    coba++;
-    if(window.currentSession && currentSession.memberId && document.getElementById('m-c-stt')){
-      clearInterval(t);
-      try { history.replaceState(null, '', location.pathname); } catch(e){}
-      bukaStatistikTT();
-    } else if(coba > 120){ clearInterval(t); }
-  }, 500);
 })();
 
 function htmlChipTier(tier){
