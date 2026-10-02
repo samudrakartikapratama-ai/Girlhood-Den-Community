@@ -1239,6 +1239,21 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 .jl-baris input{min-height:36px;border-radius:8px;padding:0 6px;flex:1;min-width:0}
 .jl-baris span{font-size:12px;color:var(--gray-text)}
 .jl-mini{border:none;background:#fff;border-radius:999px;padding:5px 10px;font-weight:800;font-size:11.5px;cursor:pointer;font-family:inherit}
+/* Kolom jam & tanggal */
+.tp-pil{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:6px 12px 6px 6px;border-radius:14px;background:var(--pink-pale);box-sizing:border-box;min-width:0;width:100%;cursor:pointer;vertical-align:middle;transition:box-shadow .15s}
+.tp-pil:focus-within{box-shadow:0 0 0 2px var(--pink)}
+.tp-ik{font-style:normal;width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tp-isi{display:flex;flex-direction:column;min-width:0;line-height:1.15;text-align:left}
+.tp-isi small{font-size:10.5px;font-weight:700;color:#993556;letter-spacing:.02em}
+.tp-isi b{font-size:15px;font-weight:800;color:#4B1528;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-pil.kosong .tp-isi b{color:#B98AA2;font-weight:700}
+.tp-pil.mati{opacity:.55;cursor:not-allowed}
+input.tp-asli{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;min-height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;opacity:0 !important;cursor:pointer;z-index:2}
+input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.tp-panah{color:#993556;font-weight:800;font-size:15px;flex-shrink:0}
+.jl-baris .tp-pil,.jl-atur .tp-pil{width:auto;flex:1;min-height:42px;background:#fff}
+.jl-baris .tp-ik,.jl-atur .tp-ik{width:26px;height:26px;font-size:13px;background:var(--pink-pale)}
+.jl-baris .tp-isi b,.jl-atur .tp-isi b{font-size:14px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -10623,7 +10638,7 @@ function jlRender(id){
         const pendek = jlDurasiMenit(v) < 60;
         const edit = st.atur === v.id;
         return '<div class="jl-baris' + (pendek ? ' pendek' : '') + '">'
-          + (edit ? '<input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'m\',this.value)" aria-label="Jam mulai"><span>s/d</span><input type="time" value="' + v.s + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'s\',this.value)" aria-label="Jam selesai">'
+          + (edit ? '<input type="time" value="' + v.m + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'m\',this.value)" aria-label="Jam mulai"><span class="tp-panah">→</span><input type="time" value="' + v.s + '" onchange="jlUbahJam(\'' + id + '\',' + v.id + ',\'s\',this.value)" aria-label="Jam selesai">'
             : '<b>' + v.m.replace(':', '.') + ' – ' + v.s.replace(':', '.') + '</b>' + (pendek ? '<em>kurang dari 1 jam</em>' : ''))
           + '<button type="button" class="jl-mini" onclick="jlAtur(\'' + id + '\',' + v.id + ')">' + (edit ? 'Selesai' : 'Ubah') + '</button>'
           + '<button type="button" class="jl-hapus" aria-label="Hapus sesi" onclick="jlHapus(\'' + id + '\',' + v.id + ')">×</button></div>';
@@ -10874,7 +10889,7 @@ function hkfLangkah2(){
   const ada = f.mulai && f.selesai;
   return '<div class="hkf2-k">Nama Harta Karun</div><input class="hkf2-in" maxlength="80" placeholder="Contoh: Jeju Glow Oktober" value="' + escHtml(f.nama) + '" oninput="window._hkf.nama=this.value">'
     + '<div class="hkf2-k">Periode</div><div class="hkf2-chips">' + chip('bulan', 'Sisa bulan ini') + chip('14', '14 hari') + chip('payday', 'Payday 25–28') + chip('atur', 'Atur sendiri') + '</div>'
-    + (f.cepat === 'atur' ? '<div class="hkf2-dua"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.mulai + '" onchange="window._hkf.mulai=this.value;hkfRender()"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.selesai + '" onchange="window._hkf.selesai=this.value;hkfRender()"></div>'
+    + (f.cepat === 'atur' ? '<div class="hkf2-dua"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.mulai + '" aria-label="Tanggal mulai" onchange="window._hkf.mulai=this.value;hkfRender()"><input type="date" class="hkf2-in" min="' + hkfHariIni() + '" value="' + f.selesai + '" aria-label="Tanggal selesai" onchange="window._hkf.selesai=this.value;hkfRender()"></div>'
       + '<label class="hkf2-cek"><input type="checkbox"' + (f.payday ? ' checked' : '') + ' onchange="window._hkf.payday=this.checked"> Hitung khusus tanggal ini (edisi payday)</label>' : '')
     + (ada ? '<div class="hkf2-rng">📅 <b>' + hkTgl(f.mulai) + ' – ' + hkTgl(f.selesai) + '</b><span>' + hkfJumlahHari(f.mulai, f.selesai) + ' hari' + (f.payday ? ' · payday' : '') + '</span></div>' : '')
     + '<div class="hkf2-k">Dihitung dari penjualan lewat</div>' + seg('jalur', [['video', 'Video'], ['live', 'Live'], ['keduanya', 'Keduanya']])
@@ -11201,6 +11216,59 @@ async function rwMuatGD(){
   });
   el.innerHTML = html;
 }
+
+// ===== Tampilan kolom jam & tanggal: pil lembut dengan label, tetap memakai pemilih bawaan HP =====
+const TP_HARI = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+function tpLabel(inp){
+  if(inp.dataset.tpLabel) return inp.dataset.tpLabel;
+  const a = (inp.getAttribute('aria-label') || inp.getAttribute('placeholder') || '').toLowerCase();
+  if(/mulai|dari|awal/.test(a)) return inp.type === 'date' ? 'Dari tanggal' : 'Mulai';
+  if(/selesai|sampai|akhir/.test(a)) return inp.type === 'date' ? 'Sampai tanggal' : 'Selesai';
+  const id = (inp.id || '').toLowerCase();
+  if(/mulai|dari|start/.test(id)) return inp.type === 'date' ? 'Dari tanggal' : 'Mulai';
+  if(/selesai|sampai|(^|[-_])end$/.test(id)) return inp.type === 'date' ? 'Sampai tanggal' : 'Selesai';
+  return inp.type === 'date' ? 'Tanggal' : 'Jam';
+}
+function tpTeks(inp){
+  const v = inp.value;
+  if(!v) return inp.type === 'date' ? 'Pilih tanggal' : 'Pilih jam';
+  if(inp.type === 'date') return new Date(v + 'T00:00:00+07:00').toLocaleDateString('id-ID', Object.assign({ timeZone: 'Asia/Jakarta' }, TP_HARI));
+  return v.slice(0, 5).replace(':', '.');
+}
+function tpSegarkan(inp){
+  const w = inp.parentNode; if(!w || !w.classList || !w.classList.contains('tp-pil')) return;
+  const b = w.querySelector('.tp-isi b'); const t = tpTeks(inp);
+  if(b.textContent !== t) b.textContent = t;
+  w.classList.toggle('kosong', !inp.value);
+  w.classList.toggle('mati', !!inp.disabled);
+}
+function tpBungkus(inp){
+  if(!inp || inp.dataset.tp === '1' || (inp.type !== 'date' && inp.type !== 'time')) return;
+  inp.dataset.tp = '1';
+  const w = document.createElement('span');
+  w.className = 'tp-pil';
+  w.innerHTML = '<i class="tp-ik" aria-hidden="true">' + (inp.type === 'date' ? '📅' : '🕐') + '</i><span class="tp-isi"><small>' + escHtml(tpLabel(inp)) + '</small><b></b></span>';
+  inp.parentNode.insertBefore(w, inp);
+  w.appendChild(inp);
+  inp.classList.add('tp-asli');
+  inp.addEventListener('click', function(){ try { if(inp.showPicker) inp.showPicker(); } catch(e){} });
+  inp.addEventListener('input', function(){ tpSegarkan(inp); });
+  inp.addEventListener('change', function(){ tpSegarkan(inp); });
+  tpSegarkan(inp);
+}
+function tpPindai(akar){
+  (akar || document).querySelectorAll('input[type="date"], input[type="time"]').forEach(tpBungkus);
+}
+(function(){
+  const mulai = function(){
+    tpPindai(document);
+    new MutationObserver(function(m){ m.forEach(function(x){ x.addedNodes.forEach(function(n){ if(n.nodeType === 1){ if(n.matches && n.matches('input[type="date"], input[type="time"]')) tpBungkus(n); else if(n.querySelectorAll) tpPindai(n); } }); }); })
+      .observe(document.body, { childList: true, subtree: true });
+    // Nilai yang diubah lewat kode (bukan diketik) tidak memicu event, jadi disegarkan berkala.
+    setInterval(function(){ document.querySelectorAll('input.tp-asli').forEach(tpSegarkan); }, 800);
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai); else mulai();
+})();
 
 function htmlChipTier(tier){
   const w = TIER_WARNA[tier] || TIER_WARNA.Bronze;
