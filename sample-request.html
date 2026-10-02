@@ -1283,6 +1283,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 .stt-vid span{display:block;font-size:11.5px;font-weight:700;color:#4B1528;margin-top:4px}
 .stt-putus{width:100%;min-height:44px;margin-top:10px;border:1.5px solid var(--border);background:#fff;border-radius:12px;font-weight:800;color:var(--gray-text);cursor:pointer;font-family:inherit}
 .stt-profil span.stt-ava,.stt-vid span.stt-vid-k{display:flex;align-items:center;justify-content:center;margin:0;font-size:24px;color:inherit}
+.stt-ok{background:#E1F5EE;color:#085041;border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;margin-bottom:10px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11315,15 +11316,17 @@ async function sttPanggil(action){
 function bukaStatistikTT(){ openModal('m-c-stt'); sttMuat(); }
 async function sttMuat(){
   const el = document.getElementById('stt-isi');
+  const psn = window._sttPesan; window._sttPesan = null;
+  const ban = psn ? '<div class="' + (psn.ok ? 'stt-ok' : 'stt-galat') + '">' + (psn.ok ? '✅ ' : '⚠️ ') + escHtml(psn.teks) + '</div>' : '';
   el.innerHTML = '<div class="card-sub">Memuat...</div>';
   let st;
   try { st = await sttPanggil('status'); } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat. Coba lagi.</div>'; return; }
   if(!st.valid){ el.innerHTML = '<div class="card-sub">' + escHtml(st.error || 'Gagal memuat.') + '</div>'; return; }
-  if(!st.terhubung){ el.innerHTML = sttIntro(); return; }
+  if(!st.terhubung){ el.innerHTML = ban + sttIntro(); return; }
   el.innerHTML = '<div class="card-sub">Mengambil statistik dari TikTok...</div>';
   const j = await sttPanggil('muat');
   if(!j.valid){ el.innerHTML = '<div class="stt-galat">' + escHtml(j.error || 'Gagal memuat.') + '</div>' + sttTombolHubung('Hubungkan ulang'); return; }
-  el.innerHTML = sttTampil(j);
+  el.innerHTML = ban + sttTampil(j);
 }
 function sttTombolHubung(teks){
   return '<a class="stt-hubung" href="' + buildTiktokVideoInsightsAuthUrl(currentSession.memberId) + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1 0-5.2c.27 0 .53.04.78.12V9.65a5.7 5.7 0 0 0-.78-.05 5.7 5.7 0 1 0 5.68 5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></svg>' + teks + '</a>';
@@ -11367,13 +11370,16 @@ async function sttPutus(){
 }
 // Setelah kembali dari halaman izin TikTok (?statistik=1), buka statistiknya otomatis begitu creator sudah masuk.
 (function(){
-  if(new URLSearchParams(location.search).get('statistik') !== '1') return;
+  const q = new URLSearchParams(location.search);
+  if(q.get('statistik') !== '1') return;
+  const tt = q.get('tt');
+  window._sttPesan = tt === 'ok' ? { ok: true, teks: 'Akun TikTok berhasil terhubung.' } : tt === 'gagal' ? { ok: false, teks: q.get('pesan') || 'Gagal menghubungkan akun TikTok.' } : null;
   let coba = 0;
   const t = setInterval(function(){
     coba++;
     if(window.currentSession && currentSession.memberId && document.getElementById('m-c-stt')){
       clearInterval(t);
-      try { history.replaceState(null, '', location.pathname); } catch(e){}
+      try { history.replaceState(null, '', location.pathname + (q.get('vi_sandbox') === '1' ? '?vi_sandbox=1' : '')); } catch(e){}
       bukaStatistikTT();
     } else if(coba > 120){ clearInterval(t); }
   }, 500);
