@@ -1254,6 +1254,42 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 .jl-baris .tp-pil,.jl-atur .tp-pil{width:auto;flex:1;min-height:42px;background:#fff}
 .jl-baris .tp-ik,.jl-atur .tp-ik{width:26px;height:26px;font-size:13px;background:var(--pink-pale)}
 .jl-baris .tp-isi b,.jl-atur .tp-isi b{font-size:14px}
+.kh-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#F1ECF1;border-radius:14px;padding:4px;margin-bottom:12px}
+.kh-tabs button{min-height:40px;border:none;border-radius:10px;background:transparent;font-weight:800;font-size:13px;color:var(--gray-text);cursor:pointer;font-family:inherit}
+.kh-tabs button.on{background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.kh-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:620px){.kh-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.kh-kartu{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:7px;display:flex;flex-direction:column;gap:3px}
+.kh-kartu.habis{opacity:.6}
+.kh-img{position:relative;width:100%;aspect-ratio:1/1;border-radius:11px;background:var(--pink-pale);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:4px}
+.kh-img img{width:100%;height:100%;object-fit:cover}
+.kh-tier{position:absolute;top:6px;left:6px;font-size:10.5px;font-weight:800;border-radius:99px;padding:2px 8px}
+.kh-img em{position:absolute;top:6px;right:6px;font-style:normal;font-size:10.5px;font-weight:800;background:#3E2340;color:#fff;border-radius:99px;padding:2px 8px}
+.kh-kartu b{font-size:12.5px;font-weight:800;color:var(--dark);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kh-poin{font-family:'Baloo 2',inherit;font-size:17px;font-weight:800;color:var(--pink)}
+.kh-meta{font-size:11px;color:var(--gray-text)}
+.kh-aksi{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}
+.kh-aksi button{min-height:34px;border:1.5px solid var(--border);background:#fff;border-radius:10px;font-weight:800;font-size:11.5px;cursor:pointer;font-family:inherit;color:var(--dark)}
+.kh-tambah{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:220px;border:1.5px dashed #C9B3C2;border-radius:16px;background:#fff;color:var(--pink);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.kh-tambah span{font-size:30px;line-height:1}
+.kh-form{max-width:420px;width:100%;max-height:90vh;overflow-y:auto;text-align:left}
+.kh-judul{font-family:'Baloo 2',inherit;font-size:20px;font-weight:800;color:var(--dark);margin-bottom:4px}
+.kh-lbl{font-size:12px;font-weight:800;color:var(--dark);margin:12px 0 5px}
+.kh-in{width:100%;min-height:44px;border-radius:12px;box-sizing:border-box;padding:0 12px;font-size:14px}
+.kh-dua{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kh-hint{font-size:11px;color:var(--gray-text);margin-top:4px}
+.kh-foto{display:flex;align-items:center;gap:10px;cursor:pointer}
+.kh-foto img{width:64px;height:64px;border-radius:14px;object-fit:cover;display:none}
+.kh-foto span{width:64px;height:64px;border-radius:14px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:26px}
+.kh-foto b{font-size:13px;color:var(--pink)}
+.kh-foto input{display:none}
+.kh-chips{display:flex;gap:6px;flex-wrap:wrap}
+.kh-chips button{min-height:36px;border:1.5px solid var(--border);border-radius:999px;background:#fff;padding:0 13px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;color:var(--dark)}
+.kh-chips button.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.kh-aktif{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-top:12px}
+.kh-aktif input{width:20px;height:20px}
+.kh-btns{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px}
+.kh-btns .btn{min-height:46px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2091,48 +2127,31 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
   </div>
 
   <div class="poin-int-panel" id="poin-int-hadiah">
-    <div id="poin-hadiah-list"><div class="card-sub">Memuat data...</div></div>
-    <div class="card-sub" style="margin-top:12px;font-weight:700">+ Tambah Hadiah Baru</div>
-    <div class="field-row"><input id="new-reward-nama" placeholder="Nama hadiah"></div>
-    <div class="field-row"><input type="file" id="new-reward-foto" accept="image/jpeg,image/png"></div>
-    <div class="field-row">
-      <input id="new-reward-poin" type="number" placeholder="Poin dibutuhkan">
-      <input id="new-reward-stok" type="number" placeholder="Stok (opsional)">
-    </div>
-    <div class="field-row"><select id="new-reward-tier"><option value="">Semua tier</option><option value="Gold">Gold ke atas</option><option value="Diamond">Diamond ke atas</option><option value="Solitaire">Solitaire saja</option></select></div>
-    <div class="field-row">
-      <input id="new-reward-dari" type="date" placeholder="Berlaku dari">
-      <input id="new-reward-sampai" type="date" placeholder="Berlaku sampai">
-    </div>
-    <button class="btn btn-primary" style="width:100%" onclick="createRewardInternal()">Tambah Hadiah</button>
+    <div class="kh-tabs"><button type="button" class="on" data-t="aktif" onclick="khTab('aktif')">Aktif</button><button type="button" data-t="arsip" onclick="khTab('arsip')">Arsip</button></div>
+    <div id="poin-hadiah-list" class="kh-grid"><div class="card-sub">Memuat data...</div></div>
   </div>
 
   <div class="catchup-popup-bg" id="edit-reward-popup-bg">
-    <div class="catchup-popup-box">
-      <div class="cp-title">✏️ Edit Hadiah</div>
+    <div class="catchup-popup-box kh-form">
+      <div class="kh-judul" id="kh-judul">Tambah hadiah</div>
       <input type="hidden" id="edit-reward-id">
       <input type="hidden" id="edit-reward-foto-lama">
-      <div class="field-row"><input id="edit-reward-nama" placeholder="Nama hadiah"></div>
-      <div class="field-row" style="align-items:center;gap:10px">
-        <img id="edit-reward-foto-preview" src="" style="width:52px;height:52px;border-radius:10px;object-fit:cover;display:none;flex-shrink:0">
-        <input type="file" id="edit-reward-foto" accept="image/jpeg,image/png,image/jpg" style="flex:1">
+      <input type="hidden" id="edit-reward-tier">
+      <div class="kh-lbl">Foto</div>
+      <label class="kh-foto"><img id="edit-reward-foto-preview" src="" alt=""><span id="kh-foto-ph">🎁</span><b>Pilih foto</b><input type="file" id="edit-reward-foto" accept="image/jpeg,image/png,image/jpg" onchange="khPratinjau(this)"></label>
+      <div class="kh-lbl">Nama hadiah</div>
+      <input id="edit-reward-nama" class="kh-in" placeholder="Contoh: Budget Sephora Rp1 jt" maxlength="80">
+      <div class="kh-dua">
+        <div><div class="kh-lbl">Poin</div><input id="edit-reward-poin" class="kh-in" type="number" min="1" placeholder="500" oninput="khGmv()"><div class="kh-hint" id="kh-gmv"></div></div>
+        <div><div class="kh-lbl">Jumlah pemenang</div><input id="edit-reward-stok" class="kh-in" type="number" min="0" placeholder="Kosong = tak terbatas"></div>
       </div>
-      <div class="field-row">
-        <input id="edit-reward-poin" type="number" placeholder="Poin dibutuhkan">
-        <input id="edit-reward-stok" type="number" placeholder="Stok (kosongkan = tak terbatas)">
-      </div>
-      <div class="field-row"><select id="edit-reward-tier"><option value="">Semua tier</option><option value="Gold">Gold ke atas</option><option value="Diamond">Diamond ke atas</option><option value="Solitaire">Solitaire saja</option></select></div>
-      <div class="field-row">
-        <input id="edit-reward-dari" type="date">
-        <input id="edit-reward-sampai" type="date">
-      </div>
-      <div class="field-row" style="align-items:center;gap:8px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="edit-reward-aktif" style="width:auto"> Hadiah aktif</label>
-      </div>
-      <div class="cp-btns">
-        <button class="btn btn-primary" onclick="saveEditReward()">Simpan Perubahan</button>
-        <button class="btn btn-outline" onclick="closeEditRewardPopup()">Batal</button>
-      </div>
+      <div class="kh-lbl">Boleh ditukar oleh</div>
+      <div class="kh-chips" id="kh-tier"><button type="button" data-v="" onclick="khTier('')">Semua tier</button><button type="button" data-v="Gold" onclick="khTier('Gold')">Gold+</button><button type="button" data-v="Diamond" onclick="khTier('Diamond')">Diamond+</button><button type="button" data-v="Solitaire" onclick="khTier('Solitaire')">Solitaire</button></div>
+      <div class="kh-lbl">Berlaku</div>
+      <div class="kh-chips" id="kh-periode"><button type="button" data-v="bulan" onclick="khPeriode('bulan')">Bulan ini</button><button type="button" data-v="atur" onclick="khPeriode('atur')">Atur sendiri</button></div>
+      <div class="kh-dua" id="kh-tgl" style="display:none;margin-top:8px"><input id="edit-reward-dari" type="date" aria-label="Berlaku dari"><input id="edit-reward-sampai" type="date" aria-label="Berlaku sampai"></div>
+      <label class="kh-aktif" id="kh-aktif-wrap"><input type="checkbox" id="edit-reward-aktif"> Tampilkan ke creator</label>
+      <div class="kh-btns"><button type="button" class="btn btn-outline" onclick="closeEditRewardPopup()">Batal</button><button type="button" class="btn btn-primary" id="kh-simpan" onclick="khSimpan(this)">Simpan hadiah</button></div>
     </div>
   </div>
 
@@ -11836,133 +11855,127 @@ async function togglePointRuleActive(id, newActive){
   loadPoinKegiatanList();
 }
 
+// ===== Internal: Katalog Hadiah (Redeem Poin) =====
+window._khData = []; window._khTab = 'aktif';
+const KH_TIER = { Gold: ['Gold+', '#FAEEDA', '#633806'], Diamond: ['Diamond+', '#E6F1FB', '#0C447C'], Solitaire: ['Solitaire', '#EEEDFE', '#3C3489'] };
+function khHariIni(){ return new Date(Date.now() + 7*3600000).toISOString().slice(0, 10); }
+function khAktif(r){ return r.is_active && (!r.berlaku_sampai || r.berlaku_sampai >= khHariIni()); }
 async function loadPoinHadiahList(){
   const el = document.getElementById('poin-hadiah-list');
   el.innerHTML = '<div class="card-sub">Memuat data...</div>';
   try {
     const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth}, body: JSON.stringify({action:'list'})
-    });
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: JSON.stringify({ action: 'list' }) });
     const j = await res.json();
-    if(!j.valid){ el.innerHTML = '<div class="card-sub">'+(j.error||'Gagal memuat.')+'</div>'; return; }
-    let html = '';
-    j.rewards.forEach(function(r){
-      const berlaku = (r.berlaku_dari||'—')+' s/d '+(r.berlaku_sampai||'—');
-      html += '<div class="poin-reward-card"><div class="prc-thumb">'+(r.foto_url?'<img src="'+r.foto_url+'">':'🎁')+'</div>'+
-        '<div class="prc-main"><div class="t">'+r.nama+(r.is_active?'':' (nonaktif)')+'</div><div class="s">Stok: '+(r.stok===null?'∞':r.stok)+' · '+berlaku+(r.tier_min?' · '+r.tier_min+'+':' · semua tier')+'</div></div>'+
-        '<div class="prc-cost">'+r.poin_dibutuhkan+' pts</div>'+
-        '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick=\'openEditRewardPopup('+JSON.stringify(r)+')\' title="Edit">✏️</div>'+
-        '<div class="icon-card" style="padding:6px 8px;border-radius:8px;cursor:pointer" onclick="deleteRewardInternal(\''+r.id+'\')" title="Hapus">🗑</div></div>';
-    });
-    el.innerHTML = html || '<div class="card-sub">Belum ada hadiah.</div>';
-  } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: '+String(e)+'</div>'; }
+    if(!j.valid){ el.innerHTML = '<div class="card-sub">' + escHtml(j.error || 'Gagal memuat.') + '</div>'; return; }
+    window._khData = (j.rewards || []).sort(function(a, b){ return a.poin_dibutuhkan - b.poin_dibutuhkan; });
+    khRender();
+  } catch(e){ el.innerHTML = '<div class="card-sub">Gagal memuat: ' + escHtml(String(e)) + '</div>'; }
 }
-
-function openEditRewardPopup(r){
-  document.getElementById('edit-reward-id').value = r.id;
-  document.getElementById('edit-reward-foto-lama').value = r.foto_url || '';
+function khTab(t){ window._khTab = t; document.querySelectorAll('.kh-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); }); khRender(); }
+function khRender(){
+  const el = document.getElementById('poin-hadiah-list');
+  const aktif = window._khData.filter(khAktif), arsip = window._khData.filter(function(r){ return !khAktif(r); });
+  document.querySelectorAll('.kh-tabs button').forEach(function(b){ b.textContent = (b.dataset.t === 'aktif' ? 'Aktif · ' + aktif.length : 'Arsip · ' + arsip.length); });
+  const list = window._khTab === 'aktif' ? aktif : arsip;
+  let html = window._khTab === 'aktif' ? '<button type="button" class="kh-tambah" onclick="khBuka(null)"><span>+</span>Tambah hadiah</button>' : '';
+  html += list.map(function(r){
+    const t = KH_TIER[r.tier_min];
+    const tier = t ? '<span class="kh-tier" style="background:' + t[1] + ';color:' + t[2] + '">' + t[0] + '</span>' : '<span class="kh-tier" style="background:#F1EFE8;color:#444441">Semua tier</span>';
+    const habis = r.stok !== null && r.stok <= 0;
+    const periode = r.berlaku_sampai ? 's/d ' + new Date(r.berlaku_sampai + 'T00:00:00+07:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }) : 'tanpa batas waktu';
+    return '<div class="kh-kartu' + (habis ? ' habis' : '') + '"><div class="kh-img">' + (r.foto_url ? '<img src="' + escHtml(fotoKecil(r.foto_url)) + '" alt="" loading="lazy">' : '<span>🎁</span>') + tier + (habis ? '<em>Habis</em>' : '') + '</div>'
+      + '<b>' + escHtml(r.nama) + '</b><div class="kh-poin">' + Number(r.poin_dibutuhkan).toLocaleString('id-ID') + ' poin</div>'
+      + '<div class="kh-meta">' + (r.stok === null ? 'Stok tak terbatas' : 'Sisa ' + r.stok) + ' · ' + periode + '</div>'
+      + '<div class="kh-meta">Ditukar ' + (r.ditukar || 0) + '×' + (!r.is_active ? ' · disembunyikan' : '') + '</div>'
+      + '<div class="kh-aksi"><button type="button" onclick="khBuka(\'' + r.id + '\')">✏️ Ubah</button><button type="button" onclick="khHapus(\'' + r.id + '\')">' + ((r.ditukar || 0) > 0 ? '📦 Arsipkan' : '🗑 Hapus') + '</button></div></div>';
+  }).join('');
+  if(!list.length && window._khTab === 'arsip') html = '<div class="card-sub" style="grid-column:1/-1">Belum ada hadiah di arsip.</div>';
+  el.innerHTML = html;
+}
+function khTier(v){ document.getElementById('edit-reward-tier').value = v; document.querySelectorAll('#kh-tier button').forEach(function(b){ b.classList.toggle('on', b.dataset.v === v); }); }
+function khPeriode(v){
+  document.querySelectorAll('#kh-periode button').forEach(function(b){ b.classList.toggle('on', b.dataset.v === v); });
+  document.getElementById('kh-tgl').style.display = v === 'atur' ? 'grid' : 'none';
+  if(v === 'bulan'){
+    const h = khHariIni(), y = Number(h.slice(0, 4)), m = Number(h.slice(5, 7));
+    document.getElementById('edit-reward-dari').value = h.slice(0, 8) + '01';
+    document.getElementById('edit-reward-sampai').value = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  }
+}
+function khGmv(){ const p = Number(document.getElementById('edit-reward-poin').value) || 0; document.getElementById('kh-gmv').textContent = p ? '≈ GMV Rp' + (p * 100000).toLocaleString('id-ID') + ' dari video' : ''; }
+function khPratinjau(inp){
+  const f = inp.files && inp.files[0]; if(!f) return;
+  const img = document.getElementById('edit-reward-foto-preview'); img.src = URL.createObjectURL(f); img.style.display = 'block';
+  document.getElementById('kh-foto-ph').style.display = 'none';
+}
+function khBuka(id){
+  const r = id ? window._khData.find(function(x){ return x.id === id; }) : null;
+  document.getElementById('kh-judul').textContent = r ? 'Ubah hadiah' : 'Tambah hadiah';
+  document.getElementById('edit-reward-id').value = r ? r.id : '';
+  document.getElementById('edit-reward-foto-lama').value = r && r.foto_url || '';
   document.getElementById('edit-reward-foto').value = '';
-  const preview = document.getElementById('edit-reward-foto-preview');
-  if(r.foto_url){ preview.src = r.foto_url; preview.style.display = ''; } else { preview.style.display = 'none'; }
-  document.getElementById('edit-reward-nama').value = r.nama || '';
-  document.getElementById('edit-reward-poin').value = r.poin_dibutuhkan || '';
-  document.getElementById('edit-reward-stok').value = (r.stok === null || r.stok === undefined) ? '' : r.stok;
-  document.getElementById('edit-reward-dari').value = r.berlaku_dari || '';
-  document.getElementById('edit-reward-sampai').value = r.berlaku_sampai || '';
-  document.getElementById('edit-reward-aktif').checked = !!r.is_active;
-  document.getElementById('edit-reward-tier').value = r.tier_min || '';
+  const img = document.getElementById('edit-reward-foto-preview');
+  if(r && r.foto_url){ img.src = r.foto_url; img.style.display = 'block'; document.getElementById('kh-foto-ph').style.display = 'none'; }
+  else { img.removeAttribute('src'); img.style.display = 'none'; document.getElementById('kh-foto-ph').style.display = ''; }
+  document.getElementById('edit-reward-nama').value = r ? r.nama : '';
+  document.getElementById('edit-reward-poin').value = r ? r.poin_dibutuhkan : '';
+  document.getElementById('edit-reward-stok').value = r && r.stok !== null ? r.stok : '';
+  khTier(r && r.tier_min || '');
+  document.getElementById('kh-aktif-wrap').style.display = r ? 'flex' : 'none';
+  document.getElementById('edit-reward-aktif').checked = r ? !!r.is_active : true;
+  if(r && (r.berlaku_dari || r.berlaku_sampai)){
+    khPeriode('atur');
+    document.getElementById('edit-reward-dari').value = r.berlaku_dari || '';
+    document.getElementById('edit-reward-sampai').value = r.berlaku_sampai || '';
+  } else khPeriode(r ? 'atur' : 'bulan');
+  khGmv();
   document.getElementById('edit-reward-popup-bg').classList.add('open');
 }
-function closeEditRewardPopup(){
-  document.getElementById('edit-reward-popup-bg').classList.remove('open');
-}
-async function saveEditReward(){
+function openEditRewardPopup(r){ khBuka(r && r.id); }
+function closeEditRewardPopup(){ document.getElementById('edit-reward-popup-bg').classList.remove('open'); }
+async function khSimpan(btn){
   const id = document.getElementById('edit-reward-id').value;
   const nama = document.getElementById('edit-reward-nama').value.trim();
-  const poin_dibutuhkan = parseInt(document.getElementById('edit-reward-poin').value, 10);
+  const poin = parseInt(document.getElementById('edit-reward-poin').value, 10);
   const stokVal = document.getElementById('edit-reward-stok').value.trim();
-  const berlaku_dari = document.getElementById('edit-reward-dari').value;
-  const berlaku_sampai = document.getElementById('edit-reward-sampai').value;
-  const is_active = document.getElementById('edit-reward-aktif').checked;
-  if(!nama || !poin_dibutuhkan){ alert('Nama dan poin dibutuhkan wajib diisi.'); return; }
-
-  let foto_url = document.getElementById('edit-reward-foto-lama').value || null;
-  const fotoInput = document.getElementById('edit-reward-foto');
-  const fotoFile = fotoInput.files[0];
-  if(fotoFile){
-    if(!['image/jpeg','image/png','image/jpg'].includes(fotoFile.type)){ alert('Foto harus JPG, JPEG, atau PNG.'); return; }
-    if(fotoFile.size > 5*1024*1024){ alert('Ukuran foto maksimal 5MB.'); return; }
-    const upResult = await uploadFileToStorage('product-images', fotoFile, 'reward');
-    if(upResult.error){ alert('Gagal upload foto: ' + upResult.error.message); return; }
-    foto_url = upResult.url;
-  }
-
+  const dari = document.getElementById('edit-reward-dari').value, sampai = document.getElementById('edit-reward-sampai').value;
+  if(nama.length < 2){ alert('Isi nama hadiah.'); return; }
+  if(!(poin > 0)){ alert('Isi poin yang dibutuhkan.'); return; }
+  if(dari && sampai && sampai < dari){ alert('Tanggal selesai harus setelah tanggal mulai.'); return; }
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
+    let foto_url = document.getElementById('edit-reward-foto-lama').value || null;
+    const f = document.getElementById('edit-reward-foto').files[0];
+    if(f){
+      if(!['image/jpeg', 'image/png', 'image/jpg'].includes(f.type)){ alert('Foto harus JPG atau PNG.'); return; }
+      if(f.size > 5*1024*1024){ alert('Ukuran foto maksimal 5 MB.'); return; }
+      const up = await uploadFileToStorage('product-images', f, 'reward');
+      if(up.error){ alert('Gagal upload foto: ' + up.error.message); return; }
+      foto_url = up.url;
+    }
+    const data = { nama: nama, foto_url: foto_url, poin_dibutuhkan: poin, stok: stokVal === '' ? null : parseInt(stokVal, 10),
+      berlaku_dari: dari || null, berlaku_sampai: sampai || null, tier_min: document.getElementById('edit-reward-tier').value };
+    if(id){ data.action = 'update'; data.id = id; data.is_active = document.getElementById('edit-reward-aktif').checked; } else data.action = 'create';
     const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({
-        action:'update', id, nama, poin_dibutuhkan, foto_url, tier_min: document.getElementById('edit-reward-tier').value,
-        stok: stokVal === '' ? null : parseInt(stokVal, 10),
-        berlaku_dari: berlaku_dari || null, berlaku_sampai: berlaku_sampai || null,
-        is_active
-      })
-    });
+    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: JSON.stringify(data) });
     const j = await res.json();
-    if(!j.valid){ alert(j.error || 'Gagal menyimpan perubahan.'); return; }
-    closeEditRewardPopup();
-    loadPoinHadiahList();
+    if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); return; }
+    closeEditRewardPopup(); showToast(id ? 'Hadiah diperbarui' : 'Hadiah ditambahkan'); loadPoinHadiahList();
   } catch(e){ alert('Gagal menghubungi server.'); }
+  finally { btn.disabled = false; btn.textContent = 'Simpan hadiah'; }
 }
-
-async function createRewardInternal(){
-  const nama = document.getElementById('new-reward-nama').value.trim();
-  const fotoInput = document.getElementById('new-reward-foto');
-  const fotoFile = fotoInput.files[0];
-  const poin_dibutuhkan = parseInt(document.getElementById('new-reward-poin').value, 10);
-  const stokVal = document.getElementById('new-reward-stok').value.trim();
-  const berlaku_dari = document.getElementById('new-reward-dari').value;
-  const berlaku_sampai = document.getElementById('new-reward-sampai').value;
-  if(!nama || !poin_dibutuhkan){ alert('Nama dan poin dibutuhkan wajib diisi.'); return; }
-
-  let foto_url = null;
-  if(fotoFile){
-    if(!['image/jpeg','image/png'].includes(fotoFile.type)){ alert('Foto harus JPEG atau PNG.'); return; }
-    if(fotoFile.size > 5*1024*1024){ alert('Ukuran foto maksimal 5MB.'); return; }
-    const upResult = await uploadFileToStorage('product-images', fotoFile, 'reward');
-    if(upResult.error){ alert('Gagal upload foto: ' + upResult.error.message); return; }
-    foto_url = upResult.url;
-  }
-
-  try {
-    const auth = await getInternalAuthHeader();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'create', nama, foto_url, poin_dibutuhkan, stok: stokVal?parseInt(stokVal,10):null, berlaku_dari: berlaku_dari||null, berlaku_sampai: berlaku_sampai||null, tier_min: document.getElementById('new-reward-tier').value })
-    });
-    const j = await res.json();
-    if(!j.valid){ alert(j.error || 'Gagal menambah hadiah.'); return; }
-    document.getElementById('new-reward-nama').value='';
-    fotoInput.value='';
-    document.getElementById('new-reward-poin').value='';
-    document.getElementById('new-reward-stok').value='';
-    document.getElementById('new-reward-dari').value='';
-    document.getElementById('new-reward-sampai').value='';
-    document.getElementById('new-reward-tier').value='';
-    loadPoinHadiahList();
-  } catch(e){ alert('Gagal menghubungi server.'); }
-}
-
-async function deleteRewardInternal(id){
-  if(!confirm('Hapus hadiah ini?')) return;
+async function khHapus(id){
+  const r = window._khData.find(function(x){ return x.id === id; });
+  if(!confirm((r && r.ditukar > 0 ? 'Arsipkan' : 'Hapus') + ' hadiah "' + (r ? r.nama : '') + '"?')) return;
   const auth = await getInternalAuthHeader();
-  await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', {
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-    body: JSON.stringify({action:'delete', id})
-  });
+  const res = await fetch(SUPABASE_URL + '/functions/v1/internal-manage-rewards', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': auth }, body: JSON.stringify({ action: 'delete', id: id }) });
+  const j = await res.json();
+  if(!j.valid){ alert(j.error || 'Gagal.'); return; }
+  showToast(j.diarsipkan ? 'Hadiah diarsipkan' : 'Hadiah dihapus');
   loadPoinHadiahList();
 }
+function deleteRewardInternal(id){ return khHapus(id); }
 
 async function loadPoinMemberDropdowns(){
   try {
