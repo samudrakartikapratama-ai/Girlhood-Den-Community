@@ -11363,16 +11363,33 @@ function sttHubungkan(a){
   const w = window.open(u.toString(), 'tt_auth', 'width=520,height=760');
   if(!w) return true; // popup diblokir: lanjut di tab yang sama
   try { localStorage.removeItem('gd_tt_auth'); } catch(e){}
+  window._sttPesan = null;
+  // Pengaman: selama menunggu, cek ke server tiap 3 detik apakah koneksi baru sudah tersimpan.
+  sttSelesaiTunggu();
+  const mulai = Date.now();
+  window._sttTunggu = setInterval(async function(){
+    if(Date.now() - mulai > 5 * 60 * 1000){ sttSelesaiTunggu(); return; }
+    try {
+      const st = await sttPanggil('status');
+      if(st && st.valid && st.terhubung && st.diperbarui && new Date(st.diperbarui).getTime() >= mulai - 5000){
+        sttSelesaiTunggu();
+        try { localStorage.removeItem('gd_tt_auth'); } catch(e){}
+        window._sttPesan = { ok: true, teks: 'Akun TikTok berhasil terhubung.' };
+        openModal('m-c-stt'); sttMuat();
+      }
+    } catch(e){}
+  }, 3000);
   const el = document.getElementById('stt-isi');
   if(el) el.innerHTML = '<div class="stt-tunggu"><div class="stt-hero-ik">⏳</div><b>Menunggu persetujuan di jendela TikTok</b><span>Login dan setujui izinnya di jendela yang baru terbuka. Halaman ini akan memperbarui sendiri.</span><button type="button" onclick="sttMuat()">Sudah selesai? Muat ulang</button></div>';
   return false;
 }
+function sttSelesaiTunggu(){ if(window._sttTunggu){ clearInterval(window._sttTunggu); window._sttTunggu = null; } }
 function sttTerimaHasil(raw){
   let h = null; try { h = JSON.parse(raw || 'null'); } catch(e){}
   if(!h || Date.now() - (h.t || 0) > 10 * 60 * 1000) return;
   try { localStorage.removeItem('gd_tt_auth'); } catch(e){}
   window._sttPesan = h.tt === 'ok' ? { ok: true, teks: 'Akun TikTok berhasil terhubung.' } : { ok: false, teks: h.pesan || 'Gagal menghubungkan akun TikTok.' };
-  if(document.getElementById('m-c-stt') && window.currentSession && currentSession.memberId){ openModal('m-c-stt'); sttMuat(); }
+  if(document.getElementById('m-c-stt') && typeof currentSession !== 'undefined' && currentSession.memberId){ sttSelesaiTunggu(); openModal('m-c-stt'); sttMuat(); }
 }
 window.addEventListener('storage', function(e){ if(e.key === 'gd_tt_auth' && e.newValue) sttTerimaHasil(e.newValue); });
 function sttIntro(){
@@ -11432,7 +11449,7 @@ async function sttPutus(){
   let coba = 0;
   const t = setInterval(function(){
     coba++;
-    if(window.currentSession && currentSession.memberId && document.getElementById('m-c-stt')){
+    if(typeof currentSession !== 'undefined' && currentSession.memberId && document.getElementById('m-c-stt')){
       clearInterval(t);
       try { history.replaceState(null, '', location.pathname + (q.get('vi_sandbox') === '1' ? '?vi_sandbox=1' : '')); } catch(e){}
       bukaStatistikTT();
