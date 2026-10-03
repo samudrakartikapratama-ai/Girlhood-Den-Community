@@ -5735,10 +5735,11 @@ async function loadJadwalLivePrompts(){
         + '<div class="jl2-note">' + (akhir < Date.now() ? '✅ SOW Live selesai. Slot brand ini sudah kosong lagi.' : '🔒 Jadwal terkunci karena barang sudah kamu terima. SOW selesai setelah sesi terakhir.') + '</div></div>';
     }
     const cid = 'jl-sow-' + idx;
+    const rlJamWib = function(d){ return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).replace(':', '.'); };
     let aturan, mulaiDari, sampai;
     if(k){
       const b3 = new Date(new Date(k).getTime() + 3*86400000), b5 = new Date(new Date(k).getTime() + 5*86400000);
-      aturan = '<div class="jl2-warn">Barang sudah kamu terima. Ini <b>kesempatan terakhir</b>: sesi 1 paling lambat <b>' + rlFmtTgl(b3.toISOString()) + '</b>, semua sesi paling lambat <b>' + rlFmtTgl(b5.toISOString()) + '</b>. Setelah disimpan, jadwal terkunci.</div>';
+      aturan = '<div class="jl2-warn">Barang sudah kamu terima. Ini <b>kesempatan terakhir</b>: sesi 1 harus <b>dimulai paling lambat ' + rlFmtTgl(b3.toISOString()) + ' jam ' + rlJamWib(b3) + ' WIB</b>, semua sesi paling lambat <b>' + rlFmtTgl(b5.toISOString()) + ' jam ' + rlJamWib(b5) + ' WIB</b>. Jadwal baru tersimpan setelah kamu tekan Simpan, lalu terkunci.</div>';
       mulaiDari = new Date(); sampai = b5;
     } else {
       aturan = '<div class="jl2-info">Wajib <b>3 sesi</b>: <b>1 sesi per hari, 2 jam per sesi</b>. Mau live lebih dari itu boleh, tapi tidak perlu dicatat di sini. Masih bisa diubah sampai kamu konfirmasi barang diterima.</div>';
