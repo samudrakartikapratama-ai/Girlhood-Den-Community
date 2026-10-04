@@ -6020,6 +6020,7 @@ async function submitDeliveryPhoto(btn){
     alert('Konfirmasi terima berhasil! Batas waktu SOW kamu sekarang mulai kehitung 🎉');
     loadDeliveryPrompts();
     loadCekStatus();
+    if(document.getElementById('vt-progress-list')) loadVtReportPage();
   } catch(e){
     alert('Terjadi kendala: ' + e.message);
     btn.disabled = false; btn.textContent = originalText;
@@ -6039,7 +6040,7 @@ async function loadVtReportPage(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, sumber, sow_waived_at, brand_products(nama_produk, link_affiliate, brands(nama_brand)), logistics(sudah_dikirim), self_reported_products(status), vt_reports(id)')
+    .select('id, tipe_sow_dipilih, sumber, sow_waived_at, brand_products(brand_id, nama_produk, link_affiliate, brands(nama_brand)), logistics(sudah_dikirim), self_reported_products(status), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved');
@@ -6074,7 +6075,18 @@ async function loadVtReportPage(){
   const belumDikirim = semuaWajibVt.filter(function(r){ return !sudahDiTangan(r); });
   const dibebaskan = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0 && r.sow_waived_at; });
 
-  const infoLain = blokInfo(belumDikirim, 'shipping', '<div class="pending-flag">📦 Barangnya belum dikirim brand — kamu belum perlu lapor VT</div>')
+  // Brand bisa lupa menandai barang terkirim. Creator yang barangnya sudah sampai bisa konfirmasi sendiri dengan foto;
+  // setelah itu sistem mencatat barangnya terkirim dan produk langsung bisa dilaporkan.
+  const infoBelumDikirim = belumDikirim.map(function(r){
+    const bp = r.brand_products || {};
+    const namaBrand = bp.brands ? bp.brands.nama_brand : '-';
+    return '<div class="status-item shipping"><b>' + escHtml(labelProduk(r)) + '</b>'
+      + '<div class="pending-flag">📦 Brand belum menandai barang ini terkirim</div>'
+      + (bp.brand_id ? '<div class="card-sub" style="margin-top:6px">Barangnya sudah sampai di kamu? Konfirmasi dengan foto, lalu produk ini langsung bisa kamu laporkan.</div>'
+        + '<button type="button" class="btn btn-primary btn-sm" style="margin-top:6px" onclick="openDeliveryCam(\'' + bp.brand_id + '\', \'' + String(namaBrand).replace(/\\/g,'').replace(/'/g, "\\'") + '\')">🤳 Barangnya Sudah Sampai</button>' : '')
+      + '</div>';
+  }).join('');
+  const infoLain = infoBelumDikirim
     + blokInfo(dibebaskan, 'approved', '<div class="card-sub" style="margin-top:2px">✅ Kewajiban VT dibebaskan tim internal</div>');
 
   if(needVt.length === 0){
