@@ -12740,23 +12740,35 @@ async function loadSelfReportVtQueue(){
     container.innerHTML = j.rows.map(function(r){
       const tgl = new Date(r.submittedAt).toLocaleString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
       const cutoffDisplay = new Date(r.cutoffDateStr).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'});
+      const produkSendiri = (r.jenis || 'Produk sendiri') === 'Produk sendiri';
+      const tanda = r.tanda || [];
+      const alasanAwal = vtAlasanAwal(r);
+      const opsiAlasan = [['video_lama','Video lama'],['duplikat','Duplikat (video sudah pernah dilaporkan)'],['bukan_akun','Bukan dari akun TikTok terdaftar'],['tanpa_kerkun','Tidak pakai keranjang link Saturnine']];
       return '<div class="sr-card" id="sr-vt-card-'+r.vtId+'">'
-        + '<div class="sr-card-head"><div><div class="who">'+r.creatorName+'</div><div class="prod">'+r.produkName+'</div></div>'
+        + '<div class="sr-card-head"><div><div class="who">'+escHtml(r.creatorName)+'</div><div class="prod">'+escHtml(r.produkName)+'</div>'
+        + '<div style="margin-top:4px"><span style="display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:'+(produkSendiri?'#EEF2FF;color:#3730A3':'#ECFDF5;color:#065F46')+'">'+escHtml(r.jenis || 'Produk sendiri')+'</span></div></div>'
         + '<div class="datebadge">Submit: '+tgl+'</div></div>'
+        + ((r.saran || tanda.length)
+            ? '<div style="margin:8px 0;padding:10px 12px;border-radius:12px;background:#FFF7ED;border:1.5px solid #FDBA74;font-size:12.5px;line-height:1.5">'
+              + '<div style="font-weight:800;color:#9A3412;margin-bottom:4px">⚠️ Saran sistem</div>'
+              + (r.saran ? '<div>'+escHtml(r.saran)+'</div>' : '')
+              + tanda.map(function(t){ return '<div>• '+escHtml(t.info || t.kode)+'</div>'; }).join('')
+              + '</div>'
+            : '<div style="margin:8px 0;font-size:12px;color:#146B50;font-weight:700">✓ Tidak ada tanda dari sistem</div>')
         + '<div class="sr-vt-link-box">🔗 <a href="'+r.videoUrl+'" target="_blank">'+r.videoUrl+'</a>'
-        + '<div class="cutoff">Batas maksimal video: <b>H-1 dari pengajuan → '+cutoffDisplay+'</b>.'
+        + (!produkSendiri ? '' : '<div class="cutoff">Batas maksimal video: <b>H-1 dari pengajuan → '+cutoffDisplay+'</b>.'
         + (r.videoPostedAt
             ? ' Diposting: <b>' + new Date(r.videoPostedAt).toLocaleString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + '</b> '
               + (r.videoLama ? '<span style="color:var(--red);font-weight:800">LEWAT BATAS</span>' : '<span style="color:#146B50;font-weight:800">masuk batas</span>')
             : ' Tanggal posting belum terbaca — klik link buat cek manual.')
-        + '</div></div>'
+        + '</div>') + '</div>'
         + '<div class="sr-btn-row">'
         + '<button class="sr-btn sr-btn-approve" onclick="decideVtSelfReport(\''+r.vtId+'\',\'approve\')">✓ Setujui + Kasih Poin</button>'
         + '<button class="sr-btn sr-btn-reject" onclick="toggleSrVtReject(\''+r.vtId+'\')">✕ Tolak</button>'
         + '</div>'
         + '<div class="sr-reject-panel" id="sr-vt-reject-'+r.vtId+'">'
-        + '<div style="font-size:10.5px;font-weight:800;margin-bottom:6px">Alasan penolakan (otomatis):</div>'
-        + '<label class="sr-reason-opt"><input type="radio" name="srvtreason-'+r.vtId+'" checked> Upload VT tidak boleh VT yang lama, batas maksimalnya adalah Postingan VT yang di upload tgl '+cutoffDisplay+'.</label>'
+        + '<div style="font-size:10.5px;font-weight:800;margin-bottom:6px">Alasan penolakan (creator menerima pesan yang halus):</div>'
+        + opsiAlasan.map(function(o){ return '<label class="sr-reason-opt"><input type="radio" name="srvtreason-'+r.vtId+'" value="'+o[0]+'"'+(o[0]===alasanAwal?' checked':'')+'> '+o[1]+'</label>'; }).join('')
         + '<button class="sr-btn-confirm-reject" onclick="decideVtSelfReport(\''+r.vtId+'\',\'reject\')">Kirim Penolakan</button>'
         + '</div></div>';
     }).join('');
@@ -12767,14 +12779,26 @@ function toggleSrVtReject(vtId){
   document.getElementById('sr-vt-reject-'+vtId).classList.toggle('show');
 }
 
+// Alasan tolak yang terpilih otomatis: mengikuti tanda/saran sistem.
+function vtAlasanAwal(r){
+  const kode = (r.tanda || []).map(function(t){ return t.kode; });
+  const saran = String(r.saran || '').toLowerCase();
+  if(saran.indexOf('akun') >= 0 || kode.indexOf('bukan_akun') >= 0) return 'bukan_akun';
+  if(kode.indexOf('duplikat') >= 0) return 'duplikat';
+  if(kode.indexOf('video_lama') >= 0 || r.videoLama) return 'video_lama';
+  if(saran.indexOf('saturnine') >= 0 || saran.indexOf('keranjang') >= 0 || kode.indexOf('tanpa_kerkun') >= 0) return 'tanpa_kerkun';
+  return 'video_lama';
+}
 async function decideVtSelfReport(vtId, decision){
   const card = document.getElementById('sr-vt-card-'+vtId);
+  const pilih = document.querySelector('input[name="srvtreason-'+vtId+'"]:checked');
+  const reasonKey = decision === 'reject' ? (pilih ? pilih.value : 'video_lama') : undefined;
   card.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
   try {
     const auth = await getInternalAuthHeader();
     const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':auth},
-      body: JSON.stringify({ action:'decide_vt', vtId, decision })
+      body: JSON.stringify({ action:'decide_vt', vtId, decision, reasonKey })
     });
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Gagal menyimpan.'); card.querySelectorAll('button').forEach(function(b){ b.disabled = false; }); return; }
