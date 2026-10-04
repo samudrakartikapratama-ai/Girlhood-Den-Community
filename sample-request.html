@@ -3209,26 +3209,30 @@ async function loadPlayfieldByBrand(){
   wrap.style.maxHeight = 'none';
   wrap.innerHTML = '<div class="card-sub">Memuat video...</div>';
   try{
-    const resp = await fetch('https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-by-brand');
+    // Kirim identitas penonton: brand melihat produknya sendiri lengkap, brand lain disamarkan.
+    let sesiPf = null;
+    try { sesiPf = (await db.auth.getSession()).data.session; } catch(_e){}
+    const resp = await fetch('https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-by-brand', { headers: sesiPf ? { 'Authorization': 'Bearer ' + sesiPf.access_token } : {} });
     const json = await resp.json();
     const brands = json.brands || [];
+    const live = json.live || [];
     pfBrandsData = brands;
-    if(!brands.length){
+    if(!brands.length && !live.length){
       wrap.innerHTML = '<div class="card-sub">Belum ada video approved buat ditampilin.</div>';
       return;
     }
-    wrap.innerHTML = brands.map(function(b){
+    wrap.innerHTML = pfLiveHtml(live, json.menit_live || 45) + brands.map(function(b){
       return '<div class="pf-brand-block">'
         + '<div class="pf-brand-head">'
-        +   '<div class="pf-brand-logo">' + (b.logo_url ? '<img src="' + b.logo_url + '">' : pfInitialsShort(b.nama)) + '</div>'
-        +   '<div class="pf-brand-name">' + b.nama + '</div>'
-        +   '<div class="pf-brand-count">' + b.videos.length + ' video</div>'
+        +   '<div class="pf-brand-logo">' + (b.disamarkan ? '👥' : (b.logo_url ? '<img src="' + b.logo_url + '">' : pfInitialsShort(b.nama))) + '</div>'
+        +   '<div class="pf-brand-name">' + escHtml(b.nama) + (b.milik_sendiri ? ' <span style="font-size:11px;font-weight:800;color:#A30E3F">· Brand kamu</span>' : '') + '</div>'
+        +   '<div class="pf-brand-count">' + b.videos.length + ' video · 30 hari</div>'
         + '</div>'
         + '<div class="pf-video-row">'
         +   b.videos.map(function(v, i){
               return '<div class="pf-video-card"' + (v.video_id ? ' data-vid="' + escHtml(v.video_id) + '"' : '') + '>'
                 + (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
-                + '<div class="pf-vinfo"><div class="pf-vname">' + (v.creator_nama || 'Creator') + '</div>'
+                + '<div class="pf-vinfo"><div class="pf-vname">' + escHtml(v.creator_nama || 'Creator') + '</div>'
                 + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : '🤝 Campaign') + '</div></div>'
                 + '</div>';
             }).join('')
@@ -3239,6 +3243,28 @@ async function loadPlayfieldByBrand(){
   }catch(e){
     wrap.innerHTML = '<div class="card-sub">Gagal memuat video.</div>';
   }
+}
+
+// Bagian "Lagi live & laku": creator komunitas dengan pesanan LIVE lewat Saturnine dalam beberapa menit terakhir.
+function pfLiveHtml(live, menit){
+  if(!live || !live.length) return '';
+  const lalu = function(iso){ const m = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m + ' menit lalu'; };
+  return '<div class="pf-brand-block">'
+    + '<div class="pf-brand-head"><div class="pf-brand-logo" style="background:#FEE2E2">🔴</div>'
+    + '<div class="pf-brand-name">Lagi live &amp; laku</div><div class="pf-brand-count">' + live.length + ' creator · ' + menit + ' menit terakhir</div></div>'
+    + '<div style="display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px">'
+    + live.map(function(c){
+        return '<div style="flex:0 0 220px;border:1.5px solid ' + (c.milik_sendiri ? '#F87171' : 'var(--border)') + ';border-radius:14px;padding:12px;background:#fff">'
+          + '<div style="display:flex;gap:10px;align-items:center">'
+          + '<div style="width:38px;height:38px;border-radius:50%;background:#FDE2E7;color:#A30E3F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 38px">' + pfInitialsShort(c.creator_nama) + '</div>'
+          + '<div style="min-width:0"><div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.creator_nama || 'Creator') + '</div>'
+          + '<div style="font-size:11px;color:var(--gray-text)">' + escHtml(c.tier || '') + (c.tier ? ' · ' : '') + '<span style="color:#DC2626;font-weight:800">● LIVE</span></div></div></div>'
+          + (c.brand ? '<div style="margin-top:8px;font-size:12px;font-weight:700">' + escHtml(c.brand) + '</div>' : '')
+          + ((c.produk && c.produk.length) ? '<div style="font-size:11px;color:var(--gray-text);margin-top:2px;line-height:1.35">' + c.produk.map(escHtml).join('<br>') + '</div>' : '')
+          + '<div style="margin-top:8px;font-size:11px;color:var(--gray-text)">' + (c.pesanan ? '<b style="color:#146B50">' + c.pesanan + ' pesanan</b> · ' : '') + 'pesanan terakhir ' + lalu(c.terakhir) + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div></div>';
 }
 
 // Showcase: 1 video auto-play (mute, tidak bisa diklik) di baris brand yang paling kelihatan, gantian tiap 10 detik.
