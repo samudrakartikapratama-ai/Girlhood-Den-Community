@@ -5733,7 +5733,7 @@ async function loadJadwalLivePrompts(){
   const container = document.getElementById('jadwal-live-prompts');
   if(!container || !currentSession.memberId){ if(container) container.innerHTML = ''; return; }
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, jadwal_live, brand_products!inner(brand_id, nama_produk, brands(nama_brand))')
+    .select('id, tipe_sow_dipilih, jadwal_live, jadwal_dibuka_ulang_at, brand_products!inner(brand_id, nama_produk, brands(nama_brand))')
     .eq('member_id', currentSession.memberId).eq('status', 'approved').in('tipe_sow_dipilih', ['LIVE','VT_LIVE']);
   if(error || !data || !data.length){ container.innerHTML = ''; return; }
   const { data: conf } = await db.from('delivery_confirmations').select('brand_id, confirmed_at').eq('member_id', currentSession.memberId);
@@ -5747,12 +5747,15 @@ async function loadJadwalLivePrompts(){
     const g = grup[bp.brand_id] || (grup[bp.brand_id] = { nama: bp.brands ? bp.brands.nama_brand : '-', ids: [], produk: [], jadwal: null });
     g.ids.push(r.id); g.produk.push(bp.nama_produk);
     if(j && Array.isArray(j.sesi)) g.jadwal = j;
+    // Jadwal yang dibuka ulang tim internal: batas dihitung dari saat dibuka ulang.
+    if(r.jadwal_dibuka_ulang_at && (!g.buka || new Date(r.jadwal_dibuka_ulang_at) > new Date(g.buka))) g.buka = r.jadwal_dibuka_ulang_at;
   });
   const keys = Object.keys(grup);
   if(!keys.length){ container.innerHTML = ''; return; }
   const init = [];
   container.innerHTML = keys.map(function(bid, idx){
-    const g = grup[bid], k = konf[bid], j = g.jadwal;
+    const g = grup[bid], j = g.jadwal;
+    const k = (g.buka && (!konf[bid] || new Date(g.buka) > new Date(konf[bid]))) ? g.buka : konf[bid];
     const kepala = '<div class="jl2-kepala"><span class="jl2-ikon">🔴</span><div><b>Jadwal Live · ' + escHtml(g.nama) + '</b><div class="card-sub">' + g.produk.map(escHtml).join(', ') + '</div></div></div>';
     if(j && j.dikunci){
       const akhir = Math.max.apply(null, j.sesi.map(function(s){ return new Date(s.selesai).getTime(); }));
@@ -8000,7 +8003,7 @@ async function loadReportVtBrand(){
   const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, sow_waived_at, members(nama), brand_products!inner(nama_produk, brand_id), vt_reports(id, video_url, submitted_at, thumb_path)')
+    .select('id, tipe_sow_dipilih, sow_waived_at, members(nama), brand_products!inner(nama_produk, brand_id), logistics(sudah_dikirim), vt_reports(id, video_url, submitted_at, thumb_path)')
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved')
@@ -8021,18 +8024,21 @@ async function loadReportVtBrand(){
       return String(x.submitted_at || '').localeCompare(String(y.submitted_at || ''));
     });
     const count = reports.length;
+    // Barang yang belum ditandai terkirim oleh brand dipisah: creator belum bisa melapor, jadi bukan creator yang telat.
+    const logi = Array.isArray(r.logistics) ? r.logistics[0] : r.logistics;
+    const dikirim = !!(logi && logi.sudah_dikirim);
     return {
       nama: r.members ? r.members.nama : '-',
       produk: r.brand_products ? r.brand_products.nama_produk : '-',
-      required: required, reports: reports, count: count,
-      status: count === 0 ? 'belum' : (count < required ? 'jalan' : 'selesai')
+      required: required, reports: reports, count: count, dikirim: dikirim,
+      status: (count === 0 && !dikirim) ? 'kirim' : (count === 0 ? 'belum' : (count < required ? 'jalan' : 'selesai'))
     };
   });
-  const rank = { belum: 0, jalan: 1, selesai: 2 };
+  const rank = { kirim: 0, belum: 1, jalan: 2, selesai: 3 };
   rows.sort(function(a, b){ return (rank[a.status] - rank[b.status]) || (b.count - a.count); });
   reportVtBrandRows = rows;
 
-  const counts = { semua: rows.length, belum: 0, jalan: 0, selesai: 0 };
+  const counts = { semua: rows.length, kirim: 0, belum: 0, jalan: 0, selesai: 0 };
   let total = 0;
   rows.forEach(function(r){ counts[r.status]++; total += r.count; });
   statsEl.innerHTML = '<div class="rvt-stats">'
@@ -8040,8 +8046,9 @@ async function loadReportVtBrand(){
     + '<div class="rvt-stat"><span>SOW selesai</span><b style="color:#1E7A45">'+counts.selesai+'<small> / '+counts.semua+'</small></b></div>'
     + '<div class="rvt-stat"><span>Sedang berjalan</span><b style="color:#D3134F">'+counts.jalan+'</b></div>'
     + '<div class="rvt-stat"><span>Belum ada VT</span><b style="color:var(--amber-dark)">'+counts.belum+'</b></div>'
+    + (counts.kirim ? '<div class="rvt-stat"><span>Belum kamu tandai terkirim</span><b style="color:#7A5B00">'+counts.kirim+'</b></div>' : '')
     + '</div>';
-  tabsEl.innerHTML = [['semua','Semua'],['belum','Belum ada VT'],['jalan','Berjalan'],['selesai','Selesai']].map(function(t){
+  tabsEl.innerHTML = [['semua','Semua'],['belum','Belum ada VT'],['jalan','Berjalan'],['selesai','Selesai']].concat(counts.kirim ? [['kirim','Belum ditandai terkirim']] : []).map(function(t){
     return '<button type="button" class="rvt-tab" data-tab="'+t[0]+'" onclick="setReportVtBrandTab(\''+t[0]+'\')">'+t[1]+' <em>'+counts[t[0]]+'</em></button>';
   }).join('');
   renderReportVtBrandList();
@@ -8078,11 +8085,14 @@ function renderReportVtBrandList(){
     if(max > r.required && r.count === max) pills += '<span class="rvt-pill top">Paling produktif</span>';
     if(r.status === 'selesai') pills += '<span class="rvt-pill done">SOW selesai</span>';
     else if(r.status === 'jalan') pills += '<span class="rvt-pill jalan">Berjalan</span>';
+    else if(r.status === 'kirim') pills += '<span class="rvt-pill belum">📦 Belum kamu tandai terkirim</span>';
     else pills += '<span class="rvt-pill belum">Belum ada VT</span>';
     if(bonus > 0) pills += '<span class="rvt-pill bonus">+'+bonus+' VT ekstra</span>';
 
     let media;
-    if(r.count === 0){
+    if(r.count === 0 && r.status === 'kirim'){
+      media = '<div class="rvt-empty"><b>Barang belum kamu tandai terkirim</b><span>Creator baru bisa melapor video setelah barangnya ditandai terkirim. Isi resi pengirimannya ya. Kalau barang ternyata sudah sampai, creator juga bisa mengonfirmasinya sendiri.</span></div>';
+    } else if(r.count === 0){
       media = '<div class="rvt-empty"><b>Belum ada video yang disetor</b><span>Tim Girlhood Den sedang memantau progres creator ini.</span></div>';
     } else {
       media = '<div class="rvt-strip">' + r.reports.map(function(v, i){
