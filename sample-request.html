@@ -7942,26 +7942,44 @@ async function loadBelumPosting(){
     if(!j.valid){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">'+(j.error||'Gagal memuat.')+'</div>'; return; }
     if(!j.rows || j.rows.length === 0){ el.innerHTML = '<div class="card-sub">Semua creator sudah on-track, nggak ada yang perlu ditagih 🎉</div>'; return; }
 
-    el.innerHTML = j.rows.map(function(r){
-      let subLabel;
-      if(r.sudahDikirim === false){
-        // Brand belum kirim barangnya -- yang perlu ditagih brand, bukan creator.
-        subLabel = r.brandName + ' · <b style="color:var(--amber-dark)">barang belum dikirim brand</b> (VT ' + r.vtProgress + ')';
-      } else if(r.telatHari !== null){
-        subLabel = r.brandName + ' · telat ' + r.telatHari + ' hari (VT ' + r.vtProgress + ')';
-      } else if(r.deadline){
-        subLabel = r.brandName + ' · belum lewat H+3 (VT ' + r.vtProgress + ')';
-      } else {
-        subLabel = r.brandName + ' · belum ada konfirmasi terima (VT ' + r.vtProgress + ')';
-      }
-      const waMsg = encodeURIComponent('Halo ' + r.creatorName + ', sample kamu dari ' + r.brandName + ' (' + r.produkName + ') sudah dikirim. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏');
-      const waUrl = r.noHp ? 'https://wa.me/' + r.noHp.replace(/\D/g,'') + '?text=' + waMsg : null;
+    // Dikelompokkan per kondisi supaya tim tahu siapa yang perlu dikejar dan siapa yang tinggal setor link.
+    const KELOMPOK = [
+      ['sudah_posting_belum_lapor', '📊 Sudah posting di TikTok, belum setor link', 'Data TikTok mencatat video lewat link Saturnine, tapi laporannya di Girlhood Den masih kurang.'],
+      ['telat', '⏰ Telat (lewat H+3 sejak barang diterima)', ''],
+      ['belum_konfirmasi_terima', '📦 Barang sudah dikirim, belum dikonfirmasi diterima', ''],
+      ['dalam_batas', '🕒 Masih dalam batas H+3', ''],
+      ['menunggu_cek_internal', '👀 Laporannya menunggu dicek di Verifikasi VT', ''],
+      ['brand_belum_kirim', '🏷️ Brand belum menandai barang terkirim', 'Ditagih ke brand oleh tim AE. Kalau barang sebenarnya sudah sampai, creator bisa tekan "Barangnya Sudah Sampai" di Report VT.']
+    ];
+    const tgl = function(iso){ return iso ? new Date(iso).toLocaleDateString('id-ID', { day:'numeric', month:'short', timeZone:'Asia/Jakarta' }) : ''; };
+    const pesanWa = function(r){
+      if(r.kategori === 'sudah_posting_belum_lapor') return 'Halo ' + r.creatorName + ', TikTok mencatat kamu sudah posting ' + Math.min(r.videoTiktok, r.wajib) + ' video ' + r.produkName + ' lewat link Saturnine, tapi baru ' + (r.disetujui + r.menunggu) + ' yang dilaporkan di Girlhood Den. Yuk setor link videonya di menu Report VT ya 🙏';
+      if(r.kategori === 'belum_konfirmasi_terima') return 'Halo ' + r.creatorName + ', sample ' + r.produkName + ' dari ' + r.brandName + ' sudah dikirim. Kalau barangnya sudah sampai, yuk konfirmasi di Cek Status lalu lengkapi VT-nya ya 🙏';
+      if(r.kategori === 'brand_belum_kirim') return 'Halo ' + r.creatorName + ', apakah sample ' + r.produkName + ' dari ' + r.brandName + ' sudah sampai? Kalau sudah, tekan "Barangnya Sudah Sampai" di menu Report VT supaya bisa langsung lapor ya 🙏';
+      return 'Halo ' + r.creatorName + ', sample kamu dari ' + r.brandName + ' (' + r.produkName + ') sudah diterima. Masih ada VT yang belum kamu selesaikan sesuai SOW. Yuk segera lengkapi 🙏';
+    };
+    const kartu = function(r){
+      const info = [];
+      info.push(escHtml(r.brandName) + ' · ' + escHtml(r.produkName) + ' · VT ' + r.vtProgress + (r.menunggu ? ' (+' + r.menunggu + ' menunggu cek)' : ''));
+      if(r.kategori === 'telat') info.push('<b style="color:var(--red)">Telat ' + r.telatHari + ' hari</b> · diterima ' + tgl(r.konfirmasiAt));
+      else if(r.deadline) info.push('Diterima ' + tgl(r.konfirmasiAt) + ' · batas ' + tgl(r.deadline));
+      if(r.videoTiktok > 0) info.push('📊 TikTok: <b>' + r.videoTiktok + ' video</b> lewat link Saturnine');
+      if(r.dikonfirmasiCreator) info.push('📦 Dikonfirmasi sampai oleh creator (brand belum menandai terkirim)');
+      if(r.pengingatAt) info.push('🔔 Pengingat otomatis terkirim ' + tgl(r.pengingatAt));
+      if(r.beku) info.push('❄️ Akun dibekukan');
+      const waUrl = r.noHp ? 'https://wa.me/' + r.noHp.replace(/\D/g,'') + '?text=' + encodeURIComponent(pesanWa(r)) : null;
       return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
-        + '<div><b>'+escHtml(r.creatorName)+'</b><br><span class="card-sub">'+subLabel+' · '+escHtml(r.produkName)+'</span></div>'
+        + '<div><b>'+escHtml(r.creatorName)+'</b><div class="card-sub" style="line-height:1.55">'+info.join('<br>')+'</div></div>'
         + '<div style="display:flex;gap:6px;flex-shrink:0">'
         + (waUrl ? '<a class="btn btn-teal btn-sm" style="text-decoration:none" href="'+waUrl+'" target="_blank">📲 Kirim WA</a>' : '<span class="card-sub">No HP tidak ada</span>')
-        + '</div>'
-        + '</div></div>';
+        + '</div></div></div>';
+    };
+    el.innerHTML = KELOMPOK.map(function(k){
+      const isi = j.rows.filter(function(r){ return (r.kategori || 'dalam_batas') === k[0]; });
+      if(!isi.length) return '';
+      return '<div class="card-title" style="margin-top:14px">' + k[1] + ' · ' + isi.length + '</div>'
+        + (k[2] ? '<div class="card-sub" style="margin:-4px 0 8px">' + k[2] + '</div>' : '')
+        + isi.map(kartu).join('');
     }).join('');
   } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal menghubungi server.</div>'; }
 }
