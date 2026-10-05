@@ -6128,7 +6128,11 @@ function showVtRejectionPopup(errorType, message){
   const content = VT_REJECT_CONTENT[errorType] || VT_REJECT_CONTENT.default;
   document.getElementById('vt-reject-icon').textContent = content.icon;
   document.getElementById('vt-reject-title').textContent = content.title;
-  document.getElementById('vt-reject-body').textContent = message;
+  // Penjelasan tambahan: banyak creator mengira menyalin ulang link = video baru.
+  const catatanLink = errorType === 'old_video'
+    ? ' Catatan: link baru dari video lama tetap terbaca sebagai video lama, karena tanggalnya dibaca langsung dari TikTok.'
+    : (errorType === 'duplicate' ? ' Catatan: menyalin ulang link dari video yang sama tetap terbaca sebagai video yang sama.' : '');
+  document.getElementById('vt-reject-body').textContent = message + catatanLink;
   document.getElementById('vt-reject-popup').classList.add('open');
 }
 
