@@ -1975,7 +1975,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
           </div>
         </div>
       </div>
-      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="submitSelfReport()">Ajukan Sekarang</button>
+      <button class="btn btn-primary" id="sr-submit-btn" style="width:100%;margin-top:12px" onclick="submitSelfReport()">Ajukan Sekarang</button>
     </div>
   </div>
 </div></div>
@@ -12677,50 +12677,71 @@ function setSrHeroPosition(animated){
   document.querySelectorAll('#sr-hero-dots .dot').forEach((d,i) => d.classList.toggle('active', i===srHeroIdx));
 }
 
+// Foto bukti self-report: selalu diubah ke JPEG (maks 1600px) sebelum dikirim, supaya cepat terkirim
+// dan selalu bisa dilihat internal. Format yang tidak bisa dibaca browser (mis. HEIC/HEIF) ditolak dengan pesan jelas.
+let srFotoJpeg = null;
+function srTandaiFoto(card, inner, html, adaFoto){
+  card.classList.toggle('has-photo', adaFoto);
+  inner.innerHTML = html;
+}
 function handleSrFotoChange(input){
   const card = document.getElementById('sr-upload-card');
   const inner = document.getElementById('sr-upload-inner');
   const file = input.files[0];
+  srFotoJpeg = null;
   if(!file){ return; }
-  const reader = new FileReader();
-  reader.onload = function(){
-    card.classList.add('has-photo');
-    inner.innerHTML = '<img src="'+reader.result+'"><div class="sr-upload-overlay">Tap buat ganti foto</div>';
+  srTandaiFoto(card, inner, '<div class="sr-upload-label">Memproses foto...</div>', false);
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = function(){
+    const skala = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.naturalWidth * skala));
+    c.height = Math.max(1, Math.round(img.naturalHeight * skala));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    const dataUrl = c.toDataURL('image/jpeg', 0.85);
+    srFotoJpeg = dataUrl.split(',')[1];
+    srTandaiFoto(card, inner, '<img src="' + dataUrl + '"><div class="sr-upload-overlay">Tap buat ganti foto</div>', true);
   };
-  reader.readAsDataURL(file);
+  img.onerror = function(){
+    URL.revokeObjectURL(url);
+    input.value = '';
+    srTandaiFoto(card, inner, '<div class="sr-upload-icon">⚠️</div><div class="sr-upload-label">Format foto ini belum bisa dibaca.<br>Screenshot fotonya, lalu upload screenshot-nya ya.</div>', false);
+  };
+  img.src = url;
 }
 
 async function submitSelfReport(){
   const brandProductId = srSelectedProductId;
-  const fotoInput = document.getElementById('sr-foto');
-  const file = fotoInput.files[0];
+  const btn = document.getElementById('sr-submit-btn');
   if(!brandProductId){ alert('Pilih produk dulu.'); return; }
-  if(!file){ alert('Upload foto bukti dulu.'); return; }
-  if(file.size > 5*1024*1024){ alert('Ukuran foto maksimal 5MB.'); return; }
-
-  const reader = new FileReader();
-  reader.onload = async function(){
-    const base64 = reader.result.split(',')[1];
-    try {
-      const { data: { session } } = await db.auth.getSession();
-      const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
-        body: JSON.stringify({ action:'submit', brandProductId, fotoBase64: base64, fotoContentType: file.type })
-      });
-      const j = await res.json();
-      if(!j.valid){
-        if(j.errorType === 'already_approved'){
-          const goVt = confirm((j.error || 'Produk ini udah pernah di-approve.') + '\n\nMau langsung ke Report VT sekarang?');
-          if(goVt){ closeModal('m-selfreport'); handleReportVtClick(); }
-          return;
-        }
-        alert(j.error || 'Gagal mengajukan.'); return;
+  if(!srFotoJpeg){ alert('Upload foto bukti dulu. Kalau fotonya tidak muncul, screenshot fotonya lalu upload screenshot-nya ya.'); return; }
+  if(btn && btn.disabled) return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Mengirim...'; }
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/creator-self-report-product', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({ action:'submit', brandProductId, fotoBase64: srFotoJpeg, fotoContentType: 'image/jpeg' })
+    });
+    const j = await res.json();
+    if(!j.valid){
+      if(j.errorType === 'already_approved'){
+        const goVt = confirm((j.error || 'Produk ini udah pernah di-approve.') + '\n\nMau langsung ke Report VT sekarang?');
+        if(goVt){ closeModal('m-selfreport'); handleReportVtClick(); }
+        return;
       }
-      alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
-      closeModal('m-selfreport');
-    } catch(e){ alert('Gagal menghubungi server.'); }
-  };
-  reader.readAsDataURL(file);
+      alert(j.error || 'Gagal mengajukan.'); return;
+    }
+    alert('Pengajuan terkirim! Tunggu review internal, nanti muncul di Notifikasi kalau udah diputusin.');
+    srFotoJpeg = null;
+    closeModal('m-selfreport');
+  } catch(e){
+    alert('Gagal menghubungi server. Cek koneksi internet, lalu coba lagi.');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Ajukan Sekarang'; }
+  }
 }
 
 function switchSrStage(stage){
