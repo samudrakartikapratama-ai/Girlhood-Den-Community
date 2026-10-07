@@ -5414,7 +5414,7 @@ async function loadCekStatus(){
   try { await db.rpc('expire_stale_requests'); } catch(e){ /* non-fatal, lanjut aja */ }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at, nomor_resi)')
+    .select('id, status, tipe_sow_dipilih, requested_at, decided_at, rejection_template, brand_products(nama_produk, brand_id, brands(nama_brand)), shipments(tanggal_janji_kirim, finalized_at), logistics(sudah_dikirim, confirmed_at, nomor_resi), vt_reports(id, status)')
     .eq('member_id', currentSession.memberId)
     .order('requested_at', { ascending: false });
 
@@ -5479,6 +5479,7 @@ async function loadCekStatus(){
 
     if(sudahDikirim){
       const anchor = konfirmasiTerimaUntuk(confirmations, p.brand_id, (r.logistics && r.logistics.confirmed_at) || r.requested_at);
+      const adaVideo = (r.vt_reports || []).some(function(v){ return v.status === 'approved'; }); // sudah ada video = sudah diterima
       let deadlineHtml = '';
       if(anchor){
         const anchorDate = new Date(anchor);
@@ -5488,7 +5489,7 @@ async function loadCekStatus(){
           + '📮 Batas posting semua produk dari brand ini: <b>'+fmt(h3)+'</b> (H+3 dari konfirmasi terima)<br>'
           + '<span style="color:var(--gray-text)">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi 1 konten sebelum tanggal ini.</span>'
           + '</div>';
-      } else {
+      } else if(!adaVideo){
         deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--amber-dark);padding-top:6px;color:var(--amber-dark)">'
           + '📦 Barangnya sudah sampai? Konfirmasi di notifikasi di atas ya. Batas waktu SOW baru mulai dihitung setelah kamu konfirmasi.'
           + '</div>';
@@ -5500,7 +5501,7 @@ async function loadCekStatus(){
         + '<b>Riwayat:</b><br>✅ Di-approve'
         + (r.shipments && r.shipments.tanggal_janji_kirim ? '<br>📦 Janji kirim: ' + tglPanjang(r.shipments.tanggal_janji_kirim) : '')
         + '<br>🚚 Dikirim: <b style="color:var(--teal)">' + (r.logistics.confirmed_at ? tglPanjang(r.logistics.confirmed_at) : 'sudah dikirim') + '</b>'
-        + '<br>📍 Diterima: ' + (anchor ? '<b>' + tglPanjang(anchor) + '</b>' : '<span style="color:var(--amber-dark)">belum dikonfirmasi</span>')
+        + '<br>📍 Diterima: ' + (anchor ? '<b>' + tglPanjang(anchor) + '</b>' : (adaVideo ? '<b>sudah</b>' : '<span style="color:var(--amber-dark)">belum dikonfirmasi</span>'))
         + (r.logistics.nomor_resi ? '<br>🔖 Nomor Resi: <b>'+r.logistics.nomor_resi+'</b>' : '')
         + '</div>'
         + deadlineHtml
@@ -6080,6 +6081,7 @@ async function loadVtReportPage(){
   // Sudah dikirim tapi belum dikonfirmasi diterima: tampil "Dalam pengiriman", belum ditagih (tetap bisa dilaporkan).
   function sudahDiterima(r){
     if(r.sumber === 'self_report') return true;
+    if((r.vt_reports || []).length > 0) return true; // sudah ada video = barang pasti sudah diterima
     if((r.self_reported_products || []).some(function(x){ return x.status === 'approved'; })) return true;
     const logi = Array.isArray(r.logistics) ? r.logistics[0] : r.logistics;
     const bp = r.brand_products || {};
