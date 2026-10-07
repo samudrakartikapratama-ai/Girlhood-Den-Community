@@ -5386,6 +5386,20 @@ async function loadCancelQuota(){
   } catch(e){ /* non-fatal */ }
 }
 
+// Konfirmasi terima dicatat per brand. Untuk satu paket, yang dihitung hanya konfirmasi PERTAMA setelah paket itu dikirim
+// (atau setelah request dibuat bila tanggal kirim tidak tercatat), supaya konfirmasi paket lama tidak terbawa ke paket baru.
+function konfirmasiTerimaUntuk(konfirmasi, brandId, sejak){
+  const batas = sejak ? new Date(sejak).getTime() - 60000 : 0;
+  let hasil = null;
+  (konfirmasi || []).forEach(function(c){
+    if(c.brand_id !== brandId) return;
+    const t = new Date(c.confirmed_at).getTime();
+    if(t >= batas && (!hasil || t < new Date(hasil).getTime())) hasil = c.confirmed_at;
+  });
+  return hasil;
+}
+function tglPanjang(d){ return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }); }
+
 async function loadCekStatus(){
   const container = document.getElementById('c3-status-list');
   container.innerHTML = '<div class="card-sub">Memuat status...</div>';
@@ -5464,27 +5478,29 @@ async function loadCekStatus(){
     const sudahFinalKirim = r.shipments && r.shipments.finalized_at;
 
     if(sudahDikirim){
-      const anchor = brandAnchor[p.brand_id];
+      const anchor = konfirmasiTerimaUntuk(confirmations, p.brand_id, (r.logistics && r.logistics.confirmed_at) || r.requested_at);
       let deadlineHtml = '';
       if(anchor){
         const anchorDate = new Date(anchor);
         const h3 = new Date(anchorDate); h3.setDate(h3.getDate()+3);
         const fmt = function(d){ return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); };
         deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
-          + '🤳 Kamu konfirmasi terima: <b>'+fmt(anchorDate)+'</b><br>'
           + '📮 Batas posting semua produk dari brand ini: <b>'+fmt(h3)+'</b> (H+3 dari konfirmasi terima)<br>'
           + '<span style="color:var(--gray-text)">Kalau ada produk lain dari brand yang sama, boleh dirapel jadi 1 konten sebelum tanggal ini.</span>'
           + '</div>';
       } else {
         deadlineHtml = '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--amber-dark);padding-top:6px;color:var(--amber-dark)">'
-          + '⚠️ Belum ada konfirmasi terima buat brand ini. Cek notifikasi di atas buat konfirmasi barangnya udah sampai ya, biar batas waktu SOW-nya mulai kehitung.'
+          + '📦 Barangnya sudah sampai? Konfirmasi di notifikasi di atas ya. Batas waktu SOW baru mulai dihitung setelah kamu konfirmasi.'
           + '</div>';
       }
       return '<div class="status-item shipping">'
         + '<div style="font-weight:800;color:var(--teal);margin-bottom:2px">Sudah dikirim, cek tas online kamu ya 📦</div>'
         + namaLengkap
         + '<div class="card-sub" style="margin-top:8px;border-top:1px dashed var(--teal);padding-top:6px">'
-        + '<b>Riwayat:</b><br>✅ Di-approve<br>📦 Janji kirim: '+new Date(r.shipments.tanggal_janji_kirim).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+'<br>🚚 Status Logistik: <b style="color:var(--teal)">sudah dikonfirmasi dikirim</b>'
+        + '<b>Riwayat:</b><br>✅ Di-approve'
+        + (r.shipments && r.shipments.tanggal_janji_kirim ? '<br>📦 Janji kirim: ' + tglPanjang(r.shipments.tanggal_janji_kirim) : '')
+        + '<br>🚚 Dikirim: <b style="color:var(--teal)">' + (r.logistics.confirmed_at ? tglPanjang(r.logistics.confirmed_at) : 'sudah dikirim') + '</b>'
+        + '<br>📍 Diterima: ' + (anchor ? '<b>' + tglPanjang(anchor) + '</b>' : '<span style="color:var(--amber-dark)">belum dikonfirmasi</span>')
         + (r.logistics.nomor_resi ? '<br>🔖 Nomor Resi: <b>'+r.logistics.nomor_resi+'</b>' : '')
         + '</div>'
         + deadlineHtml
@@ -6049,7 +6065,7 @@ async function loadVtReportPage(){
   }
 
   const { data, error } = await db.from('sample_requests')
-    .select('id, tipe_sow_dipilih, sumber, sow_waived_at, brand_products(brand_id, nama_produk, link_affiliate, brands(nama_brand)), logistics(sudah_dikirim), self_reported_products(status), vt_reports(id)')
+    .select('id, requested_at, tipe_sow_dipilih, sumber, sow_waived_at, brand_products(brand_id, nama_produk, link_affiliate, brands(nama_brand)), logistics(sudah_dikirim, confirmed_at), self_reported_products(status), vt_reports(id)')
     .eq('member_id', currentSession.memberId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved');
@@ -6058,6 +6074,16 @@ async function loadVtReportPage(){
     select.innerHTML = '<option value="">Gagal memuat</option>';
     showDbError('memuat approved produk', error);
     return;
+  }
+
+  const { data: konfirmasiSaya } = await db.from('delivery_confirmations').select('brand_id, confirmed_at').eq('member_id', currentSession.memberId);
+  // Sudah dikirim tapi belum dikonfirmasi diterima: tampil "Dalam pengiriman", belum ditagih (tetap bisa dilaporkan).
+  function sudahDiterima(r){
+    if(r.sumber === 'self_report') return true;
+    if((r.self_reported_products || []).some(function(x){ return x.status === 'approved'; })) return true;
+    const logi = Array.isArray(r.logistics) ? r.logistics[0] : r.logistics;
+    const bp = r.brand_products || {};
+    return !!konfirmasiTerimaUntuk(konfirmasiSaya, bp.brand_id, (logi && logi.confirmed_at) || r.requested_at);
   }
 
   // Produk yang barangnya belum dikirim brand JANGAN ditagih VT. Jalur 'Sudah Punya Produk'
@@ -6123,6 +6149,10 @@ async function loadVtReportPage(){
       // Produk milik sendiri: tidak ada target, cuma catatan video yang sudah disetor.
       return '<div class="status-item" style="border-left:3px solid #E8A419"><b>'+escHtml(bp.nama_produk||'-')+'</b>'
         + '<div class="card-sub" style="margin-top:2px">📸 Produk milikmu · ' + (done > 0 ? done + ' video disetor' : 'belum ada video') + '</div>' + linkBtn + '</div>';
+    }
+    if(r.sumber !== 'self_report' && r.tipe_sow_dipilih !== 'HK' && !sudahDiterima(r)){
+      return '<div class="status-item shipping"><b>'+escHtml(bp.nama_produk||'-')+'</b>'
+        + '<div class="card-sub" style="margin-top:2px">🚚 Dalam pengiriman · batas waktu dihitung setelah kamu konfirmasi terima</div>' + linkBtn + '</div>';
     }
     if(r.tipe_sow_dipilih === 'HK'){
       return '<div class="status-item" style="border-left:3px solid #26215C"><b>'+escHtml(bp.nama_produk||'-')+'</b>'
