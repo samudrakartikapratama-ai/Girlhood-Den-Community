@@ -1081,6 +1081,10 @@ input[type=file]::file-selector-button{border:0;background:var(--pink);color:#ff
 .hk-pr-ft img{width:100%;height:100%;object-fit:cover}
 .hk-pr-tx{flex:1;min-width:0}.hk-pr-tx b{display:block;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dark)}.hk-pr-tx span{font-size:11px;color:var(--gray-text);font-weight:600}
 .hk-salin{border:none;border-radius:999px;padding:7px 11px;font-size:11.5px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit}
+.hk-pr-wrap{margin-bottom:10px}
+.hk-btn-sample{width:100%;min-height:44px;margin-top:6px;border:0;border-radius:12px;background:#26215C;color:#fff;font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.hk-btn-sample:disabled{opacity:.6}
+.hk-sample-ket{font-size:12.5px;line-height:1.45;color:#4A3A5C;background:#F3F0FB;border-radius:10px;padding:8px 10px;margin-top:6px}
 .hk-rc{display:flex;align-items:center;gap:10px;border:1.5px solid #F1ECF1;border-radius:12px;padding:8px 10px;margin-bottom:6px;background:#fff}
 .hk-rc.saya{border-color:#7F77DD;background:#EEEDFE}
 .hk-rc-no{width:26px;height:26px;border-radius:50%;background:#F1ECF1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
@@ -5203,7 +5207,8 @@ function formatTanggalSingkat(iso){
 const SOW_BADGE = {
   VT: '<span class="sow-badge vt">VIDEO · 3 video</span>',
   VT_LIVE: '<span class="sow-badge vt_live">VIDEO + LIVE (aturan lama)</span>',
-  LIVE: '<span class="sow-badge live">LIVE · 3 sesi</span>'
+  LIVE: '<span class="sow-badge live">LIVE · 3 sesi</span>',
+  HK: '<span class="sow-badge vt" style="background:#26215C;color:#fff">🏴‍☠️ Peserta Harta Karun · tanpa SOW</span>'
 };
 const PIECES_RECO = '💡 Rekomendasi: kirim <b>&gt;1 pieces</b> untuk creator VT+Live/Live, biar produknya tetap ada buat etalase pas dia jualan — nggak abis kepake konten doang.';
 
@@ -6073,7 +6078,8 @@ async function loadVtReportPage(){
     }).join('');
   }
 
-  const semuaWajibVt = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0 && !r.sow_waived_at; });
+  // Produk Harta Karun ikut bisa dilaporkan (tanpa target jumlah video).
+  const semuaWajibVt = (data || []).filter(function(r){ return (VT_REQUIRED[r.tipe_sow_dipilih] > 0 && !r.sow_waived_at) || r.tipe_sow_dipilih === 'HK'; });
   const needVt = semuaWajibVt.filter(sudahDiTangan);
   const belumDikirim = semuaWajibVt.filter(function(r){ return !sudahDiTangan(r); });
   const dibebaskan = (data || []).filter(function(r){ return VT_REQUIRED[r.tipe_sow_dipilih] > 0 && r.sow_waived_at; });
@@ -6100,7 +6106,7 @@ async function loadVtReportPage(){
 
   // Placeholder yang nggak kepilih otomatis, biar creator nggak salah kirim VT ke produk pertama.
   select.innerHTML = '<option value="" selected disabled>-- Pilih produk dulu --</option>' + needVt.map(function(r){
-    return '<option value="'+r.id+'">'+(r.sumber === 'self_report' ? '📸 ' : '')+escHtml(labelProduk(r))+'</option>';
+    return '<option value="'+r.id+'">'+(r.sumber === 'self_report' ? '📸 ' : (r.tipe_sow_dipilih === 'HK' ? '🏴‍☠️ ' : ''))+escHtml(labelProduk(r))+'</option>';
   }).join('');
   select.value = '';
 
@@ -6116,6 +6122,10 @@ async function loadVtReportPage(){
       // Produk milik sendiri: tidak ada target, cuma catatan video yang sudah disetor.
       return '<div class="status-item" style="border-left:3px solid #E8A419"><b>'+escHtml(bp.nama_produk||'-')+'</b>'
         + '<div class="card-sub" style="margin-top:2px">📸 Produk milikmu · ' + (done > 0 ? done + ' video disetor' : 'belum ada video') + '</div>' + linkBtn + '</div>';
+    }
+    if(r.tipe_sow_dipilih === 'HK'){
+      return '<div class="status-item" style="border-left:3px solid #26215C"><b>'+escHtml(bp.nama_produk||'-')+'</b>'
+        + '<div class="card-sub" style="margin-top:2px">🏴‍☠️ Harta Karun · tanpa kewajiban · ' + (done > 0 ? done + ' video disetor' : 'minimal 1 posting atau 1 live') + '</div>' + linkBtn + '</div>';
     }
     return '<div class="status-item approved"><b>'+escHtml(bp.nama_produk||'-')+'</b> · '+done+'/'+required+' video'+flag+linkBtn+'</div>';
   }).join('') + infoLain;
@@ -7737,7 +7747,7 @@ const SOW_KEWAJIBAN = {
   VT_LIVE: ['3 video testimoni', '3 sesi live, minimal 2 jam per sesi, tanggal berbeda', 'Batas 3 hari setelah konfirmasi barang sampai', 'Wajib pakai link affiliate Girlhood Den'],
   LIVE: ['Minimal 3 sesi live, 2 jam per sesi, maksimal 1 sesi per hari', 'Isi jadwal di Cek Status setelah disetujui', 'Sesi 1 paling lambat 3 hari & semua sesi paling lambat 5 hari setelah barang diterima', 'Wajib pakai link affiliate Girlhood Den']
 };
-const SOW_LABEL = { VT: 'Video', VT_LIVE: 'VT & Live', LIVE: 'Live' };
+const SOW_LABEL = { VT: 'Video', VT_LIVE: 'VT & Live', LIVE: 'Live', HK: 'Harta Karun' };
 
 function sowOptionHtml(tipe, judul, deskripsi){
   return '<button type="button" class="sow-opt" aria-pressed="false" data-sow="' + tipe + '" onclick="pilihSow(this)">'
@@ -8007,7 +8017,7 @@ async function loadReportVtBrand(){
     .eq('brand_products.brand_id', currentSession.brandId)
     .eq('status', 'approved')
     .eq('vt_reports.status', 'approved')
-    .in('tipe_sow_dipilih', ['VT','VT_LIVE']);
+    .in('tipe_sow_dipilih', ['VT','VT_LIVE','HK']);
 
   if(error){
     list.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat data.</div>';
@@ -8019,7 +8029,8 @@ async function loadReportVtBrand(){
   }
 
   const rows = data.filter(function(r){ return !r.sow_waived_at; }).map(function(r){
-    const required = VT_REQUIRED[r.tipe_sow_dipilih] || 3;
+    const hk = r.tipe_sow_dipilih === 'HK';
+    const required = hk ? 0 : (VT_REQUIRED[r.tipe_sow_dipilih] || 3);
     const reports = (r.vt_reports || []).slice().sort(function(x, y){
       return String(x.submitted_at || '').localeCompare(String(y.submitted_at || ''));
     });
@@ -8030,11 +8041,11 @@ async function loadReportVtBrand(){
     return {
       nama: r.members ? r.members.nama : '-',
       produk: r.brand_products ? r.brand_products.nama_produk : '-',
-      required: required, reports: reports, count: count, dikirim: dikirim,
-      status: (count === 0 && !dikirim) ? 'kirim' : (count === 0 ? 'belum' : (count < required ? 'jalan' : 'selesai'))
+      required: required, reports: reports, count: count, dikirim: dikirim, hk: hk,
+      status: (count === 0 && !dikirim) ? 'kirim' : (hk ? 'hk' : (count === 0 ? 'belum' : (count < required ? 'jalan' : 'selesai')))
     };
   });
-  const rank = { kirim: 0, belum: 1, jalan: 2, selesai: 3 };
+  const rank = { kirim: 0, belum: 1, jalan: 2, hk: 2, selesai: 3 };
   rows.sort(function(a, b){ return (rank[a.status] - rank[b.status]) || (b.count - a.count); });
   reportVtBrandRows = rows;
 
@@ -8086,8 +8097,9 @@ function renderReportVtBrandList(){
     if(r.status === 'selesai') pills += '<span class="rvt-pill done">SOW selesai</span>';
     else if(r.status === 'jalan') pills += '<span class="rvt-pill jalan">Berjalan</span>';
     else if(r.status === 'kirim') pills += '<span class="rvt-pill belum">📦 Belum kamu tandai terkirim</span>';
+    else if(r.status === 'hk') pills += '<span class="rvt-pill jalan">🏴‍☠️ Peserta Harta Karun' + (r.count ? ' · ' + r.count + ' video' : '') + '</span>';
     else pills += '<span class="rvt-pill belum">Belum ada VT</span>';
-    if(bonus > 0) pills += '<span class="rvt-pill bonus">+'+bonus+' VT ekstra</span>';
+    if(bonus > 0 && !r.hk) pills += '<span class="rvt-pill bonus">+'+bonus+' VT ekstra</span>';
 
     let media;
     if(r.count === 0 && r.status === 'kirim'){
@@ -11068,7 +11080,9 @@ async function hkDetail(id, peran){
     + '<div class="hk-statrow"><div><b>' + c.peserta + '</b><span>peserta</span></div><div><b>' + hkRp(c.mode === 'gabungan' ? c.total_gmv_peserta : c.total_gmv) + '</b><span>' + (c.mode === 'gabungan' ? 'GMV gabungan' : 'total GMV') + '</span></div><div><b>' + (c.pemenang || []).length + '</b><span>pemenang</span></div></div></div>'
     + '<div class="hk-judul">Target & hadiah <span>' + (c.mode === 'gabungan' ? 'target gabungan peserta' : 'dihitung per creator') + '</span></div><div class="hk-tangga">' + hkTangga(c.level, '#F6F1F4') + '</div>'
     + (c.benefit && c.benefit.length ? '<div class="hk-judul">Benefit peserta</div><div class="hk-tangga">' + c.benefit.map(function(b){ return '<span class="hk-anak" style="background:#E1F5EE;color:#085041">' + escHtml(b) + '</span>'; }).join('') + '</div>' : '')
-    + '<div class="hk-judul">Produk</div>' + c.produk.map(function(p){ return hkProdukBaris(p, '#26215C'); }).join('');
+    + '<div class="hk-judul">Produk</div>'
+    + (peran === 'creator' && c.status === 'tayang' && sisa >= 0 ? '<div class="hk-sample-ket" style="margin:-2px 0 8px">Sample Harta Karun <b>tanpa kewajiban video</b> dan tidak dihitung kuota. Syaratnya cukup minimal 1 posting atau 1 live produknya selama periode ini.</div>' : '')
+    + c.produk.map(function(p){ return peran === 'creator' ? hkProdukCreator(c, p, c.status === 'tayang' && sisa >= 0) : hkProdukBaris(p, '#26215C'); }).join('');
   if(c.pemenang && c.pemenang.length){
     html += '<div class="hk-judul">Pemenang</div>' + c.pemenang.map(function(w){
       return '<div class="hk-rc">' + htmlAvatar(w.foto, w.nama, w.tier, 30) + '<span class="hk-rc-nm">' + escHtml(w.nama || '-') + '<em>' + escHtml(w.hadiah) + ' · ' + hkRp(w.gmv) + '</em></span>'
@@ -11202,7 +11216,7 @@ async function hkCreatorBeranda(){
     return '<button type="button" class="hk-gk' + (i === 0 ? ' besar' : '') + '" style="background:' + w[0] + ';color:' + w[1] + '" onclick="hkDetail(\'' + c.id + '\',\'creator\')">'
       + '<span class="hk-chip" style="background:' + w[2] + ';color:' + w[1] + '">' + (c.payday ? 'Payday' : 'Sisa ' + hkSisaHari(c.selesai) + ' hari') + '</span>'
       + '<b class="hk-gk-nm">' + escHtml(c.brand) + ' · ' + escHtml(c.nama) + '</b><span class="hk-gk-sub">' + c.produk.length + ' produk · ' + HK_JALUR[c.jalur] + '</span>'
-      + (c.saya_ikut ? '<b class="hk-gk-rp">' + hkRp(gmv) + '</b><span class="hk-bar"><span style="width:' + pct + '%;background:' + w[1] + '"></span></span><span class="hk-gk-sub">' + (next ? 'Kurang ' + hkRp(next.target - gmv) + ' lagi untuk hadiah ' + hkHadiah(next.hadiah) : '🎁 Semua target tembus!') + '</span>'
+      + (c.saya_ikut ? '<b class="hk-gk-rp">' + hkRp(gmv) + '</b><span class="hk-bar"><span style="width:' + pct + '%;background:' + w[1] + '"></span></span><span class="hk-gk-sub">' + (next ? hkRp(gmv) + ' dari target ' + hkRp(next.target) + '<br>🎁 Hadiah: ' + hkHadiah(next.hadiah) : '🎁 Semua target tembus!') + '</span>'
         : '<span class="hk-gk-ikut" style="background:' + w[1] + '">Ikut sekarang</span>')
       + '</button>';
   }).join('') + '</div>';
@@ -11234,6 +11248,28 @@ async function hkCreatorSemua(){
       + (!c.saya_ikut && c.status === 'tayang' && hkSisaHari(c.selesai) >= 0 ? '<button type="button" style="background:' + w[1] + ';color:#fff" onclick="hkIkut(this,\'' + c.id + '\')">Ikut sekarang</button>' : '') + '</div></div>';
   }).join('');
   el.innerHTML = html;
+}
+// Baris produk di detail Harta Karun untuk creator: tombol minta sample menyesuaikan kondisi creator.
+// Sample Harta Karun tanpa SOW dan di luar kuota; syaratnya minimal 1 posting atau 1 live selama periode.
+function hkProdukCreator(c, p, bolehAksi){
+  let aksi = '';
+  if(bolehAksi){
+    const st = p.sample_saya || 'boleh';
+    if(st === 'boleh') aksi = '<button type="button" class="hk-btn-sample" onclick="hkMintaSample(this,\'' + c.id + '\',\'' + p.id + '\')">🎁 Ikut & minta sample</button>';
+    else if(st === 'diproses') aksi = '<div class="hk-sample-ket">⏳ Request sample kamu sedang diproses</div>';
+    else if(st === 'punya') aksi = '<div class="hk-sample-ket">✅ Kamu sudah punya produknya' + (c.saya_ikut ? '' : ', tinggal ikut tantangannya') + '</div>';
+    else if(st === 'diblokir') aksi = '<div class="hk-sample-ket">Belum bisa minta sample: sample Harta Karun sebelumnya belum ada posting atau live-nya.</div>';
+  }
+  return '<div class="hk-pr-wrap">' + hkProdukBaris(p, '#26215C') + aksi + '</div>';
+}
+async function hkMintaSample(btn, id, produkId){
+  if(!confirm('Minta sample produk ini?\n\nTanpa kewajiban video. Syaratnya cukup minimal 1 posting atau 1 live produk ini selama periode Harta Karun.')) return;
+  btn.disabled = true; const t = btn.textContent; btn.textContent = 'Mengirim...';
+  const { error } = await db.rpc('creator_hk_minta_sample', { p_id: id, p_product: produkId });
+  btn.disabled = false; btn.textContent = t;
+  if(error){ alert(hkPesanError(error)); return; }
+  showToast('Request sample terkirim! Kamu juga sudah tercatat sebagai peserta 🔥');
+  window._hkCreatorCache = null; await hkCreatorAmbil(); hkDetail(id, 'creator');
 }
 async function hkIkut(btn, id){
   btn.disabled = true;
