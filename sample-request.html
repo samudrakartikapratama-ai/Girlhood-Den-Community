@@ -3237,7 +3237,7 @@ async function loadPlayfieldByBrand(){
               return '<div class="pf-video-card"' + (v.video_id ? ' data-vid="' + escHtml(v.video_id) + '"' : '') + '>'
                 + (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
                 + '<div class="pf-vinfo"><div class="pf-vname">' + escHtml(v.creator_nama || 'Creator') + '</div>'
-                + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : '🤝 Campaign') + '</div></div>'
+                + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : (v.source === 'hk' ? '🏴‍☠️ HK' : '🤝 Campaign')) + '</div></div>'
                 + '</div>';
             }).join('')
         + '</div>'
@@ -3263,7 +3263,7 @@ function pfLiveHtml(live, menit){
           + '<div style="width:38px;height:38px;border-radius:50%;background:#FDE2E7;color:#A30E3F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 38px">' + pfInitialsShort(c.creator_nama) + '</div>'
           + '<div style="min-width:0"><div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.creator_nama || 'Creator') + '</div>'
           + '<div style="font-size:11px;color:var(--gray-text)">' + escHtml(c.tier || '') + (c.tier ? ' · ' : '') + '<span style="color:#DC2626;font-weight:800">● LIVE</span></div></div></div>'
-          + (c.hk ? '<div style="margin-top:8px"><span style="display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#26215C;color:#fff">🏴‍☠️ Harta Karun</span></div>' : '')
+          + (c.hk ? '<div style="margin-top:8px"><span style="display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#26215C;color:#fff">🏴‍☠️ HK</span></div>' : '')
           + (c.brand ? '<div style="margin-top:8px;font-size:12px;font-weight:700">' + escHtml(c.brand) + '</div>' : '')
           + ((c.produk && c.produk.length) ? '<div style="font-size:11px;color:var(--gray-text);margin-top:2px;line-height:1.35">' + c.produk.map(escHtml).join('<br>') + '</div>' : '')
           + '<div style="margin-top:8px;font-size:11px;color:var(--gray-text)">' + (c.pesanan ? '<b style="color:#146B50">' + c.pesanan + ' pesanan</b> · ' : '') + 'pesanan terakhir ' + lalu(c.terakhir) + '</div>'
@@ -5209,7 +5209,7 @@ const SOW_BADGE = {
   VT: '<span class="sow-badge vt">VIDEO · 3 video</span>',
   VT_LIVE: '<span class="sow-badge vt_live">VIDEO + LIVE (aturan lama)</span>',
   LIVE: '<span class="sow-badge live">LIVE · 3 sesi</span>',
-  HK: '<span class="sow-badge vt" style="background:#26215C;color:#fff">🏴‍☠️ Peserta Harta Karun · tanpa SOW</span>'
+  HK: '<span class="sow-badge vt" style="background:#26215C;color:#fff">🏴‍☠️ Peserta Harta Karun</span>'
 };
 const PIECES_RECO = '💡 Rekomendasi: kirim <b>&gt;1 pieces</b> untuk creator VT+Live/Live, biar produknya tetap ada buat etalase pas dia jualan — nggak abis kepake konten doang.';
 
