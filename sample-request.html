@@ -3602,28 +3602,33 @@ async function loadPlayfieldMatches(){
   (data || []).forEach(function(r){ (perTier[r.tier] = perTier[r.tier] || []).push(r); });
   pfLastMatches = (data || []).map(function(r){ return { nama: r.nama }; });
   window._pfTopTier = perTier;
-  const pertama = ['Solitaire','Diamond','Gold','Bronze'].find(function(t){ return (perTier[t] || []).length; }) || 'Bronze';
-  pfTampilTier(pertama);
+  pfTampilTier('Semua');
 }
 function pfTampilTier(tierAktif){
   const wrap = document.getElementById('pf-matches');
   const perTier = window._pfTopTier || {};
-  const warna = { Solitaire:'#4B2F8F', Diamond:'#17577F', Gold:'#7A5A00', Bronze:'#7F4E2B' };
-  const tabs = ['Solitaire','Diamond','Gold','Bronze'].map(function(t){
+  const warna = { Semua:'#E8185A', Solitaire:'#4B2F8F', Diamond:'#17577F', Gold:'#7A5A00', Bronze:'#7F4E2B' };
+  const urutanTier = ['Solitaire','Diamond','Gold','Bronze'];
+  // Tab "Semua tier": gabungan semua tier, urut dari tier tertinggi lalu peringkat di tiernya.
+  const tabs = ['Semua'].concat(urutanTier).map(function(t){
     const on = t === tierAktif;
-    return '<button type="button" onclick="pfTampilTier(\'' + t + '\')" style="min-height:38px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:800;cursor:pointer;border:1.5px solid ' + warna[t] + ';background:' + (on ? warna[t] : '#fff') + ';color:' + (on ? '#fff' : warna[t]) + '">' + t + '</button>';
+    return '<button type="button" onclick="pfTampilTier(\'' + t + '\')" style="min-height:38px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:800;cursor:pointer;border:1.5px solid ' + warna[t] + ';background:' + (on ? warna[t] : '#fff') + ';color:' + (on ? '#fff' : warna[t]) + '">' + (t === 'Semua' ? 'Semua tier' : t) + '</button>';
   }).join('');
-  const list = perTier[tierAktif] || [];
-  const isi = list.length ? list.map(function(r){
+  const list = tierAktif === 'Semua'
+    ? urutanTier.reduce(function(acc, t){ return acc.concat(perTier[t] || []); }, [])
+    : (perTier[tierAktif] || []);
+  const isi = list.length ? list.map(function(r, idx){
+    const tierBaris = r.tier || tierAktif;
+    const w = warna[tierBaris] || warna.Bronze;
     return '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--gray-mid);border-radius:12px;padding:10px 12px;margin-bottom:6px">'
-      + '<div style="width:22px;font-weight:800;color:var(--gray-text)">' + r.peringkat + '</div>'
+      + '<div style="width:22px;font-weight:800;color:var(--gray-text)">' + (tierAktif === 'Semua' ? idx + 1 : r.peringkat) + '</div>'
       + htmlAvatar(r.foto, r.nama, r.tier, 42)
       + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(r.nama || '-') + '</div>'
       + '<div style="font-size:11.5px;color:var(--gray-text)">' + (r.username ? '@' + escHtml(r.username) + ' · ' : '') + r.jumlah_video + ' video disetujui</div>'
       + ((r.badge_live_performance || r.badge_short_video_maker) ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">' + htmlChipBadge(r) + '</div>' : '') + '</div>'
-      + '<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;border:1.5px solid ' + warna[tierAktif] + ';color:' + warna[tierAktif] + '">' + tierAktif + '</span>'
+      + '<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;border:1.5px solid ' + w + ';color:' + w + '">' + escHtml(tierBaris) + '</span>'
       + '</div>';
-  }).join('') : '<div class="card-sub" style="padding:10px 2px">Belum ada creator di tier ' + tierAktif + '.</div>';
+  }).join('') : '<div class="card-sub" style="padding:10px 2px">Belum ada creator' + (tierAktif === 'Semua' ? '' : ' di tier ' + tierAktif) + '.</div>';
   wrap.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + tabs + '</div>' + isi;
 }
 
