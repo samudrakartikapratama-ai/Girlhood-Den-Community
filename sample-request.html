@@ -3264,7 +3264,9 @@ function pfLiveHtml(live, menit){
           + '<div style="display:flex;gap:10px;align-items:center">'
           + '<div style="width:38px;height:38px;border-radius:50%;background:#FDE2E7;color:#A30E3F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 38px">' + pfInitialsShort(c.creator_nama) + '</div>'
           + '<div style="min-width:0"><div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(c.creator_nama || 'Creator') + '</div>'
-          + '<div style="font-size:11px;color:var(--gray-text)">' + escHtml(c.tier || '') + (c.tier ? ' · ' : '') + '<span style="color:#DC2626;font-weight:800">● LIVE</span></div></div></div>'
+          + '<div style="font-size:11px;color:var(--gray-text)">' + escHtml(c.tier || '') + (c.tier ? ' · ' : '') + '<span style="color:#DC2626;font-weight:800">● LIVE</span></div>'
+          + (c.username ? '<a href="https://www.tiktok.com/@' + encodeURIComponent(c.username) + '/live" target="_blank" rel="noopener" style="display:inline-block;margin-top:2px;font-size:12px;font-weight:800;color:#E8185A;text-decoration:none">@' + escHtml(c.username) + ' ›</a>' : '')
+          + '</div></div>'
           + (c.hk ? '<div style="margin-top:8px"><span style="display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#26215C;color:#fff">🏴‍☠️ HK</span></div>' : '')
           + (c.brand ? '<div style="margin-top:8px;font-size:12px;font-weight:700">' + escHtml(c.brand) + '</div>' : '')
           + ((c.produk && c.produk.length) ? '<div style="font-size:11px;color:var(--gray-text);margin-top:2px;line-height:1.35">' + c.produk.map(escHtml).join('<br>') + '</div>' : '')
@@ -5840,6 +5842,7 @@ async function loadBrandRencanaLive(){
   wrap.innerHTML = urut.map(function(k){
     return '<div class="nb-hari">' + k + '</div>' + perHari[k].map(function(r){
       return '<div class="bl-baris"><div style="display:flex;gap:10px;align-items:center">' + htmlAvatar(r.foto, r.member_nama, r.tier, 42) + '<div><div class="bl-nama">' + escHtml(r.member_nama || '-') + '</div>'
+        + (r.username ? '<a href="https://www.tiktok.com/@' + encodeURIComponent(r.username) + '" target="_blank" rel="noopener" style="display:block;margin:1px 0 3px;font-size:12px;font-weight:800;color:#E8185A;text-decoration:none">@' + escHtml(r.username) + ' ›</a>' : '')
         + '<span class="bl-tag ' + (r.mix_brand ? 'mix' : 'fokus') + '">' + (r.mix_brand ? 'Mix Brand' : 'Fokus brand kamu') + '</span></div></div>'
         + '<div class="bl-jam">' + rlFmtJam(r.mulai) + '–' + rlFmtJam(r.selesai) + '</div></div>';
     }).join('');
