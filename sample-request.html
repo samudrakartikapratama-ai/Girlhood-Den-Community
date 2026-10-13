@@ -9597,8 +9597,8 @@ async function loadCreatorDatabase(){
 
 function fotoKecil(url){
   if(!url) return '';
-  // Pakai versi kecil (±5 KB) dari penyimpanan, bukan foto asli, supaya halaman ringan.
-  return String(url).replace('/storage/v1/object/public/', '/storage/v1/render/image/public/').replace(/\+/g, '%2B') + '?width=200&height=200&resize=cover&quality=70';
+  // Pakai foto asli dari penyimpanan.
+  return String(url); // foto asli, bukan resize Supabase (berbayar lewat 100 foto/bulan); ukuran tampil diatur CSS
 }
 function tglGabung(m){
   const t = m.verified_at || m.created_at;
