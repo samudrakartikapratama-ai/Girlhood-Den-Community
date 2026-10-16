@@ -13270,7 +13270,8 @@ async function gdlcInitCreator(){
     if(lama) lama.remove();
     frame.classList.toggle('gdlc-pakai', st.mentor && st.akses);
     if(st.mentor && st.akses) frame.insertAdjacentHTML('beforeend', gdlcMahkotaSvg());
-  }  if(typeof updateEndorsementLockState === 'function') updateEndorsementLockState();
+  }
+  if(typeof updateEndorsementLockState === 'function') updateEndorsementLockState();
 }
 function gdlcSegera(){ showToast('Fitur mentor GDLC segera hadir 👑'); }
 
