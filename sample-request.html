@@ -13100,7 +13100,7 @@ function showSimpleInfo(text){
 .gdlc-av > svg.gdlc-mahkota{position:absolute;left:-25%;top:-25%;width:150%;height:150%;pointer-events:none;overflow:visible}
 .avatar-frame.gdlc-pakai{position:relative;overflow:visible}
 .avatar-frame.gdlc-pakai > img{border-radius:50%}
-.gdlc-tabs{display:flex;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:4px 0 12px;overflow-x:auto}
+.gdlc-tabs{display:flex;flex-wrap:wrap;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:4px 0 12px}
 .gdlc-tabs button{flex:1 0 auto;min-height:40px;padding:0 12px;border:none;border-radius:9px;background:transparent;font-weight:800;font-size:12.5px;color:var(--gray-text);cursor:pointer;white-space:nowrap;transition:background-color .15s ease-out,color .15s ease-out}
 .gdlc-tabs button.on{background:var(--dark);color:#fff}
 .gdlc-kartu{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px}
@@ -13119,7 +13119,7 @@ function showSimpleInfo(text){
 .gdlc-chip.merah{background:var(--red-light);color:var(--red)}
 .gdlc-bar{height:8px;background:#F1ECF1;border-radius:99px;overflow:hidden;margin-top:6px}
 .gdlc-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:99px}
-.gdlc-btn{min-height:44px;padding:0 16px;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;background:var(--pink);color:#fff;transition:transform .12s ease-out,opacity .12s ease-out}
+.gdlc-btn{min-height:44px;padding:0 16px;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13px;white-space:nowrap;flex-shrink:0;cursor:pointer;background:var(--pink);color:#fff;transition:transform .12s ease-out,opacity .12s ease-out}
 .gdlc-btn:active{transform:scale(.97)}
 .gdlc-btn:disabled{opacity:.5;cursor:not-allowed}
 .gdlc-btn.lembut{background:var(--pink-pale);color:var(--pink)}
@@ -13406,7 +13406,10 @@ async function gdlcJawabAjakan(id, ikut, btn){
 function gdlcMTab(t){
   window._gdlcMTab = t;
   document.querySelectorAll('#gdlcm-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
-  const el = document.getElementById('gdlcm-isi');
+  // Tiap buka tab dapat wadah baru, supaya hasil tab lama yang telat datang tidak menimpa tab yang sedang dibuka.
+  const wadah = document.getElementById('gdlcm-isi');
+  wadah.innerHTML = '';
+  const el = wadah.appendChild(document.createElement('div'));
   el.innerHTML = '<div class="card-sub">Memuat...</div>';
   ({ tim: gdlcMTim, materi: gdlcMMateri, kampanye: gdlcMKampanye, laporan: gdlcMLaporan })[t](el);
 }
@@ -13459,13 +13462,14 @@ async function gdlcMMateri(el){
     + '<button type="button" class="gdlc-btn" id="gdlcm-kirim" style="width:100%;margin-top:10px" onclick="gdlcMKirimMateri(this)">Kirim ke tim</button>'
     + '<div class="gdlc-label" style="margin-top:16px">Materi yang sudah dikirim</div><div id="gdlcm-riwayat"><div class="card-sub">Memuat...</div></div>';
   gdlcMCariProduk();
+  const riwayat = el.querySelector('#gdlcm-riwayat');
   try {
     const r = await gdlcRpc('mentor_gdlc_materi_list');
-    document.getElementById('gdlcm-riwayat').innerHTML = r.length ? r.map(function(x){
+    riwayat.innerHTML = r.length ? r.map(function(x){
       return '<div class="gdlc-baris" style="padding:8px 0;border-bottom:1px solid #F3E4EC"><div style="flex:1"><b style="font-size:13px">' + escHtml(x.produk) + '</b><div class="gdlc-sub">' + escHtml(x.brand) + ' · ' + gdlcLabelTgl(x.created_at) + '</div>'
         + (x.pesan ? '<div class="gdlc-sub" style="color:var(--dark)">"' + escHtml(x.pesan) + '"</div>' : '') + '</div></div>';
     }).join('') : '<div class="gdlc-sub">Belum ada materi terkirim.</div>';
-  } catch(e){ document.getElementById('gdlcm-riwayat').innerHTML = ''; }
+  } catch(e){ riwayat.innerHTML = ''; }
 }
 async function gdlcMCariProduk(){
   const q = (document.getElementById('gdlcm-cari') || {}).value || '';
@@ -13473,7 +13477,9 @@ async function gdlcMCariProduk(){
   if(!wrap) return;
   document.getElementById('gdlcm-cari-judul').textContent = q.trim().length >= 2 ? 'Hasil pencarian' : 'Paling laku di timmu bulan ini';
   let list = [];
-  try { list = await gdlcRpc('mentor_gdlc_cari_produk', { p_q: q }); } catch(e){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const no = window._gdlcCariNo = (window._gdlcCariNo || 0) + 1;
+  try { list = await gdlcRpc('mentor_gdlc_cari_produk', { p_q: q }); } catch(e){ if(no !== window._gdlcCariNo) return; wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  if(no !== window._gdlcCariNo) return; // hasil pencarian lama, abaikan
   window._gdlcProdukList = list;
   wrap.innerHTML = list.length ? list.map(function(p){
     return '<div class="gdlc-produk' + (window._gdlcProdukPilih === p.id ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" onclick="gdlcMPilihProduk(this)">'
@@ -13606,7 +13612,9 @@ function gdlcITab(t){
   window._gdlcITab = t;
   document.querySelectorAll('#gdlci-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
   gdlcIStatusBar();
-  const el = document.getElementById('gdlci-isi');
+  const wadah = document.getElementById('gdlci-isi');
+  wadah.innerHTML = '';
+  const el = wadah.appendChild(document.createElement('div'));
   el.innerHTML = '<div class="card-sub">Memuat...</div>';
   ({ ringkasan: gdlcIRingkasan, angkat: gdlcIAngkat, kampanye: gdlcIKampanye, laporan: gdlcILaporan, atur: gdlcIAtur })[t](el);
 }
@@ -13668,7 +13676,9 @@ async function gdlcICari(){
   if(q.trim().length < 2){ wrap.innerHTML = ''; return; }
   wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
   let list;
-  try { list = await gdlcRpc('internal_gdlc_cari', { p_q: q }); } catch(e){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const no = window._gdlcICariNo = (window._gdlcICariNo || 0) + 1;
+  try { list = await gdlcRpc('internal_gdlc_cari', { p_q: q }); } catch(e){ if(no !== window._gdlcICariNo) return; wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  if(no !== window._gdlcICariNo) return;
   wrap.innerHTML = list.length ? list.map(function(m){
     const sudah = m.mentor_status === 'aktif';
     const tierOk = ['Gold', 'Diamond', 'Solitaire'].indexOf(m.tier) !== -1;
@@ -13715,8 +13725,10 @@ async function gdlcICariProduk(){
   const q = document.getElementById('gdlci-k-cari').value.trim();
   const wrap = document.getElementById('gdlci-k-produk');
   if(q.length < 2){ wrap.innerHTML = ''; return; }
+  const no = window._gdlcIPNo = (window._gdlcIPNo || 0) + 1;
   const { data, error } = await db.from('brand_products').select('id, nama_produk, foto_urls, brands!inner(nama_brand, is_frozen)')
     .eq('is_frozen', false).eq('brands.is_frozen', false).ilike('nama_produk', '%' + q.replace(/[%_]/g, '') + '%').limit(12);
+  if(no !== window._gdlcIPNo) return;
   if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal mencari produk.</div>'; return; }
   wrap.innerHTML = (data || []).length ? data.map(function(p){
     const foto = Array.isArray(p.foto_urls) && p.foto_urls.length ? p.foto_urls[0] : null;
@@ -13786,6 +13798,7 @@ async function gdlcIAtur(el){
 }
 function gdlcIRenderLevel(){
   const wrap = document.getElementById('gdlci-level');
+  if(!wrap) return;
   wrap.innerHTML = '<div style="overflow-x:auto"><table class="gdlc-tabel" style="margin-top:8px;min-width:460px"><tr><th>Lv</th><th>GMV tim (juta)</th><th>Bonus (ribu)</th><th>Min. aktif</th><th>Gathering</th><th></th></tr>'
     + window._gdlcLevel.map(function(l, i){
         return '<tr><td><b>' + (i + 1) + '</b></td>'
@@ -13850,7 +13863,7 @@ function gdlcPfRender(mode){
           return '<div class="gdlc-kartu" style="cursor:pointer;' + (on ? 'border-color:var(--pink);background:var(--pink-pale)' : '') + '" onclick="window._pfTimMentor={member_id:\'' + t.member_id + '\',nama:' + escHtml(JSON.stringify(t.nama)) + '};gdlcPfRender(\'tim\')">'
             + '<div class="gdlc-baris">' + gdlcAvatar(t.foto, t.nama, t.tier, 46, true)
             + '<div style="flex:1;min-width:0"><div class="gdlc-nama">Tim Kak ' + escHtml(t.nama) + '</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="gdlc-chip emas">✓ Dipilih Girlhood Den</span><span class="gdlc-chip' + (t.level >= 3 ? ' ungu' : '') + '">' + (t.level ? 'Level ' + t.level : 'Tim baru') + '</span></div></div>'
-            + (on ? '<span class="gdlc-chip hijau">Dipilih</span>' : '') + '</div>'
+            + (on ? '<span title="Dipilih" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">✓</span>' : '') + '</div>'
             + '<div class="gdlc-angka"><div><b>' + t.aktif + '</b><span>anggota aktif</span></div><div><b>' + rpPendek(t.gmv_30) + '</b><span>GMV tim 30 hari</span></div><div><b>' + t.video_30 + '</b><span>video 30 hari</span></div><div><b>' + t.retur_persen + '%</b><span>retur</span></div></div>'
             + ((t.kategori || []).length ? '<div class="gdlc-sub" style="margin-top:8px">Sering laku di: ' + t.kategori.map(escHtml).join(', ') + '</div>' : '')
             + (!t.level ? '<div class="gdlc-sub" style="margin-top:4px">Tim baru, masih berkembang.</div>' : '') + '</div>';
