@@ -13207,7 +13207,8 @@ const GDLC_PESAN = {
   BATAS_MATERI: 'Maksimal 5 materi per hari. Coba lagi besok ya.',
   MINGGU_TIDAK_SESUAI: 'Laporan hanya bisa diisi untuk minggu ini atau minggu lalu.',
   TUGAS_TIDAK_ADA: 'Ajakan tidak ditemukan.',
-  SUDAH_DI_KAMPANYE: 'Anggota itu sudah ada di kampanye ini.'
+  SUDAH_DI_KAMPANYE: 'Anggota itu sudah ada di kampanye ini.',
+  PASSWORD_OWNER_SALAH: 'Password owner salah. Saklar tidak diubah.'
 };
 function gdlcPesanError(error){
   const m = String((error && error.message) || error || '');
@@ -13791,6 +13792,8 @@ async function gdlcIAtur(el){
     + '<div class="gdlc-sub" style="margin-top:6px">Selama dikunci: menu mentor dan tab Mentor di Papan Skor bergembok, mahkota tidak tampil, brand tidak melihat Tim Mentor, dan tidak ada notifikasi GDLC yang terkirim.</div>'
     + '<label class="gdlc-label" for="gdlci-tester">Akun penguji (kode login creator, pisahkan dengan koma)</label><input class="gdlc-input" id="gdlci-tester" value="' + escHtml(kodeTester) + '" placeholder="Contoh: ABC123, XYZ789">'
     + '<div class="gdlc-sub" style="margin-top:4px">Akun penguji bisa mencoba fitur GDLC walau saklar masih dikunci.</div>'
+    + '<label class="gdlc-label" for="gdlci-pw">Password owner</label><input class="gdlc-input" type="password" id="gdlci-pw" autocomplete="off" placeholder="Wajib diisi untuk mengubah saklar">'
+    + '<div class="gdlc-sub" style="margin-top:4px">Hanya owner yang bisa membuka, mengunci, atau mengganti akun penguji.</div>'
     + '<button type="button" class="gdlc-btn gelap" style="width:100%;margin-top:10px" onclick="gdlcISimpanSaklar(this)">Simpan saklar</button></div>'
     + '<div class="gdlc-kartu"><b>Level bonus mentor</b><div class="gdlc-sub">Dihitung dari GMV settled tim per bulan. Bonus dibayar dari level tertinggi yang tercapai. Berlaku langsung untuk hitungan bulan berjalan.</div>'
     + '<div id="gdlci-level"></div><button type="button" class="gdlc-btn lembut" style="margin-top:8px" onclick="window._gdlcLevel.push({min_gmv:0,bonus:0,min_aktif:5,gathering:false});gdlcIRenderLevel()">+ Tambah level</button>'
@@ -13811,9 +13814,12 @@ function gdlcIRenderLevel(){
       }).join('') + '</table></div>';
 }
 async function gdlcISimpanSaklar(btn){
+  const pw = document.getElementById('gdlci-pw');
+  if(!pw.value){ showToast('Isi password owner dulu ya.'); pw.focus(); return; }
   btn.disabled = true;
   try {
-    await gdlcRpc('internal_gdlc_setting', { p_buka: document.getElementById('gdlci-buka').checked, p_tester: document.getElementById('gdlci-tester').value });
+    const sandi = pw.value; pw.value = '';
+    await gdlcRpc('internal_gdlc_setting', { p_buka: document.getElementById('gdlci-buka').checked, p_tester: document.getElementById('gdlci-tester').value, p_password: sandi });
     showToast('Pengaturan tersimpan.');
     gdlcITab('atur');
   } catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
