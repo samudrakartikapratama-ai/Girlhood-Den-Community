@@ -1371,11 +1371,12 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     </div>
     <div class="icon-card" id="ic-rencana-live" onclick="openRencanaLive()"><div class="icon-emoji">📅</div><div class="icon-label">Rencana Live</div></div>
     <div class="icon-card hk-kunci-menu" id="ic-harta-karun" onclick="bukaHkCreator()"><div class="icon-emoji">🧭</div><div class="icon-label">Harta Karun</div></div>
-    <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
+    <div class="icon-card" id="ic-edukasi" onclick="openModal('m-c6'); gdlcEdukasi(); loadEducationCreator();"><div class="icon-emoji">🎓</div><div class="icon-label">Edukasi</div></div>
     <div class="icon-card" id="ic-notif-creator" onclick="openModal('m-c7'); loadNotificationsCreator();"><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
     <div class="icon-card" id="ic-poin-creator" onclick="openModal('m-c8'); loadPoinCreator(); loadTierCreator();"><div class="icon-emoji">⭐</div><div class="icon-label">Poin</div></div>
     <div class="icon-card" id="ic-gmv-dash" onclick="handleGmvDashClick()"><div class="icon-emoji">📈</div><div class="icon-label">Dashboard GMV</div><div style="position:absolute;top:-7px;left:-7px;background:#17577F;color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(74,43,71,.3)">Diamond+</div><div id="ic-gmv-dash-lock" style="display:none;position:absolute;top:6px;right:6px;background:rgba(74,43,71,.85);color:#fff;font-size:12px;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center">🔒</div></div>
     <div class="icon-card" onclick="openModal('m-c9'); loadPapanSkor('gmv');"><div class="icon-emoji">🏆</div><div class="icon-label">Papan Skor</div></div>
+    <div class="icon-card" id="ic-gdlc-tim" style="display:none" onclick="gdlcBukaTimSaya()"><div class="icon-emoji">👑</div><div class="icon-label">Tim Saya</div></div>
   </div>
 </div>
 
@@ -1448,7 +1449,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <div class="icon-card" onclick="openModal('m-i13'); loadKelolaBanner();"><div class="icon-emoji">🖼️</div><div class="icon-label">Kelola Banner</div></div>
     <div class="icon-card" onclick="openModal('m-i8'); loadEducationManage();"><div class="icon-emoji">🎓</div><div class="icon-label">Kelola Edukasi</div></div>
     <div class="icon-card" onclick="openModal('m-i7'); loadNotifications();"><div class="icon-badge" id="notif-badge" style="display:none">0</div><img class="icon-img-custom" src="https://raw.githubusercontent.com/samudrakartikapratama-ai/Girlhood-Den-Community/main/assets/icons/notifikasi.png" alt="Notifikasi"><div class="icon-label">Notifikasi</div></div>
-    <div class="icon-card" onclick="openOwnerGate()"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
+    <div class="icon-card" onclick="openOwnerGateDb()"><div class="icon-emoji">📇</div><div class="icon-label">Database Creator</div></div>
     <div class="icon-card" onclick="openModal('m-i-live'); iLiveTab('akan');"><div class="icon-emoji">🔴</div><div class="icon-label">Rencana Live</div></div>
     <div class="icon-card" onclick="bukaHkInternal()"><div class="icon-emoji">🧭</div><div class="icon-label">Harta Karun</div></div>
     <div class="icon-card" onclick="openModal('m-i-hampir'); loadHampirNaikTier();"><div class="icon-emoji">📈</div><div class="icon-label">Hampir Naik Tier</div></div>
@@ -1459,6 +1460,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <div class="icon-card" onclick="openModal('m-i18'); loadAeHunting();"><div class="icon-emoji">🎯</div><div class="icon-label">Hunting Produk (AE)</div></div>
     <div class="icon-card" onclick="openModal('m-i21'); loadGerbangVerifikasi();"><div class="icon-emoji">🪪</div><div class="icon-label">Gerbang Verifikasi</div></div>
         <div class="icon-card" onclick="openModal('m-i20'); loadRekomendasiBrands();"><div class="icon-emoji">🏆</div><div class="icon-label">Pilihan Girlhood Den</div></div>
+    <div class="icon-card" onclick="bukaGdlcInternal()"><div class="icon-emoji">👑</div><div class="icon-label">GDLC</div></div>
   </div>
 </div>
 
@@ -1635,6 +1637,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 <div class="modal-bg" id="m-c6"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c6')">‹ ✕</button>
   <div class="modal-title">🎓 Edukasi</div>
   <div class="card-sub">Materi dari tim Girlhood Den — video atau PDF buat bantu kamu lebih jago konten.</div>
+  <div id="gdlc-edukasi"></div>
   <div id="edukasi-creator-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
@@ -1669,7 +1672,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 <div class="modal-bg" id="m-c9"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c9')">‹ ✕</button>
   <div class="modal-title">🏆 Papan Skor</div>
   <div class="card-sub">Peringkat bulan ini. Reset tiap tanggal 1.</div>
-  <div class="ps-tabs"><button type="button" class="ps-tab on" data-t="gmv" onclick="loadPapanSkor('gmv')">Top GMV</button><button type="button" class="ps-tab" data-t="pengajak" onclick="loadPapanSkor('pengajak')">Top Referral</button></div>
+  <div class="ps-tabs" style="grid-template-columns:repeat(3,1fr)"><button type="button" class="ps-tab on" data-t="gmv" onclick="loadPapanSkor('gmv')">Top GMV</button><button type="button" class="ps-tab" data-t="pengajak" onclick="loadPapanSkor('pengajak')">Top Referral</button><button type="button" class="ps-tab" data-t="mentor" id="ps-tab-mentor" onclick="loadPapanSkor('mentor')">Mentor 🔒</button></div>
   <div class="card-sub" id="ps-intro" style="background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin-bottom:10px"></div>
   <div id="c9-leaderboard-content"><div class="card-sub">Memuat data...</div></div>
 </div></div>
@@ -1746,6 +1749,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 <div class="modal-bg" id="m-c-endorsement"><div class="modal-box"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-endorsement')">‹ ✕</button>
   <div class="modal-title">🚀 Job Endorsement Kamu</div>
   <div class="card-sub" style="margin-bottom:10px">Campaign endorsement yang kamu ikut. Wajib upload video sesuai jumlah VT di masing-masing job.</div>
+  <div id="gdlc-ajakan"></div>
   <div id="c-endorsement-list"><div class="card-sub">Memuat data...</div></div>
 </div></div>
 
@@ -1786,6 +1790,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
 
 <div class="modal-bg" id="m-b2"><div class="modal-box" style="max-width:820px"><button class="modal-close" title="Kembali" onclick="closeModal('m-b2')">‹ ✕</button>
   <div class="modal-title">🎥 Report VT</div>
+  <div id="gdlc-brand-kampanye"></div>
   <div id="report-vt-brand-stats"></div>
   <div id="report-vt-brand-tabs" class="rvt-tabs"></div>
   <div id="report-vt-brand-rows" class="rvt-list"><div class="card-sub">Memuat data...</div></div>
@@ -2451,6 +2456,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <div id="pf-wiz-step-2" style="display:none">
       <div style="font-size:16px;font-weight:800;color:var(--dark);margin-bottom:6px">Top creator Girlhood Den</div>
       <div style="font-size:12px;line-height:1.5;color:#6B4A00;background:#FFF3D6;border-radius:10px;padding:8px 10px;margin-bottom:10px">Sementara: ini creator teratas yang kemungkinan bisa membawakan produkmu. Tim kami bantu pilih yang paling cocok setelah proposal masuk.</div>
+      <div id="pf-gdlc-pilih"></div>
       <div id="pf-matches" style="background:var(--gray);border-radius:12px;padding:10px"><div class="card-sub">Memuat top creator...</div></div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-outline btn-sm" style="flex:1" onclick="pfGoToWizardStep(1)">‹ Kembali</button>
@@ -3596,6 +3602,7 @@ function pfConnectedBadge(isConnected){
 }
 
 async function loadPlayfieldMatches(){
+  gdlcPfPilihan();
   const wrap = document.getElementById('pf-matches');
   wrap.innerHTML = '<div class="card-sub">Memuat top creator...</div>';
   const { data, error } = await db.rpc('brand_top_creator_per_tier');
@@ -3676,7 +3683,7 @@ async function sendEndorsementProposal(){
     const funnelTeks = 'CTR 7 hari: ' + ctr7 + '% · CTOR 7 hari: ' + ctor7 + '%'
       + (isNaN(ctr30) ? '' : ' · CTR 30 hari: ' + ctr30 + '%')
       + (isNaN(ctor30) ? '' : ' · CTOR 30 hari: ' + ctor30 + '%');
-    const summary = (document.getElementById('pf-summary').value || '') + '\n\nData funnel produk: ' + funnelTeks;
+    const summary = gdlcPfCatatan() + (document.getElementById('pf-summary').value || '') + '\n\nData funnel produk: ' + funnelTeks;
     const creators = pfLastMatches.map(function(m){ return { nama: m.nama }; });
 
     // Simpan data funnel sekali saja per pengiriman (tidak dobel kalau tombol diklik ulang setelah gagal kirim).
@@ -4869,7 +4876,8 @@ async function loadNotificationsCreator(diam){
       };
     });
 
-  const allData = (data||[]).concat(resiItems).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+  const gdlcItems = await gdlcNotifUmum();
+  const allData = (data||[]).concat(resiItems).concat(gdlcItems).sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
 
   if(!allData || allData.length === 0){
     container.innerHTML = '<div class="card-sub">Belum ada notifikasi.</div>';
@@ -4897,7 +4905,7 @@ async function loadNotificationsCreator(diam){
     const text = n.kategori === 'resi' ? n.detail_text : humanizeNotifText(n.kategori, n.detail_text, brandName);
     const isAutoClose = /otomatis ditutup|ditutup otomatis/i.test(n.detail_text || '');
     html += '<div class="notif-item">'
-      + '<div class="ic ' + typeClass + '">' + (n.kategori === 'resi' ? '📦' : iconEmoji[typeClass]) + '</div>'
+      + '<div class="ic ' + typeClass + '">' + (n.kategori === 'resi' ? '📦' : n.kategori === 'gdlc' ? '👑' : iconEmoji[typeClass]) + '</div>'
       + '<div style="flex:1">'
       +   '<div class="txt">' + text + '</div>'
       +   '<div class="time">' + notifTimeAgo(n.created_at) + '</div>'
@@ -5876,6 +5884,7 @@ async function loadPapanSkor(jenis){
   document.querySelectorAll('.ps-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.t === window._psTab); });
   const wrap = document.getElementById('c9-leaderboard-content');
   const intro = document.getElementById('ps-intro');
+  if(window._psTab === 'mentor'){ await gdlcPapanMentor(wrap, intro); return; }
   intro.innerHTML = window._psTab === 'gmv'
     ? 'Penjualan lewat link Girlhood Den bulan ini, dari data TikTok yang masuk tiap Senin.'
     : 'Ajak teman gabung. Begitu temanmu menuntaskan sample pertamanya, kamu dapat <b>+50 poin</b> dan naik di papan ini.';
@@ -5887,7 +5896,7 @@ async function loadPapanSkor(jenis){
   const rows = (top.data || []).slice(0, 10);
   let html = rows.length ? rows.map(function(r, i){
     const aku = r.member_id === currentSession.memberId;
-    return '<div class="ps-baris' + (aku ? ' aku' : '') + '"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + r.peringkat + '</span>' + htmlAvatar(r.foto, r.nama, r.tier, 36)
+    return '<div class="ps-baris' + (aku ? ' aku' : '') + '"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + r.peringkat + '</span>' + gdlcAvatar(r.foto, r.nama, r.tier, 36, gdlcIsMentor(r.member_id))
       + '<span class="ps-nama">' + escHtml(r.nama || '-') + (aku ? ' (kamu)' : '') + '</span><span class="ps-nilai">' + nilai(r.nilai) + '</span></div>';
   }).join('') : '<div class="rl-kosong">🏆<div>' + (window._psTab === 'gmv' ? 'Belum ada data penjualan bulan ini.' : 'Belum ada teman yang menuntaskan sample bulan ini.') + '</div></div>';
   const s = (saya.data || [])[0];
@@ -6493,6 +6502,7 @@ async function logout(){
     applyCreatorAvatar();
     renderCreatorEmblem();
     hkUpdateKunciMenu();
+    gdlcInitCreator();
     db.rpc('creator_cek_referral_saya').then(function(){}, function(){});
   }
   if(role === 'brand'){
@@ -8052,6 +8062,7 @@ async function loadReportVtBrand(){
   statsEl.innerHTML = ''; tabsEl.innerHTML = '';
   reportVtBrandRows = []; reportVtBrandTab = 'semua';
   if(!currentSession.brandId){ list.innerHTML = '<div class="card-sub">Sesi brand tidak terdeteksi.</div>'; return; }
+  gdlcBrandKampanye();
 
   const VT_REQUIRED = { VT: 3, VT_LIVE: 3, LIVE: 0 };
 
@@ -9503,6 +9514,7 @@ async function loadPendingMembers(){
       + '<div class="size-note result-note" style="display:none;margin-top:6px">Kode ini yang diberikan manual ke creator (misal via WA) — dipakai buat login.</div>'
       + '</div>';
   }).join('');
+  gdlcLabelVerifikasi(data.map(function(m){ return m.id; }));
 }
 
 let __creatorDbCache = [];
@@ -9521,7 +9533,7 @@ async function openOwnerGate(){
 
   document.getElementById('owner-gate-title').textContent = hasPassword ? 'Akses Terbatas' : 'Setup Password Owner';
   document.getElementById('owner-gate-body').textContent = hasPassword
-    ? 'Database Creator cuma bisa dibuka pakai password khusus owner.'
+    ? (window._ownerGateTujuan === 'gdlc' ? 'GDLC masih dikunci. Menu ini cuma bisa dibuka pakai password khusus owner.' : 'Database Creator cuma bisa dibuka pakai password khusus owner.')
     : 'Belum ada password owner yang di-set. Buat password baru dulu sebelum bisa akses Database Creator.';
   document.getElementById('owner-gate-verify-view').style.display = hasPassword ? '' : 'none';
   document.getElementById('owner-gate-setup-view').style.display = hasPassword ? 'none' : '';
@@ -9529,6 +9541,8 @@ async function openOwnerGate(){
 function closeOwnerGate(){
   document.getElementById('owner-gate-popup').classList.remove('open');
 }
+// Menu Database Creator selalu lewat gerbang tanpa tujuan GDLC.
+function openOwnerGateDb(){ window._ownerGateTujuan = null; openOwnerGate(); }
 async function submitOwnerPassword(){
   const password = document.getElementById('owner-gate-input').value;
   if(!password){ alert('Masukkan password dulu.'); return; }
@@ -9541,6 +9555,7 @@ async function submitOwnerPassword(){
     const j = await res.json();
     if(!j.valid){ alert(j.error || 'Password salah.'); return; }
     closeOwnerGate();
+    if(window._ownerGateTujuan === 'gdlc'){ window._ownerGateTujuan = null; gdlcBukaModalInternal(); return; }
     openModal('m-i10');
     // Muat dari database langsung (lengkap dengan tier, badge, dan jumlah video/request).
     loadCreatorDatabase();
@@ -10400,6 +10415,7 @@ async function handleReportVtClick(){
 // Menu Endorsement hanya terbuka kalau creator punya job endorsement yang campaign-nya sudah aktif (status 'locked').
 async function cekPunyaEndorsementAktif(){
   if(!currentSession.memberId) return false;
+  if((await gdlcAjakanSaya()).length) return true;
   const { data, error } = await db.from('endorsement_campaign_creators')
     .select('id, endorsement_campaigns!inner(status)')
     .eq('member_id', currentSession.memberId).eq('endorsement_campaigns.status', 'locked').limit(1);
@@ -10423,6 +10439,7 @@ async function handleEndorsementClick(){
   }
   updateEndorsementLockState();
   openModal('m-c-endorsement');
+  gdlcRenderAjakan();
   loadCreatorEndorsementJobs();
 }
 
@@ -13075,6 +13092,805 @@ function showSimpleInfo(text){
   box.innerHTML = '<span style="flex:1">'+text+'</span><span style="cursor:pointer;font-weight:900;flex-shrink:0" onclick="this.parentElement.remove()">✕</span>';
 }
 </script>
+<!-- ================= GDLC (Girlhood Den Leader Circle) =================
+     Semua fitur dikunci saklar app_config.gdlc_buka. Saat mati: creator lihat gembok,
+     brand tidak melihat apa pun, internal hanya bisa masuk lewat password owner. -->
+<style>
+.gdlc-av{position:relative;display:inline-flex;flex-shrink:0}
+.gdlc-av > svg.gdlc-mahkota{position:absolute;left:-25%;top:-25%;width:150%;height:150%;pointer-events:none;overflow:visible}
+.avatar-frame.gdlc-pakai{position:relative;overflow:visible}
+.avatar-frame.gdlc-pakai > img{border-radius:50%}
+.gdlc-tabs{display:flex;gap:4px;background:#F1ECF1;border-radius:12px;padding:4px;margin:4px 0 12px;overflow-x:auto}
+.gdlc-tabs button{flex:1 0 auto;min-height:40px;padding:0 12px;border:none;border-radius:9px;background:transparent;font-weight:800;font-size:12.5px;color:var(--gray-text);cursor:pointer;white-space:nowrap;transition:background-color .15s ease-out,color .15s ease-out}
+.gdlc-tabs button.on{background:var(--dark);color:#fff}
+.gdlc-kartu{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px}
+.gdlc-baris{display:flex;align-items:center;gap:10px}
+.gdlc-nama{font-weight:800;font-size:14px;color:var(--dark)}
+.gdlc-sub{font-size:12px;color:var(--gray-text)}
+.gdlc-angka{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:10px}
+.gdlc-angka > div{background:var(--pink-pale);border-radius:12px;padding:9px 10px}
+.gdlc-angka b{display:block;font-size:16px;color:var(--dark)}
+.gdlc-angka span{font-size:11px;color:var(--gray-text)}
+.gdlc-chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#F1ECF1;color:var(--dark);white-space:nowrap}
+.gdlc-chip.emas{background:#FFF3D6;color:#7A5A00;border:1px solid #F4DDA8}
+.gdlc-chip.ungu{background:var(--dark);color:#fff}
+.gdlc-chip.hijau{background:var(--teal-light);color:var(--teal)}
+.gdlc-chip.oren{background:var(--amber);color:var(--amber-dark)}
+.gdlc-chip.merah{background:var(--red-light);color:var(--red)}
+.gdlc-bar{height:8px;background:#F1ECF1;border-radius:99px;overflow:hidden;margin-top:6px}
+.gdlc-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--gold));border-radius:99px}
+.gdlc-btn{min-height:44px;padding:0 16px;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;background:var(--pink);color:#fff;transition:transform .12s ease-out,opacity .12s ease-out}
+.gdlc-btn:active{transform:scale(.97)}
+.gdlc-btn:disabled{opacity:.5;cursor:not-allowed}
+.gdlc-btn.lembut{background:var(--pink-pale);color:var(--pink)}
+.gdlc-btn.gelap{background:var(--dark)}
+.gdlc-btn.garis{background:#fff;color:var(--dark);border:1.5px solid var(--border)}
+.gdlc-input{width:100%;min-height:44px;padding:0 12px;border-radius:12px;border:1.5px solid var(--border);font-family:inherit;font-size:14px;color:var(--dark);background:#fff;box-sizing:border-box}
+textarea.gdlc-input{padding:10px 12px;min-height:84px;resize:vertical}
+.gdlc-label{display:block;font-size:12px;font-weight:800;color:var(--gray-text);margin:8px 0 5px}
+.gdlc-kosong{text-align:center;padding:24px 10px;color:var(--gray-text);font-size:13px}
+.gdlc-kosong > div:first-child{font-size:28px;margin-bottom:6px}
+.gdlc-info{background:#FFF3D6;color:#6B4A00;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin-bottom:10px}
+.gdlc-pilih{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.gdlc-pilih button{text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:14px;padding:12px;cursor:pointer;font-family:inherit;transition:border-color .15s ease-out,background-color .15s ease-out}
+.gdlc-pilih button.on{border-color:var(--pink);background:var(--pink-pale)}
+.gdlc-pilih b{display:block;font-size:13px;color:var(--dark);margin-bottom:3px}
+.gdlc-pilih span{font-size:11.5px;color:var(--gray-text);line-height:1.4}
+.gdlc-tabel{width:100%;border-collapse:collapse;font-size:13px}
+.gdlc-tabel th{text-align:left;font-size:11px;color:var(--gray-text);padding:7px 6px;border-bottom:1.5px solid var(--border)}
+.gdlc-tabel td{padding:8px 6px;border-bottom:1px solid #F3E4EC;vertical-align:middle}
+.gdlc-produk{display:flex;align-items:center;gap:10px;padding:8px;border:1.5px solid var(--border);border-radius:12px;margin-bottom:6px;cursor:pointer;background:#fff;transition:border-color .15s ease-out}
+.gdlc-produk.on{border-color:var(--pink);background:var(--pink-pale)}
+.gdlc-produk img,.gdlc-produk .ph{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--gray)}
+.icon-card .gdlc-ic-mahkota{width:40px;height:40px}
+@media (max-width:520px){.gdlc-pilih{grid-template-columns:1fr}}
+</style>
+
+<svg width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <linearGradient id="gdlcEmas" x1="0" y1="-22" x2="0" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFE7A0"/><stop offset=".5" stop-color="#F2BE55"/><stop offset="1" stop-color="#C98A2E"/></linearGradient>
+    <linearGradient id="gdlcPita" x1="0" y1="6" x2="0" y2="18" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E9AE4A"/><stop offset="1" stop-color="#B9792A"/></linearGradient>
+    <radialGradient id="gdlcBola" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#FFF6D6"/><stop offset=".5" stop-color="#F2BE55"/><stop offset="1" stop-color="#B9792A"/></radialGradient>
+  </defs>
+</svg>
+
+<!-- Menu internal GDLC -->
+<div class="modal-bg" id="m-i-gdlc"><div class="modal-box" style="max-width:860px"><button class="modal-close" title="Kembali" onclick="closeModal('m-i-gdlc')">‹ ✕</button>
+  <div class="modal-title">👑 GDLC</div>
+  <div class="card-sub">Girlhood Den Leader Circle: angkat mentor, pantau tim, atur bonus, dan kampanye tim.</div>
+  <div id="gdlci-status"></div>
+  <div class="gdlc-tabs" id="gdlci-tabs">
+    <button type="button" data-t="ringkasan" onclick="gdlcITab('ringkasan')">Ringkasan</button>
+    <button type="button" data-t="angkat" onclick="gdlcITab('angkat')">Angkat mentor</button>
+    <button type="button" data-t="kampanye" onclick="gdlcITab('kampanye')">Kampanye tim</button>
+    <button type="button" data-t="laporan" onclick="gdlcITab('laporan')">Laporan mingguan</button>
+    <button type="button" data-t="atur" onclick="gdlcITab('atur')">Pengaturan</button>
+  </div>
+  <div id="gdlci-isi"></div>
+</div></div>
+
+<!-- Menu mentor: Tim Saya -->
+<div class="modal-bg" id="m-c-gdlc"><div class="modal-box" style="max-width:560px"><button class="modal-close" title="Kembali" onclick="closeModal('m-c-gdlc')">‹ ✕</button>
+  <div class="modal-title">👑 Tim Saya</div>
+  <div class="gdlc-tabs" id="gdlcm-tabs">
+    <button type="button" data-t="tim" onclick="gdlcMTab('tim')">Tim</button>
+    <button type="button" data-t="materi" onclick="gdlcMTab('materi')">Kirim materi</button>
+    <button type="button" data-t="kampanye" onclick="gdlcMTab('kampanye')">Kampanye</button>
+    <button type="button" data-t="laporan" onclick="gdlcMTab('laporan')">Laporan</button>
+  </div>
+  <div id="gdlcm-isi"></div>
+</div></div>
+
+<script>
+// ======================= GDLC: bersama =======================
+window._gdlcMentorSet = new Set();
+window._gdlcStatus = null;
+
+const GDLC_PESAN = {
+  BUKAN_INTERNAL: 'Menu ini khusus tim internal.',
+  BUKAN_MENTOR: 'Akun ini belum terdaftar sebagai mentor.',
+  GDLC_TUTUP: 'Fitur GDLC segera hadir.',
+  CREATOR_TIDAK_VALID: 'Creator belum terverifikasi atau sedang dibekukan.',
+  LEVEL_KOSONG: 'Isi minimal 1 level.',
+  LEVEL_KEBANYAKAN: 'Maksimal 20 level.',
+  LEVEL_HARUS_NAIK: 'Target GMV tiap level harus lebih besar dari level sebelumnya.',
+  BULAN_BELUM_SELESAI: 'Bonus baru bisa ditandai dibayar setelah bulannya selesai.',
+  PRODUK_TIDAK_ADA: 'Produk tidak ditemukan atau sedang dibekukan.',
+  TENGGAT_LEWAT: 'Tenggat tidak boleh sebelum hari ini.',
+  KAMPANYE_TIDAK_ADA: 'Kampanye tidak ditemukan.',
+  STATUS_TIDAK_SESUAI: 'Status kampanye sudah berubah. Muat ulang halaman ini.',
+  PEMBAGIAN_BELUM_PAS: 'Jumlah video yang dibagi harus sama dengan total video kampanye.',
+  PEMBAGIAN_KOSONG: 'Pilih minimal 1 anggota.',
+  BUKAN_ANGGOTA: 'Creator itu bukan anggota timmu.',
+  JUMLAH_TIDAK_VALID: 'Jumlah video minimal 1.',
+  BATAS_MATERI: 'Maksimal 5 materi per hari. Coba lagi besok ya.',
+  MINGGU_TIDAK_SESUAI: 'Laporan hanya bisa diisi untuk minggu ini atau minggu lalu.',
+  TUGAS_TIDAK_ADA: 'Ajakan tidak ditemukan.',
+  SUDAH_DI_KAMPANYE: 'Anggota itu sudah ada di kampanye ini.'
+};
+function gdlcPesanError(error){
+  const m = String((error && error.message) || error || '');
+  const kode = Object.keys(GDLC_PESAN).find(function(k){ return m.indexOf(k) !== -1; });
+  return kode ? GDLC_PESAN[kode] : 'Ada kendala, coba lagi ya.';
+}
+async function gdlcRpc(nama, param){
+  const { data, error } = await db.rpc(nama, param || {});
+  if(error) throw error;
+  return data;
+}
+function gdlcHariIni(){ return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })); }
+function gdlcTglIso(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function gdlcAwalBulan(selisih){ const d = gdlcHariIni(); d.setDate(1); d.setMonth(d.getMonth() + (selisih || 0)); return gdlcTglIso(d); }
+function gdlcAwalMinggu(selisih){ const d = gdlcHariIni(); const hari = (d.getDay() + 6) % 7; d.setDate(d.getDate() - hari + 7 * (selisih || 0)); return gdlcTglIso(d); }
+function gdlcLabelBulan(iso){ return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); }
+function gdlcLabelTgl(iso){ return iso ? new Date(String(iso).length <= 10 ? iso + 'T00:00:00' : iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'; }
+
+function gdlcMahkotaSvg(){
+  return '<svg class="gdlc-mahkota" viewBox="-25 -25 150 150" aria-hidden="true">'
+    + '<ellipse cx="50" cy="17.5" rx="27" ry="3.2" fill="#4A2B47" opacity=".2"/>'
+    + '<path d="M23 15 L19 -6 L27 3 L34.5 -12 L42 1 L50 -19 L58 1 L65.5 -12 L73 3 L81 -6 L77 15 Q50 19.5 23 15 Z" fill="url(#gdlcEmas)" stroke="#B9792A" stroke-width=".6" stroke-linejoin="round"/>'
+    + '<path d="M22.3 6 Q50 9 77.7 6 L77 15 Q50 19.5 23 15 Z" fill="url(#gdlcPita)" stroke="#B9792A" stroke-width=".5"/>'
+    + '<path d="M24 8.2 Q50 11 76 8.2" fill="none" stroke="#FFE7A0" stroke-width=".7" opacity=".8"/>'
+    + '<circle cx="36" cy="11.6" r="1.8" fill="#C4144E" stroke="#FFE6A8" stroke-width=".5"/><circle cx="50" cy="11.6" r="1.8" fill="#C4144E" stroke="#FFE6A8" stroke-width=".5"/><circle cx="64" cy="11.6" r="1.8" fill="#C4144E" stroke="#FFE6A8" stroke-width=".5"/>'
+    + '<circle cx="19" cy="-8.4" r="2.9" fill="url(#gdlcBola)"/><circle cx="34.5" cy="-14.4" r="2.9" fill="url(#gdlcBola)"/><circle cx="50" cy="-21.4" r="3.4" fill="url(#gdlcBola)"/><circle cx="65.5" cy="-14.4" r="2.9" fill="url(#gdlcBola)"/><circle cx="81" cy="-8.4" r="2.9" fill="url(#gdlcBola)"/>'
+    + '</svg>';
+}
+// Avatar dengan mahkota untuk mentor. Dipakai di semua tampilan GDLC.
+function gdlcAvatar(url, nama, tier, size, mentor){
+  size = size || 40;
+  const av = htmlAvatar(url, nama, tier, size);
+  if(!mentor) return av;
+  return '<span class="gdlc-av" style="width:' + size + 'px;height:' + size + 'px;margin-top:' + Math.round(size * 0.22) + 'px">' + av + gdlcMahkotaSvg() + '</span>';
+}
+function gdlcIsMentor(memberId){ return !!memberId && window._gdlcMentorSet.has(memberId); }
+
+async function gdlcMuatMentorIds(){
+  try {
+    const ids = await gdlcRpc('gdlc_mentor_ids');
+    window._gdlcMentorSet = new Set(ids || []);
+  } catch(e){ window._gdlcMentorSet = new Set(); }
+}
+
+// ======================= GDLC: creator =======================
+async function gdlcInitCreator(){
+  try { window._gdlcStatus = await gdlcRpc('gdlc_status_saya'); } catch(e){ window._gdlcStatus = { buka: false, akses: false, mentor: false, punya_mentor: false }; }
+  const st = window._gdlcStatus;
+  await gdlcMuatMentorIds();
+  const ic = document.getElementById('ic-gdlc-tim');
+  if(ic){
+    ic.style.display = st.mentor ? '' : 'none';
+    ic.classList.toggle('hk-kunci-menu', st.mentor && !st.akses);
+  }
+  const tab = document.getElementById('ps-tab-mentor');
+  if(tab) tab.textContent = st.akses ? 'Mentor 👑' : 'Mentor 🔒';
+  // Mahkota di foto profil sendiri kalau mentor dan fitur sudah dibuka untuknya.
+  const frame = document.getElementById('avatar-frame');
+  if(frame){
+    const lama = frame.querySelector('svg.gdlc-mahkota');
+    if(lama) lama.remove();
+    frame.classList.toggle('gdlc-pakai', st.mentor && st.akses);
+    if(st.mentor && st.akses) frame.insertAdjacentHTML('beforeend', gdlcMahkotaSvg());
+  }  if(typeof updateEndorsementLockState === 'function') updateEndorsementLockState();
+}
+function gdlcSegera(){ showToast('Fitur mentor GDLC segera hadir 👑'); }
+
+async function gdlcBukaTimSaya(){
+  const st = window._gdlcStatus || {};
+  if(!st.mentor) return;
+  if(!st.akses){ gdlcSegera(); return; }
+  openModal('m-c-gdlc');
+  gdlcMTab(window._gdlcMTab || 'tim');
+}
+
+// ---- Papan Skor: tab Mentor ----
+async function gdlcPapanMentor(wrap, intro){
+  const st = window._gdlcStatus || {};
+  if(!st.akses){
+    intro.innerHTML = 'Papan peringkat tim mentor GDLC.';
+    wrap.innerHTML = '<div class="gdlc-kosong"><div>🔒</div>Papan mentor segera hadir.</div>';
+    return;
+  }
+  intro.innerHTML = 'Peringkat tim mentor dari penjualan anggotanya bulan ini (GMV mentor sendiri tidak dihitung).';
+  wrap.innerHTML = '<div class="card-sub">Memuat...</div>';
+  let rows = [];
+  try { rows = await gdlcRpc('papan_skor_mentor', { p_bulan: gdlcAwalBulan(0) }); } catch(e){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal memuat papan mentor.</div>'; return; }
+  if(!rows.length){ wrap.innerHTML = '<div class="gdlc-kosong"><div>👑</div>Belum ada tim mentor.</div>'; return; }
+  const medal = ['#F5C542', '#D9DCE3', '#D8A06B'];
+  wrap.innerHTML = rows.map(function(r, i){
+    const aku = r.member_id === currentSession.memberId;
+    return '<div class="ps-baris' + (aku ? ' aku' : '') + '" style="align-items:center"><span class="ps-rank" style="background:' + (i < 3 ? medal[i] : '#F1ECF1') + '">' + (i + 1) + '</span>'
+      + gdlcAvatar(r.foto, r.nama, r.tier, 36, true)
+      + '<span class="ps-nama">Tim ' + escHtml(r.nama || '-') + (aku ? ' (kamu)' : '')
+      + '<br><span class="gdlc-chip' + (r.level >= 3 ? ' ungu' : '') + '" style="margin-top:3px">' + (r.level ? 'Level ' + r.level : 'Belum level') + '</span> <span class="gdlc-sub">' + r.anggota + ' anggota</span></span>'
+      + '<span class="ps-nilai">' + rpPendek(r.gmv) + '</span></div>';
+  }).join('');
+}
+
+// ---- Notifikasi: kabar mentor baru / naik level ----
+async function gdlcNotifUmum(){
+  const st = window._gdlcStatus || {};
+  if(!st.akses) return [];
+  let list = [];
+  try { list = await gdlcRpc('creator_gdlc_pengumuman'); } catch(e){ return []; }
+  return (list || []).map(function(p){
+    const teks = p.jenis === 'mentor_baru'
+      ? '👑 <b>Kak ' + escHtml(p.nama) + '</b> resmi jadi Mentor GDLC.'
+      : '🎉 <b>Tim Kak ' + escHtml(p.nama) + '</b> naik ke <b>Level ' + p.level + '</b> bulan ini (' + p.anggota + ' anggota).';
+    return { kategori: 'gdlc', detail_text: teks, brand_id: null, created_at: p.created_at };
+  });
+}
+
+// ---- Edukasi: Dari mentor kamu ----
+async function gdlcEdukasi(){
+  const box = document.getElementById('gdlc-edukasi');
+  if(!box) return;
+  box.innerHTML = '';
+  const st = window._gdlcStatus || {};
+  if(!st.akses || !st.punya_mentor) return;
+  let d;
+  try { d = await gdlcRpc('creator_gdlc_materi_saya'); } catch(e){ return; }
+  if(!d || !d.mentor) return;
+  const m = d.mentor;
+  let html = '<div class="gdlc-kartu" style="border-color:#F4DDA8;background:#FFFCF3"><div class="gdlc-baris">' + gdlcAvatar(m.foto, m.nama, m.tier, 40, true)
+    + '<div><div class="gdlc-nama">Dari mentor kamu</div><div class="gdlc-sub">Kak ' + escHtml(m.nama) + ' · materi produk untuk timnya</div></div></div></div>';
+  if(!d.materi.length){
+    html += '<div class="gdlc-kosong"><div>📚</div>Belum ada materi dari Kak ' + escHtml(m.nama) + '.</div>';
+  } else {
+    html += d.materi.map(gdlcKartuMateri).join('');
+  }
+  html += '<div class="card-sub" style="margin:12px 0 6px;font-weight:800">Materi dari tim Girlhood Den</div>';
+  box.innerHTML = html;
+}
+function gdlcKartuMateri(x){
+  const foto = x.foto ? '<img src="' + escHtml(x.foto) + '" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:10px" loading="lazy">' : '';
+  const ringkas = x.ringkasan
+    ? '<div style="white-space:pre-line;font-size:13px;line-height:1.55;margin-top:8px">' + escHtml(x.ringkasan) + '</div>'
+    : '<div class="gdlc-sub" style="margin-top:8px">Ringkasan produk belum diisi brand.</div>';
+  const video = (x.video || []).length
+    ? '<div class="gdlc-label">Contoh video yang laku</div>' + x.video.map(function(v){
+        const url = 'https://www.tiktok.com/@' + encodeURIComponent(v.username) + '/video/' + encodeURIComponent(v.content_id);
+        return '<div class="gdlc-baris" style="justify-content:space-between;padding:6px 0"><div><b style="font-size:13px">@' + escHtml(v.username) + '</b><div class="gdlc-sub">' + rpPendek(v.gmv) + ' · ' + v.orders + ' order (60 hari)</div></div>'
+          + '<a class="gdlc-btn lembut" style="display:inline-flex;align-items:center;text-decoration:none" href="' + url + '" target="_blank" rel="noopener">Tonton</a></div>';
+      }).join('')
+    : '';
+  const file = (x.file || []).length
+    ? '<div class="gdlc-label">File dari brand</div>' + x.file.map(function(f){ return '<a href="' + escHtml(f.url) + '" target="_blank" rel="noopener" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">📄 ' + escHtml(f.nama || 'File') + '</a>'; }).join('')
+    : '';
+  const link = x.link ? '<button type="button" class="gdlc-btn" style="width:100%;margin-top:10px" onclick="navigator.clipboard.writeText(' + escHtml(JSON.stringify(x.link)) + ');showToast(\'Link produk disalin\')">Salin link produk</button>' : '';
+  return '<div class="gdlc-kartu">' + foto
+    + '<div class="gdlc-sub" style="font-weight:800;color:var(--pink)">' + escHtml(x.brand || '') + '</div>'
+    + '<div class="gdlc-nama" style="font-size:16px">' + escHtml(x.produk || '') + '</div>'
+    + '<div class="gdlc-sub">' + (x.komisi ? 'Komisi ' + x.komisi + '% · ' : '') + (x.harga ? formatRupiah(x.harga) + ' · ' : '') + 'dikirim ' + gdlcLabelTgl(x.created_at) + '</div>'
+    + (x.pesan ? '<div style="background:var(--pink-pale);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:8px"><b>Pesan mentor:</b> ' + escHtml(x.pesan) + '</div>' : '')
+    + ringkas + video + file + link + '</div>';
+}
+
+// ---- Endorsement: ajakan kampanye tim ----
+async function gdlcAjakanSaya(){
+  const st = window._gdlcStatus || {};
+  if(!st.akses) return [];
+  try { return (await gdlcRpc('creator_gdlc_tugas_saya')) || []; } catch(e){ return []; }
+}
+async function gdlcRenderAjakan(){
+  const box = document.getElementById('gdlc-ajakan');
+  if(!box) return;
+  const list = await gdlcAjakanSaya();
+  box.innerHTML = list.map(function(t){
+    return '<div class="gdlc-kartu" style="border-color:#F9B8D2">'
+      + '<div class="gdlc-baris">' + gdlcAvatar(t.mentor_foto, t.mentor_nama, t.mentor_tier, 40, true)
+      + '<div class="gdlc-sub" style="color:var(--dark);font-size:13.5px"><b>Kak ' + escHtml(t.mentor_nama) + '</b> ngajak kamu ikut kampanye tim</div></div>'
+      + '<div class="gdlc-baris" style="margin-top:10px">' + (t.foto ? '<img src="' + escHtml(t.foto) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover">' : '')
+      + '<div><div class="gdlc-nama">' + escHtml(t.produk) + '</div><div class="gdlc-sub">' + escHtml(t.brand) + '</div></div></div>'
+      + '<div class="gdlc-angka"><div><b>' + t.jumlah_video + ' video</b><span>tugas kamu</span></div><div><b>' + gdlcLabelTgl(t.tenggat) + '</b><span>tenggat</span></div>'
+      + (t.fee_per_video ? '<div><b>' + rpPendek(t.fee_per_video) + '</b><span>per video</span></div>' : '') + '</div>'
+      + (t.catatan ? '<div class="gdlc-sub" style="margin-top:8px">' + escHtml(t.catatan) + '</div>' : '')
+      + '<div class="gdlc-sub" style="margin-top:8px">Sample dikirim tim Girlhood Den setelah kamu ikut. Setor videonya di job endorsement ini.</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="gdlc-btn garis" style="flex:1" onclick="gdlcJawabAjakan(\'' + t.id + '\', false, this)">Nggak dulu</button>'
+      + '<button type="button" class="gdlc-btn" style="flex:2" onclick="gdlcJawabAjakan(\'' + t.id + '\', true, this)">Ikut kampanye</button></div></div>';
+  }).join('');
+  return list.length;
+}
+async function gdlcJawabAjakan(id, ikut, btn){
+  btn.disabled = true;
+  try {
+    await gdlcRpc('creator_gdlc_tugas_jawab', { p_id: id, p_ikut: ikut });
+    showToast(ikut ? 'Berhasil! Kamu ikut kampanye tim ini.' : 'Oke, mentor kamu sudah dikabari.');
+    await gdlcRenderAjakan();
+    if(typeof loadCreatorEndorsementJobs === 'function') loadCreatorEndorsementJobs();
+    updateEndorsementLockState();
+  } catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+
+// ======================= GDLC: menu mentor (Tim Saya) =======================
+function gdlcMTab(t){
+  window._gdlcMTab = t;
+  document.querySelectorAll('#gdlcm-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
+  const el = document.getElementById('gdlcm-isi');
+  el.innerHTML = '<div class="card-sub">Memuat...</div>';
+  ({ tim: gdlcMTim, materi: gdlcMMateri, kampanye: gdlcMKampanye, laporan: gdlcMLaporan })[t](el);
+}
+async function gdlcMTim(el){
+  let s, anggota;
+  try { [s, anggota] = await Promise.all([gdlcRpc('mentor_gdlc_saya', { p_bulan: gdlcAwalBulan(0) }), gdlcRpc('mentor_gdlc_anggota', { p_bulan: gdlcAwalBulan(0) })]); }
+  catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const nx = s.berikut;
+  const persen = nx ? Math.min(100, Math.round(100 * s.gmv_settled / nx.min_gmv)) : 100;
+  const linkAjak = 'https://girlhoodden.com';
+  const teksAjak = 'Yuk gabung tim aku di Girlhood Den Community. Daftar di ' + linkAjak + ' dan pakai kode ajak aku: ' + (s.kode || '-');
+  let html = '<div class="gdlc-kartu" style="background:var(--dark);color:#fff;border:none">'
+    + '<div class="gdlc-baris">' + gdlcAvatar(s.foto, s.nama, s.tier, 48, true)
+    + '<div><div style="font-weight:800;font-size:16px">' + escHtml(s.nama) + '</div><div style="font-size:12px;opacity:.85">Mentor sejak ' + gdlcLabelTgl(s.mulai_at) + ' · ' + escHtml(s.tier) + '</div></div></div>'
+    + '<div style="background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+    + '<div><div style="font-size:11px;opacity:.8;font-weight:700">KODE AJAK KAMU</div><b style="font-size:18px;letter-spacing:.06em">' + escHtml(s.kode || '-') + '</b></div>'
+    + '<div style="display:flex;gap:6px"><button type="button" class="gdlc-btn garis" onclick="navigator.clipboard.writeText(' + escHtml(JSON.stringify(s.kode || '')) + ');showToast(\'Kode disalin\')">Salin</button>'
+    + '<a class="gdlc-btn" style="display:inline-flex;align-items:center;text-decoration:none" href="https://wa.me/?text=' + encodeURIComponent(teksAjak) + '" target="_blank" rel="noopener">Bagikan</a></div></div></div>';
+  if(s.kampanye_menunggu > 0) html += '<div class="gdlc-info">👑 Ada ' + s.kampanye_menunggu + ' kampanye yang menunggu kamu bagi tugasnya. Buka tab Kampanye.</div>';
+  html += '<div class="gdlc-kartu"><div class="gdlc-baris" style="justify-content:space-between"><b>Bulan ini · ' + (s.level ? 'Level ' + s.level : 'belum level') + '</b>'
+    + (s.bonus ? '<span class="gdlc-chip emas">Bonus ' + rpPendek(s.bonus) + '</span>' : '') + '</div>'
+    + '<div class="gdlc-angka"><div><b>' + rpPendek(s.gmv_settled) + '</b><span>GMV tim (settled)</span></div><div><b>' + rpPendek(s.gmv_pending) + '</b><span>masih pending</span></div>'
+    + '<div><b>' + s.aktif + ' / ' + s.anggota + '</b><span>anggota aktif</span></div></div>';
+  if(nx){
+    html += '<div class="gdlc-sub" style="margin-top:10px">Menuju <b>Level ' + nx.level + '</b>: ' + rpPendek(nx.min_gmv) + ' dan minimal ' + nx.min_aktif + ' anggota aktif' + (nx.gathering ? ' · dapat gathering' : '') + '</div>'
+      + '<div class="gdlc-bar"><i style="width:' + persen + '%"></i></div>';
+  } else {
+    html += '<div class="gdlc-sub" style="margin-top:10px">Level tertinggi sudah tercapai. Mantap! 🎉</div>';
+  }
+  if(!s.tier_ok) html += '<div class="gdlc-info" style="margin-top:10px">Bonus mentor berlaku untuk tier Gold ke atas. Tier kamu sekarang ' + escHtml(s.tier) + '.</div>';
+  html += '<div class="gdlc-sub" style="margin-top:8px">Hitungan dari penjualan anggota lewat link Girlhood Den. GMV kamu sendiri dan pesanan retur tidak dihitung. Bonus dari GMV settled.</div></div>';
+  html += '<details class="gdlc-kartu"><summary style="cursor:pointer;font-weight:800">Tangga level & bonus</summary><table class="gdlc-tabel" style="margin-top:8px"><tr><th>Level</th><th>GMV tim</th><th>Anggota aktif</th><th>Bonus</th></tr>'
+    + (s.level_list || []).map(function(l){ return '<tr><td>' + l.urutan + '</td><td>' + rpPendek(l.min_gmv) + '</td><td>' + l.min_aktif + '</td><td>' + rpPendek(l.bonus) + (l.gathering ? ' + gathering' : '') + '</td></tr>'; }).join('')
+    + '</table><div class="gdlc-sub" style="margin-top:6px">Bonus dibayar dari level tertinggi yang tercapai. Semua level juga dapat prioritas slot endorsement.</div></details>';
+  html += '<div class="gdlc-label">Anggota tim (' + anggota.length + ')</div>';
+  html += anggota.length ? anggota.map(function(a){
+    return '<div class="gdlc-kartu gdlc-baris" style="padding:10px 12px">' + htmlAvatar(a.foto, a.nama, a.tier, 38)
+      + '<div style="flex:1;min-width:0"><div class="gdlc-nama" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(a.nama) + '</div><div class="gdlc-sub">' + (a.username ? '@' + escHtml(a.username) + ' · ' : '') + escHtml(a.tier) + '</div></div>'
+      + '<div style="text-align:right"><b style="font-size:13px">' + rpPendek(Number(a.gmv_settled) + Number(a.gmv_pending)) + '</b><br><span class="gdlc-chip ' + (a.aktif ? 'hijau' : '') + '">' + (a.aktif ? 'aktif' : 'belum jualan') + '</span></div></div>';
+  }).join('') : '<div class="gdlc-kosong"><div>🤝</div>Belum ada anggota. Bagikan kode ajak kamu ke teman creator.</div>';
+  el.innerHTML = html;
+}
+async function gdlcMMateri(el){
+  window._gdlcProdukPilih = null;
+  el.innerHTML = '<div class="gdlc-info">Pilih produk, tulis pesan singkat, lalu kirim. Semua anggota timmu dapat notifikasi, dan materinya tersimpan di menu Edukasi mereka.</div>'
+    + '<input class="gdlc-input" id="gdlcm-cari" placeholder="🔍 Cari produk atau brand..." oninput="clearTimeout(window._gdlcCariT);window._gdlcCariT=setTimeout(gdlcMCariProduk,350)">'
+    + '<div class="gdlc-sub" id="gdlcm-cari-judul" style="margin:8px 0 6px">Paling laku di timmu bulan ini</div>'
+    + '<div id="gdlcm-produk"><div class="card-sub">Memuat...</div></div>'
+    + '<label class="gdlc-label" for="gdlcm-pesan">Pesan untuk tim (opsional)</label><textarea class="gdlc-input" id="gdlcm-pesan" maxlength="500" placeholder="Contoh: Coba bikin video pagi hari pas mandi, pakai poin nomor 1 di awal."></textarea>'
+    + '<button type="button" class="gdlc-btn" id="gdlcm-kirim" style="width:100%;margin-top:10px" onclick="gdlcMKirimMateri(this)">Kirim ke tim</button>'
+    + '<div class="gdlc-label" style="margin-top:16px">Materi yang sudah dikirim</div><div id="gdlcm-riwayat"><div class="card-sub">Memuat...</div></div>';
+  gdlcMCariProduk();
+  try {
+    const r = await gdlcRpc('mentor_gdlc_materi_list');
+    document.getElementById('gdlcm-riwayat').innerHTML = r.length ? r.map(function(x){
+      return '<div class="gdlc-baris" style="padding:8px 0;border-bottom:1px solid #F3E4EC"><div style="flex:1"><b style="font-size:13px">' + escHtml(x.produk) + '</b><div class="gdlc-sub">' + escHtml(x.brand) + ' · ' + gdlcLabelTgl(x.created_at) + '</div>'
+        + (x.pesan ? '<div class="gdlc-sub" style="color:var(--dark)">"' + escHtml(x.pesan) + '"</div>' : '') + '</div></div>';
+    }).join('') : '<div class="gdlc-sub">Belum ada materi terkirim.</div>';
+  } catch(e){ document.getElementById('gdlcm-riwayat').innerHTML = ''; }
+}
+async function gdlcMCariProduk(){
+  const q = (document.getElementById('gdlcm-cari') || {}).value || '';
+  const wrap = document.getElementById('gdlcm-produk');
+  if(!wrap) return;
+  document.getElementById('gdlcm-cari-judul').textContent = q.trim().length >= 2 ? 'Hasil pencarian' : 'Paling laku di timmu bulan ini';
+  let list = [];
+  try { list = await gdlcRpc('mentor_gdlc_cari_produk', { p_q: q }); } catch(e){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  window._gdlcProdukList = list;
+  wrap.innerHTML = list.length ? list.map(function(p){
+    return '<div class="gdlc-produk' + (window._gdlcProdukPilih === p.id ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" onclick="gdlcMPilihProduk(this)">'
+      + (p.foto ? '<img src="' + escHtml(p.foto) + '" alt="" loading="lazy">' : '<span class="ph"></span>')
+      + '<div style="flex:1;min-width:0"><b style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(p.nama) + '</b><span class="gdlc-sub">' + escHtml(p.brand) + (p.komisi ? ' · komisi ' + p.komisi + '%' : '') + '</span></div>'
+      + (p.ada_ringkasan ? '' : '<span class="gdlc-chip oren" title="Ringkasan produk belum diisi brand">tanpa ringkasan</span>') + '</div>';
+  }).join('') : '<div class="gdlc-sub">' + (q.trim().length >= 2 ? 'Produk tidak ditemukan.' : 'Belum ada penjualan tim bulan ini. Cari produk lewat kolom di atas.') + '</div>';
+}
+function gdlcMPilihProduk(el){
+  window._gdlcProdukPilih = el.dataset.id;
+  document.querySelectorAll('#gdlcm-produk .gdlc-produk').forEach(function(x){ x.classList.toggle('on', x === el); });
+}
+async function gdlcMKirimMateri(btn){
+  if(!window._gdlcProdukPilih){ showToast('Pilih produknya dulu ya.'); return; }
+  btn.disabled = true; btn.textContent = 'Mengirim...';
+  try {
+    const n = await gdlcRpc('mentor_gdlc_kirim_materi', { p_bp: window._gdlcProdukPilih, p_pesan: document.getElementById('gdlcm-pesan').value });
+    showToast('Materi terkirim ke ' + n + ' anggota tim.');
+    gdlcMTab('materi');
+  } catch(e){ btn.disabled = false; btn.textContent = 'Kirim ke tim'; showToast(gdlcPesanError(e)); }
+}
+const GDLC_STATUS_KAMPANYE = { menunggu_mentor: ['Menunggu kamu bagi tugas', 'oren'], menunggu_cek: ['Dicek tim internal', ''], berjalan: ['Berjalan', 'hijau'], selesai: ['Selesai', 'ungu'], batal: ['Batal', 'merah'] };
+const GDLC_STATUS_TUGAS = { rencana: ['Rencana', ''], diajak: ['Menunggu jawaban', 'oren'], ikut: ['Ikut', 'hijau'], tolak: ['Menolak', 'merah'] };
+function gdlcChipStatus(peta, s){ const x = peta[s] || [s, '']; return '<span class="gdlc-chip ' + x[1] + '">' + escHtml(x[0]) + '</span>'; }
+async function gdlcMKampanye(el){
+  let list, anggota;
+  try { [list, anggota] = await Promise.all([gdlcRpc('mentor_gdlc_kampanye'), gdlcRpc('mentor_gdlc_anggota', { p_bulan: gdlcAwalBulan(0) })]); }
+  catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  window._gdlcAnggota = anggota;
+  if(!list.length){ el.innerHTML = '<div class="gdlc-kosong"><div>🚀</div>Belum ada kampanye tim. Tim internal akan mengabari kalau ada brand yang mau kerja sama dengan timmu.</div>'; return; }
+  el.innerHTML = list.map(function(k){
+    let html = '<div class="gdlc-kartu"><div class="gdlc-baris">' + (k.foto ? '<img src="' + escHtml(k.foto) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover">' : '')
+      + '<div style="flex:1"><div class="gdlc-nama">' + escHtml(k.produk) + '</div><div class="gdlc-sub">' + escHtml(k.brand) + '</div></div>' + gdlcChipStatus(GDLC_STATUS_KAMPANYE, k.status) + '</div>'
+      + '<div class="gdlc-angka"><div><b>' + k.total_video + ' video</b><span>total</span></div><div><b>' + gdlcLabelTgl(k.tenggat) + '</b><span>tenggat</span></div>'
+      + (k.fee_per_video ? '<div><b>' + rpPendek(k.fee_per_video) + '</b><span>per video untuk anggota</span></div>' : '') + '</div>'
+      + (k.catatan ? '<div class="gdlc-sub" style="margin-top:8px">' + escHtml(k.catatan) + '</div>' : '');
+    if(k.status === 'menunggu_mentor' || k.status === 'menunggu_cek'){
+      const isi = {}; (k.tugas || []).forEach(function(t){ isi[t.member_id] = t.jumlah_video; });
+      html += '<div class="gdlc-label">Bagi ' + k.total_video + ' video ke anggota</div>'
+        + (anggota.length ? anggota.map(function(a){
+            return '<div class="gdlc-baris" style="padding:6px 0">' + htmlAvatar(a.foto, a.nama, a.tier, 32) + '<div style="flex:1;min-width:0;font-size:13px;font-weight:700">' + escHtml(a.nama) + '<div class="gdlc-sub">' + (a.aktif ? 'aktif bulan ini' : 'belum jualan bulan ini') + '</div></div>'
+              + '<input type="number" min="0" max="100" inputmode="numeric" class="gdlc-input gdlc-bagi" data-k="' + k.id + '" data-m="' + escHtml(a.member_id) + '" value="' + (isi[a.member_id] || '') + '" placeholder="0" style="width:72px;text-align:center" oninput="gdlcMHitungBagi(\'' + k.id + '\',' + k.total_video + ')"></div>';
+          }).join('') : '<div class="gdlc-sub">Belum ada anggota di timmu.</div>')
+        + '<div class="gdlc-sub" id="gdlc-bagi-sisa-' + k.id + '" style="margin-top:6px"></div>'
+        + '<button type="button" class="gdlc-btn" style="width:100%;margin-top:8px" onclick="gdlcMKirimBagi(\'' + k.id + '\',' + k.total_video + ',this)">' + (k.status === 'menunggu_cek' ? 'Perbarui pembagian' : 'Kirim pembagian') + '</button>';
+    } else {
+      html += '<table class="gdlc-tabel" style="margin-top:10px"><tr><th>Anggota</th><th>Video</th><th>Status</th></tr>'
+        + (k.tugas || []).map(function(t){
+            let aksi = '';
+            if(k.status === 'berjalan' && t.status === 'tolak'){
+              const calon = anggota.filter(function(a){ return !(k.tugas || []).some(function(x){ return x.member_id === a.member_id; }); });
+              aksi = calon.length ? '<div class="gdlc-baris" style="margin-top:6px"><select class="gdlc-input" id="gdlc-ganti-' + t.id + '" style="min-height:38px">' + calon.map(function(a){ return '<option value="' + escHtml(a.member_id) + '">' + escHtml(a.nama) + '</option>'; }).join('') + '</select>'
+                + '<button type="button" class="gdlc-btn lembut" style="min-height:38px" onclick="gdlcMGanti(\'' + t.id + '\',this)">Pindahkan</button></div>' : '';
+            }
+            return '<tr><td><b>' + escHtml(t.nama) + '</b>' + aksi + '</td><td>' + (t.status === 'ikut' ? t.video_ok + ' / ' : '') + t.jumlah_video + '</td><td>' + gdlcChipStatus(GDLC_STATUS_TUGAS, t.status) + '</td></tr>';
+          }).join('') + '</table>';
+    }
+    return html + '</div>';
+  }).join('');
+  list.forEach(function(k){ if(k.status === 'menunggu_mentor' || k.status === 'menunggu_cek') gdlcMHitungBagi(k.id, k.total_video); });
+}
+function gdlcMHitungBagi(id, total){
+  let n = 0;
+  document.querySelectorAll('.gdlc-bagi[data-k="' + id + '"]').forEach(function(i){ n += Math.max(0, parseInt(i.value || '0', 10) || 0); });
+  const el = document.getElementById('gdlc-bagi-sisa-' + id);
+  if(el) el.innerHTML = n === total ? '<span style="color:var(--teal);font-weight:800">✓ Pas, ' + n + ' dari ' + total + ' video</span>' : 'Terbagi ' + n + ' dari ' + total + ' video' + (n > total ? ' <span style="color:var(--red);font-weight:800">(kelebihan ' + (n - total) + ')</span>' : ' · sisa ' + (total - n));
+}
+async function gdlcMKirimBagi(id, total, btn){
+  const rows = [];
+  document.querySelectorAll('.gdlc-bagi[data-k="' + id + '"]').forEach(function(i){ const j = parseInt(i.value || '0', 10) || 0; if(j > 0) rows.push({ member_id: i.dataset.m, jumlah: j }); });
+  const n = rows.reduce(function(a, r){ return a + r.jumlah; }, 0);
+  if(n !== total){ showToast('Jumlah video yang dibagi harus pas ' + total + '.'); return; }
+  btn.disabled = true;
+  try { await gdlcRpc('mentor_gdlc_bagi', { p_id: id, p_rows: rows }); showToast('Pembagian terkirim. Tim internal akan cek dulu sebelum anggota diajak.'); gdlcMTab('kampanye'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcMGanti(tugasId, btn){
+  const sel = document.getElementById('gdlc-ganti-' + tugasId);
+  if(!sel || !sel.value) return;
+  btn.disabled = true;
+  try { await gdlcRpc('mentor_gdlc_ganti', { p_tugas: tugasId, p_member: sel.value }); showToast('Jatah video berhasil dipindahkan. Anggota baru sudah diajak.'); gdlcMTab('kampanye'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcMLaporan(el){
+  const minggu = window._gdlcMMinggu || gdlcAwalMinggu(0);
+  let r;
+  try { r = await gdlcRpc('mentor_gdlc_laporan', { p_minggu: minggu }); } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const ini = gdlcAwalMinggu(0), lalu = gdlcAwalMinggu(-1);
+  el.innerHTML = '<div class="gdlc-pilih"><button type="button" class="' + (minggu === ini ? 'on' : '') + '" onclick="window._gdlcMMinggu=\'' + ini + '\';gdlcMTab(\'laporan\')"><b>Minggu ini</b><span>' + gdlcLabelTgl(ini) + '</span></button>'
+    + '<button type="button" class="' + (minggu === lalu ? 'on' : '') + '" onclick="window._gdlcMMinggu=\'' + lalu + '\';gdlcMTab(\'laporan\')"><b>Minggu lalu</b><span>' + gdlcLabelTgl(lalu) + '</span></button></div>'
+    + '<div class="gdlc-kartu"><b>Ringkasan otomatis</b><div class="gdlc-sub">' + gdlcLabelTgl(r.minggu) + ' – ' + gdlcLabelTgl(r.sampai) + '</div>'
+    + '<div class="gdlc-angka"><div><b>' + r.anggota_baru + '</b><span>anggota baru</span></div><div><b>' + r.aktif + ' / ' + r.anggota + '</b><span>anggota jualan</span></div>'
+    + '<div><b>' + rpPendek(r.gmv) + '</b><span>GMV tim</span></div><div><b>' + r.vt + '</b><span>video disetujui</span></div><div><b>' + r.materi + '</b><span>materi dikirim</span></div></div></div>'
+    + '<label class="gdlc-label" for="gdlcm-kendala">Kendala atau cerita minggu ini</label>'
+    + '<textarea class="gdlc-input" id="gdlcm-kendala" maxlength="2000" placeholder="Contoh: 2 anggota belum dapat sample, ada yang bingung cara pakai link.">' + escHtml(r.kendala || '') + '</textarea>'
+    + '<button type="button" class="gdlc-btn" style="width:100%;margin-top:10px" onclick="gdlcMKirimLaporan(\'' + minggu + '\',this)">' + (r.dikirim_at ? 'Perbarui laporan' : 'Kirim laporan') + '</button>'
+    + (r.dikirim_at ? '<div class="gdlc-sub" style="margin-top:6px;text-align:center">Terkirim ' + gdlcLabelTgl(r.dikirim_at) + '</div>' : '');
+}
+async function gdlcMKirimLaporan(minggu, btn){
+  btn.disabled = true;
+  try { await gdlcRpc('mentor_gdlc_laporan_kirim', { p_minggu: minggu, p_kendala: document.getElementById('gdlcm-kendala').value }); showToast('Laporan tersimpan. Makasih ya!'); gdlcMTab('laporan'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+
+// ======================= GDLC: internal =======================
+async function bukaGdlcInternal(){
+  let cfg;
+  try { cfg = await gdlcRpc('internal_gdlc_cfg'); } catch(e){ showToast(gdlcPesanError(e)); return; }
+  if(!cfg.buka){
+    // Saat GDLC masih dikunci, menu internal hanya bisa dibuka owner.
+    window._ownerGateTujuan = 'gdlc';
+    openOwnerGate();
+    return;
+  }
+  gdlcBukaModalInternal();
+}
+async function gdlcBukaModalInternal(){
+  await gdlcMuatMentorIds();
+  openModal('m-i-gdlc');
+  gdlcITab(window._gdlcITab || 'ringkasan');
+}
+async function gdlcIStatusBar(){
+  let cfg;
+  try { cfg = await gdlcRpc('internal_gdlc_cfg'); } catch(e){ return; }
+  document.getElementById('gdlci-status').innerHTML = cfg.buka
+    ? '<div class="gdlc-info" style="background:var(--teal-light);color:var(--teal)">✅ GDLC <b>dibuka</b> untuk creator dan brand.</div>'
+    : '<div class="gdlc-info">🔒 GDLC masih <b>dikunci</b>. Creator hanya melihat gembok, brand tidak melihat apa pun. Buka lewat tab Pengaturan.</div>';
+}
+function gdlcITab(t){
+  window._gdlcITab = t;
+  document.querySelectorAll('#gdlci-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
+  gdlcIStatusBar();
+  const el = document.getElementById('gdlci-isi');
+  el.innerHTML = '<div class="card-sub">Memuat...</div>';
+  ({ ringkasan: gdlcIRingkasan, angkat: gdlcIAngkat, kampanye: gdlcIKampanye, laporan: gdlcILaporan, atur: gdlcIAtur })[t](el);
+}
+async function gdlcIRingkasan(el){
+  const bulan = window._gdlcIBulan || gdlcAwalBulan(0);
+  let list;
+  try { list = await gdlcRpc('internal_gdlc_ringkasan', { p_bulan: bulan }); } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const pilihan = [0, -1, -2, -3, -4, -5].map(function(i){ const b = gdlcAwalBulan(i); return '<option value="' + b + '"' + (b === bulan ? ' selected' : '') + '>' + gdlcLabelBulan(b) + '</option>'; }).join('');
+  const lewat = bulan < gdlcAwalBulan(0);
+  const aktif = list.filter(function(m){ return m.status === 'aktif'; });
+  const totalBonus = aktif.reduce(function(a, m){ return a + Number(m.bonus || 0); }, 0);
+  const totalGmv = aktif.reduce(function(a, m){ return a + Number(m.gmv_settled || 0); }, 0);
+  let html = '<div class="gdlc-baris" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px"><select class="gdlc-input" style="max-width:220px" onchange="window._gdlcIBulan=this.value;gdlcITab(\'ringkasan\')">' + pilihan + '</select>'
+    + '<div class="gdlc-sub">' + aktif.length + ' mentor aktif · GMV tim ' + rpPendek(totalGmv) + ' · bonus ' + rpPendek(totalBonus) + '</div></div>';
+  if(!list.length) html += '<div class="gdlc-kosong"><div>👑</div>Belum ada mentor. Angkat mentor pertama lewat tab "Angkat mentor".</div>';
+  html += list.map(function(m){
+    const bayar = m.dibayar_at
+      ? '<span class="gdlc-chip hijau">Dibayar ' + gdlcLabelTgl(m.dibayar_at) + ' · ' + rpPendek(m.dibayar_bonus) + '</span> <button type="button" class="gdlc-btn garis" style="min-height:34px" onclick="gdlcITandaiBayar(\'' + m.member_id + '\',\'' + bulan + '\',false,this)">Batalkan tanda</button>'
+      : (lewat && m.bonus > 0 ? '<button type="button" class="gdlc-btn gelap" style="min-height:38px" onclick="gdlcITandaiBayar(\'' + m.member_id + '\',\'' + bulan + '\',true,this)">Tandai bonus dibayar</button>' : '');
+    return '<div class="gdlc-kartu"' + (m.status !== 'aktif' ? ' style="opacity:.6"' : '') + '><div class="gdlc-baris">' + gdlcAvatar(m.foto, m.nama, m.tier, 44, m.status === 'aktif')
+      + '<div style="flex:1;min-width:0"><div class="gdlc-nama">' + escHtml(m.nama) + '</div><div class="gdlc-sub">' + (m.username ? '@' + escHtml(m.username) + ' · ' : '') + escHtml(m.tier) + ' · kode ' + escHtml(m.kode || '-') + ' · sejak ' + gdlcLabelTgl(m.mulai_at) + '</div>'
+      + (m.catatan ? '<div class="gdlc-sub">📝 ' + escHtml(m.catatan) + '</div>' : '') + '</div>'
+      + '<span class="gdlc-chip ' + (m.status === 'aktif' ? (m.level ? 'ungu' : '') : 'merah') + '">' + (m.status === 'aktif' ? (m.level ? 'Level ' + m.level : 'Belum level') : 'Berhenti') + '</span></div>'
+      + '<div class="gdlc-angka"><div><b>' + m.aktif + ' / ' + m.anggota + '</b><span>anggota aktif</span></div><div><b>' + rpPendek(m.gmv_settled) + '</b><span>GMV settled</span></div>'
+      + '<div><b>' + rpPendek(m.gmv_pending) + '</b><span>pending</span></div><div><b>' + rpPendek(m.bonus) + '</b><span>bonus' + (m.gathering ? ' + gathering' : '') + '</span></div></div>'
+      + (!m.tier_ok ? '<div class="gdlc-sub" style="color:var(--amber-dark);margin-top:6px">Tier di bawah Gold: bonus tidak dihitung sampai tier naik.</div>' : '')
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">' + bayar
+      + (m.status === 'aktif'
+          ? '<button type="button" class="gdlc-btn garis" style="min-height:38px" onclick="gdlcIBerhenti(\'' + m.member_id + '\',this)">Berhentikan</button>'
+          : '<button type="button" class="gdlc-btn lembut" style="min-height:38px" onclick="gdlcIAngkatId(\'' + m.member_id + '\',this)">Aktifkan lagi</button>')
+      + '</div></div>';
+  }).join('');
+  el.innerHTML = html;
+}
+async function gdlcITandaiBayar(mentor, bulan, bayar, btn){
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_tandai_bayar', { p_mentor: mentor, p_bulan: bulan, p_bayar: bayar }); gdlcITab('ringkasan'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcIBerhenti(mentor, btn){
+  if(btn.dataset.yakin !== '1'){ btn.dataset.yakin = '1'; btn.textContent = 'Ketuk lagi untuk berhentikan'; return; }
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_berhenti', { p_member: mentor }); showToast('Mentor diberhentikan. Mahkotanya hilang otomatis.'); await gdlcMuatMentorIds(); gdlcITab('ringkasan'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcIAngkatId(member, btn, catatan){
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_angkat', { p_member: member, p_catatan: catatan || '' }); showToast('Berhasil! Creator ini sekarang mentor GDLC 👑'); await gdlcMuatMentorIds(); gdlcITab('ringkasan'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+function gdlcIAngkat(el){
+  el.innerHTML = '<div class="gdlc-info">Syarat mentor: minimal Gold dengan GMV stabil 3 bulan, tertib, komunikatif, punya waktu, aktif di komunitas creator. Anggota tim dihitung dari creator yang daftar pakai kode ajak mentor.</div>'
+    + '<input class="gdlc-input" id="gdlci-cari" placeholder="🔍 Cari nama, @username, atau kode login creator..." oninput="clearTimeout(window._gdlcICariT);window._gdlcICariT=setTimeout(gdlcICari,350)">'
+    + '<div id="gdlci-hasil" style="margin-top:10px"></div>';
+}
+async function gdlcICari(){
+  const q = document.getElementById('gdlci-cari').value;
+  const wrap = document.getElementById('gdlci-hasil');
+  if(q.trim().length < 2){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="card-sub">Mencari...</div>';
+  let list;
+  try { list = await gdlcRpc('internal_gdlc_cari', { p_q: q }); } catch(e){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  wrap.innerHTML = list.length ? list.map(function(m){
+    const sudah = m.mentor_status === 'aktif';
+    const tierOk = ['Gold', 'Diamond', 'Solitaire'].indexOf(m.tier) !== -1;
+    return '<div class="gdlc-kartu"><div class="gdlc-baris">' + gdlcAvatar(m.foto, m.nama, m.tier, 42, sudah)
+      + '<div style="flex:1;min-width:0"><div class="gdlc-nama">' + escHtml(m.nama) + '</div><div class="gdlc-sub">' + (m.username ? '@' + escHtml(m.username) + ' · ' : '') + escHtml(m.tier) + ' · GMV settled 90 hari ' + rpPendek(m.gmv_90) + ' · ' + m.anggota + ' teman diajak</div>'
+      + (!tierOk ? '<div class="gdlc-sub" style="color:var(--amber-dark)">Belum Gold: bonusnya tidak dihitung sampai tier naik.</div>' : '') + '</div></div>'
+      + (sudah ? '<div class="gdlc-sub" style="margin-top:8px;font-weight:800;color:var(--teal)">✓ Sudah jadi mentor</div>'
+        : '<div class="gdlc-baris" style="margin-top:10px"><input class="gdlc-input" id="gdlci-cat-' + escHtml(m.member_id) + '" placeholder="Catatan internal (opsional)" style="min-height:40px">'
+          + '<button type="button" class="gdlc-btn" style="min-height:40px" onclick="gdlcIAngkatId(\'' + m.member_id + '\',this,document.getElementById(\'gdlci-cat-' + m.member_id + '\').value)">Angkat 👑</button></div>')
+      + '</div>';
+  }).join('') : '<div class="gdlc-sub">Creator tidak ditemukan (hanya creator terverifikasi yang tidak dibekukan).</div>';
+}
+async function gdlcIKampanye(el){
+  let list, mentor;
+  try { [list, mentor] = await Promise.all([gdlcRpc('internal_gdlc_kampanye_list'), gdlcRpc('internal_gdlc_ringkasan', { p_bulan: gdlcAwalBulan(0) })]); }
+  catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const aktif = mentor.filter(function(m){ return m.status === 'aktif'; });
+  window._gdlcIProduk = null;
+  const besok = gdlcHariIni(); besok.setDate(besok.getDate() + 7);
+  let html = '<details class="gdlc-kartu"' + (list.length ? '' : ' open') + '><summary style="cursor:pointer;font-weight:800">+ Buat kampanye tim</summary>'
+    + (aktif.length ? '<label class="gdlc-label">Tim mentor</label><select class="gdlc-input" id="gdlci-k-mentor">' + aktif.map(function(m){ return '<option value="' + escHtml(m.member_id) + '">Tim ' + escHtml(m.nama) + ' (' + m.anggota + ' anggota)</option>'; }).join('') + '</select>'
+      + '<label class="gdlc-label">Produk</label><input class="gdlc-input" id="gdlci-k-cari" placeholder="🔍 Cari produk atau brand..." oninput="clearTimeout(window._gdlcIPT);window._gdlcIPT=setTimeout(gdlcICariProduk,350)"><div id="gdlci-k-produk" style="margin-top:6px"></div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"><div><label class="gdlc-label">Total video</label><input class="gdlc-input" type="number" min="1" max="500" id="gdlci-k-total" value="24"></div>'
+      + '<div><label class="gdlc-label">Tenggat</label><input class="gdlc-input" type="date" id="gdlci-k-tenggat" value="' + gdlcTglIso(besok) + '"></div>'
+      + '<div><label class="gdlc-label">Bayaran per video untuk anggota (Rp)</label><input class="gdlc-input" type="number" min="0" step="1000" id="gdlci-k-fee" value="0"></div></div>'
+      + '<label class="gdlc-label">Catatan untuk tim (opsional)</label><textarea class="gdlc-input" id="gdlci-k-catatan" maxlength="500"></textarea>'
+      + '<button type="button" class="gdlc-btn" style="width:100%;margin-top:10px" onclick="gdlcIBuatKampanye(this)">Buat & kabari mentor</button>'
+      : '<div class="gdlc-sub" style="margin-top:8px">Belum ada mentor aktif.</div>')
+    + '</details>';
+  html += list.length ? list.map(function(k){
+    let aksi = '';
+    if(k.status === 'menunggu_cek') aksi += '<button type="button" class="gdlc-btn" style="min-height:38px" onclick="gdlcISetujui(\'' + k.id + '\',this)">Setujui & ajak anggota</button>';
+    if(k.status === 'berjalan') aksi += '<button type="button" class="gdlc-btn gelap" style="min-height:38px" onclick="gdlcIStatusKampanye(\'' + k.id + '\',\'selesai\',this)">Tandai selesai</button>';
+    if(['menunggu_mentor', 'menunggu_cek', 'berjalan'].indexOf(k.status) !== -1) aksi += '<button type="button" class="gdlc-btn garis" style="min-height:38px" onclick="gdlcIStatusKampanye(\'' + k.id + '\',\'batal\',this)">Batalkan</button>';
+    return '<div class="gdlc-kartu"><div class="gdlc-baris">' + gdlcAvatar(k.mentor_foto, k.mentor_nama, k.mentor_tier, 38, true)
+      + '<div style="flex:1;min-width:0"><div class="gdlc-nama">' + escHtml(k.produk) + '</div><div class="gdlc-sub">' + escHtml(k.brand) + ' · Tim ' + escHtml(k.mentor_nama) + ' · ' + k.total_video + ' video · tenggat ' + gdlcLabelTgl(k.tenggat) + (k.fee_per_video ? ' · ' + rpPendek(k.fee_per_video) + '/video' : '') + '</div></div>'
+      + gdlcChipStatus(GDLC_STATUS_KAMPANYE, k.status) + '</div>'
+      + ((k.tugas || []).length ? '<table class="gdlc-tabel" style="margin-top:8px"><tr><th>Anggota</th><th>Video</th><th>Status</th></tr>' + k.tugas.map(function(t){ return '<tr><td>' + escHtml(t.nama) + '</td><td>' + (t.status === 'ikut' ? t.video_ok + ' / ' : '') + t.jumlah_video + '</td><td>' + gdlcChipStatus(GDLC_STATUS_TUGAS, t.status) + '</td></tr>'; }).join('') + '</table>' : '')
+      + (aksi ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' + aksi + '</div>' : '') + '</div>';
+  }).join('') : '';
+  el.innerHTML = html;
+}
+async function gdlcICariProduk(){
+  const q = document.getElementById('gdlci-k-cari').value.trim();
+  const wrap = document.getElementById('gdlci-k-produk');
+  if(q.length < 2){ wrap.innerHTML = ''; return; }
+  const { data, error } = await db.from('brand_products').select('id, nama_produk, foto_urls, brands!inner(nama_brand, is_frozen)')
+    .eq('is_frozen', false).eq('brands.is_frozen', false).ilike('nama_produk', '%' + q.replace(/[%_]/g, '') + '%').limit(12);
+  if(error){ wrap.innerHTML = '<div class="card-sub" style="color:var(--red)">Gagal mencari produk.</div>'; return; }
+  wrap.innerHTML = (data || []).length ? data.map(function(p){
+    const foto = Array.isArray(p.foto_urls) && p.foto_urls.length ? p.foto_urls[0] : null;
+    return '<div class="gdlc-produk' + (window._gdlcIProduk === p.id ? ' on' : '') + '" data-id="' + escHtml(p.id) + '" onclick="window._gdlcIProduk=this.dataset.id;document.querySelectorAll(\'#gdlci-k-produk .gdlc-produk\').forEach(function(x){x.classList.toggle(\'on\',x.dataset.id===window._gdlcIProduk)})">'
+      + (foto ? '<img src="' + escHtml(foto) + '" alt="" loading="lazy">' : '<span class="ph"></span>')
+      + '<div style="min-width:0"><b style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(p.nama_produk) + '</b><span class="gdlc-sub">' + escHtml(p.brands && p.brands.nama_brand) + '</span></div></div>';
+  }).join('') : '<div class="gdlc-sub">Produk tidak ditemukan.</div>';
+}
+async function gdlcIBuatKampanye(btn){
+  if(!window._gdlcIProduk){ showToast('Pilih produknya dulu ya.'); return; }
+  const total = parseInt(document.getElementById('gdlci-k-total').value || '0', 10);
+  if(!(total >= 1)){ showToast('Total video minimal 1.'); return; }
+  btn.disabled = true;
+  try {
+    await gdlcRpc('internal_gdlc_kampanye_buat', {
+      p_mentor: document.getElementById('gdlci-k-mentor').value, p_bp: window._gdlcIProduk, p_total: total,
+      p_tenggat: document.getElementById('gdlci-k-tenggat').value, p_fee: parseInt(document.getElementById('gdlci-k-fee').value || '0', 10) || 0,
+      p_catatan: document.getElementById('gdlci-k-catatan').value
+    });
+    showToast('Kampanye dibuat. Mentor sudah dikabari untuk bagi tugas.');
+    gdlcITab('kampanye');
+  } catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcISetujui(id, btn){
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_kampanye_setujui', { p_id: id }); showToast('Disetujui. Anggota sudah diajak, sample bisa disiapkan.'); gdlcITab('kampanye'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcIStatusKampanye(id, status, btn){
+  if(status === 'batal' && btn.dataset.yakin !== '1'){ btn.dataset.yakin = '1'; btn.textContent = 'Ketuk lagi untuk batalkan'; return; }
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_kampanye_status', { p_id: id, p_status: status }); gdlcITab('kampanye'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcILaporan(el){
+  const minggu = window._gdlcIMinggu || gdlcAwalMinggu(0);
+  let list;
+  try { list = await gdlcRpc('internal_gdlc_laporan', { p_minggu: minggu }); } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  const pilihan = [0, -1, -2, -3, -4].map(function(i){ const m = gdlcAwalMinggu(i); return '<option value="' + m + '"' + (m === minggu ? ' selected' : '') + '>Minggu ' + gdlcLabelTgl(m) + '</option>'; }).join('');
+  el.innerHTML = '<select class="gdlc-input" style="max-width:240px;margin-bottom:10px" onchange="window._gdlcIMinggu=this.value;gdlcITab(\'laporan\')">' + pilihan + '</select>'
+    + (list.length ? list.map(function(r){
+        return '<div class="gdlc-kartu"><div class="gdlc-baris">' + gdlcAvatar(r.foto, r.nama, r.tier, 38, true) + '<div style="flex:1"><div class="gdlc-nama">' + escHtml(r.nama) + '</div><div class="gdlc-sub">' + (r.dikirim_at ? 'Laporan masuk ' + gdlcLabelTgl(r.dikirim_at) : 'Belum kirim laporan') + '</div></div>'
+          + '<span class="gdlc-chip ' + (r.dikirim_at ? 'hijau' : 'oren') + '">' + (r.dikirim_at ? 'Sudah' : 'Belum') + '</span></div>'
+          + '<div class="gdlc-angka"><div><b>' + r.anggota_baru + '</b><span>anggota baru</span></div><div><b>' + r.aktif + ' / ' + r.anggota + '</b><span>anggota jualan</span></div><div><b>' + rpPendek(r.gmv) + '</b><span>GMV tim</span></div><div><b>' + r.vt + '</b><span>video disetujui</span></div><div><b>' + r.materi + '</b><span>materi</span></div></div>'
+          + (r.kendala ? '<div style="background:var(--pink-pale);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px;white-space:pre-line"><b>Kendala:</b> ' + escHtml(r.kendala) + '</div>' : '') + '</div>';
+      }).join('') : '<div class="gdlc-kosong"><div>📝</div>Belum ada mentor aktif.</div>');
+}
+async function gdlcIAtur(el){
+  let cfg;
+  try { cfg = await gdlcRpc('internal_gdlc_cfg'); } catch(e){ el.innerHTML = '<div class="card-sub" style="color:var(--red)">' + escHtml(gdlcPesanError(e)) + '</div>'; return; }
+  let kodeTester = '';
+  if(cfg.tester){
+    const { data } = await db.from('members').select('kode_login').in('id', cfg.tester.split(',').filter(Boolean));
+    kodeTester = (data || []).map(function(m){ return m.kode_login; }).filter(Boolean).join(', ');
+  }
+  window._gdlcLevel = (cfg.level || []).map(function(l){ return { min_gmv: l.min_gmv, bonus: l.bonus, min_aktif: l.min_aktif, gathering: l.gathering }; });
+  el.innerHTML = '<div class="gdlc-kartu"><b>Saklar GDLC</b>'
+    + '<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:14px;font-weight:700;cursor:pointer"><input type="checkbox" id="gdlci-buka" style="width:20px;height:20px"' + (cfg.buka ? ' checked' : '') + '> Buka GDLC untuk semua creator dan brand</label>'
+    + '<div class="gdlc-sub" style="margin-top:6px">Selama dikunci: menu mentor dan tab Mentor di Papan Skor bergembok, mahkota tidak tampil, brand tidak melihat Tim Mentor, dan tidak ada notifikasi GDLC yang terkirim.</div>'
+    + '<label class="gdlc-label" for="gdlci-tester">Akun penguji (kode login creator, pisahkan dengan koma)</label><input class="gdlc-input" id="gdlci-tester" value="' + escHtml(kodeTester) + '" placeholder="Contoh: ABC123, XYZ789">'
+    + '<div class="gdlc-sub" style="margin-top:4px">Akun penguji bisa mencoba fitur GDLC walau saklar masih dikunci.</div>'
+    + '<button type="button" class="gdlc-btn gelap" style="width:100%;margin-top:10px" onclick="gdlcISimpanSaklar(this)">Simpan saklar</button></div>'
+    + '<div class="gdlc-kartu"><b>Level bonus mentor</b><div class="gdlc-sub">Dihitung dari GMV settled tim per bulan. Bonus dibayar dari level tertinggi yang tercapai. Berlaku langsung untuk hitungan bulan berjalan.</div>'
+    + '<div id="gdlci-level"></div><button type="button" class="gdlc-btn lembut" style="margin-top:8px" onclick="window._gdlcLevel.push({min_gmv:0,bonus:0,min_aktif:5,gathering:false});gdlcIRenderLevel()">+ Tambah level</button>'
+    + '<button type="button" class="gdlc-btn" style="width:100%;margin-top:10px" onclick="gdlcISimpanLevel(this)">Simpan level</button></div>';
+  gdlcIRenderLevel();
+}
+function gdlcIRenderLevel(){
+  const wrap = document.getElementById('gdlci-level');
+  wrap.innerHTML = '<div style="overflow-x:auto"><table class="gdlc-tabel" style="margin-top:8px;min-width:460px"><tr><th>Lv</th><th>GMV tim (juta)</th><th>Bonus (ribu)</th><th>Min. aktif</th><th>Gathering</th><th></th></tr>'
+    + window._gdlcLevel.map(function(l, i){
+        return '<tr><td><b>' + (i + 1) + '</b></td>'
+          + '<td><input class="gdlc-input" type="number" min="1" step="1" value="' + Math.round(l.min_gmv / 1e6) + '" style="min-height:38px;width:90px" onchange="window._gdlcLevel[' + i + '].min_gmv=Number(this.value)*1e6"></td>'
+          + '<td><input class="gdlc-input" type="number" min="0" step="50" value="' + Math.round(l.bonus / 1e3) + '" style="min-height:38px;width:90px" onchange="window._gdlcLevel[' + i + '].bonus=Number(this.value)*1e3"></td>'
+          + '<td><input class="gdlc-input" type="number" min="0" step="1" value="' + l.min_aktif + '" style="min-height:38px;width:70px" onchange="window._gdlcLevel[' + i + '].min_aktif=Number(this.value)"></td>'
+          + '<td><input type="checkbox"' + (l.gathering ? ' checked' : '') + ' style="width:20px;height:20px" onchange="window._gdlcLevel[' + i + '].gathering=this.checked"></td>'
+          + '<td><button type="button" class="gdlc-btn garis" style="min-height:34px;padding:0 10px" onclick="window._gdlcLevel.splice(' + i + ',1);gdlcIRenderLevel()">Hapus</button></td></tr>';
+      }).join('') + '</table></div>';
+}
+async function gdlcISimpanSaklar(btn){
+  btn.disabled = true;
+  try {
+    await gdlcRpc('internal_gdlc_setting', { p_buka: document.getElementById('gdlci-buka').checked, p_tester: document.getElementById('gdlci-tester').value });
+    showToast('Pengaturan tersimpan.');
+    gdlcITab('atur');
+  } catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+async function gdlcISimpanLevel(btn){
+  btn.disabled = true;
+  try { await gdlcRpc('internal_gdlc_level_simpan', { p_rows: window._gdlcLevel }); showToast('Level bonus tersimpan.'); gdlcITab('atur'); }
+  catch(e){ btn.disabled = false; showToast(gdlcPesanError(e)); }
+}
+// Label "Diajak oleh" di Verifikasi Member.
+async function gdlcLabelVerifikasi(ids){
+  if(!ids || !ids.length) return;
+  let rows = [];
+  try { rows = await gdlcRpc('internal_gdlc_label', { p_ids: ids }); } catch(e){ return; }
+  (rows || []).forEach(function(r){
+    const card = document.querySelector('#pending-members-list .card[data-member-id="' + r.member_id + '"] .card-title');
+    if(card && !card.querySelector('.gdlc-chip')) card.insertAdjacentHTML('beforeend', ' <span class="gdlc-chip emas">👑 Diajak oleh ' + escHtml(r.mentor_nama) + '</span>');
+  });
+}
+
+// ======================= GDLC: brand (tersembunyi saat dikunci) =======================
+window._pfTimMentor = null;
+window._pfGdlcTim = [];
+async function gdlcPfPilihan(){
+  const box = document.getElementById('pf-gdlc-pilih');
+  if(!box) return;
+  box.innerHTML = '';
+  window._pfTimMentor = null;
+  let tim = [];
+  try { tim = await gdlcRpc('brand_gdlc_tim'); } catch(e){ tim = []; }
+  window._pfGdlcTim = tim || [];
+  if(!window._pfGdlcTim.length) return;
+  await gdlcMuatMentorIds();
+  gdlcPfRender('biasa');
+}
+function gdlcPfRender(mode){
+  const box = document.getElementById('pf-gdlc-pilih');
+  const matches = document.getElementById('pf-matches');
+  if(mode === 'biasa') window._pfTimMentor = null;
+  let html = '<div class="gdlc-pilih"><button type="button" class="' + (mode === 'biasa' ? 'on' : '') + '" onclick="gdlcPfRender(\'biasa\')"><b>Creator pilihan tim kami</b><span>Tim AE bantu pilih creator yang paling cocok setelah proposal masuk.</span></button>'
+    + '<button type="button" class="' + (mode === 'tim' ? 'on' : '') + '" onclick="gdlcPfRender(\'tim\')"><b>Satu tim mentor sekaligus 👑</b><span>Cukup satu kontak. Mentor yang brief anggotanya dan memastikan semua video tayang.</span></button></div>';
+  if(mode === 'tim'){
+    html += '<details class="gdlc-kartu" style="border-color:#F4DDA8;background:#FFFCF3"><summary style="cursor:pointer;font-weight:800;font-size:13px">✓ Dipilih Girlhood Den: kenapa mentor bisa dipercaya?</summary>'
+      + '<div style="font-size:13px;line-height:1.6;margin-top:8px">✓ Minimal tier Gold<br>✓ Penjualan stabil 3 bulan terakhir<br>✓ Tertib setor laporan dan video<br>✓ Didampingi tim internal tiap minggu</div>'
+      + '<div class="gdlc-sub" style="margin-top:6px">Angka tim dihitung otomatis dari data penjualan TikTok, bukan diisi sendiri oleh mentor.</div></details>'
+      + window._pfGdlcTim.map(function(t){
+          const on = window._pfTimMentor && window._pfTimMentor.member_id === t.member_id;
+          return '<div class="gdlc-kartu" style="cursor:pointer;' + (on ? 'border-color:var(--pink);background:var(--pink-pale)' : '') + '" onclick="window._pfTimMentor={member_id:\'' + t.member_id + '\',nama:' + escHtml(JSON.stringify(t.nama)) + '};gdlcPfRender(\'tim\')">'
+            + '<div class="gdlc-baris">' + gdlcAvatar(t.foto, t.nama, t.tier, 46, true)
+            + '<div style="flex:1;min-width:0"><div class="gdlc-nama">Tim Kak ' + escHtml(t.nama) + '</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="gdlc-chip emas">✓ Dipilih Girlhood Den</span><span class="gdlc-chip' + (t.level >= 3 ? ' ungu' : '') + '">' + (t.level ? 'Level ' + t.level : 'Tim baru') + '</span></div></div>'
+            + (on ? '<span class="gdlc-chip hijau">Dipilih</span>' : '') + '</div>'
+            + '<div class="gdlc-angka"><div><b>' + t.aktif + '</b><span>anggota aktif</span></div><div><b>' + rpPendek(t.gmv_30) + '</b><span>GMV tim 30 hari</span></div><div><b>' + t.video_30 + '</b><span>video 30 hari</span></div><div><b>' + t.retur_persen + '%</b><span>retur</span></div></div>'
+            + ((t.kategori || []).length ? '<div class="gdlc-sub" style="margin-top:8px">Sering laku di: ' + t.kategori.map(escHtml).join(', ') + '</div>' : '')
+            + (!t.level ? '<div class="gdlc-sub" style="margin-top:4px">Tim baru, masih berkembang.</div>' : '') + '</div>';
+        }).join('');
+  }
+  box.innerHTML = html;
+  if(matches) matches.style.display = mode === 'tim' ? 'none' : '';
+  const catatanTop = box.previousElementSibling, judulTop = catatanTop && catatanTop.previousElementSibling;
+  if(catatanTop) catatanTop.style.display = mode === 'tim' ? 'none' : '';
+  if(judulTop) judulTop.textContent = mode === 'tim' ? 'Pilih tim mentor' : 'Top creator Girlhood Den';
+}
+function gdlcPfCatatan(){
+  return window._pfTimMentor ? 'Pilihan kerja sama: Tim Mentor GDLC - Tim Kak ' + window._pfTimMentor.nama + ' (satu tim sekaligus).\n\n' : '';
+}
+async function gdlcBrandKampanye(){
+  const box = document.getElementById('gdlc-brand-kampanye');
+  if(!box) return;
+  box.innerHTML = '';
+  let list = [];
+  try { list = await gdlcRpc('brand_gdlc_kampanye'); } catch(e){ return; }
+  if(!list.length) return;
+  box.innerHTML = '<div class="card-sub" style="font-weight:800;margin:4px 0 8px">👑 Kampanye Tim Mentor</div>' + list.map(function(k){
+    const vid = k.video || [];
+    const gmv = vid.reduce(function(a, v){ return a + Number(v.gmv || 0); }, 0);
+    const ord = vid.reduce(function(a, v){ return a + Number(v.orders || 0); }, 0);
+    const ret = vid.reduce(function(a, v){ return a + Number(v.retur || 0); }, 0);
+    const perMember = {}; vid.forEach(function(v){ const p = perMember[v.member_id] = perMember[v.member_id] || { gmv: 0, orders: 0, url: v.url }; p.gmv += Number(v.gmv || 0); p.orders += Number(v.orders || 0); });
+    return '<div class="gdlc-kartu"><div class="gdlc-baris">' + gdlcAvatar(k.mentor_foto, k.mentor_nama, k.mentor_tier, 42, true)
+      + '<div style="flex:1;min-width:0"><div class="gdlc-nama">' + escHtml(k.produk) + ' × Tim Kak ' + escHtml(k.mentor_nama) + '</div><div class="gdlc-sub">Tenggat ' + gdlcLabelTgl(k.tenggat) + ' · ' + (k.tugas || []).filter(function(t){ return t.status === 'ikut'; }).length + ' anggota ikut</div></div>'
+      + gdlcChipStatus(GDLC_STATUS_KAMPANYE, k.status) + '</div>'
+      + '<div class="gdlc-angka"><div><b>' + vid.length + ' / ' + k.total_video + '</b><span>video tayang</span></div><div><b>' + ord + '</b><span>order</span></div><div><b>' + rpPendek(gmv) + '</b><span>GMV (tanpa retur)</span></div><div><b>' + (ord + ret ? Math.round(100 * ret / (ord + ret)) : 0) + '%</b><span>retur</span></div></div>'
+      + '<table class="gdlc-tabel" style="margin-top:8px"><tr><th>Anggota</th><th>Video</th><th>Order</th><th>GMV</th><th></th></tr>'
+      + (k.tugas || []).filter(function(t){ return t.status === 'ikut'; }).map(function(t){
+          const p = perMember[t.member_id] || { gmv: 0, orders: 0 };
+          return '<tr><td><b>' + escHtml(t.nama) + '</b></td><td>' + t.video_ok + ' / ' + t.jumlah_video + '</td><td>' + p.orders + '</td><td>' + rpPendek(p.gmv) + '</td><td>' + (p.url ? '<a href="' + escHtml(p.url) + '" target="_blank" rel="noopener" style="font-weight:800">Tonton</a>' : '') + '</td></tr>';
+        }).join('') + '</table>'
+      + '<div class="gdlc-sub" style="margin-top:6px">Order dan GMV diambil dari data penjualan TikTok per video. Views belum tersedia.</div></div>';
+  }).join('');
+}
+</script>
+
 <div class="pf-feed-overlay" id="pf-feed-overlay">
   <button class="pf-feed-close" onclick="closePfFullFeed()">✕</button>
   <div class="pf-feed-scroll" id="pf-feed-scroll"></div>
