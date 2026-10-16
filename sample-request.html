@@ -13861,7 +13861,7 @@ function gdlcPfRender(mode){
       + '<div class="gdlc-sub" style="margin-top:6px">Angka tim dihitung otomatis dari data penjualan TikTok, bukan diisi sendiri oleh mentor.</div></details>'
       + window._pfGdlcTim.map(function(t){
           const on = window._pfTimMentor && window._pfTimMentor.member_id === t.member_id;
-          return '<div class="gdlc-kartu" style="cursor:pointer;' + (on ? 'border-color:var(--pink);background:var(--pink-pale)' : '') + '" onclick="window._pfTimMentor={member_id:\'' + t.member_id + '\',nama:' + escHtml(JSON.stringify(t.nama)) + '};gdlcPfRender(\'tim\')">'
+          return '<div class="gdlc-kartu" style="cursor:pointer;' + (on ? 'border-color:var(--pink);box-shadow:0 0 0 1.5px var(--pink)' : '') + '" onclick="window._pfTimMentor={member_id:\'' + t.member_id + '\',nama:' + escHtml(JSON.stringify(t.nama)) + '};gdlcPfRender(\'tim\')">'
             + '<div class="gdlc-baris">' + gdlcAvatar(t.foto, t.nama, t.tier, 46, true)
             + '<div style="flex:1;min-width:0"><div class="gdlc-nama">Tim Kak ' + escHtml(t.nama) + '</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="gdlc-chip emas">✓ Dipilih Girlhood Den</span><span class="gdlc-chip' + (t.level >= 3 ? ' ungu' : '') + '">' + (t.level ? 'Level ' + t.level : 'Tim baru') + '</span></div></div>'
             + (on ? '<span title="Dipilih" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">✓</span>' : '') + '</div>'
