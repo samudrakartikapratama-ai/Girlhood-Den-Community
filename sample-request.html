@@ -6336,7 +6336,6 @@ async function loadCreatorTiktokVideos(){
 }
 
 // Link otorisasi CREATOR (bukan seller). Link seller bikin creator nyasar ke halaman toko Tokopedia.
-const TIKTOK_COLLAB_APP_KEY = '6latc062264ep';
 
 // ===== Gerbang verifikasi akun TikTok =====
 // Saklarnya ada di app_config.verifikasi_tiktok_wajib (default 'off').
@@ -6388,7 +6387,7 @@ function bukaGerbangVerifikasi(){
       +   '<div class="card-sub" style="margin-bottom:7px">\ud83c\udf81 Langsung dapat <b>+50 poin</b></div>'
       +   '<div class="card-sub">\u2b50 Masuk daftar prioritas brand & paid campaign</div>'
       + '</div>'
-      + '<a class="btn btn-primary" style="display:block;text-decoration:none" href="https://shop-id.tokopedia.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(currentSession.memberId || '') + '">Verifikasi lewat TikTok</a>'
+      + '<a class="btn btn-primary" style="display:block;text-decoration:none" href="/hubungkan-tiktok">Verifikasi lewat TikTok</a>'
       + '<div class="card-sub" style="margin-top:10px;font-size:11.5px">Kami cuma membaca daftar produk di showcase kamu. Nggak bisa posting, nggak bisa ubah apa pun di akunmu, dan izinnya bisa kamu cabut kapan saja dari TikTok.</div>'
       + '<button class="btn btn-outline" style="margin-top:10px" onclick="document.getElementById(\'m-verifikasi-akun\').classList.remove(\'open\')">Nanti dulu</button>'
       + '</div>';
@@ -6409,8 +6408,8 @@ async function loadCreatorTiktokCollabStatus(){
     .limit(1)
     .maybeSingle();
 
-  // Domain Indonesia: shop.tiktok.com diblokir "tidak tersedia di wilayah Anda" buat akun ID.
-  const authUrl = 'https://shop-id.tokopedia.com/alliance/creator/auth?app_key=' + TIKTOK_COLLAB_APP_KEY + '&state=' + encodeURIComponent(memberId);
+  // Otorisasi lewat halaman khusus yang membuat kode keamanan acak (state) sekali pakai.
+  const authUrl = '/hubungkan-tiktok';
 
   if(error || !data){
     wrap.innerHTML =

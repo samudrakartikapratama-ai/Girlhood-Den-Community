@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hubungkan TikTok — Girlhood Den Community</title>
+<style>
+  :root{ --dark:#4A2B47; --pink:#E8185A; --pink-pale:#FFF0F6; --gray-text:#9A7285; --border:#E8D5DF; --teal:#1D9E75; --teal-light:#E1F5EE; --red:#C41E3A; --red-light:#FDE8EA; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:linear-gradient(160deg,#fdf2f6 0%,#f3dfe9 100%); color:#3a2438; line-height:1.5; min-height:100vh; }
+  .wrap{ max-width:520px; margin:0 auto; padding:32px 16px 60px; }
+  .card{ background:#fff; border-radius:20px; padding:24px 20px; box-shadow:0 10px 30px rgba(74,43,71,.12); }
+  h1{ color:var(--pink); font-size:22px; margin:0 0 4px; }
+  .sub{ color:var(--gray-text); font-size:13px; margin:0 0 16px; }
+  .en{ display:block; color:var(--gray-text); font-size:11.5px; font-weight:500; }
+  .btn{ display:block; width:100%; min-height:48px; border:none; border-radius:14px; background:var(--pink); color:#fff; font:inherit; font-weight:800; font-size:15px; cursor:pointer; text-align:center; text-decoration:none; line-height:48px; transition:transform .12s ease-out, opacity .12s ease-out; }
+  .btn:active{ transform:scale(.97); }
+  .btn:disabled{ opacity:.6; cursor:wait; }
+  .btn.garis{ background:#fff; color:var(--dark); border:1.5px solid var(--border); }
+  .langkah{ display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid #F3E4EC; }
+  .langkah:last-child{ border-bottom:none; }
+  .ikon{ flex-shrink:0; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; background:var(--teal-light); color:var(--teal); }
+  .ikon.x{ background:var(--red-light); color:var(--red); }
+  .judul{ font-weight:800; font-size:14px; color:var(--dark); }
+  .isi{ font-size:12.5px; color:#6b5060; word-break:break-word; }
+  code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; background:#F7ECF1; padding:2px 6px; border-radius:6px; word-break:break-all; }
+  .scope{ display:flex; gap:8px; align-items:center; font-size:12.5px; padding:3px 0; }
+  .info{ background:#FFF3D6; color:#6B4A00; border-radius:12px; padding:10px 12px; font-size:12.5px; margin:12px 0; }
+  .salah{ background:var(--red-light); color:var(--red); border-radius:12px; padding:10px 12px; font-size:13px; margin:12px 0; }
+  ul.janji{ padding-left:18px; margin:8px 0 16px; font-size:13px; color:#5c4655; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="isi"><div class="sub">Memuat...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const APP_KEY = '6latc062264ep';
+const AUTH_URL = 'https://shop-id.tokopedia.com/alliance/creator/auth';
+// Izin yang dibutuhkan fitur verifikasi (semuanya hanya baca).
+const SCOPE_WAJIB = [
+  ['creator.affiliate.info', 'Info akun affiliate'],
+  ['creator.showcase.read', 'Lihat produk showcase'],
+  ['creator.affiliate_collaboration.read', 'Lihat kolaborasi affiliate'],
+  ['creator.affiliate.share_link.read', 'Lihat link affiliate']
+];
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const box = document.getElementById('isi');
+const q = new URLSearchParams(location.search);
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function langkah(ok, judul, en, isi){
+  return '<div class="langkah"><div class="ikon' + (ok ? '' : ' x') + '">' + (ok ? '✓' : '✕') + '</div><div><div class="judul">' + judul + '<span class="en">' + en + '</span></div>' + (isi ? '<div class="isi">' + isi + '</div>' : '') + '</div></div>';
+}
+
+async function mulai(){
+  if(q.get('hasil')) return tampilHasil();
+  const { data: { session } } = await db.auth.getSession();
+  if(!session){
+    box.innerHTML = '<h1>Hubungkan TikTok</h1><p class="sub">Connect your TikTok Shop creator account</p>'
+      + '<div class="info">Masuk dulu ke Girlhood Den Community sebagai creator, lalu buka halaman ini lagi.</div>'
+      + '<a class="btn" href="/sample-request">Masuk ke Girlhood Den</a>';
+    return;
+  }
+  const { data: m } = await db.from('members').select('nama').eq('user_id', session.user.id).maybeSingle();
+  box.innerHTML = '<h1>Hubungkan TikTok</h1><p class="sub">Connect your TikTok Shop creator account to Girlhood Den Community</p>'
+    + (m ? '<p style="font-size:14px;margin:0 0 8px">Masuk sebagai <b>' + esc(m.nama) + '</b></p>' : '')
+    + '<p style="font-size:13px;color:#5c4655;margin:0">Dengan menghubungkan akun, Girlhood Den bisa memastikan link affiliate yang kamu pakai memang link Saturnine Media, jadi laporan video kamu terverifikasi otomatis.</p>'
+    + '<ul class="janji"><li>Kami hanya <b>membaca</b> data affiliate & showcase.</li><li>Kami tidak bisa posting atau mengubah apa pun di akunmu.</li><li>Izin bisa kamu cabut kapan saja dari TikTok.</li></ul>'
+    + '<div id="langkah-state"></div>'
+    + '<button type="button" class="btn" id="btn-hubung" onclick="hubungkan(this)">Hubungkan akun TikTok</button>';
+}
+
+async function hubungkan(btn){
+  btn.disabled = true; btn.textContent = 'Menyiapkan...';
+  const { data: state, error } = await db.rpc('buat_tiktok_state', { p_tujuan: 'creator' });
+  if(error || !state){
+    btn.disabled = false; btn.textContent = 'Hubungkan akun TikTok';
+    document.getElementById('langkah-state').innerHTML = '<div class="salah">Gagal menyiapkan kode keamanan. Pastikan kamu masuk sebagai creator, lalu coba lagi.</div>';
+    return;
+  }
+  document.getElementById('langkah-state').innerHTML = langkah(true, 'Kode keamanan dibuat', 'Random state generated (single use, valid 15 minutes)', '<code>' + esc(state.slice(0, 12)) + '…</code>');
+  btn.textContent = 'Membuka TikTok...';
+  const url = AUTH_URL + '?app_key=' + encodeURIComponent(APP_KEY) + '&state=' + encodeURIComponent(state);
+  setTimeout(function(){ location.href = url; }, 1200);
+}
+
+async function tampilHasil(){
+  const ok = q.get('hasil') === 'ok';
+  const stateCocok = q.get('state_cocok') === '1';
+  if(!ok){
+    box.innerHTML = '<h1>Belum terhubung</h1><p class="sub">Authorization not completed</p>'
+      + langkah(stateCocok, 'Kode keamanan dicek', 'State verification', stateCocok ? 'Cocok dengan yang dibuat Girlhood Den.' : 'Tidak cocok atau kedaluwarsa.')
+      + '<div class="salah">' + esc(q.get('pesan') || 'Terjadi kesalahan.') + '</div>'
+      + '<a class="btn" href="/hubungkan-tiktok">Ulangi</a>';
+    return;
+  }
+  const scopes = (q.get('scopes') || '').split(',').filter(Boolean);
+  const daftar = SCOPE_WAJIB.map(function(s){
+    const ada = scopes.indexOf(s[0]) !== -1;
+    return '<div class="scope"><span class="ikon' + (ada ? '' : ' x') + '" style="width:20px;height:20px;font-size:11px">' + (ada ? '✓' : '✕') + '</span><span>' + esc(s[1]) + ' <code>' + esc(s[0]) + '</code></span></div>';
+  }).join('');
+  const lengkap = SCOPE_WAJIB.every(function(s){ return scopes.indexOf(s[0]) !== -1; });
+  let html = '<h1>' + (lengkap ? 'Akun TikTok terhubung' : 'Terhubung, tapi izin belum lengkap') + '</h1><p class="sub">' + (lengkap ? 'TikTok account connected' : 'Connected, some required scopes missing') + '</p>'
+    + langkah(true, 'Kode keamanan cocok', 'Callback received · state matches the original value')
+    + langkah(true, 'Kode otorisasi ditukar jadi token', 'auth_code exchanged for access token')
+    + langkah(true, 'Jenis akun', 'user_type', '<code>' + esc(q.get('user_type') || '-') + '</code>' + (q.get('nama') ? ' · ' + esc(q.get('nama')) : '') + (q.get('region') ? ' · ' + esc(q.get('region')) : ''))
+    + '<div class="langkah"><div class="ikon' + (lengkap ? '' : ' x') + '">' + (lengkap ? '✓' : '!') + '</div><div style="flex:1"><div class="judul">Izin yang diberikan<span class="en">granted_scopes</span></div>' + daftar
+    + (scopes.length ? '<div class="isi" style="margin-top:6px">Semua izin dari TikTok: <code>' + esc(scopes.join(', ')) + '</code></div>' : '') + '</div></div>'
+    + '<div id="cek-simpan"></div>';
+  box.innerHTML = html;
+  // Verifikasi otomatis: cek bahwa koneksi benar-benar tersimpan untuk akun yang sedang masuk.
+  const { data: { session } } = await db.auth.getSession();
+  let simpan = '';
+  if(session && q.get('tujuan') !== 'partner'){
+    const { data: m } = await db.from('members').select('id').eq('user_id', session.user.id).maybeSingle();
+    const { data: a } = m ? await db.from('creator_tiktok_collab_authorizations').select('updated_at').eq('member_id', m.id).order('updated_at', { ascending: false }).limit(1).maybeSingle() : { data: null };
+    simpan = langkah(!!a, a ? 'Tersimpan di Girlhood Den' : 'Belum tersimpan', a ? 'Connected status verified in Girlhood Den' : 'Connection not found for this account',
+      a ? 'Status: <b>Terhubung</b> · ' + new Date(a.updated_at).toLocaleString('id-ID') : 'Masuk dengan akun creator yang sama lalu ulangi.');
+  }
+  document.getElementById('cek-simpan').innerHTML = simpan + '<a class="btn garis" style="margin-top:14px" href="/sample-request">Kembali ke Girlhood Den</a>';
+}
+
+mulai();
+</script>
+</body>
+</html>
