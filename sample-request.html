@@ -1622,6 +1622,7 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
   <div class="modal-title">🎬 Report VT</div>
   <div class="card-sub">Produk yang muncul di sini itu yang udah kamu request & di-approve lewat sistem. Belum ada yang muncul padahal kamu udah pegang produknya? Klik tombol di bawah.</div>
   <button class="btn btn-outline btn-sm" style="width:100%;margin:8px 0 4px" onclick="closeModal('m-c4'); openSelfReportModal();">📸 Udah Punya Produknya Duluan? Ajukan di Sini</button>
+  <div id="vt-tiktok-status" style="margin:8px 0 4px"></div>
   <div class="card">
     <div class="field"><label>Brand + Produk</label><select id="vt-product-select"><option value="">Memuat...</option></select></div>
     <div class="field"><label>Link Video</label><input id="vt-video-link" placeholder="https://tiktok.com/..."></div>
@@ -6087,7 +6088,19 @@ async function submitDeliveryPhoto(btn){
   }
 }
 
+// Status cek otomatis TikTok (app Creator Connect) di menu Report VT.
+async function tampilkanStatusTiktokVt(){
+  const wrap = document.getElementById('vt-tiktok-status');
+  if(!wrap || !currentSession.memberId) return;
+  const { data, error } = await db.rpc('creator_tiktok_terhubung');
+  if(error){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = data === true
+    ? '<div style="background:var(--teal-light);color:#0F5F45;border-radius:12px;padding:9px 12px;font-size:12.5px;font-weight:700">✅ TikTok terhubung — laporanmu dicek otomatis lewat TikTok</div>'
+    : '<div style="background:var(--gray);border-radius:12px;padding:9px 12px;font-size:12.5px">🔗 Hubungkan TikTok supaya laporanmu dicek otomatis. <a href="/hubungkan-tiktok" target="_blank" style="color:var(--pink);font-weight:800">Hubungkan</a></div>';
+}
+
 async function loadVtReportPage(){
+  tampilkanStatusTiktokVt();
   const select = document.getElementById('vt-product-select');
   const progressList = document.getElementById('vt-progress-list');
   select.innerHTML = '<option value="">Memuat...</option>';
