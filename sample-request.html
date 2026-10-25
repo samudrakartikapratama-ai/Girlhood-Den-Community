@@ -675,6 +675,9 @@ td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top}
 .og-input{width:100%;padding:13px 16px;border-radius:12px;border:none;font-size:14px;font-family:inherit;background:rgba(255,255,255,.95);color:var(--dark);outline:none;box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .og-input:focus{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.4)}
 .og-input::placeholder{color:var(--gray-text)}
+.vt-cek-row{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;color:#fff;font-size:12.5px;line-height:1.4}
+.vt-cek-row b{display:block;font-size:13px}
+.vt-cek-row span.ik{font-size:16px;line-height:1.2}
 .og-btn-primary{width:100%;margin-top:14px;padding:13px;border-radius:12px;border:none;background:#fff;color:var(--pink);font-weight:800;font-size:14px;cursor:pointer}
 .og-btn-outline{width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:700;font-size:13px;cursor:pointer}
 .mev-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin-bottom:8px}
@@ -2235,6 +2238,17 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <div class="og-title" id="vt-reject-title">Video Nggak Bisa Disubmit</div>
     <div class="og-body" id="vt-reject-body">-</div>
     <button class="og-btn-primary" onclick="document.getElementById('vt-reject-popup').classList.remove('open')" style="color:#8f6510">Oke, Aku Ganti Videonya</button>
+  </div>
+</div>
+
+<div class="og-popup-bg" id="vt-cek-popup">
+  <div class="og-box">
+    <div class="og-icon-wrap">🔎</div>
+    <div class="og-title">Laporan Video Masuk</div>
+    <div class="og-body" style="margin-bottom:12px">Dicek otomatis lewat TikTok</div>
+    <div id="vt-cek-list" style="display:grid;gap:8px;text-align:left"></div>
+    <div class="og-body" id="vt-cek-extra" style="margin:12px 0 0;white-space:pre-line"></div>
+    <button class="og-btn-primary" onclick="document.getElementById('vt-cek-popup').classList.remove('open')">Oke</button>
   </div>
 </div>
 
@@ -6245,6 +6259,12 @@ async function submitVtReport(){
   });
 
   linkInput.value = '';
+  if(result.verifikasi){
+    tampilkanCekTiktok(result.verifikasi, result);
+    await loadVtReportPage();
+    checkFreezeStatus();
+    return;
+  }
   let successMsg = 'VT berhasil disubmit!';
   if(result.bonuses && result.bonuses.length > 0){
     successMsg += '\n\n🎉 ' + result.bonuses.join('\n🎉 ');
@@ -6253,6 +6273,36 @@ async function submitVtReport(){
   await loadVtReportPage();
   checkFreezeStatus();
 }
+// Hasil cek otomatis Report VT lewat API TikTok (akun, keranjang Saturnine, penjualan).
+function tampilkanCekTiktok(v, result){
+  const baris = [];
+  const ak = v.akun || {}, sa = v.saturnine || {}, pj = v.penjualan || {};
+  if(ak.status === 'cocok') baris.push(['✅', 'Video dari akun kamu', '@' + ak.video]);
+  else if(ak.status === 'beda') baris.push(['⚠️', 'Video dari akun lain', '@' + ak.video + ' — akun yang terhubung @' + ak.terhubung]);
+  else baris.push(['⏳', 'Akun video belum terbaca', 'Tim kami cek manual ya']);
+  if(sa.status === 'ya') baris.push(['✅', 'Produk lewat keranjang Saturnine', sa.produk || '']);
+  else if(sa.status === 'bukan_saturnine') baris.push(['⚠️', 'Produk belum lewat keranjang Saturnine', 'Pasang ulang produknya dari link Saturnine di Girlhood Den']);
+  else if(sa.status === 'tidak_ada') baris.push(['⚠️', 'Produk belum ketemu di etalase kamu', 'Tim kami cek keranjang di videonya']);
+  else baris.push(['⏳', 'Etalase belum terbaca', 'Tim kami cek manual ya']);
+  if(pj.status === 'ada') baris.push(['✅', pj.order + ' penjualan dari video ini', 'Mantap!']);
+  else if(pj.status === 'belum') baris.push(['⏳', 'Menunggu penjualan', 'Belum ada yang beli lewat video ini']);
+  else baris.push(['⏳', 'Data penjualan belum terbaca', '']);
+  const list = document.getElementById('vt-cek-list');
+  list.innerHTML = '';
+  baris.forEach(function(b){
+    const row = document.createElement('div'); row.className = 'vt-cek-row';
+    const ik = document.createElement('span'); ik.className = 'ik'; ik.textContent = b[0];
+    const tx = document.createElement('div'); const t = document.createElement('b'); t.textContent = b[1]; tx.appendChild(t);
+    if(b[2]) tx.appendChild(document.createTextNode(b[2]));
+    row.append(ik, tx); list.appendChild(row);
+  });
+  const extra = [];
+  if(result.pendingReview) extra.push('Laporanmu dicek tim dulu ya. Poin masuk setelah disetujui.');
+  if(result.bonuses && result.bonuses.length) extra.push('🎉 ' + result.bonuses.join('\n🎉 '));
+  document.getElementById('vt-cek-extra').textContent = extra.join('\n');
+  document.getElementById('vt-cek-popup').classList.add('open');
+}
+
 // App "Girlhood Den Video Insights" di developers.tiktok.com (Login Kit)
 const TIKTOK_VI_CLIENT_KEY = 'awzs5e9er1hmjduu';
 const TIKTOK_VI_SANDBOX_CLIENT_KEY = 'sbaw296liuuj8gx338';
