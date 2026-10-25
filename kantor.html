@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Kantor AI · Girlhood Den</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: render kantor 3D di atas sebagai panggung, karyawan berjalan di atasnya sesuai status; panel keputusan + hasil kerja di bawah */
+:root{
+  --bg:#ece7e1; --paper:#f8f6f3; --ink:#2e2926; --muted:#7a7068; --line:#d3c9bd; --accent:#9a6b3f; --accent-soft:#f1e5d6;
+  --good:#3f7d5a; --good-soft:#e3f0e7; --warn:#a46a12; --warn-soft:#f7ebd5; --rest:#6b6f86; --rest-soft:#e7e8ef;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif; --body:"Figtree",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1b1917; --paper:#25211f; --ink:#f1ebe4; --muted:#ab9f93; --line:#443c36; --accent:#d4a373; --accent-soft:#3a2e22;
+  --good:#7cc49a; --good-soft:#203229; --warn:#e3b05c; --warn-soft:#3a2f1b; --rest:#a9adc6; --rest-soft:#2a2b36; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b1917; --paper:#25211f; --ink:#f1ebe4; --muted:#ab9f93; --line:#443c36; --accent:#d4a373; --accent-soft:#3a2e22;
+  --good:#7cc49a; --good-soft:#203229; --warn:#e3b05c; --warn-soft:#3a2f1b; --rest:#a9adc6; --rest-soft:#2a2b36; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,36px);line-height:1.1;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.clock{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right}
+.clock b{display:block;font-size:20px;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.scene{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stage-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stage{position:relative;width:100%;min-width:760px;aspect-ratio:1376/768;container-type:inline-size;background:#2a2420 url("assets/kantor/office.webp") center/cover no-repeat;overflow:hidden}
+.glass{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1600}
+.occ{position:absolute;inset:0;background:url("assets/kantor/office.webp") center/cover no-repeat;pointer-events:none}
+.night{position:absolute;inset:0;z-index:9000;background:rgba(14,16,34,.38);pointer-events:none;opacity:0;transition:opacity .6s ease-out}
+.stage.malam .night{opacity:1}
+.tag{position:absolute;z-index:8000;transform:translate(-50%,-50%);font-family:var(--mono);font-size:1.05cqw;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(30,24,20,.55);padding:.2cqw .6cqw;border-radius:99px;pointer-events:none;white-space:nowrap}
+.ch{position:absolute;left:0;top:0;width:0;height:0;cursor:pointer;background:none;border:0;padding:0;outline:none}
+.ch .fig{position:absolute;left:0;bottom:0;transform:translateX(-50%);display:grid;justify-items:center}
+.ch .shadow{position:absolute;left:0;top:0;width:3.2cqw;height:1cqw;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(rgba(0,0,0,.38),rgba(0,0,0,0) 70%)}
+.ch img{height:6.4cqw;width:auto;display:block;transform-origin:50% 100%;will-change:transform;filter:drop-shadow(0 .15cqw .2cqw rgba(0,0,0,.25))}
+.ch .nm{font-size:.95cqw;font-weight:600;color:#fff;background:rgba(30,24,20,.62);padding:0 .45cqw;border-radius:99px;margin-bottom:.2cqw;white-space:nowrap}
+.ch .bub{font-size:.9cqw;font-weight:600;padding:.1cqw .6cqw;border-radius:99px;margin-bottom:.25cqw;white-space:nowrap;border:1px solid}
+.b-warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)!important}
+.b-rest{background:var(--rest-soft);color:var(--rest);border-color:var(--rest)!important}
+.b-done{background:var(--good-soft);color:var(--good);border-color:var(--good)!important}
+.b-info{background:var(--paper);color:var(--ink);border-color:var(--line)!important}
+.ch:focus-visible .nm,.ch:hover .nm{outline:2px solid var(--accent);outline-offset:1px}
+.pop{position:absolute;z-index:9500;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:240px;box-shadow:0 8px 24px rgba(0,0,0,.2);font-size:13px}
+.pop b{font-size:14px} .pop .rl{color:var(--muted)} .pop .tk{margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:start}
+@media (max-width:860px){.panels{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h2{font-family:var(--display);font-weight:500;font-size:19px;margin:0 0 4px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 12px}
+.req{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;display:grid;gap:8px}
+.req:first-child{border-top:0;margin-top:0;padding-top:0}
+.who{font-size:13px;color:var(--muted)} .who b{color:var(--ink)}
+.req p{margin:0;white-space:pre-wrap}
+label.lbl{font-size:12px;color:var(--muted)}
+textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.btn{font:inherit;font-weight:600;font-size:14px;background:var(--ink);color:var(--paper);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;justify-self:start;transition:transform .12s cubic-bezier(.2,.8,.2,1),opacity .12s ease-out}
+.btn:active{transform:scale(.97)} .btn[disabled]{opacity:.5;cursor:default}
+.btn:focus-visible,textarea:focus-visible,.chip:focus-visible,.more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.out{border-top:1px solid var(--line);padding:10px 0} .out:first-child{border-top:0}
+.out h3{font-size:15px;margin:2px 0 4px;font-weight:600}
+.meta{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.isi{white-space:pre-wrap;font-size:14px;max-height:9.5em;overflow:hidden}
+.out.buka .isi{max-height:none}
+.more{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;margin-top:4px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.simbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:-6px}
+.simlbl{font-size:13px;color:var(--muted);margin-right:2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;font-size:14px;z-index:5000}
+.back{font:inherit;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px}
+.back:hover{color:var(--accent)}
+.gate{position:fixed;inset:0;z-index:9800;display:grid;place-items:center;background:var(--bg);padding:24px}
+.gate .card{max-width:380px;text-align:center;display:grid;gap:10px;justify-items:center}
+.gate[hidden]{display:none}
+.ro{font-size:13px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="gate" id="gate"><div class="card"><h2 id="gate-judul">Memuat kantor…</h2><p class="hint" id="gate-teks" style="margin:0"></p><a class="btn" id="gate-btn" href="/sample-request.html" hidden>Masuk lewat menu Internal</a></div></div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back" href="/sample-request.html" id="kembali">‹ Kembali ke menu Internal</a>
+      <h1>Kantor Girlhood Den</h1>
+      <p class="sub">Karyawan AI bekerja di mejanya, ngopi di pantry, rapat tiap Jumat sore, dan datang ke ruang CEO/COO kalau butuh keputusan. Klik karyawan untuk melihat kerjanya.</p>
+    </div>
+    <div class="clock"><b id="jam">--.--</b><span id="hari">WIB</span></div>
+  </header>
+
+  <div class="simbar" role="group" aria-label="Simulasi">
+    <span class="simlbl">Lihat simulasi:</span>
+    <button type="button" class="chip" data-sim="" aria-pressed="true">Waktu nyata</button>
+    <button type="button" class="chip" data-sim="kerja" aria-pressed="false">Jam kerja</button>
+    <button type="button" class="chip" data-sim="keputusan" aria-pressed="false">Minta keputusan</button>
+    <button type="button" class="chip" data-sim="rapat" aria-pressed="false">Rapat Jumat</button>
+    <button type="button" class="chip" data-sim="istirahat" aria-pressed="false">Istirahat malam</button>
+  </div>
+
+  <section class="scene" aria-label="Kantor 3D">
+    <div class="stage-scroll" id="scroll"><div class="stage" id="stage"><div class="night"></div></div></div>
+    <div class="legend">
+      <span><i style="background:var(--good)"></i>Sudah setor hasil</span>
+      <span><i style="background:var(--warn)"></i>Menunggu keputusan</span>
+      <span><i style="background:var(--rest)"></i>Istirahat</span>
+      <span>Jam kerja Sen–Jum 07.30–18.00 WIB · rapat Jumat 16.00</span>
+    </div>
+  </section>
+
+  <div class="panels">
+    <div class="card">
+      <h2>Menunggu keputusan</h2>
+      <p class="hint" id="reqs-hint">Pertanyaan dari karyawan AI untuk CEO dan COO. Jawabanmu langsung diteruskan.</p>
+      <div id="reqs"><p class="empty">Belum ada yang menunggu keputusan.</p></div>
+    </div>
+    <div class="card">
+      <h2>Hasil kerja</h2>
+      <p class="hint">Laporan, ide, dan draf terbaru.</p>
+      <div class="filters" id="filters"></div>
+      <div id="outs"><p class="empty">Belum ada hasil kerja. Hasil pertama muncul setelah uji coba.</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* Koordinat dalam piksel gambar kantor (1376 x 768) */
+const W = 1376, H = 768;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const AG = [
+  {id:"gantara", nm:"Gantara", rl:"Manager", desk:[742,440], an:"j"},
+  {id:"gisella", nm:"Gisella", rl:"Riset", desk:[662,482], an:"k"},
+  {id:"gregorius", nm:"Gregorius", rl:"Analyst", desk:[588,526], an:"l"},
+  {id:"caroline", nm:"Caroline", rl:"Asisten AE", desk:[940,505], an:"e"},
+  {id:"nadine", nm:"Nadine", rl:"Asisten Creator", desk:[866,570], an:"g"},
+  {id:"dante", nm:"Dante", rl:"Sosmed Specialist", desk:[778,616], an:"h"},
+  {id:"marco", nm:"Marco", rl:"Editor", desk:[418,482], an:"n"}
+];
+const BOSS = [{id:"ceo", nm:"CEO", rl:"Ruang CEO", boss:true, pos:[585,250]}, {id:"gabriella", nm:"Gabriella", rl:"COO", boss:true, pos:[1140,350]}];
+const SLOTS = {
+  ceo:[[690,300],[770,262],[650,312]],
+  coo:[[958,338],[1005,322],[930,350]],
+  rapat:[[222,330],[262,356],[332,343],[392,318],[382,262],[300,250],[232,268]],
+  lounge:[[205,600],[262,592],[330,625],[420,618],[385,655],[300,672],[170,648]],
+  pantry:[[1005,592],[1062,562],[1130,642],[1192,602],[1212,470]]
+};
+const ANCHOR = {ceo:"b", coo:"d", rapat:"q", lounge:"o", pantry:"f"};
+/* jalur jalan: titik-titik di lantai kosong, dihubungkan supaya tidak menembus meja/dinding */
+const NODES = {a:[560,285], b:[700,292], c:[800,322], d:[915,378], e:[1010,465], f:[960,560], g:[930,566], h:[790,634],
+  i:[792,404], j:[740,436], k:[660,476], l:[600,524], m:[520,562], n:[430,515], o:[380,562], p:[482,345], q:[420,326], r:[1150,488]};
+const EDGES = "a-b b-c c-d d-e e-f f-g g-h c-i i-j j-k k-l l-m m-n n-o a-p p-q e-r".split(" ").map(x => x.split("-"));
+const ADJ = {}; for (const [u,v] of EDGES){ (ADJ[u] ||= []).push(v); (ADJ[v] ||= []).push(u); }
+const dist2 = (p,q) => Math.hypot(p[0]-q[0], p[1]-q[1]);
+function shortest(from, to){
+  const D = {}, prev = {}, Q = new Set(Object.keys(NODES)); for (const n of Q) D[n] = Infinity; D[from] = 0;
+  while (Q.size){ let u = null; for (const n of Q) if (u === null || D[n] < D[u]) u = n; Q.delete(u); if (u === to) break;
+    for (const v of ADJ[u] || []) if (Q.has(v)){ const alt = D[u] + dist2(NODES[u], NODES[v]); if (alt < D[v]){ D[v] = alt; prev[v] = u; } } }
+  const out = []; let n = to; while (n){ out.unshift(n); if (n === from) break; n = prev[n]; } return out;
+}
+/* bagian depan meja: karakter di belakangnya tertutup meja */
+const OCC = [
+  {pts:[[444,442],[487,390],[722,320],[764,358],[762,416],[617,494],[525,529],[470,532],[444,494]]},
+  {pts:[[640,530],[690,476],[925,395],[970,440],[965,458],[820,594],[645,594]]}
+];
+function bottomAt(poly, x){ let best = -1; const P = poly.pts; for (let i=0;i<P.length;i++){ const [x1,y1] = P[i], [x2,y2] = P[(i+1)%P.length];
+  if ((x >= Math.min(x1,x2)) && (x <= Math.max(x1,x2)) && x1 !== x2){ const y = y1 + (y2-y1)*(x-x1)/(x2-x1); if (y > best) best = y; } } return best; }
+function topAt(poly, x){ let best = 1e9; const P = poly.pts; for (let i=0;i<P.length;i++){ const [x1,y1] = P[i], [x2,y2] = P[(i+1)%P.length];
+  if ((x >= Math.min(x1,x2)) && (x <= Math.max(x1,x2)) && x1 !== x2){ const y = y1 + (y2-y1)*(x-x1)/(x2-x1); if (y < best) best = y; } } return best; }
+OCC.forEach((o, i) => { o.z = 2000 + i*1000; const d = document.createElement("div"); d.className = "occ";
+  d.style.clipPath = "polygon(" + o.pts.map(([x,y]) => (x/W*100).toFixed(2)+"% "+(y/H*100).toFixed(2)+"%").join(",") + ")"; d.style.zIndex = o.z;
+  document.getElementById("stage").appendChild(d); });
+
+/* partisi kaca ruang CEO & COO (garis lantai, celah = pintu) */
+const GH = 180;
+const GLASS = [
+  {a:[540,322], b:[610,352]},
+  {a:[610,352], b:[830,260], door:[700,755]},
+  {a:[848,335], b:[1150,465], door:[885,950]}
+];
+GLASS.forEach(g => { g.m = (g.b[1]-g.a[1])/(g.b[0]-g.a[0]); g.at = x => g.a[1] + g.m*(x - g.a[0]); });
+(function drawGlass(){
+  const NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.setAttribute("preserveAspectRatio","none"); svg.setAttribute("class","glass"); svg.setAttribute("aria-hidden","true");
+  const mk = (t, at) => { const e = document.createElementNS(NS,t); for (const k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; };
+  svg.innerHTML = '<defs><linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f3f7" stop-opacity=".26"/><stop offset=".45" stop-color="#cfe2ea" stop-opacity=".12"/><stop offset=".55" stop-color="#ffffff" stop-opacity=".22"/><stop offset="1" stop-color="#cfe2ea" stop-opacity=".10"/></linearGradient></defs>';
+  const P = (x, y) => x.toFixed(1)+","+y.toFixed(1);
+  for (const g of GLASS){
+    const runs = g.door ? [[g.a[0], g.door[0]], [g.door[1], g.b[0]]] : [[g.a[0], g.b[0]]];
+    for (const [x1,x2] of runs){
+      mk("polygon",{points:[P(x1,g.at(x1)),P(x2,g.at(x2)),P(x2,g.at(x2)-GH),P(x1,g.at(x1)-GH)].join(" "), fill:"url(#gl)"});
+      const n = Math.max(1, Math.round((x2-x1)/75));
+      for (let i=0;i<=n;i++){ const x = x1 + (x2-x1)*i/n; mk("line",{x1:x, y1:g.at(x), x2:x, y2:g.at(x)-GH, stroke:"#2a2622", "stroke-width": (i===0||i===n) ? 2.4 : 1.4, "stroke-opacity":.85}); }
+    }
+    mk("line",{x1:g.a[0], y1:g.a[1], x2:g.b[0], y2:g.b[1], stroke:"#2a2622", "stroke-width":2.2, "stroke-opacity":.8});
+    mk("line",{x1:g.a[0], y1:g.a[1]-GH, x2:g.b[0], y2:g.b[1]-GH, stroke:"#2a2622", "stroke-width":2.4, "stroke-opacity":.9});
+    if (g.door){ const [d1,d2] = g.door; mk("line",{x1:d1, y1:g.at(d1)-GH+22, x2:d2, y2:g.at(d2)-GH+22, stroke:"#2a2622", "stroke-width":1.4, "stroke-opacity":.7});
+      const hx = d1 + 6; mk("line",{x1:hx, y1:g.at(hx)-GH*0.55, x2:hx, y2:g.at(hx)-GH*0.38, stroke:"#c9b89a", "stroke-width":2.4}); }
+  }
+  document.getElementById("stage").appendChild(svg);
+})();
+
+const TAGS = [["Ruang rapat",170,118],["Ruang CEO",650,140],["Ruang COO",1060,250],["Area kerja",700,560],["Lounge",250,500],["Pantry",1150,520]];
+const LABEL = {kerja:"Sedang kerja", selesai:"Sudah setor", menunggu:"Menunggu keputusan", istirahat:"Istirahat"};
+const state = {agents:{}, reqs:[], outs:[], filter:"semua", peran:null, open:new Set()};
+const chars = {};
+const stage = document.getElementById("stage");
+const $ = id => document.getElementById(id);
+const el = (t, cls, txt) => { const e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+for (const [t,x,y] of TAGS){ const d = el("div","tag",t); d.style.left = (x/W*100)+"%"; d.style.top = (y/H*100)+"%"; stage.appendChild(d); }
+
+function makeChar(a){
+  const b = el("button","ch"); b.type = "button"; b.setAttribute("aria-label", a.nm + ", " + a.rl);
+  const sh = el("div","shadow"); const fig = el("div","fig");
+  const bub = el("div","bub"); bub.hidden = true; const nm = el("div","nm",a.nm);
+  const img = new Image(); img.src = "assets/kantor/sp/" + a.id + ".webp"; img.alt = ""; img.draggable = false;
+  fig.append(bub, nm, img); b.append(sh, fig); stage.appendChild(b);
+  const start = a.boss ? a.pos : a.desk;
+  const c = {a, b, fig, img, bub, x:start[0], y:start[1], vx:0, vy:0, path:[], target:start, anchor:a.an, place:"meja", phase:Math.random()*6, errand:null, dir:1, dirT:0};
+  b.addEventListener("click", e => { e.stopPropagation(); showPop(c); });
+  chars[a.id] = c;
+}
+let SIM = null;
+const placeKey = p => p === "pantry-kopi" ? "pantry" : p;
+function anchorFor(c, to, place){ if (place === "meja") return c.a.an; if (place === "pantry-kopi" || place === "pantry") return to[0] > 1150 ? "r" : "f"; return ANCHOR[place]; }
+function goTo(c, to, place){
+  if (c.place === place && c.target[0] === to[0] && c.target[1] === to[1]) return;
+  const an = anchorFor(c, to, place);
+  if (reduce){ c.place = place; c.target = to; c.anchor = an; c.x = to[0]; c.y = to[1]; c.path = []; return; }
+  if (place === c.place && place !== "meja"){ c.target = to; c.path = [to]; return; }
+  const route = shortest(c.anchor, an).map(n => NODES[n]);
+  c.place = place; c.target = to; c.anchor = an;
+  c.path = [...route, to];
+}
+function setBubble(c, txt, cls){ if (!txt){ c.bub.hidden = true; return; } c.bub.hidden = false; c.bub.className = "bub " + cls; c.bub.textContent = txt; }
+
+function jakarta(){
+  if (SIM) return {txt:"Simulasi", hari:{kerja:"Contoh jam kerja", keputusan:"Contoh minta keputusan", rapat:"Contoh rapat Jumat 16.00", istirahat:"Contoh malam hari"}[SIM], kerja: SIM !== "istirahat", rapat: SIM === "rapat", malam: SIM === "istirahat"};
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jakarta",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  const h = +p.hour % 24, m = +p.minute, wd = p.weekday, mins = h*60+m;
+  return {txt:String(h).padStart(2,"0")+"."+String(m).padStart(2,"0"), hari:{Mon:"Senin",Tue:"Selasa",Wed:"Rabu",Thu:"Kamis",Fri:"Jumat",Sat:"Sabtu",Sun:"Minggu"}[wd],
+    kerja:!["Sat","Sun"].includes(wd) && mins>=450 && mins<1080, rapat: wd==="Fri" && mins>=960 && mins<1080, malam: h>=18 || h<6};
+}
+function statusOf(a, t){
+  const d = state.agents[a.id] || {};
+  const simTanya = SIM === "keputusan" ? ({gantara:{untuk:"ceo"}, caroline:{untuk:"ceo"}, dante:{untuk:"coo"}})[a.id] : null;
+  const tanya = SIM ? simTanya : state.reqs.find(r => r.agent === a.id && r.status !== "dijawab");
+  if (tanya) return {st:"menunggu", place:tanya.untuk === "coo" ? "coo" : "ceo", task:d.task};
+  if (t.rapat) return {st:"kerja", place:"rapat", task:"Rapat evaluasi mingguan"};
+  if (!t.kerja) return {st:"istirahat", place:"lounge", task:d.task};
+  return {st:d.status || "kerja", place:"meja", task:d.task || ""};
+}
+let T = jakarta();
+function plan(){
+  T = jakarta();
+  $("jam").textContent = T.txt; $("hari").textContent = SIM ? T.hari : T.hari + " · WIB · " + (T.kerja ? "jam kerja" : "di luar jam kerja");
+  stage.classList.toggle("malam", T.malam);
+  const used = {ceo:0, coo:0, rapat:0, lounge:0, pantry:0};
+  for (const a of AG){
+    const c = chars[a.id], s = statusOf(a, T); c.s = s;
+    if (s.place === "meja"){ if (!c.errand) goTo(c, a.desk, "meja"); }
+    else { c.errand = null; const L = SLOTS[s.place]; if (c.place !== s.place) goTo(c, L[used[s.place] % L.length], s.place); used[s.place]++; }
+    if (c.errand) continue;
+    if (s.st === "menunggu") setBubble(c, "Perlu keputusan", "b-warn");
+    else if (s.st === "istirahat") setBubble(c, "Istirahat", "b-rest");
+    else if (s.place === "rapat") setBubble(c, "Rapat", "b-info");
+    else if (s.st === "selesai") setBubble(c, "Sudah setor", "b-done");
+    else setBubble(c, null);
+  }
+  for (const b of BOSS) chars[b.id].s = {task:b.rl};
+}
+function errands(){
+  if (reduce) return;
+  // yang di ruang rapat / lounge sesekali pindah ke kursi sebelahnya
+  const idle = AG.map(a=>chars[a.id]).filter(c => (c.place === "rapat" || c.place === "lounge") && !c.path.length);
+  if (idle.length && Math.random() < 0.6){
+    const c = idle[Math.floor(Math.random()*idle.length)], L = SLOTS[c.place];
+    const i = L.findIndex(p => p[0] === c.target[0] && p[1] === c.target[1]);
+    const taken = AG.map(a => chars[a.id].target.join());
+    const near = [L[(i+1) % L.length], L[(i-1+L.length) % L.length]].filter(p => !taken.includes(p.join()));
+    if (i >= 0 && near.length) goTo(c, near[Math.floor(Math.random()*near.length)], c.place);
+  }
+  if (!T.kerja || T.rapat) return;
+  const cand = AG.map(a=>chars[a.id]).filter(c => c.place === "meja" && !c.errand && !c.path.length);
+  if (!cand.length || Math.random() > 0.5) return;
+  const c = cand[Math.floor(Math.random()*cand.length)];
+  c.errand = {back: Date.now() + 9000 + Math.random()*7000};
+  goTo(c, SLOTS.pantry[Math.floor(Math.random()*SLOTS.pantry.length)], "pantry-kopi"); setBubble(c, "Ambil kopi", "b-info");
+}
+let last = performance.now();
+const MAX = 78;
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  const k = stage.clientWidth / W;
+  for (const id in chars){
+    const c = chars[id];
+    let speed = 0;
+    if (c.path.length){
+      const [tx,ty] = c.path[0], dx = tx-c.x, dy = ty-c.y, d = Math.hypot(dx,dy), final = c.path.length === 1;
+      if ((!final && d < 16) || (final && d < 1.5)){ c.path.shift(); if (final){ c.x = tx; c.y = ty; c.vx = c.vy = 0; } }
+      else {
+        const want = final ? Math.max(18, Math.min(MAX, d*2.2)) : MAX;
+        const ax = dx/d*want, ay = dy/d*want, t = Math.min(1, dt*5);
+        c.vx += (ax - c.vx)*t; c.vy += (ay - c.vy)*t;
+        c.x += c.vx*dt; c.y += c.vy*dt;
+      }
+    } else if (c.errand && Date.now() > c.errand.back){ c.errand = null; goTo(c, c.a.desk, "meja"); plan(); }
+    speed = Math.hypot(c.vx, c.vy);
+    if (!c.path.length){ c.vx *= 0.8; c.vy *= 0.8; }
+    if (Math.abs(c.vx) > 14){ const nd = c.vx < 0 ? -1 : 1; if (nd !== c.dir && (now - c.dirT) > 250){ c.dir = nd; c.dirT = now; } }
+    const walking = speed > 6;
+    c.phase += walking ? dt * speed * 0.16 : dt * 1.3;
+    const bob = walking ? -Math.abs(Math.sin(c.phase)) * 2.2 : 0;
+    const tilt = walking ? Math.sin(c.phase) * 2.2 : 0;
+    const breathe = walking ? 1 : 1 + Math.sin(c.phase) * 0.006;
+    c.b.style.transform = `translate3d(${(c.x*k).toFixed(2)}px,${(c.y*k).toFixed(2)}px,0)`;
+    // urutan tumpukan: di depan / di belakang meja
+    let z = 1000 + c.y;
+    for (const o of OCC){ const bt = bottomAt(o, c.x); if (bt < 0) continue; if (c.y >= bt - 3) z = Math.max(z, o.z + 1 + c.y/1000); }
+    for (const o of OCC){ const bt = bottomAt(o, c.x), tp = topAt(o, c.x); if (bt < 0) continue; if (c.y < bt - 3 && c.y > tp - 140) z = Math.min(z, o.z - 1); }
+    // di depan kaca -> gambar di atas kaca; di dalam ruangan -> di bawah kaca
+    for (const g of GLASS){ if (c.x >= g.a[0] && c.x <= g.b[0] && c.y >= g.at(c.x) - 2 && c.y < g.at(c.x) + 150) z = Math.max(z, 1601 + c.y/1000); }
+    for (const o of OCC){ const bt = bottomAt(o, c.x), tp = topAt(o, c.x); if (bt < 0) continue; if (c.y < bt - 3 && c.y > tp - 140) z = Math.min(z, o.z - 1); }
+    c.b.style.zIndex = Math.round(z);
+    c.img.style.transform = `translateY(${(bob*k).toFixed(2)}px) rotate(${tilt.toFixed(2)}deg) scale(${c.dir},${breathe.toFixed(4)})`;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* popover & panel */
+let pop = null;
+function showPop(c){
+  if (pop) pop.remove();
+  pop = el("div","pop"); const s = c.s || {};
+  pop.append(el("b",null,c.a.nm), el("div","rl", c.a.rl + (s.st ? " · " + LABEL[s.st] : "")));
+  if (s.task && !c.a.boss) pop.appendChild(el("div","tk",s.task));
+  stage.appendChild(pop);
+  const k = stage.clientWidth / W;
+  pop.style.left = Math.min(Math.max(8, c.x*k - 120), stage.clientWidth - 250) + "px";
+  pop.style.top = Math.max(8, c.y*k - 6.4*stage.clientWidth/100 - pop.offsetHeight - 30) + "px";
+  if (!c.a.boss){ state.filter = c.a.id; renderOuts(); }
+}
+document.addEventListener("click", e => { if (pop && !e.target.closest(".pop")){ pop.remove(); pop = null; } });
+function waktu(iso){ if (!iso) return ""; try { return new Intl.DateTimeFormat("id-ID",{timeZone:"Asia/Jakarta",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(iso)); } catch { return ""; } }
+function toast(t){ const e = el("div","toast",t); document.body.appendChild(e); setTimeout(() => e.remove(), 2600); }
+function bolehJawab(r){ return state.peran === "ceo" || (state.peran === "coo" && r.untuk === "coo"); }
+function renderReqs(){
+  const box = $("reqs"), open = state.reqs.filter(r => r.status !== "dijawab");
+  if (state.peran === "tim"){
+    $("reqs-hint").textContent = "Pertanyaan ke CEO/COO hanya bisa dibaca dan dijawab oleh CEO dan COO.";
+    box.replaceChildren(el("p","empty", open.length ? open.length + " pertanyaan sedang menunggu jawaban CEO/COO." : "Belum ada yang menunggu keputusan."));
+    return;
+  }
+  if (!open.length){ box.replaceChildren(el("p","empty","Belum ada yang menunggu keputusan.")); return; }
+  const active = document.activeElement && document.activeElement.tagName === "TEXTAREA" ? document.activeElement.id : null;
+  const drafts = {}; box.querySelectorAll("textarea").forEach(x => drafts[x.id] = x.value);
+  box.replaceChildren();
+  for (const r of open){
+    const a = AG.find(x => x.id === r.agent) || {nm:r.agent};
+    const w = el("div","req"), who = el("div","who");
+    who.append(el("b",null,a.nm), document.createTextNode(" untuk " + (r.untuk === "coo" ? "Gabriella" : "CEO") + " · " + waktu(r.waktu)));
+    w.append(who, el("p",null,r.pertanyaan || ""));
+    if (bolehJawab(r)){
+      const ta = el("textarea"); ta.id = "jawab-" + r.id; ta.placeholder = "Tulis keputusanmu…"; ta.value = drafts[ta.id] || "";
+      const lab = el("label","lbl","Jawaban"); lab.htmlFor = ta.id;
+      const btn = el("button","btn","Kirim keputusan"); btn.type = "button"; btn.onclick = () => jawab(r, ta, btn);
+      w.append(lab, ta, btn);
+    } else w.appendChild(el("p","ro","Menunggu jawaban CEO."));
+    box.appendChild(w);
+  }
+  if (active && $(active)) $(active).focus();
+}
+function renderOuts(){
+  const f = $("filters"); f.replaceChildren();
+  for (const k of ["semua", ...AG.map(a=>a.id)]){
+    const c = el("button","chip", k === "semua" ? "Semua" : AG.find(a=>a.id===k).nm); c.type = "button";
+    c.setAttribute("aria-pressed", String(state.filter === k)); c.onclick = () => { state.filter = k; renderOuts(); }; f.appendChild(c);
+  }
+  const box = $("outs"), list = state.outs.filter(o => state.filter === "semua" || o.agent === state.filter);
+  if (!list.length){ box.replaceChildren(el("p","empty", state.outs.length ? "Karyawan ini belum menyetor hasil." : "Belum ada hasil kerja. Hasil pertama muncul setelah uji coba.")); return; }
+  box.replaceChildren();
+  for (const o of list.slice(0, 40)){
+    const a = AG.find(x => x.id === o.agent) || {nm:o.agent};
+    const w = el("article","out" + (state.open.has(o.id) ? " buka" : ""));
+    w.append(el("div","meta", a.nm + " · " + waktu(o.waktu) + (o.untuk ? " · untuk " + o.untuk : "")), el("h3",null,o.judul || "Tanpa judul"), el("div","isi",o.isi || ""));
+    if ((o.isi || "").length > 320){
+      const m = el("button","more", state.open.has(o.id) ? "Tutup" : "Baca selengkapnya"); m.type = "button";
+      m.onclick = () => { state.open.has(o.id) ? state.open.delete(o.id) : state.open.add(o.id); renderOuts(); }; w.appendChild(m);
+    }
+    box.appendChild(w);
+  }
+}
+const PESAN = {KANTOR_TIDAK_BERHAK:"Kamu tidak punya izin menjawab pertanyaan ini.", KANTOR_SUDAH_DIJAWAB:"Pertanyaan ini sudah dijawab.", KANTOR_JAWABAN_KOSONG:"Tulis jawabannya dulu.", KANTOR_TIDAK_ADA:"Pertanyaan ini sudah tidak ada.", KANTOR_BUKAN_INTERNAL:"Sesi internal habis. Masuk lagi lewat menu Internal."};
+function pesanError(e){ const m = String((e && e.message) || ""); const k = Object.keys(PESAN).find(x => m.includes(x)); return k ? PESAN[k] : "Gagal mengirim. Cek koneksi lalu coba lagi."; }
+async function jawab(r, ta, btn){
+  const teks = ta.value.trim(); if (!teks){ ta.focus(); return; }
+  btn.disabled = true;
+  const { error } = await sb.rpc("kantor_jawab", {p_id: r.id, p_jawaban: teks});
+  if (error){ btn.disabled = false; toast(pesanError(error)); await muat(); return; }
+  toast("Keputusan terkirim ke " + ((AG.find(a=>a.id===r.agent)||{}).nm || "karyawan"));
+  ta.value = ""; await muat();
+}
+
+for (const a of AG) makeChar(a);
+for (const b of BOSS) makeChar(b);
+plan(); renderReqs(); renderOuts();
+requestAnimationFrame(frame);
+setInterval(plan, 30000); setInterval(() => { if (!SIM) errands(); }, 12000); setInterval(() => { if (SIM) errands(); }, 3500);
+document.querySelectorAll("[data-sim]").forEach(b => b.addEventListener("click", () => {
+  SIM = b.dataset.sim || null;
+  document.querySelectorAll("[data-sim]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  for (const a of AG) chars[a.id].errand = null;
+  plan();
+}));
+$("kembali").addEventListener("click", e => { if (window.opener){ e.preventDefault(); window.close(); } });
+function tutupGerbang(judul, teks, tombol){
+  $("gate-judul").textContent = judul; $("gate-teks").textContent = teks; $("gate-btn").hidden = !tombol; $("gate").hidden = false;
+}
+let sudahMasuk = false;
+async function muat(){
+  const { data, error } = await sb.rpc("kantor_data");
+  if (error){
+    if (/KANTOR_BUKAN_INTERNAL|JWT|permission denied/i.test(error.message || "")) tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true);
+    else if (!sudahMasuk) tutupGerbang("Kantor belum bisa dibuka", "Cek koneksi internet lalu muat ulang halaman.", false);
+    return;
+  }
+  sudahMasuk = true; $("gate").hidden = true;
+  state.peran = data.peran; state.agents = data.agents || {}; state.reqs = data.reqs || []; state.outs = data.outs || [];
+  plan(); renderReqs(); renderOuts();
+}
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
+  await muat();
+  setInterval(() => { if (!document.hidden) muat(); }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) muat(); });
+})();
+</script>
+</body>
+</html>
