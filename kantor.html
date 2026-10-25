@@ -68,6 +68,10 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .btn:focus-visible,textarea:focus-visible,.chip:focus-visible,.more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chip{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip-rl{color:var(--muted)}
+.chip[aria-pressed="true"] .chip-rl{color:inherit}
+.jobdesc{font-size:13px;background:var(--bg);border-radius:8px;padding:8px 12px;margin:0 0 10px}
+.jobdesc[hidden]{display:none}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .out{border-top:1px solid var(--line);padding:10px 0} .out:first-child{border-top:0}
 .out h3{font-size:15px;margin:2px 0 4px;font-weight:600}
@@ -154,6 +158,7 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
       <h2>Hasil kerja</h2>
       <p class="hint">Laporan, ide, dan draf terbaru.</p>
       <div class="filters" id="filters"></div>
+      <p class="jobdesc" id="job" hidden></p>
       <div id="outs"><p class="empty">Belum ada hasil kerja. Hasil pertama muncul setelah uji coba.</p></div>
     </div>
   </div>
@@ -168,13 +173,13 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const W = 1376, H = 768;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const AG = [
-  {id:"gantara", nm:"Gantara", rl:"Manager", desk:[742,440], an:"j"},
-  {id:"gisella", nm:"Gisella", rl:"Riset", desk:[662,482], an:"k"},
-  {id:"gregorius", nm:"Gregorius", rl:"Analyst", desk:[588,526], an:"l"},
-  {id:"caroline", nm:"Caroline", rl:"Asisten AE", desk:[940,505], an:"e"},
-  {id:"nadine", nm:"Nadine", rl:"Asisten Creator", desk:[866,570], an:"g"},
-  {id:"dante", nm:"Dante", rl:"Sosmed Specialist", desk:[778,616], an:"h"},
-  {id:"marco", nm:"Marco", rl:"Editor", desk:[418,482], an:"n"}
+  {id:"gantara", nm:"Gantara", rl:"Manager", job:"Laporan pagi (GMV + tugas hari ini untuk Ara & Riche) dan rangkuman sore. Jalan Senin–Jumat 07.45 dan 16.40.", desk:[742,440], an:"j"},
+  {id:"gisella", nm:"Gisella", rl:"Riset", job:"Produk paling laku dan yang lagi naik, plus palet produk per subkategori. Jalan Senin–Jumat 07.39.", desk:[662,482], an:"k"},
+  {id:"gregorius", nm:"Gregorius", rl:"Analyst", job:"Analisa angka mendalam (GMV, creator, brand). Belum punya jadwal kerja.", desk:[588,526], an:"l"},
+  {id:"caroline", nm:"Caroline", rl:"Asisten AE", job:"Bantu Ara: brand yang belum kirim sample, produk viral, analisa brand vs pesaing. Belum punya jadwal kerja.", desk:[940,505], an:"e"},
+  {id:"nadine", nm:"Nadine", rl:"Asisten Creator", job:"Bantu Riche & Caca: cari KOL potensial dan KOL lama yang perlu disapa. Mulai jalan setelah FastMoss aktif.", desk:[866,570], an:"g"},
+  {id:"dante", nm:"Dante", rl:"Sosmed Specialist", job:"10 ide konten TikTok Girlhood Den per hari dan naskah ide yang dipilih Gabriella. Jalan Senin–Jumat 09.40.", desk:[778,616], an:"h"},
+  {id:"marco", nm:"Marco", rl:"Editor", job:"Edit video konten. Belum punya jadwal kerja.", desk:[418,482], an:"n"}
 ];
 const BOSS = [{id:"ceo", nm:"CEO", rl:"Ruang CEO", boss:true, pos:[585,250]}, {id:"gabriella", nm:"Gabriella", rl:"COO", boss:true, pos:[1140,350]}];
 const SLOTS = {
@@ -413,9 +418,13 @@ function renderReqs(){
 function renderOuts(){
   const f = $("filters"); f.replaceChildren();
   for (const k of ["semua", ...AG.map(a=>a.id)]){
-    const c = el("button","chip", k === "semua" ? "Semua" : AG.find(a=>a.id===k).nm); c.type = "button";
+    const ag = AG.find(a=>a.id===k), c = el("button","chip", k === "semua" ? "Semua" : ag.nm); c.type = "button";
+    if (ag) c.appendChild(el("span","chip-rl"," · " + ag.rl));
     c.setAttribute("aria-pressed", String(state.filter === k)); c.onclick = () => { state.filter = k; renderOuts(); }; f.appendChild(c);
   }
+  const pilih = AG.find(a => a.id === state.filter);
+  $("job").replaceChildren(); $("job").hidden = !pilih;
+  if (pilih){ $("job").append(el("b",null,pilih.nm + " — " + pilih.rl), document.createTextNode(": " + pilih.job)); }
   const box = $("outs"), list = state.outs.filter(o => state.filter === "semua" || o.agent === state.filter);
   if (!list.length){ box.replaceChildren(el("p","empty", state.outs.length ? "Karyawan ini belum menyetor hasil." : "Belum ada hasil kerja. Hasil pertama muncul setelah uji coba.")); return; }
   box.replaceChildren();
