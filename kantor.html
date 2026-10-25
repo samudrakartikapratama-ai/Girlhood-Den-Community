@@ -76,6 +76,29 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .out.buka .isi{max-height:none}
 .more{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;margin-top:4px}
 .empty{color:var(--muted);font-size:14px;margin:0}
+.vis{display:grid;gap:12px;margin-top:6px}
+.vis h4{font-size:13px;font-weight:600;margin:0 0 4px}
+.br{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.6fr) 74px 62px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.br .nm2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br .nm2 small{display:block;color:var(--muted);font-size:11.5px}
+.br .tr{height:8px;border-radius:4px;background:var(--line)}
+.br .tr i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.br .vl{font-variant-numeric:tabular-nums;text-align:right}
+.up{color:var(--good)} .dn{color:#c0443a} .sb{color:var(--muted)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dn{color:#ef8a80}}
+.tn{font-size:12px;white-space:nowrap}
+.pal{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 12px;font-size:13px}
+.dt{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;vertical-align:-1px;border:1px solid var(--good)}
+.dt.on{background:var(--good)}
+.dt.off{border-color:var(--muted)}
+.mtc{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.mtc div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.mtc b{display:block;font-size:18px;font-weight:600}
+.mtc span{font-size:12px;color:var(--muted)}
+.pts{margin:0;padding-left:18px;font-size:13.5px}
+.tanya{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13.5px}
+.teks{white-space:pre-wrap;font-size:13.5px;border-top:1px dashed var(--line);padding-top:8px;margin-top:8px}
+@media (max-width:560px){.br{grid-template-columns:minmax(0,1fr) 70px 56px}.br .tr{grid-column:1/-1;order:5}}
 .simbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:-6px}
 .simlbl{font-size:13px;color:var(--muted);margin-right:2px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:8px;font-size:14px;z-index:5000}
@@ -399,7 +422,19 @@ function renderOuts(){
   for (const o of list.slice(0, 40)){
     const a = AG.find(x => x.id === o.agent) || {nm:o.agent};
     const w = el("article","out" + (state.open.has(o.id) ? " buka" : ""));
-    w.append(el("div","meta", a.nm + " · " + waktu(o.waktu) + (o.untuk ? " · untuk " + o.untuk : "")), el("h3",null,o.judul || "Tanpa judul"), el("div","isi",o.isi || ""));
+    w.append(el("div","meta", a.nm + " · " + waktu(o.waktu) + (o.untuk ? " · untuk " + o.untuk : "")), el("h3",null,o.judul || "Tanpa judul"));
+    const vis = visual(o.data, o.judul);
+    if (vis){
+      w.appendChild(vis);
+      if (o.isi){
+        const m = el("button","more", state.open.has(o.id) ? "Tutup teks lengkap" : "Lihat teks lengkap"); m.type = "button";
+        m.onclick = () => { state.open.has(o.id) ? state.open.delete(o.id) : state.open.add(o.id); renderOuts(); };
+        w.appendChild(m);
+        if (state.open.has(o.id)) w.appendChild(el("div","teks",o.isi));
+      }
+      box.appendChild(w); continue;
+    }
+    w.appendChild(el("div","isi",o.isi || ""));
     if ((o.isi || "").length > 320){
       const m = el("button","more", state.open.has(o.id) ? "Tutup" : "Baca selengkapnya"); m.type = "button";
       m.onclick = () => { state.open.has(o.id) ? state.open.delete(o.id) : state.open.add(o.id); renderOuts(); }; w.appendChild(m);
@@ -409,6 +444,53 @@ function renderOuts(){
 }
 const PESAN = {KANTOR_TIDAK_BERHAK:"Kamu tidak punya izin menjawab pertanyaan ini.", KANTOR_SUDAH_DIJAWAB:"Pertanyaan ini sudah dijawab.", KANTOR_JAWABAN_KOSONG:"Tulis jawabannya dulu.", KANTOR_TIDAK_ADA:"Pertanyaan ini sudah tidak ada.", KANTOR_BUKAN_INTERNAL:"Sesi internal habis. Masuk lagi lewat menu Internal."};
 function pesanError(e){ const m = String((e && e.message) || ""); const k = Object.keys(PESAN).find(x => m.includes(x)); return k ? PESAN[k] : "Gagal mengirim. Cek koneksi lalu coba lagi."; }
+const teksAman = v => (typeof v === "string" || typeof v === "number") ? String(v) : "";
+function tren(t, lbl){
+  if (t === "naik") return el("span","tn up","▲ " + teksAman(lbl));
+  if (t === "turun") return el("span","tn dn","▼ " + teksAman(lbl));
+  if (t === "stabil") return el("span","tn sb","— stabil");
+  return el("span","tn","");
+}
+function visual(d, judulLaporan){
+  if (!d || !Array.isArray(d.bagian) || !d.bagian.length) return null;
+  const box = el("div","vis");
+  for (const b of d.bagian){
+    if (!b || typeof b !== "object") continue;
+    const items = Array.isArray(b.item) ? b.item : [];
+    const sec = el("div");
+    if (b.judul && b.tipe !== "pertanyaan" && String(b.judul).trim().toLowerCase() !== String(judulLaporan || "").trim().toLowerCase()) sec.appendChild(el("h4",null,teksAman(b.judul)));
+    if (b.tipe === "batang"){
+      const max = Math.max(1, ...items.map(x => Number(x && x.nilai) || 0));
+      for (const x of items){ if (!x) continue;
+        const r = el("div","br"), nm = el("div","nm2",teksAman(x.nama));
+        if (x.catatan) nm.appendChild(el("small",null,teksAman(x.catatan)));
+        const tr = el("div","tr"), fill = el("i"); fill.style.width = Math.max(2, Math.round((Number(x.nilai)||0)/max*100)) + "%"; tr.appendChild(fill);
+        r.append(nm, tr, el("span","vl",teksAman(x.label)), tren(x.tren, x.tren_label)); sec.appendChild(r);
+      }
+    } else if (b.tipe === "palet"){
+      const g = el("div","pal");
+      for (const x of items){ if (!x) continue;
+        const c = el("div"), tgt = Math.min(6, Math.max(1, Number(x.target)||3)), isi = Math.min(tgt, Math.max(0, Number(x.terisi)||0));
+        for (let i=0;i<tgt;i++) c.appendChild(el("span","dt " + (i < isi ? "on" : "off")));
+        c.appendChild(document.createTextNode(" " + teksAman(x.nama))); g.appendChild(c);
+      }
+      sec.appendChild(g);
+    } else if (b.tipe === "angka"){
+      const g = el("div","mtc");
+      for (const x of items){ if (!x) continue;
+        const c = el("div"); const v = el("b",null,teksAman(x.label)); if (x.tren === "naik") v.className = "up"; if (x.tren === "turun") v.className = "dn";
+        c.append(el("span",null,teksAman(x.nama)), v); if (x.catatan) c.appendChild(el("span",null,teksAman(x.catatan))); g.appendChild(c);
+      }
+      sec.appendChild(g);
+    } else if (b.tipe === "poin"){
+      const ul = el("ul","pts"); for (const x of items) ul.appendChild(el("li",null,teksAman(x))); sec.appendChild(ul);
+    } else if (b.tipe === "pertanyaan"){
+      sec.appendChild(el("div","tanya","? " + teksAman(b.teks)));
+    } else continue;
+    box.appendChild(sec);
+  }
+  return box.children.length ? box : null;
+}
 async function jawab(r, ta, btn){
   const teks = ta.value.trim(); if (!teks){ ta.focus(); return; }
   btn.disabled = true;
