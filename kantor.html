@@ -132,6 +132,30 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .bj.belum{background:var(--rest-soft);color:var(--rest);border-color:var(--rest)}
 .fm-st{padding:5px 7px;font-size:13px}
 @media (max-width:860px){.pr{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.pr.kepala{display:none}.pr>*{grid-column:1/-1}.pr .num{text-align:left}.pr .nmc{grid-column:1}.pr .bjc{grid-column:2;grid-row:1;justify-self:end}}
+.kiri{display:grid;gap:18px;min-width:0}
+.ng-log{display:grid;gap:10px;max-height:460px;overflow-y:auto;padding:4px 2px 8px;margin:4px 0 10px;overscroll-behavior:contain}
+.bub{max-width:88%;border-radius:12px;padding:8px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.user{justify-self:end;background:var(--accent-soft);border-bottom-right-radius:4px}
+.bub.ai{justify-self:start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bub a{color:var(--accent)}
+.bub .mt{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:2px;white-space:normal}
+.bub .lp{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;white-space:normal}
+.fchip{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:2px 8px;cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fchip b{font-weight:600;margin-left:4px;color:var(--muted)}
+.bub .ft{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;white-space:normal;font-size:12px;color:var(--muted)}
+.lk{font:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer;transition:transform .12s cubic-bezier(.2,.8,.2,1)}
+.lk:active{transform:scale(.97)} .lk[disabled]{opacity:.5;cursor:default}
+.pilih-grup{display:grid;gap:6px;margin-top:8px;padding:8px;border:1px dashed var(--line);border-radius:8px;white-space:normal;font-size:13px;transform-origin:top left;animation:munc .16s cubic-bezier(.2,.8,.2,1)}
+@keyframes munc{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.pilih-grup select{font:inherit;font-size:13px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px 7px}
+.mengetik{justify-self:start;color:var(--muted);font-size:13px;font-style:italic}
+.ng-form{display:grid;gap:6px}
+.ng-files{display:flex;flex-wrap:wrap;gap:6px}
+.ng-aksi{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.ng-lamp{font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
+.ng-lamp:focus-within{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.req .duo{display:flex;gap:8px;flex-wrap:wrap}
+.btn.sek{background:transparent;color:var(--ink);border:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -168,10 +192,28 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
   </section>
 
   <div class="panels">
+    <div class="kiri">
     <div class="card">
       <h2>Menunggu keputusan</h2>
       <p class="hint" id="reqs-hint">Pertanyaan dari karyawan AI untuk CEO dan COO. Jawabanmu langsung diteruskan.</p>
       <div id="reqs"><p class="empty">Belum ada yang menunggu keputusan.</p></div>
+    </div>
+    <section class="card" id="ngobrol" aria-labelledby="ng-judul">
+      <h2 id="ng-judul">Ngobrol dengan karyawan AI</h2>
+      <p class="hint">Tanya, diskusi, atau kasih tugas. Bisa lampirkan foto, PDF, Excel, Word, atau video. Kalau hasilnya sudah oke, kirim ke grup Lark.</p>
+      <div class="filters" id="ng-agen" role="group" aria-label="Pilih karyawan AI"></div>
+      <div class="ng-log" id="ng-log" aria-live="polite"><p class="empty">Pilih karyawan, lalu tulis pesan.</p></div>
+      <form class="ng-form" id="ng-form">
+        <div class="ng-files" id="ng-files"></div>
+        <label class="lbl" for="ng-teks" id="ng-label">Pesan</label>
+        <textarea id="ng-teks" rows="3" placeholder="Tulis pesan…"></textarea>
+        <div class="ng-aksi">
+          <label class="ng-lamp" title="Tambah lampiran">+ Lampiran<input id="ng-file" type="file" multiple hidden accept="image/*,.pdf,.xlsx,.xls,.csv,.docx,.txt,.mp4,.mov"></label>
+          <span class="ro" id="ng-kuota"></span>
+          <button class="btn" id="ng-kirim" type="submit">Kirim</button>
+        </div>
+      </form>
+    </section>
     </div>
     <div class="card">
       <h2>Hasil kerja</h2>
@@ -438,11 +480,16 @@ function renderReqs(){
   const drafts = {}; box.querySelectorAll("textarea").forEach(x => drafts[x.id] = x.value);
   box.replaceChildren();
   for (const r of open){
-    const a = AG.find(x => x.id === r.agent) || {nm:r.agent};
+    const a = r.jenis === "kuota" ? {nm:"Permintaan kuota"} : (AG.find(x => x.id === r.agent) || {nm:r.agent});
     const w = el("div","req"), who = el("div","who");
     who.append(el("b",null,a.nm), document.createTextNode(" untuk " + (r.untuk === "coo" ? "Gabriella" : "CEO") + " · " + waktu(r.waktu)));
     w.append(who, el("p",null,r.pertanyaan || ""));
-    if (bolehJawab(r)){
+    if (r.jenis === "kuota" && bolehJawab(r)){
+      const d = el("div","duo"), ya = el("button","btn","Setujui +15"), no = el("button","btn sek","Tolak");
+      ya.type = no.type = "button";
+      ya.onclick = () => putuskanKuota(r, "Disetujui", [ya, no]); no.onclick = () => putuskanKuota(r, "Ditolak", [ya, no]);
+      d.append(ya, no); w.appendChild(d);
+    } else if (bolehJawab(r)){
       const ta = el("textarea"); ta.id = "jawab-" + r.id; ta.placeholder = "Tulis keputusanmu…"; ta.value = drafts[ta.id] || "";
       const lab = el("label","lbl","Jawaban"); lab.htmlFor = ta.id;
       const btn = el("button","btn","Kirim keputusan"); btn.type = "button"; btn.onclick = () => jawab(r, ta, btn);
@@ -542,6 +589,12 @@ function visual(d, judulLaporan){
     box.appendChild(sec);
   }
   return box.children.length ? box : null;
+}
+async function putuskanKuota(r, keputusan, btns){
+  btns.forEach(b => b.disabled = true);
+  const { error } = await sb.rpc("kantor_jawab", {p_id: r.id, p_jawaban: keputusan});
+  if (error){ btns.forEach(b => b.disabled = false); toast(pesanError(error)); await muat(); return; }
+  toast(keputusan === "Disetujui" ? "Tambahan 15 pesan disetujui" : "Permintaan ditolak"); await muat();
 }
 async function jawab(r, ta, btn){
   const teks = ta.value.trim(); if (!teks){ ta.focus(); return; }
@@ -659,11 +712,162 @@ $("fm-form").addEventListener("submit", async e => {
     toast("Gagal membaca file. Cek koneksi lalu coba lagi.");
   } finally { btn.disabled = false; btn.textContent = "Upload"; }
 });
+/* ===== Ngobrol dengan karyawan AI (website) — otak yang sama dengan bot Lark ===== */
+const NG = {agent: null, pesan: [], kuota: null, files: [], sibuk: false, grup: null};
+try { NG.agent = localStorage.getItem("kantor-ng-agen"); } catch {}
+const ukuran = n => n >= 1048576 ? (n/1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(n/1024)) + " KB";
+async function web(body){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw Object.assign(new Error("BUKAN_INTERNAL"), {data:{galat:"BUKAN_INTERNAL"}});
+  const r = await fetch(SUPABASE_URL + "/functions/v1/lark-bot/web", {method: "POST",
+    headers: {"content-type": "application/json", authorization: "Bearer " + session.access_token, apikey: SUPABASE_ANON_KEY}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({galat: "GAGAL"}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || "GAGAL"), {data: j});
+  return j;
+}
+const PESAN_NG = {KUOTA: "Jatah pesanmu hari ini habis. Minta tambahan ke CEO di bawah.", PENUH: "Karyawan AI sedang penuh hari ini. Coba lagi besok.", SALDO: "Saldo API karyawan AI habis. Minta CEO isi ulang.", BUKAN_INTERNAL: "Sesi internal habis. Masuk lagi lewat menu Internal.", GRUP: "Grup Lark tidak ditemukan. Pastikan bot sudah masuk grup itu."};
+function teksTautan(teks){
+  const f = document.createDocumentFragment(); let i = 0;
+  for (const m of String(teks).matchAll(/https:\/\/[^\s<>"')\]]+/g)){
+    f.appendChild(document.createTextNode(teks.slice(i, m.index)));
+    const a = el("a", null, m[0]); a.href = m[0]; a.target = "_blank"; a.rel = "noopener"; f.appendChild(a); i = m.index + m[0].length;
+  }
+  f.appendChild(document.createTextNode(teks.slice(i))); return f;
+}
+function chipLampiran(f){
+  const c = el("button","fchip", f.nama); c.type = "button"; c.title = "Buka " + f.nama;
+  if (f.ukuran) c.appendChild(el("b",null,ukuran(f.ukuran)));
+  c.onclick = async () => { const { data } = await sb.storage.from("kantor-lampiran").createSignedUrl(f.path, 600); if (data && data.signedUrl) window.open(data.signedUrl, "_blank", "noopener"); else toast("File tidak bisa dibuka."); };
+  return c;
+}
+function renderAgenNg(){
+  $("ng-agen").replaceChildren(...AG.map(a => { const c = el("button","chip", a.nm); c.type = "button"; c.appendChild(el("span","chip-rl"," · " + a.rl));
+    c.setAttribute("aria-pressed", String(NG.agent === a.id)); c.onclick = () => pilihAgenNg(a.id); return c; }));
+  const a = AG.find(x => x.id === NG.agent);
+  $("ng-teks").placeholder = a ? "Tulis pesan untuk " + a.nm + "…" : "Pilih karyawan dulu";
+  $("ng-label").textContent = a ? "Pesan untuk " + a.nm : "Pesan";
+}
+function renderKuotaNg(){
+  const k = NG.kuota, box = $("ng-kuota"); box.replaceChildren();
+  if (!k) return;
+  const sisa = Math.max(0, k.batas - k.pakai);
+  if (sisa > 0){ box.textContent = "Sisa " + sisa + " dari " + k.batas + " pesan hari ini"; return; }
+  if (k.menunggu){ box.textContent = "Jatah habis · menunggu persetujuan CEO"; return; }
+  const b = el("button","lk","Minta tambahan 15 ke CEO"); b.type = "button";
+  b.onclick = async () => { b.disabled = true; try { const j = await web({aksi: "minta_kuota"}); NG.kuota = j.kuota; toast("Permintaan dikirim ke CEO"); } catch (e){ toast(PESAN_NG[e.message] || "Gagal mengirim permintaan."); } renderKuotaNg(); };
+  box.append(document.createTextNode("Jatah habis · "), b);
+}
+function renderLogNg(){
+  const box = $("ng-log"), a = AG.find(x => x.id === NG.agent);
+  if (!a){ box.replaceChildren(el("p","empty","Pilih karyawan, lalu tulis pesan.")); return; }
+  if (!NG.pesan.length && !NG.sibuk){ box.replaceChildren(el("p","empty","Belum ada obrolan dengan " + a.nm + ". " + a.job)); return; }
+  box.replaceChildren();
+  NG.pesan.forEach((p, idx) => {
+    const ai = p.peran === "assistant", b = el("div","bub " + (ai ? "ai" : "user"));
+    b.appendChild(el("span","mt",(ai ? a.nm : "Kamu") + " · " + waktu(p.waktu || p.created_at)));
+    b.appendChild(teksTautan(p.isi || ""));
+    if ((p.lampiran || []).length){ const lp = el("div","lp"); p.lampiran.forEach(f => lp.appendChild(chipLampiran(f))); b.appendChild(lp); }
+    if (ai){
+      const ft = el("div","ft");
+      const sudah = p.lark || p.dikirim_lark || [];
+      if (sudah.length){ const s = sudah[sudah.length - 1]; ft.appendChild(el("span",null,"Terkirim ke " + s.grup + " · " + waktu(s.waktu) + (s.file ? " · " + s.file + " file" : ""))); }
+      const kb = el("button","lk", sudah.length ? "Kirim lagi ke Lark" : "Kirim ke Lark"); kb.type = "button";
+      kb.onclick = () => bukaPilihGrup(b, p, idx, kb);
+      ft.prepend(kb); b.appendChild(ft);
+    }
+    box.appendChild(b);
+  });
+  if (NG.sibuk) box.appendChild(el("p","mengetik", a.nm + " sedang mengerjakan…"));
+  box.scrollTop = box.scrollHeight;
+}
+async function bukaPilihGrup(bub, p, idx, tombol){
+  const ada = bub.querySelector(".pilih-grup"); if (ada){ ada.remove(); return; }
+  tombol.disabled = true;
+  try { if (!NG.grup) NG.grup = (await web({aksi: "grup"})).grup || []; }
+  catch (e){ tombol.disabled = false; toast(PESAN_NG[e.message] || "Gagal memuat grup Lark."); return; }
+  tombol.disabled = false;
+  const w = el("div","pilih-grup");
+  if (!NG.grup.length){ w.appendChild(el("span",null,"Bot Kantor AI belum masuk grup Lark mana pun.")); bub.appendChild(w); return; }
+  const sel = document.createElement("select"); sel.setAttribute("aria-label","Pilih grup Lark");
+  NG.grup.forEach(g => { const o = document.createElement("option"); o.value = g.chat_id; o.textContent = g.nama; sel.appendChild(o); });
+  w.append(el("span",null,"Kirim ke grup:"), sel);
+  const prev = NG.pesan.slice(0, idx).reverse().find(x => x.peran === "user");
+  let cek = null;
+  if (prev && (prev.lampiran || []).length){
+    const lab = el("label"); cek = document.createElement("input"); cek.type = "checkbox"; cek.checked = true;
+    lab.append(cek, document.createTextNode(" Sertakan " + prev.lampiran.length + " file dari pesanku (" + prev.lampiran.map(f => f.nama).join(", ") + ")"));
+    w.appendChild(lab);
+  }
+  const ok = el("button","lk","Kirim sekarang"); ok.type = "button";
+  ok.onclick = async () => {
+    ok.disabled = true; ok.textContent = "Mengirim…";
+    try {
+      const j = await web({aksi: "kirim", pesan_id: p.id, chat_id: sel.value, sertakan_lampiran: !!(cek && cek.checked)});
+      p.lark = j.lark; toast("Terkirim ke " + j.grup); renderLogNg();
+    } catch (e){ ok.disabled = false; ok.textContent = "Kirim sekarang"; toast(PESAN_NG[e.message] || "Gagal mengirim ke Lark."); }
+  };
+  w.appendChild(ok); bub.appendChild(w);
+}
+async function pilihAgenNg(id){
+  NG.agent = id; NG.pesan = []; try { localStorage.setItem("kantor-ng-agen", id); } catch {}
+  renderAgenNg(); renderLogNg();
+  const { data, error } = await sb.rpc("kantor_chat_riwayat", {p_agent: id});
+  if (error || NG.agent !== id) return;
+  NG.pesan = data.pesan || []; NG.kuota = data.kuota; renderLogNg(); renderKuotaNg();
+}
+function renderFilesNg(){
+  $("ng-files").replaceChildren(...NG.files.map((f, i) => { const c = el("button","fchip", f.name); c.type = "button"; c.title = "Hapus " + f.name;
+    c.appendChild(el("b",null,"✕")); c.onclick = () => { NG.files.splice(i, 1); renderFilesNg(); }; return c; }));
+}
+$("ng-file").addEventListener("change", e => {
+  for (const f of e.target.files){
+    if (NG.files.length >= 5){ toast("Maksimal 5 file per pesan."); break; }
+    if (f.size > 50 * 1048576){ toast(f.name + " lebih dari 50 MB."); continue; }
+    NG.files.push(f);
+  }
+  e.target.value = ""; renderFilesNg();
+});
+$("ng-teks").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)){ e.preventDefault(); $("ng-form").requestSubmit(); } });
+$("ng-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (NG.sibuk) return;
+  if (!NG.agent){ toast("Pilih karyawan dulu."); return; }
+  const teks = $("ng-teks").value.trim();
+  if (!teks && !NG.files.length) return;
+  const agent = NG.agent, btn = $("ng-kirim");
+  NG.sibuk = true; btn.disabled = true;
+  try {
+    const lampiran = [];
+    for (const f of NG.files){
+      btn.textContent = "Upload " + (lampiran.length + 1) + "/" + NG.files.length + "…";
+      const path = "web/" + crypto.randomUUID() + "-" + f.name.replace(/[^\w.\-]+/g, "_").slice(-80);
+      const { error } = await sb.storage.from("kantor-lampiran").upload(path, f, {contentType: f.type || undefined});
+      if (error) throw Object.assign(new Error("UPLOAD"), {data: {}});
+      lampiran.push({path, nama: f.name, tipe: f.type, ukuran: f.size});
+    }
+    btn.textContent = "Mengirim…";
+    NG.pesan.push({id: 0, peran: "user", isi: teks, lampiran, waktu: new Date().toISOString()});
+    $("ng-teks").value = ""; NG.files = []; renderFilesNg(); renderLogNg();
+    const j = await web({aksi: "chat", agent, pesan: teks, lampiran});
+    if (NG.agent !== agent) return;
+    NG.pesan[NG.pesan.length - 1] = j.user; NG.pesan.push(j.jawab); NG.kuota = j.kuota;
+  } catch (err){
+    if (err.data && err.data.kuota){ NG.kuota = err.data.kuota; NG.pesan.pop(); }
+    toast(err.message === "UPLOAD" ? "Upload file gagal. Coba lagi." : (PESAN_NG[err.message] || "Gagal mengirim. Coba lagi."));
+  } finally {
+    NG.sibuk = false; btn.disabled = false; btn.textContent = "Kirim";
+    if (NG.agent === agent){ renderLogNg(); renderKuotaNg(); }
+  }
+});
+function mulaiNgobrol(){
+  if (!NG.agent || !AG.some(a => a.id === NG.agent)) NG.agent = state.peran === "coo" ? "dante" : "gantara";
+  renderAgenNg(); pilihAgenNg(NG.agent);
+}
 (async () => {
   const { data } = await sb.auth.getSession();
   if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
   await muat();
-  if (sudahMasuk) muatFm();
+  if (sudahMasuk){ muatFm(); mulaiNgobrol(); }
   setInterval(() => { if (!document.hidden) muat(); }, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) muat(); });
 })();
