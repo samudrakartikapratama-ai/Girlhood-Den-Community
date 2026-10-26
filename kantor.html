@@ -495,6 +495,12 @@ function visual(d, judulLaporan){
       const ul = el("ul","pts"); for (const x of items) ul.appendChild(el("li",null,teksAman(x))); sec.appendChild(ul);
     } else if (b.tipe === "pertanyaan"){
       sec.appendChild(el("div","tanya","? " + teksAman(b.teks)));
+    } else if (b.tipe === "file"){
+      for (const x of items){
+        if (!x || !/^https:\/\/[a-z0-9.-]+\.(larksuite|feishu)\.(com|cn)\//i.test(String(x.url || ""))) continue;
+        const a = el("a","btn", "Buka " + (teksAman(x.nama) || "file")); a.href = x.url; a.target = "_blank"; a.rel = "noopener"; sec.appendChild(a);
+      }
+      if (!sec.querySelector("a")) continue;
     } else continue;
     box.appendChild(sec);
   }
