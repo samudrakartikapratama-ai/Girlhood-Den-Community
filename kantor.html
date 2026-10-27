@@ -156,7 +156,24 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .ng-lamp:focus-within{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .req .duo{display:flex;gap:8px;flex-wrap:wrap}
 .btn.sek{background:transparent;color:var(--ink);border:1px solid var(--line)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.rh-cari{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;max-width:240px;min-width:0}
+.rh-cari:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tg{border-top:1px solid var(--line);padding:10px 0;display:grid;gap:4px}
+.tg:first-child{border-top:0;padding-top:0}
+.tg-atas{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tg h3{font-size:14.5px;font-weight:600;margin:0;flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.st{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:1px 9px;border:1px solid;white-space:nowrap}
+.st.proses{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.st.selesai{background:var(--good-soft);color:var(--good);border-color:var(--good)}
+.st.gagal{background:transparent;color:#c0443a;border-color:#c0443a}
+.st.proses::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:1px;animation:denyut 1.2s ease-in-out infinite}
+@keyframes denyut{50%{opacity:.25}}
+.tg .tmp{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.tg a{color:var(--accent)}
+.tg .more{justify-self:start}
+.tg .isi{max-height:6em}
+.tg.buka .isi{max-height:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.st.proses::before{animation:none}}
 </style>
 </head>
 <body>
@@ -214,6 +231,15 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
           <button class="btn" id="ng-kirim" type="submit">Kirim</button>
         </div>
       </form>
+    </section>
+    <section class="card" id="rh" aria-labelledby="rh-judul">
+      <h2 id="rh-judul">📁 Riwayat Hasil</h2>
+      <p class="hint">Semua tugas yang diminta ke karyawan AI, dari Lark maupun website. Status berubah sendiri: <b>Proses</b> saat dikerjakan, <b>Selesai</b> begitu hasilnya jadi.</p>
+      <div class="fm-bar" style="margin-top:0">
+        <div class="filters" id="rh-filter" role="group" aria-label="Filter status tugas"></div>
+        <input id="rh-cari" class="rh-cari" type="search" placeholder="Cari tugas, karyawan, atau nama" aria-label="Cari riwayat hasil">
+      </div>
+      <div id="rh-list" aria-live="polite"><p class="empty">Memuat…</p></div>
     </section>
     </div>
     <div class="card">
@@ -874,6 +900,58 @@ $("ng-form").addEventListener("submit", async e => {
     if (NG.agent === agent){ renderLogNg(); renderKuotaNg(); }
   }
 });
+/* ===== Riwayat Hasil: semua tugas karyawan AI, status langsung berubah (real-time) ===== */
+const RH = {tugas: [], filter: "semua", tampil: 30, buka: new Set()};
+const ST_TUGAS = {proses: "Proses", selesai: "Selesai", gagal: "Gagal"};
+const SUMBER = {lark: "Lark", website: "website", otomatis: "otomatis"};
+const namaAgen = id => { const a = AG.find(x => x.id === id); return a ? a.nm + " · " + a.rl : "Kantor AI"; };
+async function muatRh(){
+  const { data, error } = await sb.from("kantor_tugas").select("id, agent, permintaan, diminta_oleh, sumber, status, hasil, link, tempat, dibuat_at, selesai_at").order("dibuat_at", {ascending: false}).limit(300);
+  if (error){ $("rh-list").replaceChildren(el("p","empty","Riwayat belum bisa dimuat. Muat ulang halaman.")); return; }
+  RH.tugas = data || []; renderRh();
+}
+function renderRh(){
+  const hit = {semua: RH.tugas.length, proses: 0, selesai: 0, gagal: 0};
+  for (const t of RH.tugas) hit[t.status]++;
+  $("rh-filter").replaceChildren(...[["semua","Semua"],["proses","Proses"],["selesai","Selesai"],["gagal","Gagal"]].filter(([k]) => k !== "gagal" || hit.gagal).map(([k, t]) => {
+    const b = el("button","chip", t + " (" + hit[k] + ")"); b.type = "button"; b.setAttribute("aria-pressed", String(RH.filter === k));
+    b.onclick = () => { RH.filter = k; RH.tampil = 30; renderRh(); }; return b; }));
+  const q = $("rh-cari").value.trim().toLowerCase();
+  const list = RH.tugas.filter(t => (RH.filter === "semua" || t.status === RH.filter) && (!q || [t.permintaan, t.hasil, t.diminta_oleh, namaAgen(t.agent)].some(x => String(x || "").toLowerCase().includes(q))));
+  const box = $("rh-list");
+  if (!RH.tugas.length){ box.replaceChildren(el("p","empty","Belum ada tugas. Kasih tugas lewat kolom ngobrol di atas atau Lark, hasilnya muncul di sini.")); return; }
+  if (!list.length){ box.replaceChildren(el("p","empty","Tidak ada yang cocok.")); return; }
+  box.replaceChildren();
+  for (const t of list.slice(0, RH.tampil)){
+    const r = el("div","tg" + (RH.buka.has(t.id) ? " buka" : ""));
+    const atas = el("div","tg-atas"); atas.append(el("span","st " + t.status, ST_TUGAS[t.status] || t.status), el("h3",null,t.permintaan));
+    r.appendChild(atas);
+    r.appendChild(el("div","meta", namaAgen(t.agent) + " · diminta " + (t.diminta_oleh || "tim") + " (" + (SUMBER[t.sumber] || t.sumber) + ") · " + waktu(t.dibuat_at) + (t.selesai_at && t.status !== "proses" ? " · selesai " + waktu(t.selesai_at) : "")));
+    if (t.status === "proses") r.appendChild(el("div","tmp","Sedang dikerjakan. Hasilnya muncul di sini dan dikirim ke grup Lark begitu selesai."));
+    else {
+      if (t.tempat){ const tm = el("div","tmp"); tm.append(document.createTextNode("Cek hasil di: "), teksTautan(t.tempat)); r.appendChild(tm); }
+      if (t.hasil){
+        const isi = el("div","isi"); isi.appendChild(teksTautan(t.hasil)); r.appendChild(isi);
+        if (t.hasil.length > 240 || t.hasil.split("\n").length > 4){
+          const m = el("button","more", RH.buka.has(t.id) ? "Tutup" : "Lihat hasil lengkap"); m.type = "button";
+          m.onclick = () => { RH.buka.has(t.id) ? RH.buka.delete(t.id) : RH.buka.add(t.id); renderRh(); };
+          r.appendChild(m);
+        }
+      }
+    }
+    box.appendChild(r);
+  }
+  if (list.length > RH.tampil){ const m = el("button","more","Tampilkan lebih banyak (" + (list.length - RH.tampil) + " lagi)"); m.type = "button"; m.onclick = () => { RH.tampil += 30; renderRh(); }; box.appendChild(m); }
+}
+$("rh-cari").addEventListener("input", () => { RH.tampil = 30; renderRh(); });
+function langgananRh(){
+  sb.channel("kantor-tugas").on("postgres_changes", {event: "*", schema: "public", table: "kantor_tugas"}, ({ new: baru }) => {
+    if (!baru || !baru.id) return;
+    const i = RH.tugas.findIndex(t => t.id === baru.id);
+    if (i >= 0) RH.tugas[i] = baru; else RH.tugas.unshift(baru);
+    renderRh();
+  }).subscribe();
+}
 function mulaiNgobrol(){
   if (!NG.agent || !AG.some(a => a.id === NG.agent)) NG.agent = state.peran === "coo" ? "dante" : "gantara";
   renderAgenNg(); pilihAgenNg(NG.agent);
@@ -882,9 +960,9 @@ function mulaiNgobrol(){
   const { data } = await sb.auth.getSession();
   if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
   await muat();
-  if (sudahMasuk){ muatFm(); mulaiNgobrol(); }
-  setInterval(() => { if (!document.hidden) muat(); }, 60000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) muat(); });
+  if (sudahMasuk){ muatFm(); mulaiNgobrol(); muatRh(); langgananRh(); }
+  setInterval(() => { if (!document.hidden){ muat(); if (sudahMasuk) muatRh(); } }, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden){ muat(); if (sudahMasuk) muatRh(); } });
 })();
 </script>
 </body>
