@@ -113,11 +113,7 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .gate[hidden]{display:none}
 .gate .btn{text-decoration:none;justify-self:center}
 .ro{font-size:13px;color:var(--muted);margin:0}
-.fm-up{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) auto;grid-template-rows:auto auto;grid-auto-flow:column;gap:4px 10px;align-items:end;margin-bottom:8px}
-.fm-up .btn{grid-row:2}
-#fm-produk,#fm-cari,.fm-st{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;min-width:0}
-#fm-file{font:inherit;font-size:13px;min-width:0;max-width:100%}
-@media (max-width:640px){.fm-up{grid-template-columns:1fr;grid-auto-flow:row}.fm-up .btn{grid-row:auto}}
+#fm-cari,.fm-st{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;min-width:0}
 .fm-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:14px 0 6px}
 .fm-bar .filters{margin:0} #fm-cari{max-width:280px}
 .pr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.1fr) 92px 150px minmax(0,1.4fr) 156px;gap:10px;align-items:center;border-top:1px solid var(--line);padding:9px 0;font-size:13.5px}
@@ -224,16 +220,8 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
     </div>
   </div>
   <section class="card" id="fm" aria-labelledby="fm-judul">
-    <h2 id="fm-judul">Data FastMoss untuk Nadine &amp; Caroline</h2>
-    <p class="hint">Cara ambil file: buka produk di FastMoss → tab Kreator → Ekspor (pilih yang ada info kontaknya). Satu file untuk satu produk.</p>
-    <form class="fm-up" id="fm-form">
-      <label class="lbl" for="fm-produk">Produk</label>
-      <input id="fm-produk" list="fm-opsi" autocomplete="off" placeholder="Ketik nama produk, misal KIME Jeju Soap" required>
-      <datalist id="fm-opsi"></datalist>
-      <label class="lbl" for="fm-file">File ekspor (.xlsx)</label>
-      <input id="fm-file" type="file" accept=".xlsx,.xls,.csv" required>
-      <button class="btn" id="fm-kirim" type="submit">Upload</button>
-    </form>
+    <h2 id="fm-judul">Data FastMoss</h2>
+    <p class="hint">Cara menambah data: di FastMoss buka produk → tab Kreator → Ekspor (pilih yang ada info kontaknya), lalu kirim file-nya ke Nadine atau Caroline di kolom ngobrol (atau lewat Lark) dan sebut produknya. Datanya otomatis masuk ke sini.</p>
     <p class="ro" id="fm-riwayat"></p>
     <div class="fm-bar">
       <div class="filters" id="fm-filter" role="group" aria-label="Filter status join"></div>
@@ -535,7 +523,7 @@ function renderOuts(){
     box.appendChild(w);
   }
 }
-const PESAN = {KANTOR_PRODUK_KOSONG:"Isi nama produknya dulu.", KANTOR_FILE_KOSONG:"File kosong atau terlalu besar (maks 5.000 baris).", KANTOR_STATUS_SALAH:"Status tidak dikenal.", KANTOR_TIDAK_BERHAK:"Kamu tidak punya izin menjawab pertanyaan ini.", KANTOR_SUDAH_DIJAWAB:"Pertanyaan ini sudah dijawab.", KANTOR_JAWABAN_KOSONG:"Tulis jawabannya dulu.", KANTOR_TIDAK_ADA:"Pertanyaan ini sudah tidak ada.", KANTOR_BUKAN_INTERNAL:"Sesi internal habis. Masuk lagi lewat menu Internal."};
+const PESAN = {KANTOR_STATUS_SALAH:"Status tidak dikenal.", KANTOR_TIDAK_BERHAK:"Kamu tidak punya izin menjawab pertanyaan ini.", KANTOR_SUDAH_DIJAWAB:"Pertanyaan ini sudah dijawab.", KANTOR_JAWABAN_KOSONG:"Tulis jawabannya dulu.", KANTOR_TIDAK_ADA:"Pertanyaan ini sudah tidak ada.", KANTOR_BUKAN_INTERNAL:"Sesi internal habis. Masuk lagi lewat menu Internal."};
 function pesanError(e){ const m = String((e && e.message) || ""); const k = Object.keys(PESAN).find(x => m.includes(x)); return k ? PESAN[k] : "Gagal mengirim. Cek koneksi lalu coba lagi."; }
 const teksAman = v => (typeof v === "string" || typeof v === "number") ? String(v) : "";
 function tren(t, lbl){
@@ -633,7 +621,7 @@ async function muat(){
   plan(); renderReqs(); renderOuts();
 }
 /* ===== Data FastMoss: upload file ekspor + daftar prospek dengan status join ===== */
-const FM = {prospek: [], uploads: [], opsi: [], filter: "semua", tampil: 60};
+const FM = {prospek: [], uploads: [], filter: "semua", tampil: 60};
 const JOIN = {terdaftar: "Sudah terdaftar", terindikasi: "Terindikasi Saturnine", belum: "Belum join"};
 const STATUS_TIM = [["baru","Belum dihubungi"],["dihubungi","Sudah dihubungi"],["tertarik","Tertarik"],["join","Bilang mau join"],["tolak","Menolak"]];
 const rp = v => { const n = Number(v) || 0; if (n >= 1e9) return "Rp" + (n/1e9).toFixed(1).replace(".", ",") + " M"; if (n >= 1e6) return "Rp" + Math.round(n/1e6) + " jt"; return "Rp" + n.toLocaleString("id-ID"); };
@@ -642,7 +630,6 @@ async function muatFm(){
   const { data, error } = await sb.rpc("kantor_fastmoss_list");
   if (error) return;
   FM.prospek = data.prospek || []; FM.uploads = data.uploads || [];
-  if (!FM.opsi.length){ FM.opsi = data.produk_opsi || []; $("fm-opsi").replaceChildren(...FM.opsi.map(o => { const op = document.createElement("option"); op.value = o.n; return op; })); }
   const u = FM.uploads[0];
   $("fm-riwayat").textContent = u ? "Upload terakhir: " + u.produk + " · " + u.n + " creator · " + waktu(u.waktu) + (u.oleh ? " · oleh " + u.oleh : "") : "";
   renderFm();
@@ -656,7 +643,7 @@ function renderFm(){
   const q = $("fm-cari").value.trim().toLowerCase().replace(/^@/, "");
   const list = FM.prospek.filter(p => (FM.filter === "semua" || p.join === FM.filter) && (!q || [p.u, p.nama, p.produk].some(x => String(x || "").toLowerCase().includes(q))));
   const box = $("fm-list");
-  if (!FM.prospek.length){ box.replaceChildren(el("p","empty","Belum ada data. Upload file ekspor pertama di atas.")); return; }
+  if (!FM.prospek.length){ box.replaceChildren(el("p","empty","Belum ada data. Kirim file ekspor FastMoss ke Nadine atau Caroline di kolom ngobrol.")); return; }
   if (!list.length){ box.replaceChildren(el("p","empty","Tidak ada yang cocok dengan filter ini.")); return; }
   const kepala = el("div","pr kepala"); ["Creator","Produk","Omzet produk","Status join","Kontak","Status tim"].forEach((t, i) => kepala.appendChild(el("span", i === 2 ? "num" : null, t)));
   box.replaceChildren(kepala);
@@ -685,33 +672,6 @@ function renderFm(){
   if (list.length > FM.tampil){ const m = el("button","more","Tampilkan lebih banyak (" + (list.length - FM.tampil) + " lagi)"); m.type = "button"; m.onclick = () => { FM.tampil += 100; renderFm(); }; box.appendChild(m); }
 }
 $("fm-cari").addEventListener("input", () => { FM.tampil = 60; renderFm(); });
-let xlsxSiap = null;
-function muatXlsx(){
-  return xlsxSiap ||= new Promise((ok, gagal) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; s.onload = ok; s.onerror = () => { xlsxSiap = null; gagal(); }; document.head.appendChild(s); });
-}
-const KOLOM_FM = {"creator id":"username", "creator name":"nama", "creator email":"email", "other contact information":"kontak", "categories":"kategori",
-  "followers":"followers", "units sold":"terjual", "revenue":"omzet", "start promoting time":"mulai", "video gpm":"video_gpm", "live gpm":"live_gpm", "fastmoss creator detail":"fastmoss_url"};
-$("fm-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const produk = $("fm-produk").value.trim(), f = $("fm-file").files[0], btn = $("fm-kirim");
-  if (!produk || !f) return;
-  btn.disabled = true; btn.textContent = "Membaca file…";
-  try {
-    await muatXlsx();
-    const wb = XLSX.read(await f.arrayBuffer(), {type: "array"});
-    const mentah = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: "", raw: true});
-    const rows = mentah.map(r => { const o = {}; for (const [k, v] of Object.entries(r)){ const key = KOLOM_FM[String(k).trim().toLowerCase()]; if (key) o[key] = v instanceof Date ? v.toISOString() : String(v); } return o; }).filter(o => o.username);
-    if (!rows.length){ toast("File tidak dikenali. Pakai file ekspor Kreator dari FastMoss (ada kolom Creator ID)."); return; }
-    btn.textContent = "Mengupload…";
-    const pilih = FM.opsi.find(o => o.n === produk);
-    const { data, error } = await sb.rpc("kantor_fastmoss_upload", {p_produk: produk, p_brand_product_id: pilih ? pilih.id : null, p_file: f.name, p_rows: rows});
-    if (error){ toast(pesanError(error)); return; }
-    toast(data + " creator masuk. Nadine & Caroline sudah bisa pakai datanya.");
-    $("fm-form").reset(); FM.filter = "semua"; await muatFm();
-  } catch (err){
-    toast("Gagal membaca file. Cek koneksi lalu coba lagi.");
-  } finally { btn.disabled = false; btn.textContent = "Upload"; }
-});
 /* ===== Ngobrol dengan karyawan AI (website) — otak yang sama dengan bot Lark ===== */
 const NG = {agent: null, pesan: [], kuota: null, files: [], sibuk: false, grup: null};
 try { NG.agent = localStorage.getItem("kantor-ng-agen"); } catch {}
@@ -851,6 +811,7 @@ $("ng-form").addEventListener("submit", async e => {
     const j = await web({aksi: "chat", agent, pesan: teks, lampiran});
     if (NG.agent !== agent) return;
     NG.pesan[NG.pesan.length - 1] = j.user; NG.pesan.push(j.jawab); NG.kuota = j.kuota;
+    if (lampiran.length || /fastmoss/i.test(teks)) muatFm();
   } catch (err){
     if (err.data && err.data.kuota){ NG.kuota = err.data.kuota; NG.pesan.pop(); }
     toast(err.message === "UPLOAD" ? "Upload file gagal. Coba lagi." : (PESAN_NG[err.message] || "Gagal mengirim. Coba lagi."));
