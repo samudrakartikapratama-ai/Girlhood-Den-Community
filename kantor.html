@@ -129,6 +129,10 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .fm-st{padding:5px 7px;font-size:13px}
 @media (max-width:860px){.pr{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.pr.kepala{display:none}.pr>*{grid-column:1/-1}.pr .num{text-align:left}.pr .nmc{grid-column:1}.pr .bjc{grid-column:2;grid-row:1;justify-self:end}}
 .kiri{display:grid;gap:18px;min-width:0}
+.ubah{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.ubah-j{font-size:14px;font-weight:600;margin:0 0 4px}
+.req > .bj{justify-self:start}
+.ubah-g{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;font-size:13.5px;background:var(--bg);border-radius:8px;padding:8px 10px;overflow-wrap:anywhere}
 .ng-log{display:grid;gap:10px;max-height:460px;overflow-y:auto;padding:4px 2px 8px;margin:4px 0 10px;overscroll-behavior:contain}
 .bub{max-width:88%;border-radius:12px;padding:8px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
 .bub.user{justify-self:end;background:var(--accent-soft);border-bottom-right-radius:4px}
@@ -193,6 +197,7 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
       <h2>Menunggu keputusan</h2>
       <p class="hint" id="reqs-hint">Pertanyaan dari karyawan AI untuk CEO dan COO. Jawabanmu langsung diteruskan.</p>
       <div id="reqs"><p class="empty">Belum ada yang menunggu keputusan.</p></div>
+      <div id="ubah" class="ubah" hidden></div>
     </div>
     <section class="card" id="ngobrol" aria-labelledby="ng-judul">
       <h2 id="ng-judul">Ngobrol dengan karyawan AI</h2>
@@ -456,7 +461,48 @@ document.addEventListener("click", e => { if (pop && !e.target.closest(".pop")){
 function waktu(iso){ if (!iso) return ""; try { return new Intl.DateTimeFormat("id-ID",{timeZone:"Asia/Jakarta",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(iso)); } catch { return ""; } }
 function toast(t){ const e = el("div","toast",t); document.body.appendChild(e); setTimeout(() => e.remove(), 2600); }
 function bolehJawab(r){ return state.peran === "ceo" || (state.peran === "coo" && r.untuk === "coo"); }
+const JENIS_UBAH = {username:"Ganti username TikTok", alamat:"Ganti alamat", no_hp:"Ganti nomor HP", bekukan:"Bekukan akun", aktifkan:"Aktifkan akun", lainnya:"Perubahan lain", bug:"Laporan bug"};
+const STATUS_UBAH = {menunggu:"Menunggu CEO", dijalankan:"Sudah dijalankan", ditolak:"Ditolak", gagal:"Gagal dijalankan", diteruskan:"Diteruskan ke developer"};
+function nilaiUbah(o){
+  if (!o || typeof o !== "object") return "–";
+  const t = Object.entries(o).filter(([, v]) => v !== null && v !== "" && v !== undefined)
+    .map(([k, v]) => (k === "username" ? "@" + v : k === "dibekukan" ? (v ? "dibekukan" : "aktif") : k === "status" ? "" : String(v))).filter(Boolean);
+  return t.length ? t.join(" · ") : "–";
+}
+function renderPerubahan(){
+  const box = $("ubah"), list = state.perubahan || [];
+  if (!list.length){ box.replaceChildren(); box.hidden = true; return; }
+  box.hidden = false; box.replaceChildren(el("h3","ubah-j","Pengajuan perubahan data"));
+  const ceo = state.peran === "ceo";
+  for (const r of list.slice(0, 20)){
+    const w = el("div","req");
+    const who = el("div","who"); who.append(el("b",null, JENIS_UBAH[r.jenis] || r.jenis), document.createTextNode((r.username ? " · @" + r.username : "") + " · diajukan " + (r.oleh || "") + " · " + waktu(r.waktu)));
+    w.appendChild(who);
+    if (ceo && r.status === "menunggu"){
+      if (r.jenis !== "bug" && r.jenis !== "lainnya"){
+        const g = el("div","ubah-g"); g.append(el("span","ro","Sekarang"), el("span",null,nilaiUbah(r.lama)), el("span","ro","Jadi"), el("b",null,nilaiUbah(r.baru))); w.appendChild(g);
+      }
+      if (r.alasan) w.appendChild(el("p",null,r.alasan));
+      const d = el("div","duo"), ya = el("button","btn", r.jenis === "bug" || r.jenis === "lainnya" ? "Setujui, teruskan ke developer" : "Setujui & jalankan"), no = el("button","btn sek","Tolak");
+      ya.type = no.type = "button";
+      ya.onclick = () => putuskanUbah(r, true, [ya, no]); no.onclick = () => putuskanUbah(r, false, [ya, no]);
+      d.append(ya, no); w.appendChild(d);
+    } else {
+      w.appendChild(el("span","bj " + (r.status === "dijalankan" ? "terdaftar" : r.status === "menunggu" ? "terindikasi" : "belum"), STATUS_UBAH[r.status] || r.status));
+      if (r.hasil && r.status !== "menunggu") w.appendChild(el("p","ro",r.hasil));
+    }
+    box.appendChild(w);
+  }
+}
+async function putuskanUbah(r, setuju, btns){
+  btns.forEach(b => b.disabled = true);
+  const { data, error } = await sb.rpc("kantor_perubahan_putuskan", {p_id: r.id, p_setuju: setuju});
+  if (error){ btns.forEach(b => b.disabled = false); toast(pesanError(error)); await muat(); return; }
+  toast(data === "dijalankan" ? "Perubahan dijalankan" : data === "gagal" ? "Gagal dijalankan, lihat keterangannya" : data === "diteruskan" ? "Diteruskan ke developer" : "Pengajuan ditolak");
+  await muat();
+}
 function renderReqs(){
+  renderPerubahan();
   const box = $("reqs"), open = state.reqs.filter(r => r.status !== "dijawab");
   if (state.peran === "tim"){
     $("reqs-hint").textContent = "Pertanyaan ke CEO/COO hanya bisa dibaca dan dijawab oleh CEO dan COO.";
@@ -618,6 +664,7 @@ async function muat(){
   }
   sudahMasuk = true; $("gate").hidden = true;
   state.peran = data.peran; state.agents = data.agents || {}; state.reqs = data.reqs || []; state.outs = data.outs || [];
+  const pr = await sb.rpc("kantor_perubahan_list"); state.perubahan = pr.error ? [] : (pr.data || []);
   plan(); renderReqs(); renderOuts();
 }
 /* ===== Data FastMoss: upload file ekspor + daftar prospek dengan status join ===== */
