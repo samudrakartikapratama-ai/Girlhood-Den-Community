@@ -226,9 +226,10 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
   </div>
   <section class="card" id="fm" aria-labelledby="fm-judul">
     <h2 id="fm-judul">Data FastMoss</h2>
-    <p class="hint">Cara menambah data: di FastMoss buka produk → tab Kreator → Ekspor (pilih yang ada info kontaknya), lalu kirim file-nya ke Nadine atau Caroline di kolom ngobrol (atau lewat Lark) dan sebut produknya. Datanya otomatis masuk ke sini.</p>
+    <p class="hint"><b>Yang dikejar:</b> pilih file, lalu lihat tab <b>Belum join</b>. Itu creator yang belum pakai link Saturnine, diurutkan dari omzet terbesar. Habis dihubungi, ubah <b>Status tim</b> supaya tercatat di laporan Gantara.<br>Menambah data: ekspor dari FastMoss, kirim file-nya ke Nadine atau Caroline di kolom ngobrol (atau Lark), sebut produknya.</p>
     <p class="ro" id="fm-riwayat"></p>
     <div class="fm-bar">
+      <select id="fm-produk-pilih" class="fm-st" aria-label="Pilih file / produk" style="max-width:260px"></select>
       <div class="filters" id="fm-filter" role="group" aria-label="Filter status join"></div>
       <input id="fm-cari" type="search" placeholder="Cari nama / @username / produk" aria-label="Cari prospek">
     </div>
@@ -668,7 +669,7 @@ async function muat(){
   plan(); renderReqs(); renderOuts();
 }
 /* ===== Data FastMoss: upload file ekspor + daftar prospek dengan status join ===== */
-const FM = {prospek: [], uploads: [], filter: "semua", tampil: 60};
+const FM = {prospek: [], uploads: [], filter: "belum", produk: "", tampil: 60};
 const JOIN = {terdaftar: "Sudah terdaftar", terindikasi: "Terindikasi Saturnine", belum: "Belum join"};
 const STATUS_TIM = [["baru","Belum dihubungi"],["dihubungi","Sudah dihubungi"],["tertarik","Tertarik"],["join","Bilang mau join"],["tolak","Menolak"]];
 const rp = v => { const n = Number(v) || 0; if (n >= 1e9) return "Rp" + (n/1e9).toFixed(1).replace(".", ",") + " M"; if (n >= 1e6) return "Rp" + Math.round(n/1e6) + " jt"; return "Rp" + n.toLocaleString("id-ID"); };
@@ -682,13 +683,18 @@ async function muatFm(){
   renderFm();
 }
 function renderFm(){
-  const hit = {semua: FM.prospek.length, belum: 0, terindikasi: 0, terdaftar: 0};
-  for (const p of FM.prospek) hit[p.join]++;
+  const produkList = [...new Set(FM.prospek.map(p => p.produk))];
+  const sel = $("fm-produk-pilih");
+  sel.replaceChildren(...[["", "Semua file (" + FM.prospek.length + " creator)"], ...produkList.map(n => [n, n + " (" + FM.prospek.filter(p => p.produk === n).length + ")"])].map(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; o.selected = FM.produk === v; return o; }));
+  const dasar = FM.prospek.filter(p => !FM.produk || p.produk === FM.produk);
+  const hit = {semua: dasar.length, belum: 0, terindikasi: 0, terdaftar: 0};
+  for (const p of dasar) hit[p.join]++;
   $("fm-filter").replaceChildren(...[["semua","Semua"],["belum",JOIN.belum],["terindikasi",JOIN.terindikasi],["terdaftar",JOIN.terdaftar]].map(([k, t]) => {
     const b = el("button","chip", t + " (" + hit[k] + ")"); b.type = "button"; b.setAttribute("aria-pressed", String(FM.filter === k));
     b.onclick = () => { FM.filter = k; FM.tampil = 60; renderFm(); }; return b; }));
+  $("fm-riwayat").textContent = FM.uploads.length ? FM.uploads.slice(0, 5).map(u => u.produk + " · " + u.n + " creator · " + waktu(u.waktu) + (u.oleh ? " · " + u.oleh : "")).join("  |  ") : "";
   const q = $("fm-cari").value.trim().toLowerCase().replace(/^@/, "");
-  const list = FM.prospek.filter(p => (FM.filter === "semua" || p.join === FM.filter) && (!q || [p.u, p.nama, p.produk].some(x => String(x || "").toLowerCase().includes(q))));
+  const list = dasar.filter(p => (FM.filter === "semua" || p.join === FM.filter) && (!q || [p.u, p.nama, p.produk].some(x => String(x || "").toLowerCase().includes(q))));
   const box = $("fm-list");
   if (!FM.prospek.length){ box.replaceChildren(el("p","empty","Belum ada data. Kirim file ekspor FastMoss ke Nadine atau Caroline di kolom ngobrol.")); return; }
   if (!list.length){ box.replaceChildren(el("p","empty","Tidak ada yang cocok dengan filter ini.")); return; }
@@ -719,6 +725,7 @@ function renderFm(){
   if (list.length > FM.tampil){ const m = el("button","more","Tampilkan lebih banyak (" + (list.length - FM.tampil) + " lagi)"); m.type = "button"; m.onclick = () => { FM.tampil += 100; renderFm(); }; box.appendChild(m); }
 }
 $("fm-cari").addEventListener("input", () => { FM.tampil = 60; renderFm(); });
+$("fm-produk-pilih").addEventListener("change", e => { FM.produk = e.target.value; FM.tampil = 60; renderFm(); });
 /* ===== Ngobrol dengan karyawan AI (website) — otak yang sama dengan bot Lark ===== */
 const NG = {agent: null, pesan: [], kuota: null, files: [], sibuk: false, grup: null};
 try { NG.agent = localStorage.getItem("kantor-ng-agen"); } catch {}
