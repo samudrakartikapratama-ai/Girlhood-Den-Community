@@ -129,6 +129,13 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 .fm-st{padding:5px 7px;font-size:13px}
 @media (max-width:860px){.pr{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.pr.kepala{display:none}.pr>*{grid-column:1/-1}.pr .num{text-align:left}.pr .nmc{grid-column:1}.pr .bjc{grid-column:2;grid-row:1;justify-self:end}}
 .kiri{display:grid;gap:18px;min-width:0}
+.pg{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 150px;gap:10px;align-items:center;border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}
+.pg.kepala{border-top:0;font-size:12px;color:var(--muted);padding-top:0}
+.pg a{color:var(--ink);font-weight:600;text-decoration:none;overflow-wrap:anywhere} .pg a:hover{color:var(--accent)}
+.pg .num{font-variant-numeric:tabular-nums;text-align:right}
+.pg small{display:block;color:var(--muted);font-size:12px}
+.pg .lbm{display:none}
+@media (max-width:600px){.pg{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}.pg.kepala{display:none}.pg .num{text-align:left;grid-column:1;font-size:12.5px;color:var(--muted)}.pg .pgs{grid-column:2;grid-row:1/span 3;align-self:center}.pg .lbm{display:inline}}
 .ubah{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 .ubah-j{font-size:14px;font-weight:600;margin:0 0 4px}
 .req > .bj{justify-self:start}
@@ -260,6 +267,15 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
       <input id="fm-cari" type="search" placeholder="Cari nama / @username / produk" aria-label="Cari prospek">
     </div>
     <div id="fm-list"><p class="empty">Belum ada data. Upload file ekspor pertama di atas.</p></div>
+  </section>
+  <section class="card" id="pg" aria-labelledby="pg-judul">
+    <h2 id="pg-judul">Pemegang creator</h2>
+    <p class="hint">Pilih siapa yang pegang tiap creator. Panduan: GMV Rp50 jt+ per bulan → <b>Caca</b>, di bawah itu → <b>Riche</b>. Penjualan creator masuk ke target orang yang memegangnya. Creator yang belum dipegang tidak masuk target siapa pun.</p>
+    <div class="fm-bar">
+      <div class="filters" id="pg-filter" role="group" aria-label="Filter pemegang"></div>
+      <input id="pg-cari" class="rh-cari" type="search" placeholder="Cari @username" aria-label="Cari creator">
+    </div>
+    <div id="pg-list" aria-live="polite"><p class="empty">Memuat…</p></div>
   </section>
 </div>
 
@@ -952,6 +968,52 @@ function langgananRh(){
     renderRh();
   }).subscribe();
 }
+/* ===== Pemegang creator: Caca / Riche pilih sendiri (manual), dipakai untuk progres target ===== */
+const PG = {list: [], filter: "belum", tampil: 60};
+const NAMA_PG = {caca: "Caca", riche: "Riche"};
+async function muatPg(){
+  const { data, error } = await sb.rpc("kantor_pemegang_list");
+  if (error){ $("pg-list").replaceChildren(el("p","empty","Daftar belum bisa dimuat. Muat ulang halaman.")); return; }
+  PG.list = data || []; renderPg();
+}
+function renderPg(){
+  const hit = {semua: PG.list.length, belum: 0, caca: 0, riche: 0};
+  for (const c of PG.list) hit[c.p || "belum"]++;
+  $("pg-filter").replaceChildren(...[["belum","Belum dipegang"],["caca","Caca"],["riche","Riche"],["semua","Semua"]].map(([k, t]) => {
+    const b = el("button","chip", t + " (" + hit[k] + ")"); b.type = "button"; b.setAttribute("aria-pressed", String(PG.filter === k));
+    b.onclick = () => { PG.filter = k; PG.tampil = 60; renderPg(); }; return b; }));
+  const q = $("pg-cari").value.trim().toLowerCase().replace(/^@/, "");
+  const list = PG.list.filter(c => (PG.filter === "semua" || (c.p || "belum") === PG.filter) && (!q || c.u.includes(q)));
+  const box = $("pg-list");
+  if (!PG.list.length){ box.replaceChildren(el("p","empty","Belum ada creator yang jualan bulan ini atau bulan lalu.")); return; }
+  if (!list.length){ box.replaceChildren(el("p","empty", PG.filter === "belum" && !q ? "Semua creator sudah ada pemegangnya." : "Tidak ada yang cocok.")); return; }
+  const kepala = el("div","pg kepala"); [["Creator"],["GMV bulan ini","num"],["GMV bulan lalu","num"],["Pemegang"]].forEach(([t, c]) => kepala.appendChild(el("span", c || null, t)));
+  box.replaceChildren(kepala);
+  for (const c of list.slice(0, PG.tampil)){
+    const r = el("div","pg");
+    const nm = el("div"), a = el("a",null,"@" + c.u); a.href = "https://www.tiktok.com/@" + encodeURIComponent(c.u); a.target = "_blank"; a.rel = "noopener";
+    nm.appendChild(a); if (c.p && c.oleh) nm.appendChild(el("small",null,"diatur " + c.oleh));
+    const st = document.createElement("select"); st.className = "fm-st"; st.setAttribute("aria-label", "Pemegang @" + c.u);
+    for (const [v, t] of [["", "— Belum"], ["caca", "Caca"], ["riche", "Riche"]]){ const o = document.createElement("option"); o.value = v; o.textContent = t; o.selected = (c.p || "") === v; st.appendChild(o); }
+    st.onchange = async () => {
+      st.disabled = true;
+      const { error } = await sb.rpc("kantor_pemegang_set", {p_username: c.u, p_pemegang: st.value});
+      st.disabled = false;
+      if (error){ toast("Gagal menyimpan. Coba lagi."); st.value = c.p || ""; return; }
+      c.p = st.value || null;
+      toast(st.value ? "@" + c.u + " dipegang " + NAMA_PG[st.value] : "@" + c.u + " dilepas");
+      renderPg(); muatPg();
+    };
+    const sw = el("div","pgs"); sw.appendChild(st);
+    const gi = el("div","num"), gl = el("div","num");
+    gi.append(el("span","lbm","Bulan ini "), document.createTextNode(rp(c.ini)));
+    gl.append(el("span","lbm","Bulan lalu "), document.createTextNode(rp(c.lalu)));
+    r.append(nm, gi, gl, sw);
+    box.appendChild(r);
+  }
+  if (list.length > PG.tampil){ const m = el("button","more","Tampilkan lebih banyak (" + (list.length - PG.tampil) + " lagi)"); m.type = "button"; m.onclick = () => { PG.tampil += 100; renderPg(); }; box.appendChild(m); }
+}
+$("pg-cari").addEventListener("input", () => { PG.tampil = 60; renderPg(); });
 function mulaiNgobrol(){
   if (!NG.agent || !AG.some(a => a.id === NG.agent)) NG.agent = state.peran === "coo" ? "dante" : "gantara";
   renderAgenNg(); pilihAgenNg(NG.agent);
@@ -960,7 +1022,7 @@ function mulaiNgobrol(){
   const { data } = await sb.auth.getSession();
   if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
   await muat();
-  if (sudahMasuk){ muatFm(); mulaiNgobrol(); muatRh(); langgananRh(); }
+  if (sudahMasuk){ muatFm(); mulaiNgobrol(); muatRh(); langgananRh(); muatPg(); }
   setInterval(() => { if (!document.hidden){ muat(); if (sudahMasuk) muatRh(); } }, 60000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden){ muat(); if (sudahMasuk) muatRh(); } });
 })();
