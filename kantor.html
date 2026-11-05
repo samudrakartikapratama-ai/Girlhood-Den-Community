@@ -772,6 +772,103 @@ $("fm-produk-pilih").addEventListener("change", e => { FM.produk = e.target.valu
 const NG = {agent: null, pesan: [], kuota: null, files: [], sibuk: false, grup: null};
 try { NG.agent = localStorage.getItem("kantor-ng-agen"); } catch {}
 const ukuran = n => n >= 1048576 ? (n/1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(n/1024)) + " KB";
+/* Spreadsheet diringkas di browser: server tidak kuat membuka file besar, dan AI perlu SELURUH baris, bukan potongan.
+   Kolom kontak pribadi tidak ikut diringkas. */
+const SHEET_RE = /\.(xlsx|xls|csv)$/i;
+const PRIBADI_RE = /e-?mail|contact|kontak|phone|telepon|telp|whats ?app|\bwa\b|\bhp\b|no\.? ?hp|alamat|address/i;
+let xlsxSiap = null;
+function muatXlsx(){
+  if (window.XLSX) return Promise.resolve();
+  return xlsxSiap || (xlsxSiap = new Promise((ok, gagal) => {
+    const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = ok; s.onerror = () => { xlsxSiap = null; gagal(new Error("XLSX")); }; document.head.appendChild(s);
+  }));
+}
+function keAngka(v){
+  if (typeof v === "number") return isFinite(v) ? v : null;
+  if (v instanceof Date || v == null) return null;
+  let s = String(v).trim().replace(/^rp\.?\s*/i, "").replace(/\s/g, "").replace(/%$/, "");
+  if (!s || !/^-?[\d.,]+$/.test(s)) return null;
+  const t = s.lastIndexOf("."), k = s.lastIndexOf(",");
+  if (t > -1 && k > -1) s = t > k ? s.replace(/,/g, "") : s.replace(/\./g, "").replace(",", ".");
+  else if (k > -1) s = /^-?\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".");
+  else if (/^-?\d{1,3}(\.\d{3}){2,}$/.test(s)) s = s.replace(/\./g, "");
+  const n = Number(s); return isFinite(n) ? n : null;
+}
+const tglLokal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const fmtA = n => Math.abs(n) >= 1000 ? Math.round(n).toLocaleString("id-ID") : String(+n.toFixed(2)).replace(".", ",");
+function keTanggal(v){
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  if (typeof v === "string" && /\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}/.test(v)){ const d = new Date(v.replace(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/, "$3-$2-$1")); return isNaN(d) ? null : d; }
+  return null;
+}
+function ringkasSheet(namaSheet, rows){
+  let hi = rows.slice(0, 10).findIndex(r => (r || []).filter(c => typeof c === "string" && c.trim()).length >= 3);
+  if (hi < 0) hi = 0;
+  const kepala = (rows[hi] || []).map((h, i) => String(h == null ? "" : h).trim() || "Kolom " + (i + 1));
+  const data = rows.slice(hi + 1).filter(r => r && r.some(c => c !== "" && c != null));
+  if (!data.length) return `Sheet "${namaSheet}": kosong.`;
+  const dibuang = kepala.filter(h => PRIBADI_RE.test(h)).length;
+  const kol = kepala.map((h, i) => ({h, i})).filter(c => !PRIBADI_RE.test(c.h) && !/profile picture|avatar|foto|image|gambar/i.test(c.h));
+  for (const c of kol){
+    let isi = 0, n = 0, tg = 0, sum = 0, min = Infinity, max = -Infinity; const unik = new Set();
+    for (const r of data){
+      const v = r[c.i]; if (v === "" || v == null) continue; isi++;
+      if (keTanggal(v)) tg++;
+      const a = keAngka(v); if (a !== null){ n++; sum += a; if (a < min) min = a; if (a > max) max = a; }
+      if (unik.size <= 5000) unik.add(String(v));
+    }
+    Object.assign(c, {isi, unik: unik.size, tanggal: isi && tg / isi >= 0.9, angka: isi && n / isi >= 0.9 && !(tg / isi >= 0.9), sum, min, max, n});
+  }
+  const ID_RE = /(^|\b|_)(id|kode|code|sku|no|nomor|number)(\b|_|$)/i;
+  const num = kol.filter(c => c.angka && !ID_RE.test(c.h));
+  const teks = kol.filter(c => !c.angka && !c.tanggal && c.isi);
+  const metrik = num.find(c => /gmv|revenue|omzet|sales|penjualan|amount|nilai|pendapatan/i.test(c.h)) || num.slice().sort((a, b) => b.sum - a.sum)[0];
+  const tambahan = num.filter(c => c !== metrik && /order|pesanan|qty|quantity|unit|terjual|sold|item|komisi|commission|refund|retur|return/i.test(c.h)).slice(0, 3);
+  const pola = [/creator|kreator|username|affiliate|akun|nickname/i, /product|produk|item name|nama barang/i, /shop|toko|brand|seller|store|merek/i, /content|konten|type|tipe|channel|sumber|source/i, /status|kategori|category/i];
+  const dims = [];
+  for (const p of pola){ const c = teks.find(x => p.test(x.h) && !dims.includes(x) && x.unik >= 2); if (c) dims.push(c); }
+  for (const c of teks){ if (dims.length >= 5) break; if (!dims.includes(c) && c.unik >= 2 && c.unik <= 300) dims.push(c); }
+  const out = [`=== Sheet "${namaSheet}": ${data.length.toLocaleString("id-ID")} baris data ===`,
+    "Kolom: " + kol.map(c => c.h).join(" | ") + (dibuang ? ` (${dibuang} kolom kontak pribadi tidak disertakan)` : "")];
+  if (num.length){
+    out.push("\nTotal kolom angka (jumlah · min · maks · rata-rata):");
+    num.slice(0, 15).forEach(c => out.push(`- ${c.h}: ${fmtA(c.sum)} · ${fmtA(c.min)} · ${fmtA(c.max)} · ${fmtA(c.sum / c.n)}`));
+  }
+  const ukur = metrik ? metrik.h : "jumlah baris";
+  for (const d of dims){
+    const g = new Map();
+    for (const r of data){
+      const k = String(r[d.i] == null || r[d.i] === "" ? "(kosong)" : r[d.i]).slice(0, 80);
+      let o = g.get(k); if (!o){ o = {n: 0, m: 0, t: tambahan.map(() => 0)}; g.set(k, o); }
+      o.n++; if (metrik){ const a = keAngka(r[metrik.i]); if (a !== null) o.m += a; }
+      tambahan.forEach((c, j) => { const a = keAngka(r[c.i]); if (a !== null) o.t[j] += a; });
+    }
+    const urut = [...g.entries()].sort((a, b) => metrik ? b[1].m - a[1].m : b[1].n - a[1].n);
+    out.push(`\nTop ${Math.min(25, urut.length)} "${d.h}" menurut ${ukur} (${g.size.toLocaleString("id-ID")} nilai unik). Format: nama | ${metrik ? metrik.h + " | " : ""}baris${tambahan.map(c => " | " + c.h).join("")}`);
+    urut.slice(0, 25).forEach(([k, o]) => out.push(`- ${k} | ${metrik ? fmtA(o.m) + " | " : ""}${o.n}${o.t.map(x => " | " + fmtA(x)).join("")}`));
+  }
+  const tgl = kol.find(c => c.tanggal);
+  if (tgl){
+    const hari = new Map(); let a = null, z = null;
+    for (const r of data){ const d = keTanggal(r[tgl.i]); if (!d) continue; const k = tglLokal(d);
+      if (!a || k < a) a = k; if (!z || k > z) z = k;
+      const o = hari.get(k) || {n: 0, m: 0}; o.n++; if (metrik){ const v = keAngka(r[metrik.i]); if (v !== null) o.m += v; } hari.set(k, o); }
+    out.push(`\nRentang "${tgl.h}": ${a} s/d ${z}`);
+    if (hari.size <= 62){ out.push(`Per hari (tanggal | ${metrik ? metrik.h + " | " : ""}baris):`); [...hari.entries()].sort().forEach(([k, o]) => out.push(`- ${k} | ${metrik ? fmtA(o.m) + " | " : ""}${o.n}`)); }
+  }
+  out.push("\nContoh 10 baris pertama (CSV):", kol.map(c => c.h).join(","));
+  data.slice(0, 10).forEach(r => out.push(kol.map(c => { const v = r[c.i] instanceof Date ? tglLokal(r[c.i]) : String(r[c.i] == null ? "" : r[c.i]).slice(0, 60); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",")));
+  return out.join("\n");
+}
+async function ringkasFile(f){
+  await muatXlsx();
+  const buf = await f.arrayBuffer();
+  const wb = /\.csv$/i.test(f.name) ? XLSX.read(new TextDecoder().decode(buf), {type: "string", cellDates: true}) : XLSX.read(buf, {type: "array", cellDates: true});
+  const isi = wb.SheetNames.slice(0, 3).map(n => ringkasSheet(n, XLSX.utils.sheet_to_json(wb.Sheets[n], {header: 1, defval: "", raw: true})));
+  const teks = `Ringkasan otomatis dari SELURUH isi file (dihitung di browser, file ${ukuran(f.size)}${wb.SheetNames.length > 3 ? ", 3 sheet pertama dari " + wb.SheetNames.length : ""}):\n` + isi.join("\n\n");
+  return teks.length > 38000 ? teks.slice(0, 38000) + "\n…(ringkasan dipotong)" : teks;
+}
 async function web(body){
   const { data: { session } } = await sb.auth.getSession();
   if (!session) throw Object.assign(new Error("BUKAN_INTERNAL"), {data:{galat:"BUKAN_INTERNAL"}});
@@ -823,7 +920,7 @@ function renderLogNg(){
     b.appendChild(el("span","mt",(ai ? a.nm : "Kamu") + " · " + waktu(p.waktu || p.created_at)));
     b.appendChild(teksTautan(p.isi || ""));
     if ((p.lampiran || []).length){ const lp = el("div","lp"); p.lampiran.forEach(f => lp.appendChild(chipLampiran(f))); b.appendChild(lp); }
-    if (ai){
+    if (ai && !p.gagal){
       const ft = el("div","ft");
       const sudah = p.lark || p.dikirim_lark || [];
       if (sudah.length){ const s = sudah[sudah.length - 1]; ft.appendChild(el("span",null,"Terkirim ke " + s.grup + " · " + waktu(s.waktu) + (s.file ? " · " + s.file + " file" : ""))); }
@@ -899,7 +996,12 @@ $("ng-form").addEventListener("submit", async e => {
       const path = "web/" + crypto.randomUUID() + "-" + f.name.replace(/[^\w.\-]+/g, "_").slice(-80);
       const { error } = await sb.storage.from("kantor-lampiran").upload(path, f, {contentType: f.type || undefined});
       if (error) throw Object.assign(new Error("UPLOAD"), {data: {}});
-      lampiran.push({path, nama: f.name, tipe: f.type, ukuran: f.size});
+      const meta = {path, nama: f.name, tipe: f.type, ukuran: f.size};
+      if (SHEET_RE.test(f.name)){
+        btn.textContent = "Membaca " + f.name.slice(0, 20) + "…";
+        try { meta.ringkasan = await ringkasFile(f); } catch { /* file tetap terkirim; server memberi tahu kalau tidak bisa dibuka */ }
+      }
+      lampiran.push(meta);
     }
     btn.textContent = "Mengirim…";
     NG.pesan.push({id: 0, peran: "user", isi: teks, lampiran, waktu: new Date().toISOString()});
@@ -909,8 +1011,10 @@ $("ng-form").addEventListener("submit", async e => {
     NG.pesan[NG.pesan.length - 1] = j.user; NG.pesan.push(j.jawab); NG.kuota = j.kuota;
     if (lampiran.length || /fastmoss/i.test(teks)) muatFm();
   } catch (err){
+    const msg = err.message === "UPLOAD" ? "Upload file gagal. Coba lagi." : (PESAN_NG[err.message] || "Server gagal memproses pesan ini. Coba kirim lagi; kalau tetap gagal, laporkan ke CEO.");
     if (err.data && err.data.kuota){ NG.kuota = err.data.kuota; NG.pesan.pop(); }
-    toast(err.message === "UPLOAD" ? "Upload file gagal. Coba lagi." : (PESAN_NG[err.message] || "Gagal mengirim. Coba lagi."));
+    else if (NG.agent === agent && err.message !== "UPLOAD") NG.pesan.push({id: 0, peran: "assistant", gagal: true, isi: "⚠️ " + msg, lampiran: [], waktu: new Date().toISOString()});
+    toast(msg);
   } finally {
     NG.sibuk = false; btn.disabled = false; btn.textContent = "Kirim";
     if (NG.agent === agent){ renderLogNg(); renderKuotaNg(); }
