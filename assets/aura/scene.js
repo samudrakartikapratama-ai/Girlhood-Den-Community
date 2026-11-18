@@ -24,6 +24,8 @@
     return [innerWidth * 0.5, innerHeight * 0.28, 1];
   }
   window.adeganRedup = v => { redupTarget = v; };
+  // putar ulang momen pembuka (dipakai saat berhasil masuk)
+  window.adeganMulai = () => { if (siap) mulai = performance.now(); };
 
   function gambar(now) {
     const k = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight;

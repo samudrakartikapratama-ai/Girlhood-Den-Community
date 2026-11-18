@@ -63,6 +63,11 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .bar .logo{width:78px;height:auto}
 .bar .siapa{margin-left:auto;color:var(--ash);font-size:14px}
 .bar .btn{min-height:36px;padding:0 14px;font-size:14px}
+.btn.ikon{width:36px;padding:0}
+.btn.ikon .silang{display:none}
+.btn.ikon[aria-pressed="false"] .silang{display:inline}
+.btn.ikon[aria-pressed="false"] .gelombang{display:none}
+.btn.ikon[aria-pressed="false"]{color:var(--ash)}
 .tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{border:0;background:none;color:var(--ash);font-weight:500;font-variation-settings:"wdth" 110;letter-spacing:.03em;padding:8px 14px;border-radius:999px;white-space:nowrap;min-height:40px;transition:color 150ms var(--ease),background-color 150ms var(--ease)}
@@ -115,6 +120,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
     <canvas class="orb" data-orb aria-hidden="true"></canvas>
     <svg class="logo" viewBox="0 0 196 40" role="img" aria-label="Aura"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 38 L20 2 L38 38"/><path d="M56 2 V26 Q56 38 68 38 H80 Q92 38 92 26 V2"/><path d="M110 38 V2 H134 Q144 2 144 11 Q144 20 134 20 H118 L144 38"/><path d="M158 38 L176 2 L194 38"/></g></svg>
     <span class="siapa" id="siapa"></span>
+    <button class="btn ikon" id="btn-suara" type="button" aria-pressed="true" aria-label="Musik intro"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="gelombang" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="silang" d="M17 9l5 6M22 9l-5 6"/></svg></button>
     <button class="btn" id="btn-keluar" type="button">Keluar</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Menu Aura">
@@ -147,6 +153,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
 <script src="assets/aura/orb.js"></script>
 <script src="assets/aura/scene.js"></script>
+<script src="assets/aura/intro-suara.js"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -167,6 +174,7 @@ const BATAL = e => e && (e.name === 'NotAllowedError' || e.name === 'AbortError'
 
 /* ---------- masuk ---------- */
 $('btn-passkey').onclick = async () => {
+  if (suaraNyala()) auraSiapkan();
   pesan(''); const b = $('btn-passkey'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
   try {
     const { id, opsi } = await passkey('masuk-opsi', {});
@@ -174,7 +182,7 @@ $('btn-passkey').onclick = async () => {
     const hasil = await passkey('masuk-cek', { id, jawaban });
     const { error } = await sb.auth.setSession(hasil.sesi);
     if (error) throw error;
-    await mulai();
+    await mulai(true);
   } catch (e) {
     if (BATAL(e)) pesan('Belum ada Face ID terdaftar di perangkat ini, atau dibatalkan. Masuk pakai kode dulu, lalu aktifkan Face ID.');
     else if (e.message === 'TIDAK_DIKENAL') pesan('Face ID ini belum terdaftar. Masuk pakai kode dulu, lalu aktifkan Face ID.');
@@ -184,6 +192,7 @@ $('btn-passkey').onclick = async () => {
 
 $('form-kode').onsubmit = async ev => {
   ev.preventDefault(); pesan('');
+  if (suaraNyala()) auraSiapkan();
   const kode = $('kode').value.trim(); if (!kode){ pesan('Isi kode staff dulu.'); return; }
   const b = $('btn-kode'); b.disabled = true; b.textContent = 'Memeriksa…';
   try {
@@ -194,7 +203,7 @@ $('form-kode').onsubmit = async ev => {
     const { error } = await sb.auth.setSession(j.session);
     if (error){ pesan('Gagal membuat sesi. Coba lagi.'); return; }
     $('kode').value = '';
-    await mulai();
+    await mulai(true);
   } catch (e) { pesan('Gagal menghubungi server. Cek internet lalu coba lagi.'); }
   finally { b.disabled = false; b.textContent = 'Masuk'; }
 };
@@ -232,7 +241,12 @@ function salam(nama){
   $('tanggal').textContent = new Intl.DateTimeFormat('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta'}).format(new Date());
 }
 
-async function mulai(){
+function suaraNyala(){ try { return localStorage.getItem('aura-suara') !== 'mati'; } catch (e) { return true; } }
+function tampilSuara(){ $('btn-suara').setAttribute('aria-pressed', String(suaraNyala())); $('btn-suara').title = suaraNyala() ? 'Musik intro nyala' : 'Musik intro mati'; }
+$('btn-suara').onclick = () => { try { localStorage.setItem('aura-suara', suaraNyala() ? 'mati' : 'nyala'); } catch (e) {} tampilSuara(); };
+tampilSuara();
+
+async function mulai(dariTombol){
   const { data, error } = await sb.rpc('jarvis_saya');
   if (error || !data){ $('gate').classList.remove('hidden'); $('app').classList.add('hidden'); if (error) pesan('Akun ini bukan akun internal.'); return; }
   $('gate').classList.add('hidden'); $('app').classList.remove('hidden');
@@ -241,6 +255,7 @@ async function mulai(){
   $('ajak-passkey').classList.toggle('hidden', data.passkey > 0 || !WA || !WA.browserSupportsWebAuthn());
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
+  if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
 }
 
 (async () => {
