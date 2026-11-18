@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b1424">
+<title>Jarvis · Girlhood Den</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: gerbang masuk di tengah (orb + Face ID + kode); setelah masuk: bar atas, tab menu, isi menu di bawah. */
+:root{
+  --bg:#eef3fa; --paper:#ffffff; --ink:#122033; --muted:#5d6b80; --line:#d6dfeb;
+  --accent:#1f6fe0; --accent-ink:#ffffff; --accent-soft:#e2edfd; --glow:#3fa2ff; --warn:#a4600f; --warn-soft:#fbefdc; --bad:#b4233a;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Figtree",system-ui,-apple-system,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1424; --paper:#111d31; --ink:#e7eefa; --muted:#93a3bb; --line:#22324c;
+  --accent:#4ea4ff; --accent-ink:#04101f; --accent-soft:#132a48; --glow:#4ea4ff; --warn:#f0b35c; --warn-soft:#33260f; --bad:#ff7d8f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1424; --paper:#111d31; --ink:#e7eefa; --muted:#93a3bb; --line:#22324c;
+  --accent:#4ea4ff; --accent-ink:#04101f; --accent-soft:#132a48; --glow:#4ea4ff; --warn:#f0b35c; --warn-soft:#33260f; --bad:#ff7d8f; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);font-weight:600;transition:transform 120ms var(--ease),background-color 150ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[disabled]{opacity:.6;cursor:default}
+.hidden{display:none!important}
+
+/* orb Jarvis */
+.orb{position:relative;width:var(--s,120px);height:var(--s,120px);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#e9f6ff 0,#8fd0ff 14%,#2f8cff 42%,#0b3d91 72%,#061c45 100%);
+  box-shadow:0 0 calc(var(--s,120px)*.28) color-mix(in srgb,var(--glow) 70%,transparent),0 0 calc(var(--s,120px)*.7) color-mix(in srgb,var(--glow) 35%,transparent),inset 0 0 calc(var(--s,120px)*.18) rgba(255,255,255,.35)}
+.orb::after{content:"";position:absolute;inset:-10%;border-radius:50%;border:1px solid color-mix(in srgb,var(--glow) 55%,transparent);animation:denyut 3.2s var(--ease) infinite}
+@keyframes denyut{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+@media (prefers-reduced-motion:reduce){.orb::after{animation:none;opacity:.5}}
+
+/* gerbang */
+.gate{min-height:100dvh;display:grid;place-items:center;padding-block:32px}
+.gate-card{width:min(400px,100%);display:grid;justify-items:center;gap:14px;text-align:center}
+.gate h1{font:800 34px/1.05 var(--display);letter-spacing:-.02em;margin:10px 0 0}
+.gate p{margin:0;color:var(--muted)}
+.gate .btn{width:100%}
+.atau{display:flex;align-items:center;gap:10px;width:100%;color:var(--muted);font-size:13px}
+.atau::before,.atau::after{content:"";flex:1;height:1px;background:var(--line)}
+.kode{display:flex;gap:8px;width:100%}
+.kode input{flex:1;min-width:0;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:0 14px;font:inherit;letter-spacing:.2em}
+.kode input:focus-visible,.btn:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kode .btn{width:auto}
+.pesan{min-height:20px;font-size:13px;color:var(--bad)}
+
+/* aplikasi */
+.app{max-width:1360px;margin:0 auto;padding-block:14px 32px;display:grid;gap:14px}
+.bar{display:flex;align-items:center;gap:12px}
+.bar .orb{--s:34px}
+.bar b{font:800 20px/1 var(--display);letter-spacing:-.01em}
+.bar .siapa{margin-left:auto;color:var(--muted);font-size:14px;text-align:right}
+.bar .btn{min-height:36px;padding:0 12px;font-size:14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:none;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:2px solid transparent;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab small{font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:99px;padding:1px 7px;margin-left:6px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
+.halo{display:flex;align-items:center;gap:18px}
+.halo .orb{--s:64px;flex:none}
+.halo h2{font:800 26px/1.1 var(--display);margin:0}
+.halo p{margin:4px 0 0;color:var(--muted)}
+.ajak{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--accent-soft);border-color:transparent}
+.ajak div{flex:1 1 260px}
+.ajak b{display:block}
+.ajak span{color:var(--muted);font-size:14px}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.menu>*{text-align:left;display:grid;align-content:start;gap:4px;padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--paper);color:var(--ink);text-decoration:none;transition:transform 120ms var(--ease),border-color 150ms var(--ease)}
+.menu>:active{transform:scale(.98)}
+.menu>:hover{border-color:var(--accent)}
+.menu b{font:700 17px/1.2 var(--display)}
+.menu span{color:var(--muted);font-size:14px}
+.menu .segera{opacity:.7}
+.frame{width:100%;height:calc(100dvh - 150px);min-height:620px;border:0;border-radius:16px;background:var(--paper)}
+.kosong{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section class="gate" id="gate" aria-labelledby="g-judul">
+  <div class="gate-card">
+    <div class="orb" aria-hidden="true"></div>
+    <h1 id="g-judul">Jarvis</h1>
+    <p id="g-sub">Asisten internal Girlhood Den.</p>
+    <button class="btn primary" id="btn-passkey" type="button">Masuk pakai Face ID / sidik jari</button>
+    <div class="atau">atau pakai kode staff</div>
+    <form class="kode" id="form-kode">
+      <input id="kode" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" placeholder="Kode staff" aria-label="Kode staff">
+      <button class="btn" type="submit" id="btn-kode">Masuk</button>
+    </form>
+    <div class="pesan" id="pesan" role="alert"></div>
+  </div>
+</section>
+
+<div class="app hidden" id="app">
+  <div class="bar">
+    <div class="orb" aria-hidden="true"></div>
+    <b>Jarvis</b>
+    <span class="siapa" id="siapa"></span>
+    <button class="btn" id="btn-keluar" type="button">Keluar</button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Menu Jarvis">
+    <button class="tab" role="tab" data-m="beranda" aria-selected="true">Beranda</button>
+    <button class="tab" role="tab" data-m="palette" aria-selected="false">Product Palette</button>
+    <button class="tab" role="tab" data-m="chat" aria-selected="false">Chat Jarvis<small>segera</small></button>
+    <button class="tab" role="tab" data-m="sapaan" aria-selected="false">Sapaan pagi<small>segera</small></button>
+  </nav>
+
+  <main id="m-beranda" class="menu-isi" style="display:grid;gap:14px">
+    <div class="card halo"><div class="orb" aria-hidden="true"></div><div><h2 id="salam"></h2><p id="tanggal"></p></div></div>
+    <div class="card ajak hidden" id="ajak-passkey">
+      <div><b>Aktifkan Face ID / sidik jari</b><span>Besok tinggal sentuh, tidak perlu ketik kode lagi. Di laptop, kamu bisa scan QR pakai HP.</span></div>
+      <button class="btn primary" id="btn-daftar" type="button">Aktifkan sekarang</button>
+    </div>
+    <div class="menu">
+      <button type="button" data-buka="palette"><b>Product Palette</b><span>Peta produk dari rambut sampai kaki. Lihat yang sudah join dan yang perlu di-hunting.</span></button>
+      <button type="button" data-buka="chat" class="segera"><b>Chat Jarvis</b><span>Tanya apa saja soal TAP dan Bible. Segera hadir.</span></button>
+      <button type="button" data-buka="sapaan" class="segera"><b>Sapaan pagi</b><span>Laporan kemarin dan to-do hari ini jam 08.00. Segera hadir.</span></button>
+      <a href="/kantor.html"><b>Kantor AI</b><span>Kantor AI yang sudah berjalan, sementara masih terpisah.</span></a>
+    </div>
+  </main>
+  <main id="m-palette" class="menu-isi hidden"><iframe class="frame" id="f-palette" title="Product Palette" loading="lazy"></iframe></main>
+  <main id="m-chat" class="menu-isi hidden"><div class="card kosong">Chat Jarvis sedang dibangun. Sementara, ngobrol dengan karyawan AI lewat <a href="/kantor.html">Kantor AI</a>.</div></main>
+  <main id="m-sapaan" class="menu-isi hidden"><div class="card kosong">Sapaan pagi jam 08.00 sedang dibangun.</div></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const WA = window.SimpleWebAuthnBrowser;
+const $ = id => document.getElementById(id);
+const pesan = t => { $('pesan').textContent = t || ''; };
+
+async function passkey(aksi, isi, pakaiSesi){
+  const h = {'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY};
+  if (pakaiSesi){ const { data } = await sb.auth.getSession(); if (data.session) h.Authorization = 'Bearer ' + data.session.access_token; }
+  const r = await fetch(SUPABASE_URL + '/functions/v1/jarvis-passkey', {method:'POST', headers:h, body: JSON.stringify(Object.assign({aksi}, isi))});
+  const j = await r.json().catch(() => ({galat:'JARINGAN'}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
+  return j;
+}
+const BATAL = e => e && (e.name === 'NotAllowedError' || e.name === 'AbortError');
+
+/* ---------- masuk ---------- */
+$('btn-passkey').onclick = async () => {
+  pesan(''); const b = $('btn-passkey'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
+  try {
+    const { id, opsi } = await passkey('masuk-opsi', {});
+    const jawaban = await WA.startAuthentication({ optionsJSON: opsi });
+    const hasil = await passkey('masuk-cek', { id, jawaban });
+    const { error } = await sb.auth.setSession(hasil.sesi);
+    if (error) throw error;
+    await mulai();
+  } catch (e) {
+    if (BATAL(e)) pesan('Belum ada Face ID terdaftar di perangkat ini, atau dibatalkan. Masuk pakai kode dulu, lalu aktifkan Face ID.');
+    else if (e.message === 'TIDAK_DIKENAL') pesan('Face ID ini belum terdaftar. Masuk pakai kode dulu, lalu aktifkan Face ID.');
+    else pesan('Gagal masuk pakai Face ID. Coba lagi, atau pakai kode.');
+  } finally { b.disabled = false; b.textContent = 'Masuk pakai Face ID / sidik jari'; }
+};
+
+$('form-kode').onsubmit = async ev => {
+  ev.preventDefault(); pesan('');
+  const kode = $('kode').value.trim(); if (!kode){ pesan('Isi kode staff dulu.'); return; }
+  const b = $('btn-kode'); b.disabled = true; b.textContent = 'Memeriksa…';
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/verify-internal-pin', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pin: kode})});
+    const j = await r.json();
+    if (r.status === 429){ pesan(j.error || 'Terlalu banyak percobaan. Coba lagi nanti.'); return; }
+    if (!j.valid){ pesan('Kode salah.'); return; }
+    const { error } = await sb.auth.setSession(j.session);
+    if (error){ pesan('Gagal membuat sesi. Coba lagi.'); return; }
+    $('kode').value = '';
+    await mulai();
+  } catch (e) { pesan('Gagal menghubungi server. Cek internet lalu coba lagi.'); }
+  finally { b.disabled = false; b.textContent = 'Masuk'; }
+};
+
+/* ---------- daftar passkey ---------- */
+$('btn-daftar').onclick = async () => {
+  const b = $('btn-daftar'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
+  try {
+    const { id, opsi } = await passkey('daftar-opsi', {}, true);
+    const jawaban = await WA.startRegistration({ optionsJSON: opsi });
+    await passkey('daftar-cek', { id, jawaban, perangkat: navigator.userAgent }, true);
+    $('ajak-passkey').innerHTML = '<div><b>Face ID / sidik jari aktif ✓</b><span>Mulai besok, masuk Jarvis cukup sentuh.</span></div>';
+  } catch (e) {
+    b.disabled = false; b.textContent = 'Aktifkan sekarang';
+    if (!BATAL(e)) alert(e.name === 'InvalidStateError' ? 'Perangkat ini sudah terdaftar.' : 'Gagal mengaktifkan. Coba lagi.');
+  }
+};
+
+/* ---------- aplikasi ---------- */
+function bukaMenu(m){
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
+  document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/jarvis/palette.html';
+  try { localStorage.setItem('jarvis-menu', m); } catch (e) {}
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => bukaMenu(t.dataset.m));
+document.querySelectorAll('[data-buka]').forEach(t => t.onclick = () => bukaMenu(t.dataset.buka));
+$('btn-keluar').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+function salam(nama){
+  const j = Number(new Intl.DateTimeFormat('en-GB', {hour:'2-digit', hour12:false, timeZone:'Asia/Jakarta'}).format(new Date()));
+  const w = j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam';
+  $('salam').textContent = w + ', ' + nama;
+  $('tanggal').textContent = new Intl.DateTimeFormat('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta'}).format(new Date());
+}
+
+async function mulai(){
+  const { data, error } = await sb.rpc('jarvis_saya');
+  if (error || !data){ $('gate').classList.remove('hidden'); $('app').classList.add('hidden'); if (error) pesan('Akun ini bukan akun internal.'); return; }
+  $('gate').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('siapa').textContent = data.nama;
+  salam(data.nama);
+  $('ajak-passkey').classList.toggle('hidden', data.passkey > 0 || !WA || !WA.browserSupportsWebAuthn());
+  let m = 'beranda'; try { m = localStorage.getItem('jarvis-menu') || 'beranda'; } catch (e) {}
+  bukaMenu(['beranda','palette','chat','sapaan'].includes(m) ? m : 'beranda');
+}
+
+(async () => {
+  if (!WA || !WA.browserSupportsWebAuthn()) $('btn-passkey').classList.add('hidden');
+  const { data } = await sb.auth.getSession();
+  if (data.session) await mulai();
+})();
+</script>
+</body>
+</html>
