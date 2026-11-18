@@ -1,4 +1,4 @@
-// Jarvis passkey: daftar dan masuk pakai Face ID / sidik jari (WebAuthn).
+// Aura (dulu Jarvis) passkey: daftar dan masuk pakai Face ID / sidik jari (WebAuthn).
 // Aksi: daftar-opsi, daftar-cek (butuh sesi internal), masuk-opsi, masuk-cek (tanpa sesi).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       if (!staff) return balas({ galat: "BUKAN_INTERNAL" }, 401);
       const { data: ada } = await admin.from("jarvis_passkeys").select("id, transports").eq("staff_id", staff.id);
       const opsi = await generateRegistrationOptions({
-        rpName: "Jarvis Girlhood Den",
+        rpName: "Aura Girlhood Den",
         rpID,
         userName: staff.nama,
         userDisplayName: staff.nama,

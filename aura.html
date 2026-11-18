@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#05070d">
-<title>Jarvis · Girlhood Den</title>
+<title>Aura · Girlhood Den</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
@@ -28,14 +28,16 @@ button{font:inherit;cursor:pointer}
 .btn[disabled]{opacity:.6;cursor:default}
 .hidden{display:none!important}
 
-/* orb: canvas WebGL dari assets/jarvis/orb.js */
+/* orb: canvas WebGL dari assets/aura/orb.js */
 canvas.orb{display:block;width:var(--s,120px);height:var(--s,120px)}
 canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff3c4,#ff7a2e 45%,#3a2aff 100%)}
 
 /* gerbang */
 .gate{min-height:100dvh;display:grid;place-items:center;padding-block:32px}
 .gate-card{width:min(400px,100%);display:grid;justify-items:center;gap:14px;text-align:center}
-.gate h1{font:800 34px/1.05 var(--display);letter-spacing:-.02em;margin:10px 0 0}
+.gate h1{margin:14px 0 2px;line-height:0}
+.gate h1 .logo{width:min(200px,52vw);height:auto}
+.logo{display:block;color:var(--ink)}
 .gate p{margin:0;color:var(--muted)}
 .gate .btn{width:100%}
 .atau{display:flex;align-items:center;gap:10px;width:100%;color:var(--muted);font-size:13px}
@@ -50,7 +52,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .app{max-width:1360px;margin:0 auto;padding-block:14px 32px;display:grid;gap:14px}
 .bar{display:flex;align-items:center;gap:12px}
 .bar .orb{--s:40px}
-.bar b{font:800 20px/1 var(--display);letter-spacing:-.01em}
+.bar .logo{width:74px;height:auto}
 .bar .siapa{margin-left:auto;color:var(--muted);font-size:14px;text-align:right}
 .bar .btn{min-height:36px;padding:0 12px;font-size:14px}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
@@ -86,7 +88,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 <section class="gate" id="gate" aria-labelledby="g-judul">
   <div class="gate-card">
     <canvas class="orb" data-orb style="--s:min(220px,60vw)" aria-hidden="true"></canvas>
-    <h1 id="g-judul">Jarvis</h1>
+    <h1 id="g-judul"><svg class="logo" viewBox="0 0 196 40" role="img" aria-label="Aura"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 38 L20 2 L38 38"/><path d="M56 2 V26 Q56 38 68 38 H80 Q92 38 92 26 V2"/><path d="M110 38 V2 H134 Q144 2 144 11 Q144 20 134 20 H118 L144 38"/><path d="M158 38 L176 2 L194 38"/></g></svg></h1>
     <p id="g-sub">Asisten internal Girlhood Den.</p>
     <button class="btn primary" id="btn-passkey" type="button">Masuk pakai Face ID / sidik jari</button>
     <div class="atau">atau pakai kode staff</div>
@@ -101,11 +103,11 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 <div class="app hidden" id="app">
   <div class="bar">
     <canvas class="orb" data-orb aria-hidden="true"></canvas>
-    <b>Jarvis</b>
+    <svg class="logo" viewBox="0 0 196 40" role="img" aria-label="Aura"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 38 L20 2 L38 38"/><path d="M56 2 V26 Q56 38 68 38 H80 Q92 38 92 26 V2"/><path d="M110 38 V2 H134 Q144 2 144 11 Q144 20 134 20 H118 L144 38"/><path d="M158 38 L176 2 L194 38"/></g></svg>
     <span class="siapa" id="siapa"></span>
     <button class="btn" id="btn-keluar" type="button">Keluar</button>
   </div>
-  <nav class="tabs" role="tablist" aria-label="Menu Jarvis">
+  <nav class="tabs" role="tablist" aria-label="Menu Aura">
     <button class="tab" role="tab" data-m="beranda" aria-selected="true">Beranda</button>
     <button class="tab" role="tab" data-m="palette" aria-selected="false">Product Palette</button>
   </nav>
@@ -133,7 +135,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
-<script src="assets/jarvis/orb.js"></script>
+<script src="assets/aura/orb.js"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -193,7 +195,7 @@ $('btn-daftar').onclick = async () => {
     const { id, opsi } = await passkey('daftar-opsi', {}, true);
     const jawaban = await WA.startRegistration({ optionsJSON: opsi });
     await passkey('daftar-cek', { id, jawaban, perangkat: navigator.userAgent }, true);
-    $('ajak-passkey').innerHTML = '<div><b>Face ID / sidik jari aktif ✓</b><span>Mulai besok, masuk Jarvis cukup sentuh.</span></div>';
+    $('ajak-passkey').innerHTML = '<div><b>Face ID / sidik jari aktif ✓</b><span>Mulai besok, masuk Aura cukup sentuh.</span></div>';
   } catch (e) {
     b.disabled = false; b.textContent = 'Aktifkan sekarang';
     if (!BATAL(e)) alert(e.name === 'InvalidStateError' ? 'Perangkat ini sudah terdaftar.' : 'Gagal mengaktifkan. Coba lagi.');
@@ -204,8 +206,8 @@ $('btn-daftar').onclick = async () => {
 function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
-  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/jarvis/palette.html';
-  try { localStorage.setItem('jarvis-menu', m); } catch (e) {}
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html';
+  try { localStorage.setItem('aura-menu', m); } catch (e) {}
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => bukaMenu(t.dataset.m));
 document.querySelectorAll('[data-buka]').forEach(t => t.onclick = () => bukaMenu(t.dataset.buka));
@@ -225,7 +227,7 @@ async function mulai(){
   $('siapa').textContent = data.nama;
   salam(data.nama);
   $('ajak-passkey').classList.toggle('hidden', data.passkey > 0 || !WA || !WA.browserSupportsWebAuthn());
-  let m = 'beranda'; try { m = localStorage.getItem('jarvis-menu') || 'beranda'; } catch (e) {}
+  let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
 }
 
