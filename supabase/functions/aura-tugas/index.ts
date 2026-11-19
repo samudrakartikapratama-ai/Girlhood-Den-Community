@@ -139,7 +139,7 @@ async function senin() {
     : "Tidak ada brand yang mengabaikan request minggu lalu.";
   const teks = `Aura · Brand yang tidak merespons request sampel (7 hari terakhir)\n\n${isi}\n\nAE: hubungi PIC-nya minggu ini, minta approve/tolak dengan alasan, dan tawarkan aturan approve otomatis.`;
   const penerima = [...await penerimaPimpinan()].filter((p) => /skp/i.test(p.nama));
-  const { data: ae } = await db.from("aura_staff").select("lark_open_id, internal_staff!inner(nama, is_active)").eq("jalur", "ae");
+  const { data: ae } = await db.from("aura_staff").select("lark_open_id, internal_staff!inner(nama, is_active)").eq("jalur", "ae").eq("aktif_tugas", true);
   for (const a of (ae || []) as any[]) if (a.lark_open_id && a.internal_staff?.is_active) penerima.push({ nama: a.internal_staff.nama, open_id: a.lark_open_id });
   const hasil: string[] = [];
   for (const p of penerima) hasil.push(await kirim("senin", p.open_id, p.nama, teks));

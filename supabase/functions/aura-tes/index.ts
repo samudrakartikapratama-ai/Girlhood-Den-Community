@@ -2,7 +2,7 @@
 // Peserta hanya melihat soal; kunci & skor hanya untuk pimpinan (CEO/COO) dan dikirim ke Lark skp & Gabriella.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { ARTI_GAYA, Bagian, JUDUL, KASUS, nilaiGaya, nilaiLogika, RUBRIK, soalUntukKlien, URUTAN, WAKTU } from "./soal.ts";
+import { ARTI_GAYA, Bagian, JUDUL, KASUS, LOGIKA, nilaiGaya, nilaiLogika, RUBRIK, soalUntukKlien, URUTAN, WAKTU } from "./soal.ts";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
@@ -142,6 +142,27 @@ Deno.serve(async (req) => {
       const { data, error } = await db.from("aura_tes_sesi").insert({ staff_id: b.staff_id, dibuat_oleh: staff.id }).select("id").single();
       if (error) throw error;
       return balas({ id: data.id });
+    }
+
+    // Rincian jawaban untuk dinilai pimpinan (jawaban kasus apa adanya, logika benar/salah per soal)
+    if (b.aksi === "detail") {
+      if (!staff.pimpinan) return balas({ galat: "KHUSUS_PIMPINAN" }, 403);
+      const { data: s } = await db.from("aura_tes_sesi").select("*").eq("id", b.id).single();
+      if (!s) return balas({ galat: "TIDAK_ADA" }, 404);
+      const jl = s.jawaban?.logika || {};
+      return balas({
+        kasus: KASUS.map((k) => ({ ...k, jawaban: s.jawaban?.kasus?.[k.id] || "" })),
+        logika: LOGIKA.map((q) => ({ id: q.id, level: q.level, jenis: q.jenis, tanya: q.tanya, dipilih: (q.opsi.find((o) => o[0] === jl[q.id]) || [])[1] || "", kunci: (q.opsi.find((o) => o[0] === q.kunci) || [])[1], benar: jl[q.id] === q.kunci })),
+        skp: s.skor?.skp || null,
+      });
+    }
+    if (b.aksi === "nilai") {
+      if (!staff.pimpinan) return balas({ galat: "KHUSUS_PIMPINAN" }, 403);
+      const { data: s } = await db.from("aura_tes_sesi").select("skor").eq("id", b.id).single();
+      if (!s?.skor) return balas({ galat: "BELUM_SELESAI" }, 409);
+      const skp = { keputusan: String(b.keputusan || ""), kasus: Number(b.kasus) || null, catatan: String(b.catatan || "").slice(0, 3000), oleh: staff.nama, at: new Date().toISOString() };
+      await db.from("aura_tes_sesi").update({ skor: { ...s.skor, skp } }).eq("id", b.id);
+      return balas({ ok: true });
     }
 
     if (b.aksi === "hapus") {

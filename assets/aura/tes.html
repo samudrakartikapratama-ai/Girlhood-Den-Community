@@ -4,158 +4,235 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Tes · Aura</title>
+<title>Tes tim · Aura</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
-<link rel="stylesheet" href="halaman.css?v=1">
+<link rel="stylesheet" href="halaman.css?v=2">
 <style>
-.timer{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.timer b{font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+body{text-align:left}
+.wrap{max-width:820px;gap:18px}
+.kepala-hal{display:grid;gap:12px}
+.kepala-hal p{max-width:62ch}
+.submenu{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--garis);padding-bottom:12px}
+.submenu button{border:1px solid transparent;background:none;color:var(--ash);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500}
+.submenu button[aria-pressed=true]{color:var(--ink);background:rgba(255,90,31,.16);border-color:rgba(255,90,31,.35)}
+.submenu button:focus-visible{outline:2px solid var(--corona);outline-offset:2px}
+.langkah{display:grid;gap:10px;counter-reset:l}
+.langkah .panel{display:grid;grid-template-columns:40px 1fr auto;gap:4px 14px;align-items:center}
+.langkah .no{grid-row:span 2;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--garis2);font-weight:500}
+.langkah .selesai .no{background:rgba(127,224,168,.12);border-color:rgba(127,224,168,.4);color:var(--ok)}
+.langkah h2{font-size:17px}
+.langkah .ket{grid-column:2;color:var(--ash);font-size:13.5px;line-height:1.55}
+.langkah .aksi{grid-row:1 / span 2;grid-column:3}
+@media (max-width:560px){.langkah .panel{grid-template-columns:36px 1fr}.langkah .aksi{grid-column:1 / -1;grid-row:auto}}
+.aturan{margin:0;padding-left:18px;display:grid;gap:6px;color:#e9dcd2;font-size:14px;line-height:1.55}
+/* mengerjakan */
+.timer{position:sticky;top:0;z-index:5;display:grid;gap:8px;padding:12px 16px}
+.timer .baris b{font-size:28px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .timer.mepet b{color:var(--bad)}
-.bagian{display:grid;gap:10px}
-.blok{display:grid;gap:6px}
-.opsi-gaya{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:center}
+.timer .bar>i{transition:width 1s linear}
+.petunjuk{font-size:14px;line-height:1.6;color:#e9dcd2}
+.blok{display:grid;gap:10px}
+.opsi-gaya{display:grid;grid-template-columns:1fr 84px 84px;gap:8px 0;align-items:center}
 .opsi-gaya .h{font-size:12px;color:var(--ash);text-align:center}
-.opsi-gaya input{width:20px;height:20px;accent-color:var(--ember);cursor:pointer;justify-self:center}
-.stem{white-space:pre-line;font-size:14px;color:#e9dcd2;background:rgba(255,255,255,.035);border-radius:12px;padding:10px 12px}
-.soal-opsi{display:grid;gap:6px;margin-top:8px}
-.soal-opsi label{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:12px;border:1px solid var(--garis);cursor:pointer}
+.opsi-gaya .teks{font-size:15px;padding:4px 0}
+.opsi-gaya input{width:22px;height:22px;accent-color:var(--ember);cursor:pointer;justify-self:center}
+.stem{white-space:pre-line;font-size:14px;line-height:1.6;color:#e9dcd2;background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px}
+.tanya{font-size:16px;line-height:1.55}
+.soal-opsi{display:grid;gap:8px}
+.soal-opsi label{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:12px;border:1px solid var(--garis);cursor:pointer;line-height:1.5}
 .soal-opsi label:has(input:checked){border-color:var(--ember);background:rgba(255,90,31,.12)}
-.soal-opsi input{accent-color:var(--ember);margin-top:4px}
+.soal-opsi input{accent-color:var(--ember);margin-top:3px}
 .nav-soal{display:flex;flex-wrap:wrap;gap:6px}
-.nav-soal button{width:34px;height:34px;border-radius:10px;border:1px solid var(--garis);background:transparent;cursor:pointer;font-size:13px}
+.nav-soal button{width:36px;height:36px;border-radius:10px;border:1px solid var(--garis);background:transparent;cursor:pointer;font-size:13px}
 .nav-soal button.isi{background:rgba(255,90,31,.18);border-color:var(--ember)}
 .nav-soal button.kini{outline:2px solid var(--corona)}
-.kasus-teks{white-space:pre-line}
-textarea.panjang{min-height:220px}
-.hasil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.hasil-grid .panel{padding:12px 14px}
-.besar{font-size:22px;font-weight:500}
+.kasus-teks{white-space:pre-line;line-height:1.6}
+textarea.panjang{min-height:240px}
+/* hasil */
+.kartu-angka{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kartu-angka .panel{padding:12px 14px;display:grid;gap:2px}
+.besar{font-size:24px;font-weight:500}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-td,th{padding:6px 8px;border-bottom:1px solid var(--garis);text-align:left}
+td,th{padding:7px 8px;border-bottom:1px solid var(--garis);text-align:left;vertical-align:top}
 th{color:var(--ash);font-weight:500}
+.jawab{white-space:pre-line;line-height:1.6;background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px}
+.salah{color:var(--bad)}.benar{color:var(--ok)}
 </style>
 </head>
 <body>
-<div class="wrap" id="akar"><p class="muted">Memuat…</p></div>
+<div class="wrap">
+  <header class="kepala-hal">
+    <div><h1>Tes tim</h1><p class="muted kecil" id="sub">Mengukur gaya kerja, logika, dan cara berpikir bisnis.</p></div>
+    <nav class="submenu" id="submenu" aria-label="Menu tes">
+      <button data-v="kerjakan" aria-pressed="true">Kerjakan tes</button>
+      <button data-v="beri" aria-pressed="false" class="hidden">Beri tes</button>
+      <button data-v="hasil" aria-pressed="false" class="hidden">Hasil & nilai</button>
+    </nav>
+  </header>
+  <main id="isi"><p class="muted">Memuat…</p></main>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
 const sb = supabase.createClient(URL_SB, ANON);
-const akar = document.getElementById('akar');
+const isi = document.getElementById('isi');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const NAMA = {gaya:'Gaya kerja', logika:'Logika & angka', kasus:'Studi kasus'};
 const URUT = ['gaya','logika','kasus'];
 const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const tglPendek = d => new Date(d).toLocaleDateString('id-ID', {day:'numeric', month:'short', timeZone:'Asia/Jakarta'});
 
-async function panggil(isi){
+async function panggil(body){
   const { data } = await sb.auth.getSession();
   if (!data.session) throw new Error('BUKAN_INTERNAL');
-  const r = await fetch(URL_SB + '/functions/v1/aura-tes', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(isi)});
+  const r = await fetch(URL_SB + '/functions/v1/aura-tes', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
   return j;
 }
 
-/* ---------------- beranda tes ---------------- */
-let st = null;
-async function beranda(){
+/* ---------------- sub-menu ---------------- */
+let st = null, tampilan = 'kerjakan';
+function pilih(v){
+  tampilan = v;
+  document.querySelectorAll('#submenu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  render();
+}
+document.querySelectorAll('#submenu button').forEach(b => b.onclick = () => { stopTimer(); bagianKini = null; pilih(b.dataset.v); });
+
+async function muat(awal){
   stopTimer();
   try { st = await panggil({ aksi:'status' }); }
-  catch (e) { akar.innerHTML = `<div class="panel">${e.message === 'BUKAN_INTERNAL' ? 'Masuk dulu lewat Aura.' : 'Tes belum bisa dimuat. Coba lagi.'}</div>`; return; }
-  let h = '<h1>Tes</h1>';
-  if (st.sesi){
-    const b = st.sesi.bagian;
-    const lanjut = URUT.find(x => b[x].status !== 'selesai');
-    h += `<div class="panel"><p>Tes ini terdiri dari 3 bagian dan harus dikerjakan berurutan. Timer berjalan begitu bagian dimulai dan <b>tidak bisa dijeda</b>, termasuk kalau halaman ditutup. Kerjakan sendiri, tanpa AI atau bantuan orang lain.</p></div>`;
-    h += URUT.map((x, i) => {
-      const s = b[x];
-      const label = s.status === 'selesai' ? '<span class="chip ok">Selesai</span>' : s.status === 'jalan' ? `<span class="chip warn">Berjalan · sisa ${mmss(s.sisa)}</span>` : `<span class="chip">${Math.round(s.waktu/60)} menit</span>`;
-      const tombol = x === lanjut ? `<button class="btn utama" data-mulai="${x}">${s.status === 'jalan' ? 'Lanjutkan' : 'Mulai'}</button>` : '';
-      return `<div class="panel baris antara"><div><h2>${i+1}. ${NAMA[x]}</h2><p class="muted kecil">${esc(st.judul[x].petunjuk)}</p></div><div class="baris">${label}${tombol}</div></div>`;
-    }).join('');
-    if (!lanjut) h += `<div class="panel">Semua bagian selesai. Terima kasih! Hasilnya dikirim ke pimpinan.</div>`;
-  } else if (!st.pimpinan) {
-    h += `<div class="panel">Belum ada tes untukmu saat ini.</div>`;
-  }
-  if (st.pimpinan) h += panelPimpinan();
-  akar.innerHTML = h;
-  akar.querySelectorAll('[data-mulai]').forEach(btn => btn.onclick = () => {
-    const x = btn.dataset.mulai;
-    if (st.sesi.bagian[x].status === 'belum' && !confirm(`Mulai ${NAMA[x]}? Waktumu ${Math.round(st.sesi.bagian[x].waktu/60)} menit dan tidak bisa dijeda.`)) return;
-    mulai(x);
-  });
-  sambungPimpinan();
+  catch (e) { isi.innerHTML = `<div class="panel">${e.message === 'BUKAN_INTERNAL' ? 'Masuk dulu lewat Aura.' : 'Tes belum bisa dimuat. Coba lagi.'}</div>`; return; }
+  document.querySelectorAll('#submenu [data-v=beri], #submenu [data-v=hasil]').forEach(b => b.classList.toggle('hidden', !st.pimpinan));
+  if (awal) tampilan = st.sesi ? 'kerjakan' : st.pimpinan ? ((st.daftar || []).some(d => d.status === 'selesai') ? 'hasil' : 'beri') : 'kerjakan';
+  pilih(tampilan);
+}
+function render(){
+  if (tampilan === 'beri') return renderBeri();
+  if (tampilan === 'hasil') return renderHasil();
+  renderKerjakan();
 }
 
-/* ---------------- pimpinan ---------------- */
-function panelPimpinan(){
-  const opsi = (st.orang || []).map(o => `<option value="${o.id}">${esc(o.nama)}</option>`).join('');
-  const baris = (st.daftar || []).map(d => {
-    const s = d.status === 'selesai' ? '<span class="chip ok">Selesai</span>' : d.status === 'jalan' ? '<span class="chip warn">Sedang dikerjakan</span>' : '<span class="chip">Belum mulai</span>';
-    return `<tr><td>${esc(d.nama)}</td><td>${new Date(d.dibuat_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</td><td>${s}</td><td class="baris">${d.skor ? `<button class="btn" data-lihat="${d.id}">Lihat hasil</button>` : ''}<button class="btn" data-hapus="${d.id}">Hapus</button></td></tr>`;
-  }).join('');
-  return `<h2 style="margin-top:10px">Pimpinan</h2>
-    <div class="panel"><div class="baris"><select id="pilih-orang" style="width:auto">${opsi}</select><button class="btn utama" id="buat-tes">Beri tes</button></div>
-    <p class="muted kecil" style="margin-top:8px">Orang itu akan melihat tes di tab Tes Aura miliknya. Hasil hanya terlihat di sini dan dikirim ke Lark kamu & Gabriella.</p></div>
-    ${baris ? `<div class="panel"><table><thead><tr><th>Nama</th><th>Diberi</th><th>Status</th><th></th></tr></thead><tbody>${baris}</tbody></table></div>` : ''}
-    <div id="detail"></div>`;
+/* ---------------- kerjakan ---------------- */
+function renderKerjakan(){
+  if (!st.sesi){ isi.innerHTML = `<div class="panel"><h2>Belum ada tes untukmu</h2><p class="muted" style="margin-top:6px">${st.pimpinan ? 'Kamu bisa memberi tes ke dirimu sendiri lewat menu "Beri tes" untuk mencoba.' : 'Tes akan muncul di sini kalau pimpinan memberikannya.'}</p></div>`; return; }
+  const b = st.sesi.bagian, lanjut = URUT.find(x => b[x].status !== 'selesai');
+  isi.innerHTML = `<div class="blok">
+    <div class="panel"><h2>Sebelum mulai</h2><ol class="aturan" style="margin-top:10px">
+      <li>Ada 3 bagian dan dikerjakan berurutan. Total sekitar 82 menit.</li>
+      <li>Waktu mulai berjalan saat kamu menekan Mulai dan <b>tidak bisa dijeda</b>, termasuk kalau halaman ditutup.</li>
+      <li>Jawaban tersimpan otomatis tiap 20 detik. Saat waktu habis, jawaban terkirim sendiri.</li>
+      <li>Kerjakan sendiri tanpa AI, kalkulator, atau bantuan orang lain. Keluar dari halaman tercatat.</li></ol></div>
+    <div class="langkah">${URUT.map((x, i) => {
+      const s = b[x], sel = s.status === 'selesai';
+      const kanan = sel ? '<span class="chip ok">Selesai</span>' : x === lanjut ? `<button class="btn utama" data-mulai="${x}">${s.status === 'jalan' ? `Lanjutkan · ${mmss(s.sisa)}` : 'Mulai'}</button>` : '<span class="chip">Terkunci</span>';
+      const durasi = s.waktu ? `${Math.round(s.waktu/60)} menit` : s.status === 'jalan' ? `sisa ${mmss(s.sisa)}` : '';
+      return `<div class="panel ${sel ? 'selesai' : ''}"><span class="no">${sel ? '✓' : i+1}</span><h2>${NAMA[x]}${durasi ? ` <span class="muted kecil" style="font-weight:400">· ${durasi}</span>` : ''}</h2><div class="aksi">${kanan}</div><p class="ket">${esc(st.judul[x].petunjuk)}</p></div>`;
+    }).join('')}</div>
+    ${!lanjut ? `<div class="panel"><h2>Semua bagian selesai</h2><p class="muted" style="margin-top:6px">Terima kasih. Hasilnya dikirim ke pimpinan.</p></div>` : ''}</div>`;
+  isi.querySelectorAll('[data-mulai]').forEach(btn => btn.onclick = () => {
+    const x = btn.dataset.mulai;
+    if (b[x].status === 'belum' && !confirm(`Mulai ${NAMA[x]}? Waktumu ${Math.round(b[x].waktu/60)} menit dan tidak bisa dijeda.`)) return;
+    mulai(x);
+  });
 }
-function sambungPimpinan(){
+
+/* ---------------- beri tes (pimpinan) ---------------- */
+function renderBeri(){
+  const aktif = (st.daftar || []).filter(d => d.status !== 'selesai');
+  isi.innerHTML = `<div class="blok">
+    <div class="panel blok"><h2>Beri tes ke anggota tim</h2>
+      <p class="muted kecil">Tes muncul di menu Tes tim milik orang itu. Hasilnya hanya terlihat di "Hasil & nilai" dan dikirim ke Lark kamu dan Gabriella.</p>
+      <div class="baris"><select id="pilih-orang" style="width:auto;min-width:200px">${(st.orang || []).map(o => `<option value="${o.id}">${esc(o.nama)}</option>`).join('')}</select><button class="btn utama" id="buat-tes">Beri tes</button></div></div>
+    <div class="panel blok"><h2>Tes yang sedang berjalan</h2>${aktif.length ? `<table><thead><tr><th>Nama</th><th>Diberi</th><th>Progres</th><th></th></tr></thead><tbody>${aktif.map(d => `<tr><td>${esc(d.nama)}</td><td>${tglPendek(d.dibuat_at)}</td><td>${URUT.map(x => `${NAMA[x]}: ${d.bagian[x].status === 'selesai' ? '✓' : d.bagian[x].status === 'jalan' ? 'jalan' : '–'}`).join(' · ')}</td><td><button class="btn" data-hapus="${d.id}">Batalkan</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Tidak ada.</p>'}</div></div>`;
   const b = document.getElementById('buat-tes');
-  if (b) b.onclick = async () => { b.disabled = true; try { await panggil({ aksi:'buat', staff_id: document.getElementById('pilih-orang').value }); await beranda(); } catch (e) { alert('Gagal membuat tes.'); b.disabled = false; } };
-  akar.querySelectorAll('[data-hapus]').forEach(x => x.onclick = async () => { if (!confirm('Hapus tes ini beserta jawabannya?')) return; await panggil({ aksi:'hapus', id:x.dataset.hapus }); beranda(); });
-  akar.querySelectorAll('[data-lihat]').forEach(x => x.onclick = () => tampilHasil((st.daftar || []).find(d => d.id === x.dataset.lihat)));
+  b.onclick = async () => { b.disabled = true; try { await panggil({ aksi:'buat', staff_id: document.getElementById('pilih-orang').value }); await muat(); pilih('beri'); } catch (e) { alert('Gagal memberi tes.'); b.disabled = false; } };
+  isi.querySelectorAll('[data-hapus]').forEach(x => x.onclick = async () => { if (!confirm('Batalkan tes ini beserta jawabannya?')) return; await panggil({ aksi:'hapus', id:x.dataset.hapus }); await muat(); pilih('beri'); });
 }
-function tampilHasil(d){
+
+/* ---------------- hasil & nilai (pimpinan) ---------------- */
+function renderHasil(){
+  const sel = (st.daftar || []).filter(d => d.status === 'selesai');
+  if (!sel.length){ isi.innerHTML = '<div class="panel">Belum ada tes yang selesai.</div>'; return; }
+  isi.innerHTML = `<div class="blok"><div class="panel"><table><thead><tr><th>Nama</th><th>Selesai</th><th>Gaya</th><th>Logika</th><th>Kasus</th><th>Keputusanmu</th><th></th></tr></thead><tbody>${sel.map(d => {
+    const s = d.skor || {};
+    return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td>${s.gaya ? s.gaya.utama + '/' + s.gaya.kedua : '-'}</td><td class="angka">${s.logika ? s.logika.persen_berbobot + '%' : '-'}</td><td class="angka">${s.kasus?.rata ?? '-'}/5</td><td>${esc(s.skp?.keputusan || '–')}</td><td><button class="btn" data-lihat="${d.id}">Buka</button></td></tr>`;
+  }).join('')}</tbody></table></div><div id="detail"></div></div>`;
+  isi.querySelectorAll('[data-lihat]').forEach(x => x.onclick = () => buka(sel.find(d => d.id === x.dataset.lihat)));
+}
+
+async function buka(d){
+  const el = document.getElementById('detail');
+  el.innerHTML = '<div class="panel muted">Memuat jawaban…</div>';
+  let det; try { det = await panggil({ aksi:'detail', id:d.id }); } catch (e) { el.innerHTML = '<div class="panel">Gagal memuat.</div>'; return; }
   const s = d.skor, g = s.gaya, l = s.logika, k = s.kasus || {};
   const dims = ['struktur','data','akar_masalah','opsi','eksekusi'];
-  const kasusBaris = ['k1','k2','k3'].map(id => k[id] ? `<tr><td>${id.toUpperCase()}</td>${dims.map(x => `<td class="angka">${k[id][x] ?? '-'}</td>`).join('')}<td>${esc(k[id].catatan || '')}</td></tr>` : '').join('');
-  document.getElementById('detail').innerHTML = `<div class="panel" style="display:grid;gap:12px">
-    <div class="baris antara"><h2>Hasil ${esc(d.nama)}</h2><span class="muted kecil">rahasia</span></div>
-    <div class="hasil-grid">
-      <div class="panel"><p class="muted kecil">Gaya kerja</p><p class="besar">${g.utama}/${g.kedua}</p><p class="kecil muted">D ${g.skor.D} · I ${g.skor.I} · S ${g.skor.S} · C ${g.skor.C}</p></div>
-      <div class="panel"><p class="muted kecil">Logika & angka</p><p class="besar">${l.persen_berbobot}%</p><p class="kecil muted">${l.benar}/${l.total} benar · ${l.kategori}</p></div>
-      <div class="panel"><p class="muted kecil">Studi kasus</p><p class="besar">${k.rata ?? '-'}/5</p><p class="kecil muted">3 = lulusan baru yang baik · 4 = profesional</p></div>
+  const skp = det.skp || {};
+  el.innerHTML = `<div class="blok">
+    <div class="baris antara"><h2>${esc(d.nama)}</h2><span class="muted kecil">rahasia · hanya pimpinan</span></div>
+    <div class="kartu-angka">
+      <div class="panel"><span class="muted kecil">Gaya kerja</span><span class="besar">${g.utama}/${g.kedua}</span><span class="kecil muted">D ${g.skor.D} · I ${g.skor.I} · S ${g.skor.S} · C ${g.skor.C}</span></div>
+      <div class="panel"><span class="muted kecil">Logika & angka</span><span class="besar">${l.persen_berbobot}%</span><span class="kecil muted">${l.benar}/${l.total} benar · ${l.kategori}</span></div>
+      <div class="panel"><span class="muted kecil">Studi kasus (AI)</span><span class="besar">${k.rata ?? '-'}/5</span><span class="kecil muted">3 = lulusan baru yang baik · 4 = profesional</span></div>
     </div>
-    ${s.kesimpulan ? `<p>${esc(s.kesimpulan)}</p>` : ''}
-    <table><thead><tr><th>Logika</th><th>Benar</th></tr></thead><tbody>${Object.entries(l.perJenis).map(([j,v]) => `<tr><td>${esc(j)}</td><td class="angka">${v.benar}/${v.total}</td></tr>`).join('')}${Object.entries(l.perLevel).map(([j,v]) => `<tr><td>${esc(j)}</td><td class="angka">${v.benar}/${v.total}</td></tr>`).join('')}</tbody></table>
-    ${kasusBaris ? `<table><thead><tr><th>Kasus</th>${dims.map(x => `<th>${x.replace('_',' ')}</th>`).join('')}<th>Catatan</th></tr></thead><tbody>${kasusBaris}</tbody></table>` : ''}
-    ${(k.kekuatan || []).length ? `<p><b>Kekuatan:</b> ${esc(k.kekuatan.join('; '))}</p>` : ''}
-    ${(k.tanda_bahaya || []).length ? `<p><b>Tanda bahaya:</b> ${esc(k.tanda_bahaya.join('; '))}</p>` : ''}
-    <p class="muted kecil">Waktu: ${URUT.map(b => `${NAMA[b]} ${s.catatan?.[b]?.menit ?? '-'} mnt${s.catatan?.[b]?.terlambat ? ' (lewat)' : ''}${s.catatan?.[b]?.keluar_halaman ? ` · keluar halaman ${s.catatan[b].keluar_halaman}×` : ''}`).join(' · ')}</p>
+    ${s.kesimpulan ? `<div class="panel"><span class="muted kecil">Bacaan Aura</span><p style="margin-top:6px;line-height:1.6">${esc(s.kesimpulan)}</p></div>` : ''}
+    <div class="panel blok"><h2>Studi kasus: jawaban dan nilai AI</h2>
+      ${det.kasus.map(c => `<div class="blok"><b>${esc(c.judul)}</b><p class="muted kecil kasus-teks">${esc(c.teks)}</p><div class="jawab">${esc(c.jawaban || '(kosong)')}</div>
+        ${k[c.id] ? `<p class="kecil">${dims.map(x => `${x.replace('_',' ')} <b>${k[c.id][x] ?? '-'}</b>`).join(' · ')}</p><p class="muted kecil">${esc(k[c.id].catatan || '')}</p>` : ''}</div>`).join('<hr style="border:0;border-top:1px solid var(--garis);width:100%">')}
+      ${(k.kekuatan || []).length ? `<p><b>Kekuatan:</b> ${esc(k.kekuatan.join('; '))}</p>` : ''}
+      ${(k.tanda_bahaya || []).length ? `<p><b>Tanda bahaya:</b> ${esc(k.tanda_bahaya.join('; '))}</p>` : ''}</div>
+    <div class="panel blok"><h2>Logika: per soal</h2><table><thead><tr><th>#</th><th>Jenis</th><th>Jawabannya</th><th>Kunci</th></tr></thead><tbody>${det.logika.map((q, i) => `<tr><td>${i+1}</td><td>${esc(q.jenis)} · L${q.level}</td><td class="${q.benar ? 'benar' : 'salah'}">${esc(q.dipilih || '(kosong)')}</td><td>${q.benar ? '' : esc(q.kunci)}</td></tr>`).join('')}</tbody></table></div>
+    <form class="panel blok" id="form-nilai"><h2>Nilaimu</h2>
+      <span class="label">Keputusan</span>
+      <div class="pilih">${['Lanjut','Lanjut dengan catatan','Tidak lanjut'].map(x => `<label><input type="radio" name="keputusan" value="${x}" ${skp.keputusan === x ? 'checked' : ''}> ${x}</label>`).join('')}</div>
+      <label class="label" for="nilai-kasus">Nilai studi kasus versimu (1–5)</label><input type="text" id="nilai-kasus" inputmode="decimal" value="${esc(skp.kasus ?? '')}" style="max-width:120px">
+      <label class="label" for="catatan">Catatan</label><textarea id="catatan">${esc(skp.catatan || '')}</textarea>
+      <div class="baris"><button class="btn utama" type="submit">Simpan nilai</button><span class="pesan" id="pesan-nilai">${skp.at ? 'Tersimpan ' + tglPendek(skp.at) : ''}</span></div></form>
+    <p class="muted kecil">Waktu: ${URUT.map(b => `${NAMA[b]} ${s.catatan?.[b]?.menit ?? '-'} mnt${s.catatan?.[b]?.terlambat ? ' (lewat waktu)' : ''}${s.catatan?.[b]?.keluar_halaman ? ` · keluar halaman ${s.catatan[b].keluar_halaman}×` : ''}`).join(' · ')}</p>
   </div>`;
-  document.getElementById('detail').scrollIntoView({behavior:'smooth'});
+  document.getElementById('form-nilai').onsubmit = async ev => {
+    ev.preventDefault();
+    const p = document.getElementById('pesan-nilai');
+    const keputusan = (document.querySelector('input[name=keputusan]:checked') || {}).value || '';
+    try { await panggil({ aksi:'nilai', id:d.id, keputusan, kasus: document.getElementById('nilai-kasus').value.replace(',', '.'), catatan: document.getElementById('catatan').value }); p.textContent = 'Tersimpan'; d.skor.skp = { keputusan }; }
+    catch (e) { p.textContent = 'Gagal menyimpan.'; }
+  };
+  el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 /* ---------------- mengerjakan ---------------- */
-let timer = 0, simpanTimer = 0, akhir = 0, bagianKini = null, jawaban = {}, keluar = 0, terkirim = false;
+let timer = 0, simpanTimer = 0, akhir = 0, total = 0, bagianKini = null, jawaban = {}, keluar = 0, terkirim = false;
 function stopTimer(){ clearInterval(timer); clearInterval(simpanTimer); timer = simpanTimer = 0; }
 document.addEventListener('visibilitychange', () => { if (document.hidden && bagianKini) keluar++; });
 
 async function mulai(bagian){
   let d;
   try { d = await panggil({ aksi:'mulai', bagian }); }
-  catch (e) { alert('Gagal memulai: ' + e.message); return beranda(); }
+  catch (e) { alert('Gagal memulai. Coba lagi.'); return muat(); }
   bagianKini = bagian; jawaban = d.draf || {}; keluar = 0; terkirim = false;
-  akhir = Date.now() + d.sisa * 1000;
-  let isi = '';
-  if (bagian === 'gaya') isi = d.soal.map((b, i) => `<div class="panel blok"><p class="muted kecil">Kelompok ${i+1} dari ${d.soal.length}</p>
+  total = d.waktu; akhir = Date.now() + d.sisa * 1000;
+  document.getElementById('submenu').classList.add('hidden');
+  let h = '';
+  if (bagian === 'gaya') h = d.soal.map((b, i) => `<div class="panel blok"><p class="muted kecil">Kelompok ${i+1} dari ${d.soal.length}</p>
       <div class="opsi-gaya"><span></span><span class="h">Paling saya</span><span class="h">Paling bukan</span>
-      ${b.opsi.map(o => `<span>${esc(o.teks)}</span><input type="radio" name="p_${b.id}" value="${o.id}" aria-label="Paling saya: ${esc(o.teks)}" ${jawaban[b.id]?.paling === o.id ? 'checked' : ''}><input type="radio" name="b_${b.id}" value="${o.id}" aria-label="Paling bukan saya: ${esc(o.teks)}" ${jawaban[b.id]?.bukan === o.id ? 'checked' : ''}>`).join('')}
+      ${b.opsi.map(o => `<span class="teks">${esc(o.teks)}</span><input type="radio" name="p_${b.id}" value="${o.id}" aria-label="Paling saya: ${esc(o.teks)}" ${jawaban[b.id]?.paling === o.id ? 'checked' : ''}><input type="radio" name="b_${b.id}" value="${o.id}" aria-label="Paling bukan saya: ${esc(o.teks)}" ${jawaban[b.id]?.bukan === o.id ? 'checked' : ''}>`).join('')}
       </div></div>`).join('');
-  if (bagian === 'logika') isi = `<div class="panel nav-soal" id="nav">${d.soal.map((s, i) => `<button type="button" data-ke="${i}">${i+1}</button>`).join('')}</div>`
-    + d.soal.map((s, i) => `<div class="panel blok soal ${i ? 'hidden' : ''}" data-no="${i}"><p class="muted kecil">Soal ${i+1} dari ${d.soal.length}</p>${s.stem ? `<div class="stem">${esc(s.stem)}</div>` : ''}<p style="margin-top:8px">${esc(s.tanya)}</p>
+  if (bagian === 'logika') h = `<div class="panel nav-soal" id="nav">${d.soal.map((s, i) => `<button type="button" data-ke="${i}" aria-label="Soal ${i+1}">${i+1}</button>`).join('')}</div>`
+    + d.soal.map((s, i) => `<div class="panel blok soal ${i ? 'hidden' : ''}" data-no="${i}"><p class="muted kecil">Soal ${i+1} dari ${d.soal.length}</p>${s.stem ? `<div class="stem">${esc(s.stem)}</div>` : ''}<p class="tanya">${esc(s.tanya)}</p>
       <div class="soal-opsi">${s.opsi.map(o => `<label><input type="radio" name="${s.id}" value="${o.id}" ${jawaban[s.id] === o.id ? 'checked' : ''}><span>${esc(o.teks)}</span></label>`).join('')}</div>
-      <div class="baris antara" style="margin-top:10px"><button class="btn" type="button" data-geser="-1" ${i ? '' : 'disabled'}>Sebelumnya</button><button class="btn" type="button" data-geser="1" ${i < d.soal.length - 1 ? '' : 'disabled'}>Berikutnya</button></div></div>`).join('');
-  if (bagian === 'kasus') isi = d.soal.map(k => `<div class="panel blok"><h2>${esc(k.judul)}</h2><p class="kasus-teks">${esc(k.teks)}</p>
+      <div class="baris antara"><button class="btn" type="button" data-geser="-1" ${i ? '' : 'disabled'}>Sebelumnya</button><button class="btn" type="button" data-geser="1" ${i < d.soal.length - 1 ? '' : 'disabled'}>Berikutnya</button></div></div>`).join('');
+  if (bagian === 'kasus') h = d.soal.map((k, i) => `<div class="panel blok"><p class="muted kecil">Kasus ${i+1} dari ${d.soal.length}</p><h2>${esc(k.judul)}</h2><p class="kasus-teks">${esc(k.teks)}</p>
       <textarea class="panjang" name="${k.id}" placeholder="Tulis poin-poin jawabanmu…">${esc(jawaban[k.id] || '')}</textarea><p class="muted kecil" data-hitung="${k.id}"></p></div>`).join('');
-  akar.innerHTML = `<div class="panel timer" id="timer"><div><p class="muted kecil">${esc(d.judul)}</p><p class="kecil">${esc(d.petunjuk)}</p></div><b id="sisa">--:--</b></div>
-    <form class="bagian" id="form-tes">${isi}<div class="baris antara"><span class="pesan" id="pesan-tes"></span><button class="btn utama" type="submit">Kirim ${NAMA[bagian]}</button></div></form>`;
+  isi.innerHTML = `<div class="panel timer" id="timer"><div class="baris antara"><div><p class="muted kecil">${esc(d.judul)}</p><p class="kecil">Sisa waktu</p></div><b id="sisa">--:--</b></div><div class="bar"><i id="bar-waktu" style="width:100%"></i></div></div>
+    <p class="petunjuk">${esc(d.petunjuk)}</p>
+    <form class="blok" id="form-tes" style="margin-top:12px">${h}<div class="baris antara"><span class="pesan" id="pesan-tes"></span><button class="btn utama" type="submit">Kirim ${NAMA[bagian]}</button></div></form>`;
   pasangInput(bagian, d.soal.length);
-  timer = setInterval(detik, 500); detik();
+  timer = setInterval(detik, 250); detik();
   simpanTimer = setInterval(() => kirim(false), 20000);
+  window.scrollTo(0, 0);
 }
 
 function pasangInput(bagian, n){
@@ -163,7 +240,7 @@ function pasangInput(bagian, n){
   f.addEventListener('change', ev => {
     const t = ev.target;
     if (bagian === 'gaya'){
-      const [jenis, id] = [t.name.slice(0,1), t.name.slice(2)];
+      const jenis = t.name.slice(0,1), id = t.name.slice(2);
       jawaban[id] = jawaban[id] || {};
       if (jenis === 'p') jawaban[id].paling = t.value; else jawaban[id].bukan = t.value;
       if (jawaban[id].paling && jawaban[id].paling === jawaban[id].bukan){ // satu pernyataan tidak boleh dua-duanya
@@ -190,16 +267,16 @@ function pasangInput(bagian, n){
 }
 function tandaiNav(kini){
   document.querySelectorAll('#nav [data-ke]').forEach((b, i) => {
-    const id = 'l' + (i + 1);
-    b.classList.toggle('isi', !!jawaban[id]);
+    b.classList.toggle('isi', !!jawaban['l' + (i + 1)]);
     if (kini !== undefined) b.classList.toggle('kini', i === kini);
   });
 }
 
 function detik(){
-  const s = Math.max(0, Math.round((akhir - Date.now()) / 1000));
+  const s = Math.max(0, Math.ceil((akhir - Date.now()) / 1000));
   const el = document.getElementById('sisa'); if (!el) return;
   el.textContent = mmss(s);
+  document.getElementById('bar-waktu').style.width = Math.max(0, 100 * s / total) + '%';
   document.getElementById('timer').classList.toggle('mepet', s <= 60);
   if (s <= 0) selesai(true);
 }
@@ -218,13 +295,15 @@ async function selesai(habis){
   terkirim = true; stopTimer();
   const p = document.getElementById('pesan-tes'); if (p) p.textContent = habis ? 'Waktu habis, jawaban dikirim…' : 'Mengirim…';
   for (let i = 0; i < 3; i++) {
-    try { await kirim(true); bagianKini = null; return beranda(); }
-    catch (e) { if (e.message === 'SUDAH_SELESAI') { bagianKini = null; return beranda(); } await new Promise(r => setTimeout(r, 1500)); }
+    try { await kirim(true); break; }
+    catch (e) { if (e.message === 'SUDAH_SELESAI') break; if (i === 2) { terkirim = false; if (p) p.textContent = 'Gagal mengirim. Cek internet lalu tekan Kirim lagi.'; return; } await new Promise(r => setTimeout(r, 1500)); }
   }
-  terkirim = false; if (p) p.textContent = 'Gagal mengirim. Cek internet lalu tekan Kirim lagi.';
+  bagianKini = null;
+  document.getElementById('submenu').classList.remove('hidden');
+  await muat(); pilih('kerjakan');
 }
 
-beranda();
+muat(true);
 </script>
 </body>
 </html>
