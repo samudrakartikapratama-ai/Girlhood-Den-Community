@@ -82,7 +82,13 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .orb-tombol:active{transform:scale(.97)}
 .orb-tombol .orb{--s:min(250px,60vw)}
 .ruang-suara{display:grid;justify-items:center;gap:14px;width:100%;max-width:880px;text-align:center}
-.kata-aura{margin:0;max-width:26em;font:400 clamp(22px,3vw,32px)/1.4 var(--font);letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 22px rgba(0,0,0,.9);min-height:2.8em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.kata-aura{margin:0;max-width:30em;max-height:min(42dvh,440px);overflow-y:auto;scrollbar-width:none;font:400 clamp(20px,2.4vw,27px)/1.5 var(--font);letter-spacing:-.01em;text-wrap:pretty;text-shadow:0 2px 22px rgba(0,0,0,.9);min-height:1.5em;padding:0 4px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+.kata-aura::-webkit-scrollbar{display:none}
+.kata-aura span{transition:color 300ms var(--ease),opacity 300ms var(--ease)}
+.kata-aura.dibaca span{opacity:.4}
+.kata-aura.dibaca span.lewat{opacity:.75}
+.kata-aura.dibaca span.kini{opacity:1}
 .kata-saya{margin:0;max-width:34em;color:var(--corona);opacity:.9;font-size:clamp(16px,1.8vw,19px);line-height:1.45;min-height:1.45em;text-shadow:0 1px 12px rgba(0,0,0,.8);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .status-suara{margin:4px 0 0;color:var(--ash);font-size:12.5px;letter-spacing:.02em}
 .orb-tombol .orb{transition:filter 700ms var(--ease),transform 700ms var(--ease)}
@@ -191,11 +197,11 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
-<script src="assets/aura/orb.js?v=202611191113"></script>
-<script src="assets/aura/scene.js?v=202611191113"></script>
-<script src="assets/aura/intro-suara.js?v=202611191113"></script>
-<script src="assets/aura/chat.js?v=202611191113"></script>
-<script src="assets/aura/telinga.js?v=202611191113"></script>
+<script src="assets/aura/orb.js?v=202611191123"></script>
+<script src="assets/aura/scene.js?v=202611191123"></script>
+<script src="assets/aura/intro-suara.js?v=202611191123"></script>
+<script src="assets/aura/chat.js?v=202611191123"></script>
+<script src="assets/aura/telinga.js?v=202611191123"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -268,7 +274,7 @@ $('btn-daftar').onclick = async () => {
 function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
-  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191113';
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191123';
   if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : 0);
   try { localStorage.setItem('aura-menu', m); } catch (e) {}
 }
@@ -306,7 +312,7 @@ async function mulai(dariTombol){
 let indraMenyala = false;
 async function nyalakanIndra(){
   if (indraMenyala) return; indraMenyala = true;
-  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191113'); } catch (e) { return; }
+  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191123'); } catch (e) { return; }
   modul.sapaKamera(() => Aura.melihatmu());
 }
 

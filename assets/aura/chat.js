@@ -42,7 +42,11 @@
     document.body.dataset.aura = k;
     if (window.orbEnergi) orbEnergi(k === 'pikir' ? 1 : k === 'bicara' ? 0.8 : k === 'dengar' ? 0.5 : 0);
   }
-  function teksAura(t) { $('kata-aura').textContent = t || ''; }
+  function teksAura(t) { const b = $('kata-aura'); b.classList.remove('dibaca'); b.textContent = t || ''; }
+  function tampilJawaban(daftar) {
+    const box = $('kata-aura'); box.textContent = ''; box.classList.add('dibaca');
+    return daftar.map(k => { const sp = document.createElement('span'); sp.textContent = k + ' '; box.appendChild(sp); return sp; });
+  }
   function teksSaya(t) { $('kata-saya').textContent = t || ''; }
 
   function setMode(m) {
@@ -81,7 +85,7 @@
   }
   if (window.speechSynthesis) { pilihSuara(); speechSynthesis.onvoiceschanged = pilihSuara; }
   const bolehBicara = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
-  const kalimat = t => (t.replace(/[*_#|>`]/g, '').replace(/\s*\n+\s*/g, ' ').match(/[^.!?]+[.!?]*/g) || []).map(s => s.trim()).filter(Boolean);
+  const kalimat = t => (t.replace(/[*_#|>`]/g, '').replace(/\s*\n+\s*/g, ' ').match(/(?:[^.!?]|[.,](?=\d))+[.!?]*/g) || []).map(s => s.trim()).filter(Boolean);
   let antrian = [], tertunda = null, giliran = 0;
 
   // ucap(teks, sesudah): tampilkan & bacakan kalimat demi kalimat; sesudah() dipanggil setelah selesai.
@@ -98,11 +102,15 @@
     A.telinga && A.telinga('jeda');
     setKeadaan('bicara');
     const id = giliran;
+    const bagian = tampilJawaban(antrian);
+    let ke = -1;
     const berikut = () => {
       if (id !== giliran || keadaan !== 'bicara') return;
       const s = antrian.shift();
-      if (!s) { sesudah && sesudah(); return; }
-      teksAura(s);
+      if (bagian[ke]) bagian[ke].classList.replace('kini', 'lewat');
+      if (!s) { $('kata-aura').classList.remove('dibaca'); sesudah && sesudah(); return; }
+      ke++;
+      if (bagian[ke]) { bagian[ke].classList.add('kini'); bagian[ke].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
       const u = new SpeechSynthesisUtterance(s);
       u.lang = 'id-ID'; if (suaraPilihan) u.voice = suaraPilihan;
       u.rate = suaraPilihan && /google|natural|online/i.test(suaraPilihan.name) ? 1.08 : 1.15;
@@ -113,7 +121,7 @@
     berikut();
   }
   A.ucap = ucap;
-  A.diam = () => { giliran++; antrian = []; if (window.speechSynthesis) speechSynthesis.cancel(); };
+  A.diam = () => { giliran++; antrian = []; $('kata-aura').classList.remove('dibaca'); if (window.speechSynthesis) speechSynthesis.cancel(); };
 
   // ---------- percakapan ----------
   async function kirim(teks, lewatSuara) {

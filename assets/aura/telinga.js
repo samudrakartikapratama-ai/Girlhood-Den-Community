@@ -8,10 +8,10 @@
   let mode = 'mati'; // mati | tidur | dengar | jeda
   let latar = 0.008;
   // tepuk
-  let tepukLalu = 0, jedaTepuk = 0, puncakDi = 0, dalamTepuk = false;
+  let tepukLalu = 0, jedaTepuk = 0, puncakDi = 0, dalamTepuk = false, jejak = [];
   // ucapan
   let rekam = null, potong = [], bicaraMulai = 0, terakhirBicara = 0, adaBicara = false, mulaiDengar = 0;
-  const DIAM_SELESAI = 900, MAKS_UCAPAN = 30000, TANPA_UCAPAN = 8000;
+  const DIAM_SELESAI = 1200, MAKS_UCAPAN = 30000, TANPA_UCAPAN = 8000;
 
   function bunyiTing() {
     try {
@@ -47,11 +47,15 @@
     const rms = Math.sqrt(jumlah / buf.length), now = performance.now();
 
     if (mode === 'tidur') {
-      // tepuk = lonjakan tajam jauh di atas suara latar, lalu cepat hilang
-      if (!dalamTepuk && puncak > 0.3 && rms > latar * 6) { dalamTepuk = true; puncakDi = now; }
-      else if (dalamTepuk && now - puncakDi > 60) {
+      // tepuk = hening -> bunyi tajam jauh di atas suara latar -> hening lagi dalam ~70 ms.
+      // (bicara & musik tidak hening sebelum/sesudahnya; ketikan keyboard terlalu lemah)
+      jejak.push({ t: now, rms }); while (jejak.length && now - jejak[0].t > 300) jejak.shift();
+      const tenang = Math.max(latar * 2.2, 0.02);
+      const sebelum = jejak.reduce((m, r) => (now - r.t > 30 && now - r.t < 160 ? Math.max(m, r.rms) : m), 0);
+      if (!dalamTepuk && puncak > 0.2 && rms > latar * 4.5 && sebelum < tenang) { dalamTepuk = true; puncakDi = now; }
+      else if (dalamTepuk && now - puncakDi > 70) {
         dalamTepuk = false;
-        const singkat = rms < latar * 3 || rms < 0.03;
+        const singkat = rms < tenang;
         if (singkat && now > jedaTepuk) {
           const selang = now - tepukLalu;
           if (selang > 150 && selang < 750) { tepukLalu = 0; jedaTepuk = now + 2500; bunyiTing(); A.bangun && A.bangun('tepuk'); }
@@ -63,8 +67,8 @@
     }
 
     if (mode === 'dengar' && rekam) {
-      const ambang = Math.max(0.018, latar * 3.2);
-      if (rms > ambang) { if (!bicaraMulai) bicaraMulai = now; if (now - bicaraMulai > 120) { adaBicara = true; A.saatSuara && A.saatSuara(true); } terakhirBicara = now; }
+      const ambang = Math.max(0.012, latar * 2.6);
+      if (rms > ambang) { if (!bicaraMulai) bicaraMulai = now; if (now - bicaraMulai > 100) { adaBicara = true; A.saatSuara && A.saatSuara(true); } terakhirBicara = now; }
       else { bicaraMulai = 0; if (!adaBicara) latar = latar * 0.98 + rms * 0.02; }
       const selesai = adaBicara && now - terakhirBicara > DIAM_SELESAI;
       const kepanjangan = adaBicara && now - mulaiDengar > MAKS_UCAPAN;

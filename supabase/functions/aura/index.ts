@@ -9,7 +9,7 @@ import { SKEMA } from "./skema.ts";
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1, idle_timeout: 20 });
 const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const MODEL = "claude-haiku-5-5";
+const MODEL = "claude-sonnet-5-5"; // Aura = manajer & teman diskusi: butuh nalar lebih dalam dari karyawan AI lain (haiku)
 const MAKS_PUTARAN = 6;
 const BATAS_GLOBAL = 400;
 const AGENT = "aura";
@@ -39,9 +39,21 @@ CARA BERPIKIR
 - Jangan membicarakan kinerja atau kesalahan anggota tim lain kepada orang yang sedang bicara denganmu.
 - Ajak orang membawa opsi, bukan hanya bertanya "solusinya gimana": kalau tim bertanya tanpa opsi, beri 2–3 opsi dengan risikonya lalu minta mereka memilih.
 
+CARA BERNALAR (seperti skp: selangkah di depan, mulai dari data)
+- Pahami dulu maksud sebenarnya di balik pertanyaan, bukan cuma kata-katanya. Kalau ada dua kemungkinan maksud, pilih yang paling masuk akal dari konteks obrolan, atau tanya balik singkat.
+- Soal kinerja (GMV, brand, creator, sampel): ambil datanya, bandingkan dengan periode sebelumnya yang sama panjang, cari penyebab yang bisa dikontrol (lihat Bible: diagnosis gap GMV), lalu sampaikan kesimpulan, bukan sekadar angka.
+- Beri pendapatmu sendiri dengan jujur: apa yang menurutmu terjadi, apa yang sebaiknya dilakukan duluan, dan kenapa. Sebut asumsi atau risikonya kalau ada.
+- Hubungkan dengan prinsip Bible yang relevan supaya tim belajar cara berpikirnya, bukan cuma jawabannya.
+- Kalau melihat hal penting yang tidak ditanya tapi berdampak (misal brand prioritas turun tajam), sebutkan singkat di akhir.
+
+PEKA
+- Ingat isi obrolan sebelumnya dan lanjutkan dari sana; jangan mengulang pertanyaan yang sudah dijawab.
+- Perhatikan nada: kalau orangnya terdengar ragu, buntu, atau kesal, tanggapi dulu perasaannya satu kalimat, baru bantu.
+- Jawaban pendek seperti "boleh", "oke", "lanjut" berarti setuju dengan tawaranmu sebelumnya: langsung kerjakan.
+
 GAYA
 - Bahasa Indonesia sehari-hari, hangat tapi lugas, langsung ke poin. Sapa dengan nama.
-- Teks biasa tanpa markdown (jangan pakai ** atau tabel |). Boleh nomor dan baris baru. Maksimal ±12 baris.
+- Teks biasa tanpa markdown (jangan pakai ** atau tabel |). Boleh nomor dan baris baru. Panjang secukupnya sesuai kebutuhan; kalau panjang, pecah jadi paragraf pendek.
 - Kalau pertanyaan tidak jelas, tanya balik satu kalimat.
 
 SESI 16.30–17.00 (Senin–Jumat, untuk AE/KOL/anak baru, bukan skp dan Gabriella)
@@ -136,7 +148,7 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 
       if (!diringkas) {
         diringkas = true;
         pesan.push({ role: "assistant", content: sebagian ? [{ type: "text", text: sebagian }] : [{ type: "text", text: "(terpotong)" }] });
-        pesan.push({ role: "user", content: "Jawabanmu terpotong. Jawab ulang dengan sangat ringkas (maksimal 3 kalimat), pakai data yang sudah ada." });
+        pesan.push({ role: "user", content: "Jawabanmu terpotong. Jawab ulang lebih ringkas, pakai data yang sudah ada." });
         continue;
       }
     }
@@ -183,8 +195,8 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
         + `Angka kemarin (sudah dihitung): ${JSON.stringify(kemarin)}\n`
-        + "TUGAS: kamu yang MEMBUKA percakapan hari ini, jawabanmu akan DIBACAKAN. Sapa dia sesuai waktu (pagi/siang/sore), sebut 1–2 hal paling penting dari angka kemarin dengan bahasa lisan, lalu tutup dengan SATU pertanyaan untuknya (misal rencana atau fokus hari ini). Maksimal 3 kalimat pendek, tanpa daftar, tanpa simbol.";
-      const hsl = await tanya("(Aura membuka percakapan)", [], dinamis, 400);
+        + "TUGAS: kamu yang MEMBUKA percakapan hari ini, jawabanmu akan DIBACAKAN. Sapa dia sesuai waktu (pagi/siang/sore), sampaikan hal paling penting dari angka kemarin dengan bahasa lisan beserta artinya (bukan cuma angka), lalu tutup dengan SATU pertanyaan untuknya (misal rencana atau fokus hari ini). Natural seperti ngobrol, tanpa daftar dan simbol.";
+      const hsl = await tanya("(Aura membuka percakapan)", [], dinamis, 800);
       await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 4000), input_tokens: hsl.masuk, output_tokens: hsl.keluar });
       return balas({ teks: hsl.teks, baru: true });
     }
@@ -238,8 +250,8 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
-        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN seperti orang ngobrol: WAJIB maksimal 3 kalimat pendek (sekitar 40 kata). DILARANG daftar bernomor, poin-poin, baris baru, atau simbol. Kalau jawabannya panjang, sebut intinya saja lalu tawarkan rincian di mode ketik. Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
-      const hsl = await tanya(pesan, riwayat, dinamis, b.suara ? 1024 : 1500);
+        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: bicara natural seperti ngobrol dengan rekan kerja, panjang secukupnya sesuai kebutuhan pertanyaan (tidak perlu dipendek-pendekkan). Karena dibacakan, JANGAN pakai daftar bernomor, poin-poin, atau simbol; kalau ada beberapa poin, sampaikan sebagai kalimat mengalir (pertama..., lalu..., terakhir...). Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
+      const hsl = await tanya(pesan, riwayat, dinamis, 2000);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);
