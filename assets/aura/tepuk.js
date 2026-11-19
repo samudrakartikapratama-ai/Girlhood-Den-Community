@@ -1,5 +1,5 @@
 // Tepuk tangan 2x untuk memanggil Aura. Suara dianalisis di perangkat ini saja, tidak direkam atau dikirim.
-// Aura.tepukNyala(true/false). Saat terdeteksi: bunyi "ting" kecil lalu Aura.dengar().
+// Aura.tepukNyala(true/false). Saat terdeteksi: bunyi "ting" kecil lalu Aura.panggil() (sama seperti mengetuk orb).
 (function () {
   const A = window.Aura = window.Aura || {};
   let stream = null, ac = null, analis = null, buf = null, loop = 0;
@@ -28,7 +28,7 @@
       const singkat = rms < latar * 3 || rms < 0.03; // sudah turun lagi = bunyi pendek (bukan musik/bicara keras)
       if (singkat && now > jedaSampai) {
         const selang = now - tepukLalu;
-        if (selang > 150 && selang < 750) { tepukLalu = 0; jedaSampai = now + 2500; ting(); setTimeout(() => A.dengar && A.dengar(), 250); }
+        if (selang > 150 && selang < 750) { tepukLalu = 0; jedaSampai = now + 2500; ting(); setTimeout(() => A.panggil && A.panggil(), 250); }
         else tepukLalu = now;
       }
     }
@@ -39,7 +39,7 @@
     if (!ya) {
       cancelAnimationFrame(loop); loop = 0;
       if (stream) stream.getTracks().forEach(t => t.stop());
-      stream = null; analis = null;
+      stream = null; analis = null; A.tepukAktif = false;
       return true;
     }
     if (stream) return true;
@@ -51,7 +51,7 @@
     const src = ac.createMediaStreamSource(stream);
     analis = ac.createAnalyser(); analis.fftSize = 1024; buf = new Float32Array(analis.fftSize);
     src.connect(analis);
-    periksa();
+    periksa(); A.tepukAktif = true;
     return true;
   };
   // jangan dengar tepuk saat Aura sedang mendengarkan ucapan

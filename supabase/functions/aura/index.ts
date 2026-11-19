@@ -1,5 +1,5 @@
 // Aura: asisten internal Girlhood Den (dulu Jarvis; menggantikan Gantara).
-// Aksi: riwayat, chat. Login wajib (staff internal aktif). Kuota bersama Kantor AI (50/hari),
+// Aksi: riwayat, sapa, chat. Login wajib (staff internal aktif). Kuota bersama Kantor AI (50/hari),
 // tim hanya sampai 17.00 WIB (CEO/COO bebas). Data dibaca lewat peran baca-saja dalam transaksi READ ONLY.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -158,6 +158,22 @@ Deno.serve(async (req) => {
       return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran });
     }
 
+    // Aura membuka percakapan: sekali sehari dibuat dari data (disimpan), sesudahnya sapaan singkat tanpa AI.
+    if (b.aksi === "sapa") {
+      if (jam.tutup) return balas({ teks: `Hai ${staff.nama}. Aku sudah istirahat sejak jam 17.00. Sampai besok pagi ya.`, tutup: true });
+      const { count: sudah } = await db.from("kantor_chat").select("id", { count: "exact", head: true })
+        .eq("staff_id", staff.id).eq("agent", AGENT).gte("created_at", awalHariIso());
+      if ((sudah || 0) > 0) return balas({ teks: `Hai lagi, ${staff.nama}. Mau lanjut bahas apa?`, baru: false });
+      const { data: kemarin } = await db.rpc("kantor_sapa_data");
+      const w = sekarangWib();
+      const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
+        + `Angka kemarin (sudah dihitung): ${JSON.stringify(kemarin)}\n`
+        + "TUGAS: kamu yang MEMBUKA percakapan hari ini, jawabanmu akan DIBACAKAN. Sapa dia sesuai waktu (pagi/siang/sore), sebut 1–2 hal paling penting dari angka kemarin dengan bahasa lisan, lalu tutup dengan SATU pertanyaan untuknya (misal rencana atau fokus hari ini). Maksimal 3 kalimat pendek, tanpa daftar, tanpa simbol.";
+      const hsl = await tanya("(Aura membuka percakapan)", [], dinamis);
+      await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 4000), input_tokens: hsl.masuk, output_tokens: hsl.keluar });
+      return balas({ teks: hsl.teks, baru: true });
+    }
+
     if (b.aksi === "chat") {
       const pesan = String(b.pesan || "").trim().slice(0, 2000);
       if (!pesan) return balas({ galat: "KOSONG" }, 400);
@@ -173,7 +189,7 @@ Deno.serve(async (req) => {
       const riwayat: { role: string; content: string }[] = [];
       for (const r of (lalu || []).reverse()) {
         const role = r.peran === "assistant" ? "assistant" : "user";
-        if (!riwayat.length && role !== "user") continue;
+        if (!riwayat.length && role !== "user") riwayat.push({ role: "user", content: "(Aura membuka percakapan)" });
         if (riwayat.length && riwayat[riwayat.length - 1].role === role) riwayat[riwayat.length - 1].content += "\n" + r.isi;
         else riwayat.push({ role, content: r.isi });
       }
@@ -186,7 +202,7 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
-        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: jawab maksimal 3 kalimat pendek, tanpa daftar bernomor, tanpa simbol, angka rupiah ditulis seperti diucapkan (misal 2,5 miliar)." : "");
+        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: jawab maksimal 3 kalimat pendek, tanpa daftar bernomor, tanpa simbol, angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar (misal \"bagi\" maksudnya \"pagi\"): tafsirkan maksud yang paling masuk akal, jangan mempersoalkan salah ketiknya. Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
       const hsl = await tanya(pesan, riwayat, dinamis);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();

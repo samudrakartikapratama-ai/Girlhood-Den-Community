@@ -77,6 +77,18 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .utama h2{font:300 clamp(30px,5.4vw,46px)/1.08 var(--font);font-variation-settings:"wdth" 122;letter-spacing:.01em;margin:clamp(8px,3dvh,28px) 0 0;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.7)}
 .tgl{margin:0 0 10px;color:var(--corona);opacity:.8;font-variation-settings:"wdth" 115;letter-spacing:.05em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
 .panel{background:var(--kaca);border:1px solid var(--garis);border-radius:20px;padding:16px 18px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.ruang-ketik{display:grid;gap:12px;width:100%}
+.orb-tombol{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease)}
+.orb-tombol:active{transform:scale(.97)}
+.orb-tombol .orb{--s:min(250px,60vw)}
+.ruang-suara{display:grid;justify-items:center;gap:10px;width:100%;max-width:640px;text-align:center}
+.kata-aura{margin:0;font:300 clamp(20px,3.4vw,28px)/1.35 var(--font);font-variation-settings:"wdth" 110;text-wrap:balance;text-shadow:0 2px 20px rgba(0,0,0,.75);min-height:1.35em}
+.kata-saya{margin:0;color:var(--corona);font-size:16px;min-height:1.5em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
+.status-suara{margin:6px 0 0;color:var(--ash);font-size:13px;letter-spacing:.03em}
+.ke-ketik{min-height:36px;font-size:13px;padding:0 14px;margin-top:6px}
+body.mode-suara .bar,body.mode-suara .tabs,body.mode-suara #salam,body.mode-suara #tanggal,body.mode-suara .setelan,body.mode-suara .menu{display:none!important}
+body.mode-suara .utama{min-height:calc(100dvh - 40px);align-content:center;padding-top:0;gap:22px}
+body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .percakapan{display:grid;gap:10px;max-height:min(46dvh,420px);overflow-y:auto;scroll-behavior:smooth}
 .msg{white-space:pre-wrap;overflow-wrap:anywhere;max-width:88%;line-height:1.5}
 .msg.aura{justify-self:start;color:var(--ink)}
@@ -150,16 +162,24 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
   </nav>
 
   <main id="m-beranda" class="menu-isi utama">
-    <canvas class="orb" data-orb data-matahari style="--s:min(250px,60vw)" aria-hidden="true"></canvas>
+    <button class="orb-tombol" id="orb-tombol" type="button" aria-label="Bicara dengan Aura"><canvas class="orb" data-orb data-matahari aria-hidden="true"></canvas></button>
     <h2 id="salam"></h2>
     <p id="tanggal" class="tgl"></p>
-    <div class="panel percakapan hidden" id="percakapan" aria-live="polite"></div>
+    <div class="ruang-suara hidden" id="ruang-suara">
+      <p class="kata-aura" id="kata-aura" aria-live="polite"></p>
+      <p class="kata-saya" id="kata-saya" aria-live="polite"></p>
+      <p class="status-suara" id="status-suara"></p>
+      <button class="btn ke-ketik" id="ke-ketik" type="button">Ketik saja</button>
+    </div>
+    <div class="ruang-ketik" id="ruang-ketik">
+    <div class="panel percakapan hidden" id="percakapan"></div>
     <form class="chat" id="form-chat">
       <button class="btn ikon mic" id="btn-mic" type="button" aria-label="Bicara dengan Aura"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <input id="chat-isi" placeholder="Tanya Aura…" autocomplete="off" aria-label="Tulis pesan untuk Aura">
       <button class="btn primary" type="submit" id="btn-kirim">Kirim</button>
     </form>
     <p class="info-chat" id="info-chat"></p>
+    </div>
     <details class="panel setelan">
       <summary>Tepuk tangan &amp; kamera</summary>
       <label><input type="checkbox" id="set-tepuk"> <span><b>Tepuk tangan 2× untuk memanggil Aura</b>Mikrofon mendengar tepukan selama halaman ini terbuka.</span></label>
@@ -288,7 +308,7 @@ async function mulai(dariTombol){
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
-  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama });
+  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama, tundaSapa: setelan('kamera') });
   pasangSetelan(data.nama, dariTombol);
 }
 
@@ -311,16 +331,15 @@ function pasangSetelan(nama, dariTombol){
 }
 async function sapaKamera(nama, paksa){
   const hariIni = new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
-  try { if (!paksa && localStorage.getItem('aura-sapa-kamera') === hariIni) return; } catch (e) {}
-  let modul; try { modul = await import('./assets/aura/kamera.js'); } catch (e) { return; }
+  try { if (!paksa && localStorage.getItem('aura-sapa-kamera') === hariIni) { Aura.sapa(); return; } } catch (e) {}
+  let modul; try { modul = await import('./assets/aura/kamera.js'); } catch (e) { if (!paksa) Aura.sapa(); return; }
   const hasil = await modul.sapaKamera(() => {
     try { localStorage.setItem('aura-sapa-kamera', hariIni); } catch (e) {}
-    const teks = $('salam').textContent + '. Aku Aura. Mau mulai dari mana hari ini?';
-    Aura.tambahPesan('aura', teks);
-    Aura.ucap(teks);
     if (window.adeganMulai) adeganMulai();
+    Aura.setMode('suara'); Aura.sapa();
   });
   if (hasil === 'izin'){ $('set-kamera').checked = false; simpanSetelan('kamera', false); $('info-chat').textContent = 'Izinkan kamera di browser supaya Aura bisa menyapa.'; }
+  if (hasil !== 'ok' && !paksa) Aura.sapa(); // kamera gagal / tidak ada wajah: tetap disapa
 }
 
 (async () => {
