@@ -128,6 +128,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .menu span{grid-column:1;color:var(--ash);font-size:14px}
 .menu i{grid-row:1/3;grid-column:2;font-style:normal;color:var(--horizon);font-size:20px}
 .frame{width:100%;height:calc(100dvh - 120px);min-height:620px;border:0;border-radius:20px;background:#fff}
+.frame.bening{background:transparent;color-scheme:dark}
 @media (prefers-reduced-motion:reduce){.btn,.tab,.menu>*{transition:none}}
 </style>
 </head>
@@ -159,6 +160,8 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
   </div>
   <nav class="tabs" role="tablist" aria-label="Menu Aura">
     <button class="tab" role="tab" data-m="beranda" aria-selected="true">Beranda</button>
+    <button class="tab" role="tab" data-m="tugas" aria-selected="false">Tugas</button>
+    <button class="tab hidden" role="tab" data-m="tes" aria-selected="false" id="tab-tes">Tes</button>
     <button class="tab" role="tab" data-m="palette" aria-selected="false">Product Palette</button>
   </nav>
 
@@ -192,16 +195,18 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     </nav>
   </main>
   <div class="kamera hidden" id="kamera" aria-label="Kamera aktif"><video muted playsinline></video><span>Kamera aktif</span></div>
+  <main id="m-tugas" class="menu-isi hidden"><iframe class="frame bening" id="f-tugas" title="Tugas hari ini" loading="lazy"></iframe></main>
+  <main id="m-tes" class="menu-isi hidden"><iframe class="frame bening" id="f-tes" title="Tes" loading="lazy"></iframe></main>
   <main id="m-palette" class="menu-isi hidden"><iframe class="frame" id="f-palette" title="Product Palette" loading="lazy"></iframe></main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
-<script src="assets/aura/orb.js?v=202611191138"></script>
-<script src="assets/aura/scene.js?v=202611191138"></script>
-<script src="assets/aura/intro-suara.js?v=202611191138"></script>
-<script src="assets/aura/chat.js?v=202611191138"></script>
-<script src="assets/aura/telinga.js?v=202611191138"></script>
+<script src="assets/aura/orb.js?v=202611191527"></script>
+<script src="assets/aura/scene.js?v=202611191527"></script>
+<script src="assets/aura/intro-suara.js?v=202611191527"></script>
+<script src="assets/aura/chat.js?v=202611191527"></script>
+<script src="assets/aura/telinga.js?v=202611191527"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -274,8 +279,10 @@ $('btn-daftar').onclick = async () => {
 function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
-  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191138';
-  if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : 0);
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191527';
+  if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611191527'; // muat ulang tiap dibuka supaya status terbaru
+  if (m === 'tes' && !$('f-tes').src) $('f-tes').src = 'assets/aura/tes.html?v=202611191527';
+  if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : m === 'beranda' ? 0 : .6);
   try { localStorage.setItem('aura-menu', m); } catch (e) {}
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => bukaMenu(t.dataset.m));
@@ -302,17 +309,30 @@ async function mulai(dariTombol){
   salam(data.nama);
   $('ajak-passkey').classList.toggle('hidden', data.passkey > 0 || !WA || !WA.browserSupportsWebAuthn());
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
-  bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
+  bukaMenu(['beranda','tugas','palette'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
   Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama });
+  cekTes();
   nyalakanIndra();
+}
+
+/* ---------- tab Tes hanya muncul kalau ada tes untukmu (atau kamu pimpinan) ---------- */
+async function cekTes(){
+  try {
+    const { data } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/aura-tes', {method:'POST', headers:{'Content-Type':'application/json', apikey:SUPABASE_ANON_KEY, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify({aksi:'status'})});
+    const j = await r.json();
+    const ada = r.ok && (j.pimpinan || j.sesi);
+    $('tab-tes').classList.toggle('hidden', !ada);
+    if (ada && j.sesi && !j.pimpinan) bukaMenu('tes');
+  } catch (e) {}
 }
 
 /* ---------- kamera: hanya "melihat" saat Aura tidur (sekali tiap membuka Aura) ---------- */
 let indraMenyala = false;
 async function nyalakanIndra(){
   if (indraMenyala) return; indraMenyala = true;
-  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191138'); } catch (e) { return; }
+  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191527'); } catch (e) { return; }
   modul.sapaKamera(() => Aura.melihatmu());
 }
 

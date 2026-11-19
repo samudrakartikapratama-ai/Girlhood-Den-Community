@@ -122,7 +122,47 @@ async function bible(): Promise<string> {
   return (data || []).map((b) => `## ${b.judul}\n${b.isi}`).join("\n\n");
 }
 
-async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 1500): Promise<{ teks: string; masuk: number; keluar: number }> {
+// ---------- Tugas harian & setoran ----------
+const hariIniWib = () => sekarangWib().tanggal;
+async function tugasHari(staffId: string) {
+  const { data } = await db.from("aura_tugas").select("id, urut, judul, detail, data, status, hasil, kendala, opsi, dilapor_at")
+    .eq("staff_id", staffId).eq("tanggal", hariIniWib()).order("urut");
+  return data || [];
+}
+function ringkasItem(x: any) {
+  const n = x.username ? "@" + x.username : x.brand || x.nama || "";
+  const v = Object.entries(x).filter(([k]) => !["username", "brand", "nama", "turun", "naik", "g30"].includes(k)).map(([k, v]) => `${k} ${v}`).join(", ");
+  return n + (v ? ` (${v})` : "");
+}
+function teksTugas(t: any[]) {
+  return t.map((x) => `${x.urut}. ${x.judul} [${x.dilapor_at ? "sudah disetor: " + x.status : "belum disetor"}]` + ((x.data || []).length ? "\n   " + x.data.map(ringkasItem).join("; ") : "")).join("\n");
+}
+async function catatSetoran(staffId: string, p: any): Promise<string> {
+  const urut = Number(p?.urut), status = String(p?.status || "");
+  if (!["selesai", "sebagian", "tidak"].includes(status)) return "GALAT: status harus selesai/sebagian/tidak";
+  if (status !== "selesai" && !String(p?.opsi || "").trim()) return "DITOLAK: tugas belum selesai wajib disertai opsi solusi. Tanyakan opsinya dulu.";
+  const { data, error } = await db.from("aura_tugas").update({
+    status, hasil: String(p?.hasil || "").slice(0, 2000) || null, kendala: String(p?.kendala || "").slice(0, 1000) || null,
+    opsi: String(p?.opsi || "").slice(0, 1000) || null, dilapor_at: new Date().toISOString(),
+  }).eq("staff_id", staffId).eq("tanggal", hariIniWib()).eq("urut", urut).select("id").maybeSingle();
+  if (error || !data) return "GALAT: tugas nomor " + urut + " tidak ada hari ini";
+  return "TERCATAT tugas " + urut;
+}
+const ALAT_SETOR = {
+  name: "catat_setoran",
+  description: "Catat laporan hasil SATU tugas harian orang yang sedang bicara (setoran). Panggil sekali per tugas yang dilaporkan.",
+  input_schema: { type: "object", properties: {
+    urut: { type: "integer", description: "Nomor tugas" },
+    status: { type: "string", enum: ["selesai", "sebagian", "tidak"] },
+    hasil: { type: "string", description: "Apa yang dikerjakan dan hasilnya (angka, nama creator/brand)" },
+    kendala: { type: "string" },
+    opsi: { type: "string", description: "Opsi solusi yang dia usulkan (wajib kalau belum selesai)" },
+  }, required: ["urut", "status", "hasil"] },
+};
+
+type Ekstra = { alat: any[]; jalankan: (nama: string, input: any) => Promise<string> };
+
+async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 1500, ekstra?: Ekstra): Promise<{ teks: string; masuk: number; keluar: number }> {
   const sistem = [
     { type: "text", text: PERSONA },
     { type: "text", text: "BIBLE GIRLHOOD DEN (dari skp)\n\n" + (await bible()) },
@@ -135,7 +175,7 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: maks, system: sistem, tools: [ALAT_DATA], messages: pesan }),
+      body: JSON.stringify({ model: MODEL, max_tokens: maks, system: sistem, tools: [ALAT_DATA, ...(ekstra?.alat || [])], messages: pesan }),
     });
     const j = await r.json();
     if (!r.ok) throw new Error("Claude API " + r.status + ": " + String(j?.error?.message || "").slice(0, 200));
@@ -160,7 +200,7 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 
       return { teks, masuk, keluar };
     }
     const hasil = [];
-    for (const p of panggilan) hasil.push({ type: "tool_result", tool_use_id: p.id, content: p.name === "query_data" ? await ambilData(p.input?.sql) : "alat tidak dikenal" });
+    for (const p of panggilan) hasil.push({ type: "tool_result", tool_use_id: p.id, content: p.name === "query_data" ? await ambilData(p.input?.sql) : ekstra?.alat.some((a) => a.name === p.name) ? await ekstra.jalankan(p.name, p.input) : "alat tidak dikenal" });
     pesan.push({ role: "user", content: hasil });
   }
   return { teks: "Pertanyaannya butuh terlalu banyak langkah. Coba dipersempit, misalnya sebut brand dan periodenya.", masuk, keluar };
@@ -188,6 +228,15 @@ Deno.serve(async (req) => {
     // Aura membuka percakapan: sekali sehari dibuat dari data (disimpan), sesudahnya sapaan singkat tanpa AI.
     if (b.aksi === "sapa") {
       if (jam.tutup) return balas({ teks: `Hai ${staff.nama}. Aku sudah istirahat sejak jam 17.00. Sampai besok pagi ya.`, tutup: true });
+      // Jam setoran (16.00–17.00): Aura langsung minta laporan tugas yang belum disetor
+      const tg = await tugasHari(staff.id);
+      const belum = tg.filter((x: any) => !x.dilapor_at);
+      if (sekarangWib().jam >= 16 && belum.length) {
+        const t = belum[0];
+        const teks = `Hai ${staff.nama}, waktunya setor. Masih ada ${belum.length} dari ${tg.length} tugas hari ini yang belum kamu laporkan. Kita mulai dari tugas nomor ${t.urut}: ${t.judul}. Gimana hasilnya, ada kendala apa, dan kalau belum beres, apa opsi solusimu?`;
+        await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: teks });
+        return balas({ teks, baru: true });
+      }
       const { count: sudah } = await db.from("kantor_chat").select("id", { count: "exact", head: true })
         .eq("staff_id", staff.id).eq("agent", AGENT).gte("created_at", awalHariIso());
       if ((sudah || 0) > 0) return balas({ teks: `Hai lagi, ${staff.nama}. Mau lanjut bahas apa?`, baru: false });
@@ -199,6 +248,25 @@ Deno.serve(async (req) => {
       const hsl = await tanya("(Aura membuka percakapan)", [], dinamis, 800);
       await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 4000), input_tokens: hsl.masuk, output_tokens: hsl.keluar });
       return balas({ teks: hsl.teks, baru: true });
+    }
+
+    // Halaman Tugas: tugas hari ini + KPI; pimpinan melihat semua orang
+    if (b.aksi === "tugas") {
+      const tgl = String(b.tanggal || hariIniWib()).slice(0, 10);
+      const ambil = async (id: string) => (await db.from("aura_tugas").select("id, urut, judul, detail, data, status, hasil, kendala, opsi, dilapor_at").eq("staff_id", id).eq("tanggal", tgl).order("urut")).data || [];
+      const kpi = async (id: string) => (await db.rpc("aura_kpi", { p_staff: id })).data;
+      const out: any = { tanggal: tgl, pimpinan: staff.pimpinan, saya: await ambil(staff.id), kpi: await kpi(staff.id) };
+      if (staff.pimpinan) {
+        const { data: org } = await db.from("aura_staff").select("staff_id, jalur, internal_staff!inner(nama, is_active)").eq("aktif_tugas", true);
+        out.tim = [];
+        for (const o of (org || []) as any[]) if (o.internal_staff?.is_active) out.tim.push({ nama: o.internal_staff.nama, jalur: o.jalur, tugas: await ambil(o.staff_id), kpi: await kpi(o.staff_id) });
+      }
+      return balas(out);
+    }
+    if (b.aksi === "setor") {
+      const r = await catatSetoran(staff.id, b);
+      if (!r.startsWith("TERCATAT")) return balas({ galat: r.startsWith("DITOLAK") ? "BUTUH_OPSI" : "GAGAL", pesan: r }, 400);
+      return balas({ ok: true });
     }
 
     if (b.aksi === "dengar") {
@@ -251,7 +319,13 @@ Deno.serve(async (req) => {
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
         + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: bicara natural seperti ngobrol dengan rekan kerja, panjang secukupnya sesuai kebutuhan pertanyaan (tidak perlu dipendek-pendekkan). Karena dibacakan, JANGAN pakai daftar bernomor, poin-poin, atau simbol; kalau ada beberapa poin, sampaikan sebagai kalimat mengalir (pertama..., lalu..., terakhir...). Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
-      const hsl = await tanya(pesan, riwayat, dinamis, 2000);
+      const tg = await tugasHari(staff.id);
+      const ekstra: Ekstra | undefined = tg.length ? { alat: [ALAT_SETOR], jalankan: (_n, input) => catatSetoran(staff.id, input) } : undefined;
+      const dinamisTugas = tg.length ? `\n\nTUGAS HARIAN ${staff.nama} HARI INI (dari data, dikirim 08.00):\n${teksTugas(tg)}\n`
+        + "SETORAN: kalau dia melaporkan hasil tugas (terutama 16.00–17.00), cocokkan dengan nomor tugasnya lalu panggil catat_setoran sekali per tugas. "
+        + "Tugas yang belum selesai WAJIB disertai opsi solusi: kalau dia belum menyebut opsi, tanyakan dulu \"opsimu apa?\" sebelum mencatat (prinsip Bible: bawahan membawa opsi). "
+        + "Setelah mencatat, sebut singkat apa yang tercatat lalu tanyakan tugas berikutnya yang belum disetor. Kalau semua sudah disetor, beri umpan balik jujur satu-dua kalimat soal kualitas setorannya." : "";
+      const hsl = await tanya(pesan, riwayat, dinamis + dinamisTugas, 2000, ekstra);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);

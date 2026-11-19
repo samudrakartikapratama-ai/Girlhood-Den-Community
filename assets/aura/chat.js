@@ -236,7 +236,8 @@
     if (window.adeganMulai) adeganMulai();
     sesi = true; terakhirSuara = Date.now();
     A.telinga && A.telinga('jeda');
-    if (sudahSapaHariIni) { ucap('Ya, ' + cfg.nama + '?', lanjutDengar); return; }
+    const jamWib = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).format(new Date()));
+    if (sudahSapaHariIni && jamWib < 16) { ucap('Ya, ' + cfg.nama + '?', lanjutDengar); return; } // jam 16–17: server minta setoran
     setKeadaan('pikir');
     try {
       const j = await panggil({ aksi: 'sapa' });

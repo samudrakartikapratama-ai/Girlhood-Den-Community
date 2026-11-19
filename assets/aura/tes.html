@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tes · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=1">
+<style>
+.timer{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.timer b{font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+.timer.mepet b{color:var(--bad)}
+.bagian{display:grid;gap:10px}
+.blok{display:grid;gap:6px}
+.opsi-gaya{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:center}
+.opsi-gaya .h{font-size:12px;color:var(--ash);text-align:center}
+.opsi-gaya input{width:20px;height:20px;accent-color:var(--ember);cursor:pointer;justify-self:center}
+.stem{white-space:pre-line;font-size:14px;color:#e9dcd2;background:rgba(255,255,255,.035);border-radius:12px;padding:10px 12px}
+.soal-opsi{display:grid;gap:6px;margin-top:8px}
+.soal-opsi label{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:12px;border:1px solid var(--garis);cursor:pointer}
+.soal-opsi label:has(input:checked){border-color:var(--ember);background:rgba(255,90,31,.12)}
+.soal-opsi input{accent-color:var(--ember);margin-top:4px}
+.nav-soal{display:flex;flex-wrap:wrap;gap:6px}
+.nav-soal button{width:34px;height:34px;border-radius:10px;border:1px solid var(--garis);background:transparent;cursor:pointer;font-size:13px}
+.nav-soal button.isi{background:rgba(255,90,31,.18);border-color:var(--ember)}
+.nav-soal button.kini{outline:2px solid var(--corona)}
+.kasus-teks{white-space:pre-line}
+textarea.panjang{min-height:220px}
+.hasil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.hasil-grid .panel{padding:12px 14px}
+.besar{font-size:22px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--garis);text-align:left}
+th{color:var(--ash);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap" id="akar"><p class="muted">Memuat…</p></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON);
+const akar = document.getElementById('akar');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NAMA = {gaya:'Gaya kerja', logika:'Logika & angka', kasus:'Studi kasus'};
+const URUT = ['gaya','logika','kasus'];
+const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+async function panggil(isi){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error('BUKAN_INTERNAL');
+  const r = await fetch(URL_SB + '/functions/v1/aura-tes', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(isi)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
+  return j;
+}
+
+/* ---------------- beranda tes ---------------- */
+let st = null;
+async function beranda(){
+  stopTimer();
+  try { st = await panggil({ aksi:'status' }); }
+  catch (e) { akar.innerHTML = `<div class="panel">${e.message === 'BUKAN_INTERNAL' ? 'Masuk dulu lewat Aura.' : 'Tes belum bisa dimuat. Coba lagi.'}</div>`; return; }
+  let h = '<h1>Tes</h1>';
+  if (st.sesi){
+    const b = st.sesi.bagian;
+    const lanjut = URUT.find(x => b[x].status !== 'selesai');
+    h += `<div class="panel"><p>Tes ini terdiri dari 3 bagian dan harus dikerjakan berurutan. Timer berjalan begitu bagian dimulai dan <b>tidak bisa dijeda</b>, termasuk kalau halaman ditutup. Kerjakan sendiri, tanpa AI atau bantuan orang lain.</p></div>`;
+    h += URUT.map((x, i) => {
+      const s = b[x];
+      const label = s.status === 'selesai' ? '<span class="chip ok">Selesai</span>' : s.status === 'jalan' ? `<span class="chip warn">Berjalan · sisa ${mmss(s.sisa)}</span>` : `<span class="chip">${Math.round(s.waktu/60)} menit</span>`;
+      const tombol = x === lanjut ? `<button class="btn utama" data-mulai="${x}">${s.status === 'jalan' ? 'Lanjutkan' : 'Mulai'}</button>` : '';
+      return `<div class="panel baris antara"><div><h2>${i+1}. ${NAMA[x]}</h2><p class="muted kecil">${esc(st.judul[x].petunjuk)}</p></div><div class="baris">${label}${tombol}</div></div>`;
+    }).join('');
+    if (!lanjut) h += `<div class="panel">Semua bagian selesai. Terima kasih! Hasilnya dikirim ke pimpinan.</div>`;
+  } else if (!st.pimpinan) {
+    h += `<div class="panel">Belum ada tes untukmu saat ini.</div>`;
+  }
+  if (st.pimpinan) h += panelPimpinan();
+  akar.innerHTML = h;
+  akar.querySelectorAll('[data-mulai]').forEach(btn => btn.onclick = () => {
+    const x = btn.dataset.mulai;
+    if (st.sesi.bagian[x].status === 'belum' && !confirm(`Mulai ${NAMA[x]}? Waktumu ${Math.round(st.sesi.bagian[x].waktu/60)} menit dan tidak bisa dijeda.`)) return;
+    mulai(x);
+  });
+  sambungPimpinan();
+}
+
+/* ---------------- pimpinan ---------------- */
+function panelPimpinan(){
+  const opsi = (st.orang || []).map(o => `<option value="${o.id}">${esc(o.nama)}</option>`).join('');
+  const baris = (st.daftar || []).map(d => {
+    const s = d.status === 'selesai' ? '<span class="chip ok">Selesai</span>' : d.status === 'jalan' ? '<span class="chip warn">Sedang dikerjakan</span>' : '<span class="chip">Belum mulai</span>';
+    return `<tr><td>${esc(d.nama)}</td><td>${new Date(d.dibuat_at).toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</td><td>${s}</td><td class="baris">${d.skor ? `<button class="btn" data-lihat="${d.id}">Lihat hasil</button>` : ''}<button class="btn" data-hapus="${d.id}">Hapus</button></td></tr>`;
+  }).join('');
+  return `<h2 style="margin-top:10px">Pimpinan</h2>
+    <div class="panel"><div class="baris"><select id="pilih-orang" style="width:auto">${opsi}</select><button class="btn utama" id="buat-tes">Beri tes</button></div>
+    <p class="muted kecil" style="margin-top:8px">Orang itu akan melihat tes di tab Tes Aura miliknya. Hasil hanya terlihat di sini dan dikirim ke Lark kamu & Gabriella.</p></div>
+    ${baris ? `<div class="panel"><table><thead><tr><th>Nama</th><th>Diberi</th><th>Status</th><th></th></tr></thead><tbody>${baris}</tbody></table></div>` : ''}
+    <div id="detail"></div>`;
+}
+function sambungPimpinan(){
+  const b = document.getElementById('buat-tes');
+  if (b) b.onclick = async () => { b.disabled = true; try { await panggil({ aksi:'buat', staff_id: document.getElementById('pilih-orang').value }); await beranda(); } catch (e) { alert('Gagal membuat tes.'); b.disabled = false; } };
+  akar.querySelectorAll('[data-hapus]').forEach(x => x.onclick = async () => { if (!confirm('Hapus tes ini beserta jawabannya?')) return; await panggil({ aksi:'hapus', id:x.dataset.hapus }); beranda(); });
+  akar.querySelectorAll('[data-lihat]').forEach(x => x.onclick = () => tampilHasil((st.daftar || []).find(d => d.id === x.dataset.lihat)));
+}
+function tampilHasil(d){
+  const s = d.skor, g = s.gaya, l = s.logika, k = s.kasus || {};
+  const dims = ['struktur','data','akar_masalah','opsi','eksekusi'];
+  const kasusBaris = ['k1','k2','k3'].map(id => k[id] ? `<tr><td>${id.toUpperCase()}</td>${dims.map(x => `<td class="angka">${k[id][x] ?? '-'}</td>`).join('')}<td>${esc(k[id].catatan || '')}</td></tr>` : '').join('');
+  document.getElementById('detail').innerHTML = `<div class="panel" style="display:grid;gap:12px">
+    <div class="baris antara"><h2>Hasil ${esc(d.nama)}</h2><span class="muted kecil">rahasia</span></div>
+    <div class="hasil-grid">
+      <div class="panel"><p class="muted kecil">Gaya kerja</p><p class="besar">${g.utama}/${g.kedua}</p><p class="kecil muted">D ${g.skor.D} · I ${g.skor.I} · S ${g.skor.S} · C ${g.skor.C}</p></div>
+      <div class="panel"><p class="muted kecil">Logika & angka</p><p class="besar">${l.persen_berbobot}%</p><p class="kecil muted">${l.benar}/${l.total} benar · ${l.kategori}</p></div>
+      <div class="panel"><p class="muted kecil">Studi kasus</p><p class="besar">${k.rata ?? '-'}/5</p><p class="kecil muted">3 = lulusan baru yang baik · 4 = profesional</p></div>
+    </div>
+    ${s.kesimpulan ? `<p>${esc(s.kesimpulan)}</p>` : ''}
+    <table><thead><tr><th>Logika</th><th>Benar</th></tr></thead><tbody>${Object.entries(l.perJenis).map(([j,v]) => `<tr><td>${esc(j)}</td><td class="angka">${v.benar}/${v.total}</td></tr>`).join('')}${Object.entries(l.perLevel).map(([j,v]) => `<tr><td>${esc(j)}</td><td class="angka">${v.benar}/${v.total}</td></tr>`).join('')}</tbody></table>
+    ${kasusBaris ? `<table><thead><tr><th>Kasus</th>${dims.map(x => `<th>${x.replace('_',' ')}</th>`).join('')}<th>Catatan</th></tr></thead><tbody>${kasusBaris}</tbody></table>` : ''}
+    ${(k.kekuatan || []).length ? `<p><b>Kekuatan:</b> ${esc(k.kekuatan.join('; '))}</p>` : ''}
+    ${(k.tanda_bahaya || []).length ? `<p><b>Tanda bahaya:</b> ${esc(k.tanda_bahaya.join('; '))}</p>` : ''}
+    <p class="muted kecil">Waktu: ${URUT.map(b => `${NAMA[b]} ${s.catatan?.[b]?.menit ?? '-'} mnt${s.catatan?.[b]?.terlambat ? ' (lewat)' : ''}${s.catatan?.[b]?.keluar_halaman ? ` · keluar halaman ${s.catatan[b].keluar_halaman}×` : ''}`).join(' · ')}</p>
+  </div>`;
+  document.getElementById('detail').scrollIntoView({behavior:'smooth'});
+}
+
+/* ---------------- mengerjakan ---------------- */
+let timer = 0, simpanTimer = 0, akhir = 0, bagianKini = null, jawaban = {}, keluar = 0, terkirim = false;
+function stopTimer(){ clearInterval(timer); clearInterval(simpanTimer); timer = simpanTimer = 0; }
+document.addEventListener('visibilitychange', () => { if (document.hidden && bagianKini) keluar++; });
+
+async function mulai(bagian){
+  let d;
+  try { d = await panggil({ aksi:'mulai', bagian }); }
+  catch (e) { alert('Gagal memulai: ' + e.message); return beranda(); }
+  bagianKini = bagian; jawaban = d.draf || {}; keluar = 0; terkirim = false;
+  akhir = Date.now() + d.sisa * 1000;
+  let isi = '';
+  if (bagian === 'gaya') isi = d.soal.map((b, i) => `<div class="panel blok"><p class="muted kecil">Kelompok ${i+1} dari ${d.soal.length}</p>
+      <div class="opsi-gaya"><span></span><span class="h">Paling saya</span><span class="h">Paling bukan</span>
+      ${b.opsi.map(o => `<span>${esc(o.teks)}</span><input type="radio" name="p_${b.id}" value="${o.id}" aria-label="Paling saya: ${esc(o.teks)}" ${jawaban[b.id]?.paling === o.id ? 'checked' : ''}><input type="radio" name="b_${b.id}" value="${o.id}" aria-label="Paling bukan saya: ${esc(o.teks)}" ${jawaban[b.id]?.bukan === o.id ? 'checked' : ''}>`).join('')}
+      </div></div>`).join('');
+  if (bagian === 'logika') isi = `<div class="panel nav-soal" id="nav">${d.soal.map((s, i) => `<button type="button" data-ke="${i}">${i+1}</button>`).join('')}</div>`
+    + d.soal.map((s, i) => `<div class="panel blok soal ${i ? 'hidden' : ''}" data-no="${i}"><p class="muted kecil">Soal ${i+1} dari ${d.soal.length}</p>${s.stem ? `<div class="stem">${esc(s.stem)}</div>` : ''}<p style="margin-top:8px">${esc(s.tanya)}</p>
+      <div class="soal-opsi">${s.opsi.map(o => `<label><input type="radio" name="${s.id}" value="${o.id}" ${jawaban[s.id] === o.id ? 'checked' : ''}><span>${esc(o.teks)}</span></label>`).join('')}</div>
+      <div class="baris antara" style="margin-top:10px"><button class="btn" type="button" data-geser="-1" ${i ? '' : 'disabled'}>Sebelumnya</button><button class="btn" type="button" data-geser="1" ${i < d.soal.length - 1 ? '' : 'disabled'}>Berikutnya</button></div></div>`).join('');
+  if (bagian === 'kasus') isi = d.soal.map(k => `<div class="panel blok"><h2>${esc(k.judul)}</h2><p class="kasus-teks">${esc(k.teks)}</p>
+      <textarea class="panjang" name="${k.id}" placeholder="Tulis poin-poin jawabanmu…">${esc(jawaban[k.id] || '')}</textarea><p class="muted kecil" data-hitung="${k.id}"></p></div>`).join('');
+  akar.innerHTML = `<div class="panel timer" id="timer"><div><p class="muted kecil">${esc(d.judul)}</p><p class="kecil">${esc(d.petunjuk)}</p></div><b id="sisa">--:--</b></div>
+    <form class="bagian" id="form-tes">${isi}<div class="baris antara"><span class="pesan" id="pesan-tes"></span><button class="btn utama" type="submit">Kirim ${NAMA[bagian]}</button></div></form>`;
+  pasangInput(bagian, d.soal.length);
+  timer = setInterval(detik, 500); detik();
+  simpanTimer = setInterval(() => kirim(false), 20000);
+}
+
+function pasangInput(bagian, n){
+  const f = document.getElementById('form-tes');
+  f.addEventListener('change', ev => {
+    const t = ev.target;
+    if (bagian === 'gaya'){
+      const [jenis, id] = [t.name.slice(0,1), t.name.slice(2)];
+      jawaban[id] = jawaban[id] || {};
+      if (jenis === 'p') jawaban[id].paling = t.value; else jawaban[id].bukan = t.value;
+      if (jawaban[id].paling && jawaban[id].paling === jawaban[id].bukan){ // satu pernyataan tidak boleh dua-duanya
+        const lain = jenis === 'p' ? 'b_' : 'p_';
+        f.querySelectorAll(`input[name="${lain}${id}"]`).forEach(x => x.checked = false);
+        if (jenis === 'p') delete jawaban[id].bukan; else delete jawaban[id].paling;
+      }
+    }
+    if (bagian === 'logika'){ jawaban[t.name] = t.value; tandaiNav(); }
+  });
+  f.addEventListener('input', ev => {
+    if (bagian !== 'kasus') return;
+    jawaban[ev.target.name] = ev.target.value;
+    const p = f.querySelector(`[data-hitung="${ev.target.name}"]`); if (p) p.textContent = ev.target.value.trim().split(/\s+/).filter(Boolean).length + ' kata';
+  });
+  if (bagian === 'logika'){
+    let kini = 0;
+    const ke = i => { kini = Math.max(0, Math.min(n - 1, i)); f.querySelectorAll('.soal').forEach(s => s.classList.toggle('hidden', Number(s.dataset.no) !== kini)); tandaiNav(kini); };
+    f.querySelectorAll('[data-geser]').forEach(b => b.onclick = () => ke(kini + Number(b.dataset.geser)));
+    document.querySelectorAll('#nav [data-ke]').forEach(b => b.onclick = () => ke(Number(b.dataset.ke)));
+    tandaiNav(0);
+  }
+  f.onsubmit = ev => { ev.preventDefault(); selesai(false); };
+}
+function tandaiNav(kini){
+  document.querySelectorAll('#nav [data-ke]').forEach((b, i) => {
+    const id = 'l' + (i + 1);
+    b.classList.toggle('isi', !!jawaban[id]);
+    if (kini !== undefined) b.classList.toggle('kini', i === kini);
+  });
+}
+
+function detik(){
+  const s = Math.max(0, Math.round((akhir - Date.now()) / 1000));
+  const el = document.getElementById('sisa'); if (!el) return;
+  el.textContent = mmss(s);
+  document.getElementById('timer').classList.toggle('mepet', s <= 60);
+  if (s <= 0) selesai(true);
+}
+
+async function kirim(final){
+  if (!bagianKini) return;
+  try { await panggil({ aksi: final ? 'kirim' : 'simpan', bagian: bagianKini, jawaban, keluar }); return true; }
+  catch (e) { if (final) throw e; return false; }
+}
+
+async function selesai(habis){
+  if (terkirim) return;
+  const kurang = bagianKini === 'logika' ? 20 - Object.keys(jawaban).length : bagianKini === 'gaya' ? 24 - Object.values(jawaban).filter(x => x.paling && x.bukan).length : 0;
+  if (!habis && kurang > 0 && !confirm(`Masih ada ${kurang} yang belum dijawab. Tetap kirim?`)) return;
+  if (!habis && bagianKini === 'kasus' && !confirm('Kirim jawaban studi kasus? Setelah ini tes selesai.')) return;
+  terkirim = true; stopTimer();
+  const p = document.getElementById('pesan-tes'); if (p) p.textContent = habis ? 'Waktu habis, jawaban dikirim…' : 'Mengirim…';
+  for (let i = 0; i < 3; i++) {
+    try { await kirim(true); bagianKini = null; return beranda(); }
+    catch (e) { if (e.message === 'SUDAH_SELESAI') { bagianKini = null; return beranda(); } await new Promise(r => setTimeout(r, 1500)); }
+  }
+  terkirim = false; if (p) p.textContent = 'Gagal mengirim. Cek internet lalu tekan Kirim lagi.';
+}
+
+beranda();
+</script>
+</body>
+</html>

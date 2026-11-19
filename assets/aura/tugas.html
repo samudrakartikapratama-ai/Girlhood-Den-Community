@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tugas · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=1">
+<style>
+.tugas{display:grid;gap:10px}
+.no{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;border:1px solid var(--garis2);font-size:13px;flex:none}
+.kepala{display:flex;gap:12px;align-items:flex-start}
+.kepala .isi{flex:1;min-width:0}
+.hasil{margin-top:10px;font-size:14px;display:grid;gap:4px}
+.hasil b{font-weight:500;color:var(--corona)}
+.tim{display:grid;gap:12px}
+.kpi{display:grid;gap:8px}
+.kpi .baris b{font-size:22px;font-weight:500}
+.tabs{display:flex;gap:6px}
+.tabs button[aria-pressed=true]{border-color:var(--ember);background:rgba(255,90,31,.14)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="baris antara">
+    <div><h1>Tugas hari ini</h1><p class="muted kecil" id="tgl"></p></div>
+    <div class="baris">
+      <div class="tabs hidden" id="pilih-lihat"><button class="btn" data-l="saya" aria-pressed="true">Saya</button><button class="btn" data-l="tim" aria-pressed="false">Tim</button></div>
+      <input type="date" id="tanggal" aria-label="Pilih tanggal" style="width:auto">
+    </div>
+  </div>
+  <div id="pesan" class="pesan"></div>
+  <section id="lihat-saya" class="tugas"></section>
+  <section id="lihat-tim" class="tim hidden"></section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp = n => { n = Number(n || 0); return n >= 1e9 ? 'Rp' + (n/1e9).toFixed(2).replace('.', ',') + ' M' : n >= 1e6 ? 'Rp' + Math.round(n/1e6) + ' jt' : 'Rp' + Math.round(n).toLocaleString('id-ID'); };
+const hariIni = () => new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
+const STATUS = {selesai:['Selesai','ok'], sebagian:['Sebagian','warn'], tidak:['Tidak selesai','bad'], baru:['Belum disetor','']};
+
+async function panggil(isi){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error('BUKAN_INTERNAL');
+  const r = await fetch(URL_SB + '/functions/v1/aura', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(isi)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
+  return j;
+}
+
+function item(x){
+  const n = x.username ? '@' + x.username : (x.brand || x.nama || '');
+  const info = [];
+  if (x.nama && x.username) info.push(x.nama);
+  if (x.brand && x.nama) info.push(x.brand);
+  if (x.gmv7_jt !== undefined) info.push(`7 hari ${x.gmv7_jt} jt (sebelumnya ${x.gmv_sebelum_jt} jt)`);
+  if (x.hari_tidak_jualan !== undefined) info.push(`${x.hari_tidak_jualan} hari tidak jualan · 30 hari ${x.gmv30_jt} jt`);
+  if (x.hari_sejak_terima !== undefined) info.push(`sampel sampai ${x.hari_sejak_terima} hari lalu`);
+  if (x.menunggu !== undefined) info.push(`${x.menunggu} request menunggu · terlama ${x.paling_lama_hari} hari${x.pic_nama ? ' · PIC ' + x.pic_nama : ''}`);
+  if (x.jumlah !== undefined) info.push(`${x.jumlah} sampel belum ada info kirim`);
+  if (x.sudah_tutorial === false) info.push('belum tutorial');
+  return `<li><b>${esc(n)}</b>${info.length ? ' · ' + esc(info.join(' · ')) : ''}</li>`;
+}
+
+function kartuKpi(k, judul){
+  if (!k || !k.target) return '';
+  const pct = Math.min(100, Number(k.persen || 0));
+  const aman = k.proyeksi >= k.target;
+  return `<div class="panel kpi"><div class="baris antara"><span class="muted kecil">${esc(judul || 'KPI GMV bulan ini')}</span><span class="chip ${aman ? 'ok' : 'bad'}">${aman ? 'On track' : 'Di bawah target'}</span></div>
+    <div class="baris"><b class="angka">${rp(k.aktual)}</b><span class="muted">dari ${rp(k.target)} · ${k.persen ?? 0}%</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p class="muted kecil">Proyeksi akhir bulan ${rp(k.proyeksi)} · perlu ${rp(k.perlu_per_hari)}/hari</p></div>`;
+}
+
+function kartuTugas(t, bisaSetor){
+  const [lbl, cls] = STATUS[t.dilapor_at ? t.status : 'baru'];
+  const daftar = (t.data || []).length ? `<ul class="daftar">${t.data.map(item).join('')}</ul>` : '';
+  const hasil = t.dilapor_at ? `<div class="hasil">${t.hasil ? `<p><b>Hasil</b> ${esc(t.hasil)}</p>` : ''}${t.kendala ? `<p><b>Kendala</b> ${esc(t.kendala)}</p>` : ''}${t.opsi ? `<p><b>Opsi</b> ${esc(t.opsi)}</p>` : ''}</div>` : '';
+  const form = bisaSetor ? `<form class="setor ${t.dilapor_at ? 'hidden' : ''}" data-urut="${t.urut}">
+      <span class="label">Status</span>
+      <div class="pilih">${['selesai','sebagian','tidak'].map(s => `<label><input type="radio" name="st${t.urut}" value="${s}" ${t.status === s ? 'checked' : ''}> ${STATUS[s][0]}</label>`).join('')}</div>
+      <label class="label" for="h${t.urut}">Apa yang kamu kerjakan dan hasilnya (sebut nama & angka)</label><textarea id="h${t.urut}" name="hasil">${esc(t.hasil)}</textarea>
+      <label class="label" for="k${t.urut}">Kendala</label><textarea id="k${t.urut}" name="kendala" style="min-height:52px">${esc(t.kendala)}</textarea>
+      <label class="label" for="o${t.urut}">Opsi solusimu (wajib kalau belum selesai)</label><textarea id="o${t.urut}" name="opsi" style="min-height:52px">${esc(t.opsi)}</textarea>
+      <div class="baris" style="margin-top:10px"><button class="btn utama" type="submit">Setor</button><span class="pesan"></span></div>
+    </form>${t.dilapor_at ? `<button class="btn ubah" type="button" style="margin-top:10px">Ubah setoran</button>` : ''}` : '';
+  return `<article class="panel"><div class="kepala"><span class="no">${t.urut}</span><div class="isi">
+    <div class="baris antara"><h2>${esc(t.judul)}</h2><span class="chip ${cls}">${lbl}</span></div>
+    <p class="muted kecil" style="margin-top:4px">${esc(t.detail)}</p>${daftar}${hasil}${form}</div></div></article>`;
+}
+
+let data = null;
+async function muat(){
+  $('pesan').textContent = '';
+  try { data = await panggil({ aksi: 'tugas', tanggal: $('tanggal').value || hariIni() }); }
+  catch (e) { $('pesan').textContent = e.message === 'BUKAN_INTERNAL' ? 'Masuk dulu lewat Aura.' : 'Tugas belum bisa dimuat. Coba lagi.'; return; }
+  const tglTeks = new Date(data.tanggal + 'T12:00:00+07:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', timeZone:'Asia/Jakarta'});
+  const lapor = data.saya.filter(t => t.dilapor_at).length;
+  $('tgl').textContent = tglTeks + (data.saya.length ? ` · ${lapor}/${data.saya.length} disetor · setor paling lambat 17.00` : '');
+  const bisa = data.tanggal === hariIni();
+  $('lihat-saya').innerHTML = kartuKpi(data.kpi)
+    + (data.saya.length ? `<p class="muted kecil">Paling cepat: buka Beranda, tepuk 2× lalu ceritakan hasilmu ke Aura. Atau isi di sini.</p>` + data.saya.map(t => kartuTugas(t, bisa)).join('')
+       : `<div class="panel"><p>Tidak ada tugas untuk tanggal ini.</p><p class="muted kecil">Tugas dibuat otomatis tiap hari kerja jam 08.00.</p></div>`);
+  $('pilih-lihat').classList.toggle('hidden', !data.pimpinan);
+  if (data.pimpinan) $('lihat-tim').innerHTML = (data.tim || []).map(o => {
+    const l = o.tugas.filter(t => t.dilapor_at).length, op = o.tugas.filter(t => (t.opsi || '').trim()).length;
+    return `<section class="tim"><div class="baris antara"><h2>${esc(o.nama)}</h2><span class="chip ${l ? 'ok' : 'bad'}">${o.tugas.length ? (l ? `Setor ${l}/${o.tugas.length} · opsi ${op}` : 'Belum setor') : 'Tidak ada tugas'}</span></div>`
+      + kartuKpi(o.kpi, 'KPI ' + o.nama) + o.tugas.map(t => kartuTugas(t, false)).join('') + `</section>`;
+  }).join('') || '<div class="panel">Belum ada anggota tim dengan tugas harian.</div>';
+  sambung();
+}
+
+function sambung(){
+  document.querySelectorAll('.ubah').forEach(b => b.onclick = () => { b.previousElementSibling.classList.remove('hidden'); b.remove(); });
+  document.querySelectorAll('form.setor').forEach(f => f.onsubmit = async ev => {
+    ev.preventDefault();
+    const p = f.querySelector('.pesan'), btn = f.querySelector('button[type=submit]');
+    const status = (f.querySelector('input[type=radio]:checked') || {}).value;
+    const isi = { aksi:'setor', urut:Number(f.dataset.urut), status, hasil:f.hasil.value.trim(), kendala:f.kendala.value.trim(), opsi:f.opsi.value.trim() };
+    if (!status){ p.textContent = 'Pilih statusnya dulu.'; return; }
+    if (!isi.hasil){ p.textContent = 'Tulis apa yang kamu kerjakan dan hasilnya.'; return; }
+    if (status !== 'selesai' && !isi.opsi){ p.textContent = 'Belum selesai? Tulis opsi solusimu dulu.'; f.opsi.focus(); return; }
+    btn.disabled = true; p.textContent = 'Menyimpan…';
+    try { await panggil(isi); await muat(); }
+    catch (e) { p.textContent = e.message === 'BUTUH_OPSI' ? 'Belum selesai? Tulis opsi solusimu dulu.' : 'Gagal menyimpan. Coba lagi.'; btn.disabled = false; }
+  });
+}
+
+document.querySelectorAll('#pilih-lihat button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#pilih-lihat button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  $('lihat-saya').classList.toggle('hidden', b.dataset.l !== 'saya');
+  $('lihat-tim').classList.toggle('hidden', b.dataset.l !== 'tim');
+});
+$('tanggal').value = hariIni(); $('tanggal').max = hariIni();
+$('tanggal').onchange = muat;
+muat();
+</script>
+</body>
+</html>

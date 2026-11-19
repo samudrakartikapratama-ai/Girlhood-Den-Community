@@ -1,0 +1,46 @@
+/* Gaya bersama halaman di dalam Aura (Tugas, Tes). Latar transparan: adegan planet Aura tetap terlihat redup di belakang. */
+:root{
+  --ember:#ff5a1f; --corona:#ffd7a1; --ash:#a59ca8; --ink:#f6efe9; --kaca:rgba(10,6,5,.62); --kaca2:rgba(255,255,255,.04);
+  --garis:rgba(255,168,120,.18); --garis2:rgba(255,168,120,.32); --ok:#7fe0a8; --warn:#ffc46b; --bad:#ff8f9c;
+  --font:"Geist",system-ui,-apple-system,sans-serif; --ease:cubic-bezier(.22,1,.36,1); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--ink);font:400 15px/1.55 var(--font)}
+body{padding:4px 2px 40px}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:14px}
+h1{font:500 26px/1.15 var(--font);letter-spacing:-.02em;margin:0}
+h2{font:500 18px/1.3 var(--font);margin:0}
+p{margin:0}
+.muted{color:var(--ash)}
+.kecil{font-size:13px}
+.panel{background:var(--kaca);border:1px solid var(--garis);border-radius:18px;padding:16px 18px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.baris{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.antara{justify-content:space-between}
+button,input,textarea,select{font:inherit;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--garis);
+  background:var(--kaca2);cursor:pointer;font-weight:500;transition:transform 120ms var(--ease),border-color 150ms var(--ease),background-color 150ms var(--ease)}
+.btn:hover{border-color:var(--garis2)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn.utama{background:var(--ember);border-color:var(--ember);color:#160500;font-weight:600}
+.btn.utama:hover{background:#ff6e38}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--corona);outline-offset:2px}
+textarea,input[type=text],select{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--garis);border-radius:12px;padding:10px 12px;resize:vertical}
+textarea{min-height:76px;line-height:1.5}
+.label{font-size:13px;color:var(--ash);margin:10px 0 4px;display:block}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12.5px;border:1px solid var(--garis);background:var(--kaca2);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:rgba(127,224,168,.35)}
+.chip.warn{color:var(--warn);border-color:rgba(255,196,107,.35)}
+.chip.bad{color:var(--bad);border-color:rgba(255,143,156,.35)}
+.angka{font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--corona));border-radius:99px;transition:width 300ms var(--ease)}
+.pilih{display:flex;gap:6px;flex-wrap:wrap}
+.pilih label{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--garis);cursor:pointer;font-size:14px}
+.pilih input{accent-color:var(--ember)}
+.pilih label:has(input:checked){border-color:var(--ember);background:rgba(255,90,31,.14)}
+.daftar{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.daftar li{font-size:13.5px;color:#e9dcd2;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.035)}
+.pesan{min-height:1.4em;font-size:13.5px;color:var(--warn)}
+.hidden{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
