@@ -1,0 +1,17 @@
+# Aura: file kode selalu dicek ulang ke server (versi baru langsung terpakai; kalau tidak berubah cukup 304)
+/aura
+  Cache-Control: no-cache
+/assets/aura/chat.js
+  Cache-Control: no-cache
+/assets/aura/telinga.js
+  Cache-Control: no-cache
+/assets/aura/orb.js
+  Cache-Control: no-cache
+/assets/aura/scene.js
+  Cache-Control: no-cache
+/assets/aura/intro-suara.js
+  Cache-Control: no-cache
+/assets/aura/kamera.js
+  Cache-Control: no-cache
+/assets/aura/palette.html
+  Cache-Control: no-cache
