@@ -1,5 +1,5 @@
 // Sapaan kamera: kalau ada wajah di depan layar, Aura menyapa. Bukan pengenal wajah dan bukan kunci masuk:
-// hanya mendeteksi "ada orang", diproses di perangkat ini, tidak direkam/dikirim. Kamera mati sendiri setelah menyapa atau 20 detik.
+// hanya mendeteksi "ada orang", diproses di perangkat ini, tidak direkam/dikirim. Kamera mati sendiri setelah menyapa atau 8 detik.
 const VERSI = '0.10.14';
 let detektor = null;
 
@@ -28,7 +28,7 @@ export async function sapaKamera(saatAdaWajah) {
   try { await siapkan(); } catch (e) { selesai(); return 'model'; }
   return await new Promise(res => {
     let berturut = 0, terakhir = -1;
-    const batas = setTimeout(() => { selesai(); res('tidak-ada'); }, 20000);
+    const batas = setTimeout(() => { selesai(); res('tidak-ada'); }, 8000);
     const cek = () => {
       if (!video.srcObject) return;
       if (video.currentTime !== terakhir && video.readyState >= 2) {

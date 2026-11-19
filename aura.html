@@ -86,7 +86,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .kata-saya{margin:0;color:var(--corona);font-size:16px;min-height:1.5em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
 .status-suara{margin:6px 0 0;color:var(--ash);font-size:13px;letter-spacing:.03em}
 .ke-ketik{min-height:36px;font-size:13px;padding:0 14px;margin-top:6px}
-body.mode-suara .bar,body.mode-suara .tabs,body.mode-suara #salam,body.mode-suara #tanggal,body.mode-suara .setelan,body.mode-suara .menu{display:none!important}
+body.mode-suara .bar,body.mode-suara .tabs,body.mode-suara #salam,body.mode-suara #tanggal,body.mode-suara .menu,body.mode-suara .privasi{display:none!important}
 body.mode-suara .utama{min-height:calc(100dvh - 40px);align-content:center;padding-top:0;gap:22px}
 body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .percakapan{display:grid;gap:10px;max-height:min(46dvh,420px);overflow-y:auto;scroll-behavior:smooth}
@@ -98,14 +98,6 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .btn.mic{width:50px;min-height:50px;flex:none}
 .btn.mic.aktif{background:var(--ember);border-color:var(--ember);color:#160500;animation:denyut-mic 1.2s ease-in-out infinite}
 @keyframes denyut-mic{50%{box-shadow:0 0 0 8px rgba(255,90,31,.18)}}
-.setelan summary{cursor:pointer;color:var(--ash);font-size:14px;list-style:none}
-.setelan summary::-webkit-details-marker{display:none}
-.setelan summary::before{content:"+ ";color:var(--horizon)}
-.setelan[open] summary::before{content:"– "}
-.setelan label{display:flex;gap:12px;align-items:flex-start;margin-top:12px;cursor:pointer}
-.setelan input{margin-top:4px;accent-color:var(--ember);width:18px;height:18px;flex:none}
-.setelan label span{display:grid;font-size:14px;color:var(--ash)}
-.setelan label b{color:var(--ink);font-weight:500}
 .kecil{font-size:12px;color:var(--ash);margin:12px 0 0}
 .kamera{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:16px;z-index:5;display:grid;justify-items:center;gap:6px}
 .kamera video{width:92px;height:92px;border-radius:50%;object-fit:cover;transform:scaleX(-1);border:2px solid var(--ember);box-shadow:0 0 24px rgba(255,90,31,.45)}
@@ -180,12 +172,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     </form>
     <p class="info-chat" id="info-chat"></p>
     </div>
-    <details class="panel setelan">
-      <summary>Tepuk tangan &amp; kamera</summary>
-      <label><input type="checkbox" id="set-tepuk"> <span><b>Tepuk tangan 2× untuk memanggil Aura</b>Mikrofon mendengar tepukan selama halaman ini terbuka.</span></label>
-      <label><input type="checkbox" id="set-kamera"> <span><b>Aura menyapa saat melihatmu</b>Kamera menyala sebentar waktu kamu membuka Aura, lalu mati sendiri.</span></label>
-      <p class="kecil">Suara dan gambar diproses di perangkat ini saja, tidak direkam atau dikirim ke mana pun. Kamera tidak dipakai untuk masuk; masuk tetap pakai Face ID/sidik jari.</p>
-    </details>
+    <p class="kecil privasi">Mikrofon (untuk tepuk tangan dan bicara) dan kamera (untuk menyapa) diproses di perangkat ini saja, tidak direkam atau dikirim. Kamera tidak dipakai untuk masuk.</p>
     <div class="panel ajak hidden" id="ajak-passkey">
       <div><b>Aktifkan Face ID / sidik jari</b><span>Besok tinggal sentuh, tidak perlu ketik kode lagi. Di laptop, kamu bisa scan QR pakai HP.</span></div>
       <button class="btn primary" id="btn-daftar" type="button">Aktifkan sekarang</button>
@@ -308,26 +295,16 @@ async function mulai(dariTombol){
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
-  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama, tundaSapa: setelan('kamera') });
-  pasangSetelan(data.nama, dariTombol);
+  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama, tundaSapa: true });
+  nyalakanIndra(data.nama);
 }
 
-/* ---------- tepuk tangan & kamera (pilihan per perangkat) ---------- */
-function setelan(k){ try { return localStorage.getItem('aura-' + k) === 'nyala'; } catch (e) { return false; } }
-function simpanSetelan(k, v){ try { localStorage.setItem('aura-' + k, v ? 'nyala' : 'mati'); } catch (e) {} }
-let setelanTerpasang = false;
-function pasangSetelan(nama, dariTombol){
-  if (setelanTerpasang) return; setelanTerpasang = true;
-  const tepuk = $('set-tepuk'), kamera = $('set-kamera');
-  tepuk.checked = setelan('tepuk'); kamera.checked = setelan('kamera');
-  tepuk.onchange = async () => {
-    const ok = await Aura.tepukNyala(tepuk.checked);
-    if (!ok){ tepuk.checked = false; $('info-chat').textContent = 'Izinkan mikrofon di browser supaya Aura bisa mendengar tepukan.'; }
-    simpanSetelan('tepuk', tepuk.checked);
-  };
-  kamera.onchange = () => { simpanSetelan('kamera', kamera.checked); if (kamera.checked) sapaKamera(nama, true); };
-  if (tepuk.checked) Aura.tepukNyala(true).then(ok => { if (!ok) $('info-chat').textContent = 'Tepuk tangan belum aktif: izinkan mikrofon, lalu nyalakan lagi.'; });
-  if (kamera.checked) sapaKamera(nama, false);
+/* ---------- tepuk tangan & kamera: bawaan, menyala sendiri saat Aura dibuka ---------- */
+let indraMenyala = false;
+function nyalakanIndra(nama){
+  if (indraMenyala) return; indraMenyala = true;
+  Aura.tepukNyala(true);
+  sapaKamera(nama, false);
 }
 async function sapaKamera(nama, paksa){
   const hariIni = new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
@@ -338,7 +315,6 @@ async function sapaKamera(nama, paksa){
     if (window.adeganMulai) adeganMulai();
     Aura.setMode('suara'); Aura.sapa();
   });
-  if (hasil === 'izin'){ $('set-kamera').checked = false; simpanSetelan('kamera', false); $('info-chat').textContent = 'Izinkan kamera di browser supaya Aura bisa menyapa.'; }
   if (hasil !== 'ok' && !paksa) Aura.sapa(); // kamera gagal / tidak ada wajah: tetap disapa
 }
 
