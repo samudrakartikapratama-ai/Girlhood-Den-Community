@@ -118,7 +118,7 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 
     { type: "text", text: dinamis },
   ];
   const pesan: any[] = [...riwayat, { role: "user", content: pesanBaru }];
-  let masuk = 0, keluar = 0;
+  let masuk = 0, keluar = 0, diringkas = false;
   for (let i = 0; i < MAKS_PUTARAN; i++) {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -129,6 +129,17 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 
     if (!r.ok) throw new Error("Claude API " + r.status + ": " + String(j?.error?.message || "").slice(0, 200));
     masuk += (j.usage?.input_tokens || 0) + (j.usage?.cache_read_input_tokens || 0) + (j.usage?.cache_creation_input_tokens || 0);
     keluar += j.usage?.output_tokens || 0;
+    // Kepanjangan sampai terpotong: pakai teks yang sudah ada, atau minta ulang ringkas sekali.
+    if (j.stop_reason === "max_tokens") {
+      const sebagian = (j.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n").trim();
+      if (sebagian && !(j.content || []).some((b: any) => b.type === "tool_use")) return { teks: sebagian.replace(/[^.!?]*$/, "").trim() || sebagian, masuk, keluar };
+      if (!diringkas) {
+        diringkas = true;
+        pesan.push({ role: "assistant", content: sebagian ? [{ type: "text", text: sebagian }] : [{ type: "text", text: "(terpotong)" }] });
+        pesan.push({ role: "user", content: "Jawabanmu terpotong. Jawab ulang dengan sangat ringkas (maksimal 3 kalimat), pakai data yang sudah ada." });
+        continue;
+      }
+    }
     pesan.push({ role: "assistant", content: j.content });
     const panggilan = (j.content || []).filter((b: any) => b.type === "tool_use");
     if (j.stop_reason !== "tool_use" || !panggilan.length) {
@@ -227,8 +238,8 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
-        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN seperti orang ngobrol: WAJIB maksimal 3 kalimat pendek (sekitar 40 kata). DILARANG daftar bernomor, poin-poin, baris baru, atau simbol. Kalau jawabannya panjang, sebut intinya saja lalu tawarkan rincian di mode ketik. Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar (misal \"bagi\" maksudnya \"pagi\"): tafsirkan maksud yang paling masuk akal, jangan mempersoalkan salah ketiknya. Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
-      const hsl = await tanya(pesan, riwayat, dinamis, b.suara ? 500 : 1500);
+        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN seperti orang ngobrol: WAJIB maksimal 3 kalimat pendek (sekitar 40 kata). DILARANG daftar bernomor, poin-poin, baris baru, atau simbol. Kalau jawabannya panjang, sebut intinya saja lalu tawarkan rincian di mode ketik. Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
+      const hsl = await tanya(pesan, riwayat, dinamis, b.suara ? 1024 : 1500);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);

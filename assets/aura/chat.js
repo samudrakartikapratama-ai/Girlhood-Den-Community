@@ -137,7 +137,8 @@
       tambah('aura', t);
       if (e.data) infoKuota(e.data.kuota, e.data.jam);
       sibuk = false;
-      if (lewatSuara) ucap(t, () => tidur());
+      // gagal sementara: tetap lanjut mendengarkan; hanya tidur kalau memang tidak bisa dilanjutkan
+      if (lewatSuara) ucap(t, ['TUTUP', 'KUOTA', 'SALDO', 'BUKAN_INTERNAL'].includes(e.message) ? () => tidur() : lanjutDengar);
     }
   }
   A.kirim = kirim;

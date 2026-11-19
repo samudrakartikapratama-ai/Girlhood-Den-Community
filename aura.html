@@ -191,11 +191,11 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.2.2/dist/bundle/index.umd.min.js"></script>
-<script src="assets/aura/orb.js?v=202611191106"></script>
-<script src="assets/aura/scene.js?v=202611191106"></script>
-<script src="assets/aura/intro-suara.js?v=202611191106"></script>
-<script src="assets/aura/chat.js?v=202611191106"></script>
-<script src="assets/aura/telinga.js?v=202611191106"></script>
+<script src="assets/aura/orb.js?v=202611191113"></script>
+<script src="assets/aura/scene.js?v=202611191113"></script>
+<script src="assets/aura/intro-suara.js?v=202611191113"></script>
+<script src="assets/aura/chat.js?v=202611191113"></script>
+<script src="assets/aura/telinga.js?v=202611191113"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -268,7 +268,7 @@ $('btn-daftar').onclick = async () => {
 function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
-  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191106';
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191113';
   if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : 0);
   try { localStorage.setItem('aura-menu', m); } catch (e) {}
 }
@@ -306,7 +306,7 @@ async function mulai(dariTombol){
 let indraMenyala = false;
 async function nyalakanIndra(){
   if (indraMenyala) return; indraMenyala = true;
-  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191106'); } catch (e) { return; }
+  let modul; try { modul = await import('./assets/aura/kamera.js?v=202611191113'); } catch (e) { return; }
   modul.sapaKamera(() => Aura.melihatmu());
 }
 
