@@ -1,10 +1,13 @@
-// Aura: mode suara (bawaan: hanya kamu dan orb, Aura menyapa & bertanya duluan, lalu bergantian bicara-dengar)
-// dan mode ketik (chat biasa). Dipanggil dari aura.html: Aura.mulai({ sb, url, anon, nama }).
+// Aura: mode suara (bawaan) dan mode ketik.
+// Mode suara: Aura TIDUR (orb redup) -> tepuk 2× / ketuk orb -> BANGUN, menyapa, lalu ngobrol bergantian
+// (Aura bicara -> mendengarkan -> menjawab ...). Ketuk orb atau sepi 90 detik -> tidur lagi.
+// Dipanggil dari aura.html: Aura.mulai({ sb, url, anon, nama }).
 (function () {
   const $ = id => document.getElementById(id);
   const A = window.Aura = window.Aura || {};
-  let cfg = null, sibuk = false, keadaan = 'diam'; // diam | bicara | dengar | pikir
-  let sapaanTertunda = null;
+  let cfg = null, sibuk = false, keadaan = 'tidur'; // tidur | bicara | dengar | pikir | diam
+  let sesi = false, terakhirSuara = 0, sudahSapaHariIni = false, pakaiServerDengar = true;
+  const SEPI_MS = 90000;
 
   // ---------- server ----------
   async function panggil(isi) {
@@ -24,24 +27,32 @@
     BUKAN_INTERNAL: 'Sesi kamu habis. Keluar lalu masuk lagi.',
   };
 
-  // ---------- mode ----------
+  // ---------- tampilan ----------
   const suaraMode = () => document.body.classList.contains('mode-suara');
+  const STATUS = {
+    tidur: 'Tepuk 2× atau ketuk Aura untuk membangunkan',
+    diam: 'Ketuk Aura untuk bicara',
+    bicara: 'Ketuk untuk menyela',
+    dengar: 'Aku mendengarkan',
+    pikir: 'Sebentar',
+  };
+  function setKeadaan(k, teks) {
+    keadaan = k;
+    $('status-suara').textContent = teks || STATUS[k];
+    document.body.dataset.aura = k;
+    if (window.orbEnergi) orbEnergi(k === 'pikir' ? 1 : k === 'bicara' ? 0.8 : k === 'dengar' ? 0.5 : 0);
+  }
+  function teksAura(t) { $('kata-aura').textContent = t || ''; }
+  function teksSaya(t) { $('kata-saya').textContent = t || ''; }
+
   function setMode(m) {
     document.body.classList.toggle('mode-suara', m === 'suara');
     $('ruang-ketik').classList.toggle('hidden', m === 'suara');
     $('ruang-suara').classList.toggle('hidden', m !== 'suara');
     try { localStorage.setItem('aura-mode', m); } catch (e) {}
-    if (m !== 'suara') { akhiriSesi(); A.diam(); }
+    if (m === 'suara') tidur(); else { akhiriSesi(); A.diam(); A.telinga && A.telinga('mati'); }
   }
   A.setMode = setMode;
-
-  function setKeadaan(k, teks) {
-    keadaan = k;
-    const st = { diam: A.tepukAktif ? 'Ketuk Aura atau tepuk 2× untuk bicara' : 'Ketuk Aura untuk bicara', bicara: 'Aura bicara · ketuk untuk menyela', dengar: 'Aku mendengarkan…', pikir: 'Aura berpikir…' };
-    $('status-suara').textContent = teks || st[k];
-    document.body.dataset.aura = k;
-    if (window.orbEnergi) orbEnergi(k === 'pikir' ? 1 : k === 'bicara' ? 0.8 : k === 'dengar' ? 0.55 : 0);
-  }
 
   // ---------- log ketik ----------
   function tambah(peran, teks, opsi = {}) {
@@ -61,36 +72,50 @@
     if (k) el.textContent = k.pakai >= k.batas ? 'Jatah chat hari ini habis (' + k.batas + ').' : 'Sisa ' + (k.batas - k.pakai) + ' chat hari ini';
   }
 
-  // ---------- Aura bicara ----------
-  let suaraId = null;
+  // ---------- Aura bicara: suara browser terbaik, dibacakan per kalimat (teks tampil per kalimat) ----------
+  let suaraPilihan = null;
   function pilihSuara() {
-    const v = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
-    suaraId = v.find(x => /^id/i.test(x.lang) && /damayanti|female|wanita|gadis/i.test(x.name)) || v.find(x => /^id/i.test(x.lang)) || null;
+    const v = ((window.speechSynthesis && speechSynthesis.getVoices()) || []).filter(x => /^id/i.test(x.lang));
+    const skor = x => (/natural|neural|online/i.test(x.name) ? 4 : 0) + (/google/i.test(x.name) ? 3 : 0) + (/microsoft/i.test(x.name) ? 2 : 0) + (/enhanced|premium/i.test(x.name) ? 2 : 0) - (/damayanti/i.test(x.name) && !/enhanced|premium/i.test(x.name) ? 1 : 0);
+    suaraPilihan = v.sort((a, b) => skor(b) - skor(a))[0] || null;
   }
   if (window.speechSynthesis) { pilihSuara(); speechSynthesis.onvoiceschanged = pilihSuara; }
   const bolehBicara = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  const kalimat = t => (t.replace(/[*_#|>`]/g, '').replace(/\s*\n+\s*/g, ' ').match(/[^.!?]+[.!?]*/g) || []).map(s => s.trim()).filter(Boolean);
+  let antrian = [], tertunda = null, giliran = 0;
 
-  // ucap(teks, lanjutDengar): tampilkan teks besar + bacakan; setelah selesai, kalau mode suara, langsung mendengarkan.
-  function ucap(teks, lanjutDengar = true) {
-    $('kata-aura').textContent = teks;
-    $('kata-saya').textContent = '';
+  // ucap(teks, sesudah): tampilkan & bacakan kalimat demi kalimat; sesudah() dipanggil setelah selesai.
+  function ucap(teks, sesudah) {
+    A.diam();
+    antrian = kalimat(teks);
+    if (!antrian.length) { sesudah && sesudah(); return; }
     if (!window.speechSynthesis || !bolehBicara()) {
-      sapaanTertunda = teks; setKeadaan('diam', 'Ketuk Aura untuk mendengar');
+      // browser belum mengizinkan suara: tampilkan teksnya, suara menyusul setelah diketuk
+      teksAura(teks); tertunda = { teks, sesudah }; setKeadaan('diam', 'Ketuk Aura supaya aku bisa bersuara');
       return;
     }
-    sapaanTertunda = null;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(teks.replace(/[*_#|>`]/g, '').replace(/\n+/g, '. '));
-    u.lang = 'id-ID'; if (suaraId) u.voice = suaraId; u.rate = 1.03;
-    u.onstart = () => setKeadaan('bicara');
-    u.onend = () => { if (keadaan !== 'bicara') return; setKeadaan('diam'); if (lanjutDengar && suaraMode()) { sesi = true; terakhirSuara = Date.now(); setTimeout(jalankanDengar, 250); } else if (!lanjutDengar) akhiriSesi(); };
-    u.onerror = () => { if (keadaan === 'bicara') setKeadaan('diam'); };
-    speechSynthesis.speak(u);
+    tertunda = null;
+    A.telinga && A.telinga('jeda');
+    setKeadaan('bicara');
+    const id = giliran;
+    const berikut = () => {
+      if (id !== giliran || keadaan !== 'bicara') return;
+      const s = antrian.shift();
+      if (!s) { sesudah && sesudah(); return; }
+      teksAura(s);
+      const u = new SpeechSynthesisUtterance(s);
+      u.lang = 'id-ID'; if (suaraPilihan) u.voice = suaraPilihan;
+      u.rate = suaraPilihan && /google|natural|online/i.test(suaraPilihan.name) ? 1.08 : 1.15;
+      u.onend = berikut;
+      u.onerror = berikut;
+      speechSynthesis.speak(u);
+    };
+    berikut();
   }
   A.ucap = ucap;
-  A.diam = () => { if (window.speechSynthesis) speechSynthesis.cancel(); };
+  A.diam = () => { giliran++; antrian = []; if (window.speechSynthesis) speechSynthesis.cancel(); };
 
-  // ---------- kirim pertanyaan ----------
+  // ---------- percakapan ----------
   async function kirim(teks, lewatSuara) {
     teks = (teks || '').trim();
     if (!teks || sibuk) return;
@@ -98,55 +123,70 @@
     tambah('user', teks);
     $('chat-isi').value = '';
     const tunggu = lewatSuara ? null : tambah('aura', 'Aura sedang berpikir…', { sementara: true });
-    setKeadaan('pikir');
+    if (lewatSuara) setKeadaan('pikir');
     try {
       const j = await panggil({ aksi: 'chat', pesan: teks, suara: !!lewatSuara });
       if (tunggu) tunggu.remove();
       tambah('aura', j.jawab.isi);
       infoKuota(j.kuota);
-      setKeadaan('diam');
-      if (lewatSuara) ucap(j.jawab.isi);
+      sibuk = false;
+      if (lewatSuara) ucap(j.jawab.isi, lanjutDengar);
     } catch (e) {
       if (tunggu) tunggu.remove();
       const t = PESAN_GALAT[e.message] || 'Maaf, aku gagal menjawab. Coba lagi sebentar lagi.';
       tambah('aura', t);
       if (e.data) infoKuota(e.data.kuota, e.data.jam);
-      setKeadaan('diam');
-      if (lewatSuara) ucap(t, false);
-    } finally { sibuk = false; }
+      sibuk = false;
+      if (lewatSuara) ucap(t, () => tidur());
+    }
   }
   A.kirim = kirim;
 
-  // ---------- kamu bicara: sesi ngobrol, mic tetap menyala sampai kamu mengetuk orb ----------
+  function lanjutDengar() {
+    if (!suaraMode()) return;
+    if (!sesi) { sesi = true; terakhirSuara = Date.now(); }
+    if (Date.now() - terakhirSuara > SEPI_MS) { tidur('Sepi, aku tidur dulu. Tepuk 2× kalau butuh aku.'); return; }
+    teksSaya('');
+    setKeadaan('dengar');
+    if (pakaiServerDengar && A.bisaRekam && A.bisaRekam()) {
+      A.telinga('dengar').then(ok => { if (!ok) setKeadaan('diam', 'Izinkan mikrofon di browser supaya aku bisa mendengar.'); });
+    } else dengarBrowser();
+  }
+
+  // ucapan terekam -> server (Whisper) -> teks
+  A.saatSuara = ada => { if (ada) { terakhirSuara = Date.now(); if (!$('kata-saya').textContent) teksSaya('…'); } };
+  A.saatUcapan = async blob => {
+    if (!sesi) return;
+    setKeadaan('pikir');
+    try {
+      const b64 = await new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
+      const j = await panggil({ aksi: 'dengar', audio: b64, tipe: blob.type });
+      const t = koreksi((j.teks || '').trim());
+      if (!t) { lanjutDengar(); return; }
+      teksSaya(t);
+      kirim(t, true);
+    } catch (e) {
+      if (e.message === 'TANPA_KUNCI') { pakaiServerDengar = false; A.telinga('jeda'); dengarBrowser(); return; }
+      lanjutDengar();
+    }
+  };
+
+  // cadangan: pengenal suara bawaan browser (sebelum kunci Groq dipasang)
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  // nama yang sering salah tangkap oleh pengenal suara browser
   const KOREKSI = [
     [/\b(girl ?hood ?(den|then|dan)|golden ?(den|then|dan)|gold ?in ?den|gol ?den ?den|gerl ?hud ?den|golden|gold in|gol den|girl ?hood|gerl ?hud)\b/gi, 'Girlhood Den'],
     [/\b(kimi|kime|kim)\b/gi, 'KIME'], [/\bhana ?su[iy]\b/gi, 'Hanasui'], [/\bsatur ?nine?\b/gi, 'Saturnine'],
-    [/\bfast ?moss\b/gi, 'FastMoss'], [/\b(ge em ve|gmf|gm v)\b/gi, 'GMV'], [/\bskin ?(seribu|1000) ?(empat|4)\b/gi, 'SKIN1004'],
+    [/\bfast ?moss\b/gi, 'FastMoss'], [/\b(ge em ve|gmf|gm v)\b/gi, 'GMV'],
   ];
   const koreksi = t => KOREKSI.reduce((a, [r, g]) => a.replace(r, g), t);
-  let rek = null, sesi = false, kumpul = '', sementara = '', jeda = 0, terakhirSuara = 0;
-  const SEPI_MS = 90000;
-
-  function berhentiDengar() { const r = rek; rek = null; clearTimeout(jeda); if (r) { try { r.abort(); } catch (e) {} } }
-  function akhiriSesi(teks) { sesi = false; berhentiDengar(); kumpul = sementara = ''; if (A.saatMendengar) A.saatMendengar(false); setKeadaan('diam', teks); }
-  function mulaiSesi() {
-    if (!SR) { setKeadaan('diam', 'Browser ini belum bisa mendengar. Pakai Chrome atau Safari, atau ketik saja.'); return false; }
-    sesi = true; terakhirSuara = Date.now(); jalankanDengar(); return true;
-  }
-  function kirimKumpulan() {
-    const t = koreksi((kumpul + ' ' + sementara).replace(/\s+/g, ' ').trim());
-    kumpul = sementara = '';
-    if (!t) return;
-    berhentiDengar();
-    $('kata-saya').textContent = t;
-    kirim(t, true);
-  }
-  function jalankanDengar() {
-    if (!sesi || sibuk || keadaan === 'bicara' || rek) return;
+  let rek = null;
+  function dengarBrowser() {
+    if (!SR) { setKeadaan('diam', 'Browser ini belum bisa mendengar. Pakai Chrome atau Safari, atau ketik saja.'); return; }
+    if (rek) return;
+    A.telinga && A.telinga('jeda');
     const r = rek = new SR(); r.lang = 'id-ID'; r.interimResults = true; r.continuous = true;
-    r.onstart = () => { if (rek !== r) return; setKeadaan('dengar'); if (A.saatMendengar) A.saatMendengar(true); };
+    let kumpul = '', sementara = '', jeda = 0;
+    r.onstart = () => { if (rek === r) setKeadaan('dengar'); };
     r.onresult = ev => {
       if (rek !== r) return;
       sementara = '';
@@ -154,52 +194,67 @@
         if (ev.results[i].isFinal) kumpul += ev.results[i][0].transcript + ' '; else sementara += ev.results[i][0].transcript;
       }
       terakhirSuara = Date.now();
-      $('kata-saya').textContent = koreksi((kumpul + sementara).trim());
+      teksSaya(koreksi((kumpul + sementara).trim()));
       clearTimeout(jeda);
-      // kirim setelah kamu berhenti bicara sebentar
-      jeda = setTimeout(kirimKumpulan, sementara ? 2200 : 1100);
+      jeda = setTimeout(() => { const t = koreksi((kumpul + ' ' + sementara).replace(/\s+/g, ' ').trim()); kumpul = sementara = ''; if (!t) return; berhentiBrowser(); kirim(t, true); }, sementara ? 2200 : 1100);
     };
-    r.onerror = ev => {
-      if (rek !== r) return;
-      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') akhiriSesi('Izinkan mikrofon di browser supaya aku bisa mendengar.');
-    };
+    r.onerror = ev => { if (rek === r && (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')) { berhentiBrowser(); setKeadaan('diam', 'Izinkan mikrofon di browser supaya aku bisa mendengar.'); } };
     r.onend = () => {
-      if (rek !== r) return; // dihentikan sengaja
+      if (rek !== r) return;
       rek = null;
-      if (!sesi || sibuk || keadaan === 'bicara') return;
-      if (Date.now() - terakhirSuara > SEPI_MS) { akhiriSesi('Sepi, jadi aku berhenti mendengar. Ketuk Aura atau tepuk 2× untuk lanjut.'); return; }
-      setTimeout(jalankanDengar, 120); // browser memutus mic sendiri: sambung lagi
+      if (!sesi || sibuk || keadaan !== 'dengar') return;
+      if (Date.now() - terakhirSuara > SEPI_MS) { tidur('Sepi, aku tidur dulu. Tepuk 2× kalau butuh aku.'); return; }
+      setTimeout(dengarBrowser, 120);
     };
     try { r.start(); } catch (e) { rek = null; }
   }
-  A.dengar = () => { setMode('suara'); return mulaiSesi(); };
+  function berhentiBrowser() { const r = rek; rek = null; if (r) { try { r.abort(); } catch (e) {} } }
 
-  // ---------- orb sebagai tombol ----------
-  function ketukOrb() {
-    if (!suaraMode()) setMode('suara');
-    if (keadaan === 'bicara') { A.diam(); setKeadaan('diam'); mulaiSesi(); return; }
-    if (sesi && (keadaan === 'dengar' || rek)) { akhiriSesi('Ketuk Aura atau tepuk 2× untuk bicara lagi'); return; }
-    if (keadaan === 'pikir') return;
-    if (sapaanTertunda) { ucap(sapaanTertunda); return; }
-    mulaiSesi();
+  function akhiriSesi() { sesi = false; berhentiBrowser(); }
+
+  // ---------- tidur & bangun ----------
+  function tidur(teks) {
+    akhiriSesi(); A.diam(); tertunda = null;
+    teksSaya('');
+    teksAura(teks || '');
+    setKeadaan('tidur');
+    if (suaraMode() && A.telinga) A.telinga('tidur');
   }
-  A.panggil = () => { if (keadaan === 'diam' && !sibuk && !sesi) ketukOrb(); };
+  A.tidur = tidur;
 
-  // Aura membuka percakapan
-  async function sapa() {
-    if (!suaraMode() || sesi || keadaan !== 'diam') return;
-    setKeadaan('pikir', 'Aura bersiap…');
+  async function bangun() {
+    if (keadaan !== 'tidur' || !suaraMode()) return;
+    if (window.adeganMulai) adeganMulai();
+    sesi = true; terakhirSuara = Date.now();
+    A.telinga && A.telinga('jeda');
+    if (sudahSapaHariIni) { ucap('Ya, ' + cfg.nama + '?', lanjutDengar); return; }
+    setKeadaan('pikir');
     try {
       const j = await panggil({ aksi: 'sapa' });
+      sudahSapaHariIni = true;
       if (j.baru) tambah('aura', j.teks);
-      setKeadaan('diam');
-      ucap(j.teks, !j.tutup);
+      ucap(j.teks, j.tutup ? () => tidur() : lanjutDengar);
     } catch (e) {
-      setKeadaan('diam');
-      ucap('Halo ' + cfg.nama + '. Aku Aura. Ada yang mau dibahas?', true);
+      ucap('Halo ' + cfg.nama + '. Ada yang mau dibahas?', lanjutDengar);
     }
   }
-  A.sapa = sapa;
+  A.bangun = bangun;
+
+  function ketukOrb() {
+    if (!suaraMode()) { setMode('suara'); return; }
+    if (tertunda) { const t = tertunda; tertunda = null; ucap(t.teks, t.sesudah); return; }
+    if (keadaan === 'tidur') { bangun(); return; }
+    if (keadaan === 'bicara') { A.diam(); lanjutDengar(); return; }
+    if (keadaan === 'dengar') { tidur(); return; }
+    if (keadaan === 'diam') lanjutDengar();
+  }
+
+  // kamera melihat ada orang saat Aura tidur: orb menyala sebentar + ajakan, tanpa suara
+  A.melihatmu = () => {
+    if (keadaan !== 'tidur' || !suaraMode()) return;
+    if (window.orbEnergi) { orbEnergi(0.7); setTimeout(() => keadaan === 'tidur' && orbEnergi(0), 1600); }
+    teksAura('Hai ' + cfg.nama + '. Tepuk 2× kalau mau ngobrol.');
+  };
 
   // ---------- pasang ----------
   let terpasang = false;
@@ -209,7 +264,7 @@
       terpasang = true;
       $('orb-tombol').onclick = ketukOrb;
       $('ke-ketik').onclick = () => setMode('ketik');
-      $('btn-mic').onclick = () => A.dengar();
+      $('btn-mic').onclick = () => { setMode('suara'); bangun(); };
       $('form-chat').onsubmit = ev => { ev.preventDefault(); kirim($('chat-isi').value, false); };
       document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && suaraMode()) setMode('ketik'); });
     }
@@ -221,7 +276,9 @@
       (j.pesan || []).forEach(p => tambah(p.peran === 'assistant' ? 'aura' : 'user', p.isi));
       if (!(j.pesan || []).length) $('percakapan').classList.add('hidden');
       infoKuota(j.kuota, j.jam);
+      pakaiServerDengar = !!j.dengarServer;
+      const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+      sudahSapaHariIni = (j.pesan || []).some(p => new Date(p.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) === hariIni);
     } catch (e) { $('info-chat').textContent = 'Riwayat chat belum bisa dimuat.'; }
-    if (suaraMode() && !c.tundaSapa) sapa();
   };
 })();

@@ -7,24 +7,24 @@
 <meta name="theme-color" content="#000000">
 <title>Aura · Girlhood Den</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@50..125,200..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
 <style>
 /* Layout: planet saat fajar sebagai latar hidup (assets/aura/scene.js). Orb Aura duduk tepat di posisi matahari.
    Gerbang: orb di atas cakrawala, logo + tombol masuk di permukaan planet. Aplikasi: bar tipis, orb besar + sapaan, panel kaca. */
 :root{
   --void:#000000; --ember:#ff5a1f; --corona:#ffd7a1; --horizon:#ff8a3d; --rim:#6b5cff; --ash:#a59ca8;
   --ink:#f6efe9; --kaca:rgba(8,4,3,.52); --garis:rgba(255,168,120,.18); --bad:#ff8f9c;
-  --font:"Saira",system-ui,sans-serif; --ease:cubic-bezier(.22,1,.36,1); color-scheme:dark;
+  --font:"Geist",system-ui,-apple-system,sans-serif; --ease:cubic-bezier(.22,1,.36,1); color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
-body{background:var(--void);color:var(--ink);font:400 15px/1.55 var(--font);font-variation-settings:"wdth" 100;
+body{background:var(--void);color:var(--ink);font:400 15px/1.55 var(--font);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #adegan{position:fixed;inset:0;width:100%;height:100%;z-index:-2}
 .tirai{position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.4) 0,rgba(0,0,0,0) 14%,rgba(0,0,0,0) 30%,rgba(0,0,0,.5) 58%,rgba(0,0,0,.86) 100%)}
 button{font:inherit;cursor:pointer}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border-radius:999px;border:1px solid var(--garis);
-  background:var(--kaca);color:var(--ink);font-weight:500;font-variation-settings:"wdth" 108;letter-spacing:.02em;
+  background:var(--kaca);color:var(--ink);font-weight:500;letter-spacing:.02em;
   -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);transition:transform 120ms var(--ease),border-color 150ms var(--ease),background-color 150ms var(--ease)}
 .btn:hover{border-color:rgba(255,168,120,.45)}
 .btn:active{transform:scale(.97)}
@@ -45,7 +45,7 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .gate-card{width:min(380px,100%);display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:14px;text-align:center}
 .gate h1{margin:0 0 2px;line-height:0}
 .gate h1 .logo{width:min(210px,56vw);height:auto;filter:drop-shadow(0 2px 14px rgba(0,0,0,.6))}
-.gate p{margin:0 0 6px;color:var(--ash);font-variation-settings:"wdth" 112;letter-spacing:.04em}
+.gate p{margin:0 0 6px;color:var(--ash);letter-spacing:.04em}
 .gate .btn{width:100%}
 .atau{display:flex;align-items:center;gap:12px;width:100%;color:var(--ash);font-size:13px}
 .atau::before,.atau::after{content:"";flex:1;height:1px;background:var(--garis)}
@@ -70,21 +70,24 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .btn.ikon[aria-pressed="false"]{color:var(--ash)}
 .tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{border:0;background:none;color:var(--ash);font-weight:500;font-variation-settings:"wdth" 110;letter-spacing:.03em;padding:8px 14px;border-radius:999px;white-space:nowrap;min-height:40px;transition:color 150ms var(--ease),background-color 150ms var(--ease)}
+.tab{border:0;background:none;color:var(--ash);font-weight:500;padding:8px 14px;border-radius:999px;white-space:nowrap;min-height:40px;transition:color 150ms var(--ease),background-color 150ms var(--ease)}
 .tab[aria-selected="true"]{color:var(--ink);background:rgba(255,120,60,.16)}
 .utama{display:grid;justify-items:center;gap:12px;max-width:680px;width:100%;margin:0 auto;text-align:center;padding-top:clamp(16px,6dvh,64px)}
 .utama>.panel,.utama>.chat,.utama>.menu{width:100%;text-align:left}
-.utama h2{font:300 clamp(30px,5.4vw,46px)/1.08 var(--font);font-variation-settings:"wdth" 122;letter-spacing:.01em;margin:clamp(8px,3dvh,28px) 0 0;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.7)}
-.tgl{margin:0 0 10px;color:var(--corona);opacity:.8;font-variation-settings:"wdth" 115;letter-spacing:.05em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
+.utama h2{font:300 clamp(30px,5vw,44px)/1.1 var(--font);letter-spacing:-.02em;margin:clamp(8px,3dvh,28px) 0 0;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+.tgl{margin:0 0 10px;color:var(--corona);opacity:.8;letter-spacing:.01em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
 .panel{background:var(--kaca);border:1px solid var(--garis);border-radius:20px;padding:16px 18px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 .ruang-ketik{display:grid;gap:12px;width:100%}
 .orb-tombol{border:0;background:none;padding:0;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease)}
 .orb-tombol:active{transform:scale(.97)}
 .orb-tombol .orb{--s:min(250px,60vw)}
-.ruang-suara{display:grid;justify-items:center;gap:10px;width:100%;max-width:640px;text-align:center}
-.kata-aura{margin:0;font:300 clamp(20px,3.4vw,28px)/1.35 var(--font);font-variation-settings:"wdth" 110;text-wrap:balance;text-shadow:0 2px 20px rgba(0,0,0,.75);min-height:1.35em}
-.kata-saya{margin:0;color:var(--corona);font-size:16px;min-height:1.5em;text-shadow:0 1px 12px rgba(0,0,0,.7)}
-.status-suara{margin:6px 0 0;color:var(--ash);font-size:13px;letter-spacing:.03em}
+.ruang-suara{display:grid;justify-items:center;gap:12px;width:100%;max-width:600px;text-align:center}
+.kata-aura{margin:0;max-width:30em;font:400 clamp(18px,2.4vw,23px)/1.45 var(--font);letter-spacing:-.005em;text-wrap:balance;text-shadow:0 1px 18px rgba(0,0,0,.85);min-height:2.9em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.kata-saya{margin:0;max-width:34em;color:var(--corona);opacity:.85;font-size:15px;line-height:1.45;min-height:1.45em;text-shadow:0 1px 12px rgba(0,0,0,.8);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.status-suara{margin:4px 0 0;color:var(--ash);font-size:12.5px;letter-spacing:.02em}
+.orb-tombol .orb{transition:filter 700ms var(--ease),transform 700ms var(--ease)}
+body[data-aura="tidur"] .orb-tombol .orb{filter:brightness(.5) saturate(.55);transform:scale(.9)}
+@media (prefers-reduced-motion:reduce){.orb-tombol .orb{transition:none}}
 .ke-ketik{min-height:36px;font-size:13px;padding:0 14px;margin-top:6px}
 body.mode-suara .bar,body.mode-suara .tabs,body.mode-suara #salam,body.mode-suara #tanggal,body.mode-suara .menu,body.mode-suara .privasi{display:none!important}
 body.mode-suara .utama{min-height:calc(100dvh - 40px);align-content:center;padding-top:0;gap:22px}
@@ -115,7 +118,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .menu>*{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;padding:14px 18px;border:0;background:none;color:var(--ink);text-align:left;text-decoration:none;transition:background-color 150ms var(--ease)}
 .menu>*+*{border-top:1px solid var(--garis)}
 .menu>:hover{background:rgba(255,120,60,.08)}
-.menu b{font-weight:600;font-variation-settings:"wdth" 110}
+.menu b{font-weight:600}
 .menu span{grid-column:1;color:var(--ash);font-size:14px}
 .menu i{grid-row:1/3;grid-column:2;font-style:normal;color:var(--horizon);font-size:20px}
 .frame{width:100%;height:calc(100dvh - 120px);min-height:620px;border:0;border-radius:20px;background:#fff}
@@ -192,7 +195,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <script src="assets/aura/scene.js"></script>
 <script src="assets/aura/intro-suara.js"></script>
 <script src="assets/aura/chat.js"></script>
-<script src="assets/aura/tepuk.js"></script>
+<script src="assets/aura/telinga.js"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -295,27 +298,16 @@ async function mulai(dariTombol){
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','palette'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
-  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama, tundaSapa: true });
-  nyalakanIndra(data.nama);
+  Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama });
+  nyalakanIndra();
 }
 
-/* ---------- tepuk tangan & kamera: bawaan, menyala sendiri saat Aura dibuka ---------- */
+/* ---------- kamera: hanya "melihat" saat Aura tidur (sekali tiap membuka Aura) ---------- */
 let indraMenyala = false;
-function nyalakanIndra(nama){
+async function nyalakanIndra(){
   if (indraMenyala) return; indraMenyala = true;
-  Aura.tepukNyala(true);
-  sapaKamera(nama, false);
-}
-async function sapaKamera(nama, paksa){
-  const hariIni = new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
-  try { if (!paksa && localStorage.getItem('aura-sapa-kamera') === hariIni) { Aura.sapa(); return; } } catch (e) {}
-  let modul; try { modul = await import('./assets/aura/kamera.js'); } catch (e) { if (!paksa) Aura.sapa(); return; }
-  const hasil = await modul.sapaKamera(() => {
-    try { localStorage.setItem('aura-sapa-kamera', hariIni); } catch (e) {}
-    if (window.adeganMulai) adeganMulai();
-    Aura.setMode('suara'); Aura.sapa();
-  });
-  if (hasil !== 'ok' && !paksa) Aura.sapa(); // kamera gagal / tidak ada wajah: tetap disapa
+  let modul; try { modul = await import('./assets/aura/kamera.js'); } catch (e) { return; }
+  modul.sapaKamera(() => Aura.melihatmu());
 }
 
 (async () => {

@@ -1,5 +1,5 @@
 // Aura: asisten internal Girlhood Den (dulu Jarvis; menggantikan Gantara).
-// Aksi: riwayat, sapa, chat. Login wajib (staff internal aktif). Kuota bersama Kantor AI (50/hari),
+// Aksi: riwayat, sapa, dengar (suara -> teks lewat Whisper di Groq, gratis), chat. Login wajib (staff internal aktif). Kuota bersama Kantor AI (50/hari),
 // tim hanya sampai 17.00 WIB (CEO/COO bebas). Data dibaca lewat peran baca-saja dalam transaksi READ ONLY.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -14,7 +14,11 @@ const MAKS_PUTARAN = 6;
 const BATAS_GLOBAL = 400;
 const AGENT = "aura";
 const JAM_TUTUP = 17;
-
+const GROQ_KEY = Deno.env.get("GROQ_API_KEY") || "";
+// kata-kata kita, supaya pendengaran tidak salah tangkap (misal "Girlhood Den" jadi "golden")
+const KOSAKATA = "Aura, Girlhood Den, Saturnine Media, skp, Gabriella, KIME, Hanasui, SKIN1004, OMG, Oh My Glam, Glad2Glow, Skintific, GMV, TAP, FastMoss, KOL, AE, GDLC, harta karun, creator, affiliate, sampel, SOW, live, VT, payday, Super Brand Day, product palette.";
+// kalimat yang sering "dikarang" Whisper saat hening
+const HALUSINASI = /^(terima kasih( telah menonton| sudah menonton)?|thank you( for watching)?|subtitle[s]? by.*|\.+)$/i;
 const ASAL = [/^https:\/\/(www\.)?girlhoodden\.com$/, /^http:\/\/localhost:8777$/];
 const cors = (o: string) => ({
   "access-control-allow-origin": ASAL.some((r) => r.test(o)) ? o : "https://girlhoodden.com",
@@ -106,7 +110,7 @@ async function bible(): Promise<string> {
   return (data || []).map((b) => `## ${b.judul}\n${b.isi}`).join("\n\n");
 }
 
-async function tanya(pesanBaru: string, riwayat: any[], dinamis: string): Promise<{ teks: string; masuk: number; keluar: number }> {
+async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 1500): Promise<{ teks: string; masuk: number; keluar: number }> {
   const sistem = [
     { type: "text", text: PERSONA },
     { type: "text", text: "BIBLE GIRLHOOD DEN (dari skp)\n\n" + (await bible()) },
@@ -119,7 +123,7 @@ async function tanya(pesanBaru: string, riwayat: any[], dinamis: string): Promis
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: sistem, tools: [ALAT_DATA], messages: pesan }),
+      body: JSON.stringify({ model: MODEL, max_tokens: maks, system: sistem, tools: [ALAT_DATA], messages: pesan }),
     });
     const j = await r.json();
     if (!r.ok) throw new Error("Claude API " + r.status + ": " + String(j?.error?.message || "").slice(0, 200));
@@ -155,7 +159,7 @@ Deno.serve(async (req) => {
     if (b.aksi === "riwayat") {
       const { data } = await db.from("kantor_chat").select("id, peran, isi, created_at").eq("staff_id", staff.id).eq("agent", AGENT)
         .order("id", { ascending: false }).limit(30);
-      return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran });
+      return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran, dengarServer: !!GROQ_KEY });
     }
 
     // Aura membuka percakapan: sekali sehari dibuat dari data (disimpan), sesudahnya sapaan singkat tanpa AI.
@@ -169,9 +173,30 @@ Deno.serve(async (req) => {
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
         + `Angka kemarin (sudah dihitung): ${JSON.stringify(kemarin)}\n`
         + "TUGAS: kamu yang MEMBUKA percakapan hari ini, jawabanmu akan DIBACAKAN. Sapa dia sesuai waktu (pagi/siang/sore), sebut 1–2 hal paling penting dari angka kemarin dengan bahasa lisan, lalu tutup dengan SATU pertanyaan untuknya (misal rencana atau fokus hari ini). Maksimal 3 kalimat pendek, tanpa daftar, tanpa simbol.";
-      const hsl = await tanya("(Aura membuka percakapan)", [], dinamis);
+      const hsl = await tanya("(Aura membuka percakapan)", [], dinamis, 400);
       await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 4000), input_tokens: hsl.masuk, output_tokens: hsl.keluar });
       return balas({ teks: hsl.teks, baru: true });
+    }
+
+    if (b.aksi === "dengar") {
+      if (!GROQ_KEY) return balas({ galat: "TANPA_KUNCI" }, 501);
+      const audio = String(b.audio || "");
+      if (!audio || audio.length > 4_000_000) return balas({ galat: "AUDIO" }, 400);
+      const tipe = String(b.tipe || "audio/webm").split(";")[0];
+      const ext = tipe.includes("mp4") ? "mp4" : tipe.includes("ogg") ? "ogg" : "webm";
+      const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
+      const f = new FormData();
+      f.append("file", new Blob([bytes], { type: tipe }), "ucapan." + ext);
+      f.append("model", "whisper-large-v3-turbo");
+      f.append("language", "id");
+      f.append("temperature", "0");
+      f.append("response_format", "json");
+      f.append("prompt", KOSAKATA);
+      const r = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", { method: "POST", headers: { authorization: "Bearer " + GROQ_KEY }, body: f });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { console.error("groq", r.status, JSON.stringify(j).slice(0, 200)); return balas({ galat: r.status === 429 ? "PENUH" : "DENGAR" }, 502); }
+      const teks = String(j.text || "").trim();
+      return balas({ teks: HALUSINASI.test(teks) || teks === KOSAKATA ? "" : teks });
     }
 
     if (b.aksi === "chat") {
@@ -202,8 +227,8 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
-        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: jawab maksimal 3 kalimat pendek, tanpa daftar bernomor, tanpa simbol, angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar (misal \"bagi\" maksudnya \"pagi\"): tafsirkan maksud yang paling masuk akal, jangan mempersoalkan salah ketiknya. Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
-      const hsl = await tanya(pesan, riwayat, dinamis);
+        + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN seperti orang ngobrol: WAJIB maksimal 3 kalimat pendek (sekitar 40 kata). DILARANG daftar bernomor, poin-poin, baris baru, atau simbol. Kalau jawabannya panjang, sebut intinya saja lalu tawarkan rincian di mode ketik. Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar (misal \"bagi\" maksudnya \"pagi\"): tafsirkan maksud yang paling masuk akal, jangan mempersoalkan salah ketiknya. Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
+      const hsl = await tanya(pesan, riwayat, dinamis, b.suara ? 500 : 1500);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);
