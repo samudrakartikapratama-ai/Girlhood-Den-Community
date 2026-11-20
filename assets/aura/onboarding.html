@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Onboarding · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=2">
+<style>
+.layar{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--garis);background:#000;aspect-ratio:16/9}
+.layar video{display:block;width:100%;height:100%;background:#000}
+.daftar-video{display:grid;gap:8px}
+.item{display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:10px;border-radius:16px;border:1px solid var(--garis);background:var(--kaca);cursor:pointer;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:border-color 150ms var(--ease),transform 120ms var(--ease)}
+.item:hover{border-color:var(--garis2)}
+.item:active{transform:scale(.99)}
+.item[aria-current=true]{border-color:var(--ember);background:rgba(255,90,31,.10)}
+.item:disabled{cursor:default;opacity:.55;transform:none}
+.sampul{width:136px;aspect-ratio:16/9;border-radius:10px;background:rgba(255,255,255,.05) center/cover no-repeat;flex:none;display:grid;place-items:center;font-size:12px;color:var(--ash)}
+.item .isi{flex:1;min-width:0;display:grid;gap:2px}
+.item b{font-weight:500}
+.item .muted{font-size:13px}
+.tanda{flex:none}
+@media (max-width:560px){.sampul{width:96px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="baris antara">
+    <div><h1>Onboarding</h1><p class="muted kecil" id="ringkas">Tonton berurutan, satu per satu.</p></div>
+  </div>
+  <div id="pesan" class="pesan"></div>
+  <div class="layar hidden" id="layar"><video id="pemutar" controls playsinline preload="metadata"></video></div>
+  <div class="panel hidden" id="sekarang"><h2 id="judul"></h2><p class="muted kecil" id="isi"></p></div>
+  <section class="daftar-video" id="daftar" aria-label="Daftar video"></section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let daftar = [], aktif = null;
+
+// tanda "sudah ditonton" hanya di perangkat ini
+const baca = () => { try { return JSON.parse(localStorage.getItem('aura-onboarding') || '{}'); } catch (e) { return {}; } };
+const tandai = no => { const x = baca(); x[no] = 1; try { localStorage.setItem('aura-onboarding', JSON.stringify(x)); } catch (e) {} };
+
+function gambar(){
+  const s = baca();
+  const siap = daftar.filter(v => v.video), selesai = siap.filter(v => s[v.no]).length;
+  $('ringkas').textContent = siap.length ? `${selesai} dari ${siap.length} video sudah ditonton` : 'Belum ada video.';
+  $('daftar').innerHTML = daftar.map(v => `
+    <button class="item" data-no="${v.no}" ${v.video ? '' : 'disabled'} aria-current="${aktif === v.no}">
+      <span class="sampul" style="${v.sampul ? `background-image:url('${esc(v.sampul)}')` : ''}">${v.sampul ? '' : 'Segera'}</span>
+      <span class="isi"><b>${v.no}. ${esc(v.judul)}</b><span class="muted">${esc(v.isi)}</span></span>
+      <span class="tanda">${!v.video ? '<span class="chip">Segera</span>' : s[v.no] ? '<span class="chip ok">Sudah ditonton</span>' : ''}</span>
+    </button>`).join('');
+  document.querySelectorAll('.item[data-no]').forEach(b => b.onclick = () => putar(Number(b.dataset.no), true));
+}
+
+function putar(no, mulai){
+  const v = daftar.find(x => x.no === no); if (!v || !v.video) return;
+  aktif = no;
+  const p = $('pemutar'); p.poster = v.sampul || ''; p.src = v.video;
+  $('layar').classList.remove('hidden'); $('sekarang').classList.remove('hidden');
+  $('judul').textContent = v.no + '. ' + v.judul; $('isi').textContent = v.isi;
+  gambar();
+  if (mulai) { p.play().catch(() => {}); $('layar').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+
+$('pemutar').addEventListener('ended', () => {
+  tandai(aktif); const s = baca();
+  const lanjut = daftar.find(v => v.video && v.no > aktif && !s[v.no]);
+  if (lanjut) putar(lanjut.no, false); else gambar();
+});
+
+(async () => {
+  try {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) throw new Error('BUKAN_INTERNAL');
+    const r = await fetch(URL_SB + '/functions/v1/aura-onboarding', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: '{}'});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.galat || 'GAGAL');
+    daftar = j.video || [];
+    const s = baca(), awal = daftar.find(v => v.video && !s[v.no]) || daftar.find(v => v.video);
+    gambar(); if (awal) putar(awal.no, false);
+  } catch (e) {
+    $('pesan').textContent = e.message === 'BUKAN_INTERNAL' ? 'Masuk ke Aura dulu untuk menonton.' : 'Video belum bisa dimuat. Coba buka ulang menu ini.';
+  }
+})();
+</script>
+</body>
+</html>
