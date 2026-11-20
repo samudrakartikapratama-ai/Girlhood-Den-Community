@@ -21,12 +21,24 @@ const VIDEO = [
 ];
 const JAM = 6 * 3600;
 
+// Aura hanya menerima sesi yang dibuka lewat Face ID / sidik jari (bukan kode staff)
+function idSesi(jwt: string): string | null {
+  try { return JSON.parse(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).session_id || null; } catch { return null; }
+}
+async function sesiSah(jwt: string, staffId: string) {
+  const sesi = idSesi(jwt);
+  if (!sesi) return false;
+  const { data } = await db.rpc("aura_sesi_sah", { p_sesi: sesi, p_staff: staffId });
+  return data === true;
+}
+
 async function staf(req: Request) {
   const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!jwt) return null;
   const { data } = await db.auth.getUser(jwt);
   if (!data?.user) return null;
   const { data: s } = await db.from("internal_staff").select("id").eq("auth_user_id", data.user.id).eq("is_active", true).maybeSingle();
+  if (!s || !(await sesiSah(jwt, s.id))) return null;
   return s;
 }
 

@@ -49,6 +49,11 @@ async function ambilChallenge(id: string, jenis: string) {
   return data;
 }
 
+// id sesi (klaim session_id) dari access token
+function idSesi(jwt: string): string | null {
+  try { return JSON.parse(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).session_id || null; } catch { return null; }
+}
+
 // Sesi dibuat lewat token magic link di server: password staff tidak diubah.
 async function buatSesi(authUserId: string) {
   const { data: u } = await admin.auth.admin.getUserById(authUserId);
@@ -131,6 +136,10 @@ Deno.serve(async (req) => {
       await admin.from("jarvis_passkeys").update({ counter: hasil.authenticationInfo.newCounter, last_used_at: new Date().toISOString() }).eq("id", k.id);
       const sesi = await buatSesi(s.auth_user_id);
       if (!sesi) return balas({ galat: "SESI" }, 500);
+      // tandai sesi ini dibuka lewat Face ID: Aura hanya menerima sesi seperti ini
+      const sesiId = idSesi(sesi.access_token);
+      const { error: eCatat } = await admin.rpc("aura_catat_sesi_passkey", { p_sesi: sesiId, p_staff: s.id });
+      if (!sesiId || eCatat) return balas({ galat: "SESI" }, 500);
       return balas({ nama: s.nama, sesi: { access_token: sesi.access_token, refresh_token: sesi.refresh_token } });
     }
 

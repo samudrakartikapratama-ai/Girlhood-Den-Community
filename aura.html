@@ -47,6 +47,15 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .gate h1 .logo{width:min(210px,56vw);height:auto;filter:drop-shadow(0 2px 14px rgba(0,0,0,.6))}
 .gate p{margin:0 0 6px;color:var(--ash);letter-spacing:.04em}
 .gate .btn{width:100%}
+.gate[data-mode=faceid] .awal-saja,.gate[data-mode=aktifkan] .awal-saja,.gate:not([data-mode=aktifkan]) .aktifkan-saja{display:none}
+.gate[data-mode=aktifkan] #btn-passkey{display:none}
+.gate .aktifkan-saja p{margin:0;color:var(--ink);letter-spacing:0;line-height:1.5}
+.link-kecil{background:none;border:0;color:var(--ash);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:6px}
+.toast{position:fixed;left:50%;top:max(18px,env(safe-area-inset-top));z-index:50;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:999px;border:1px solid var(--garis);background:rgba(20,16,14,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:var(--ink);font-size:15px;
+  transform:translate(-50%,-12px);opacity:0;pointer-events:none;transition:transform 260ms cubic-bezier(.16,1,.3,1),opacity 200ms cubic-bezier(.16,1,.3,1)}
+.toast.tampil{transform:translate(-50%,0);opacity:1}
+.toast i{width:22px;height:22px;border-radius:50%;background:#22946A;display:grid;place-items:center;font-style:normal;font-size:13px;color:#fff}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
 .atau{display:flex;align-items:center;gap:12px;width:100%;color:var(--ash);font-size:13px}
 .atau::before,.atau::after{content:"";flex:1;height:1px;background:var(--garis)}
 .kode{display:flex;gap:8px;width:100%}
@@ -116,10 +125,6 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .chat input{flex:1;min-width:0;min-height:50px;border-radius:999px;border:1px solid var(--garis);background:var(--kaca);color:var(--ink);padding:0 20px;font:inherit;
   -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 .chat input::placeholder{color:var(--ash)}
-.ajak{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-color:rgba(255,120,60,.4)}
-.ajak div{flex:1 1 260px}
-.ajak b{display:block;font-weight:600}
-.ajak span{color:var(--ash);font-size:14px}
 .menu{display:grid;background:var(--kaca);border:1px solid var(--garis);border-radius:20px;overflow:hidden;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 .menu>*{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;padding:14px 18px;border:0;background:none;color:var(--ink);text-align:left;text-decoration:none;transition:background-color 150ms var(--ease)}
 .menu>*+*{border-top:1px solid var(--garis)}
@@ -135,20 +140,26 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <body>
 <div class="tirai" aria-hidden="true"></div>
 
-<section class="gate" id="gate" aria-labelledby="g-judul">
+<section class="gate" id="gate" data-mode="awal" aria-labelledby="g-judul">
   <canvas class="orb" data-orb data-matahari style="--s:min(230px,58vw)" aria-hidden="true"></canvas>
   <div class="gate-card">
     <h1 id="g-judul"><svg class="logo" viewBox="0 0 196 40" role="img" aria-label="Aura"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 38 L20 2 L38 38"/><path d="M56 2 V26 Q56 38 68 38 H80 Q92 38 92 26 V2"/><path d="M110 38 V2 H134 Q144 2 144 11 Q144 20 134 20 H118 L144 38"/><path d="M158 38 L176 2 L194 38"/></g></svg></h1>
     <p id="g-sub">Asisten internal Girlhood Den</p>
     <button class="btn primary" id="btn-passkey" type="button">Masuk pakai Face ID / sidik jari</button>
-    <div class="atau">atau pakai kode staff</div>
-    <form class="kode" id="form-kode">
+    <div class="aktifkan-saja" style="display:grid;gap:12px;width:100%">
+      <p>Aura wajib dibuka pakai Face ID atau sidik jari. Aktifkan sekali di perangkat ini, sesudah itu tidak perlu kode lagi.</p>
+      <button class="btn primary" id="btn-aktifkan" type="button">Aktifkan Face ID / sidik jari</button>
+    </div>
+    <div class="atau awal-saja">pertama kali? pakai kode staff</div>
+    <form class="kode awal-saja" id="form-kode">
       <input id="kode" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" placeholder="Kode staff" aria-label="Kode staff">
       <button class="btn" type="submit" id="btn-kode">Masuk</button>
     </form>
     <div class="pesan" id="pesan" role="alert"></div>
+    <button class="link-kecil hidden" id="btn-gate-keluar" type="button">Bukan akunmu? Keluar</button>
   </div>
 </section>
+<div class="toast" id="toast" role="status" aria-live="polite"><i aria-hidden="true">✓</i><span id="toast-teks"></span></div>
 
 <div class="app hidden" id="app">
   <div class="bar">
@@ -186,10 +197,6 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     <p class="info-chat" id="info-chat"></p>
     </div>
     <p class="kecil privasi">Mikrofon (untuk tepuk tangan dan bicara) dan kamera (untuk menyapa) diproses di perangkat ini saja, tidak direkam atau dikirim. Kamera tidak dipakai untuk masuk.</p>
-    <div class="panel ajak hidden" id="ajak-passkey">
-      <div><b>Aktifkan Face ID / sidik jari</b><span>Besok tinggal sentuh, tidak perlu ketik kode lagi. Di laptop, kamu bisa scan QR pakai HP.</span></div>
-      <button class="btn primary" id="btn-daftar" type="button">Aktifkan sekarang</button>
-    </div>
     <nav class="menu" aria-label="Alat kerja">
       <button type="button" data-buka="tugas"><b>Tugas hari ini</b><span>Tugas dari data, setor jam 16.30</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="onboarding"><b>Onboarding</b><span>Video wajib untuk anggota tim baru</span><i aria-hidden="true">›</i></button>
@@ -231,20 +238,26 @@ async function passkey(aksi, isi, pakaiSesi){
 const BATAL = e => e && (e.name === 'NotAllowedError' || e.name === 'AbortError');
 
 /* ---------- masuk ---------- */
+let toastJeda;
+function toast(t){ $('toast-teks').textContent = t; $('toast').classList.add('tampil'); clearTimeout(toastJeda); toastJeda = setTimeout(() => $('toast').classList.remove('tampil'), 2800); }
+
+async function masukFaceId(){
+  const { id, opsi } = await passkey('masuk-opsi', {});
+  const jawaban = await WA.startAuthentication({ optionsJSON: opsi });
+  const hasil = await passkey('masuk-cek', { id, jawaban });
+  const { error } = await sb.auth.setSession(hasil.sesi);
+  if (error) throw error;
+  if (await mulai(true)) toast('Berhasil masuk, ' + hasil.nama);
+}
+
 $('btn-passkey').onclick = async () => {
   if (suaraNyala()) auraSiapkan();
   pesan(''); const b = $('btn-passkey'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
-  try {
-    const { id, opsi } = await passkey('masuk-opsi', {});
-    const jawaban = await WA.startAuthentication({ optionsJSON: opsi });
-    const hasil = await passkey('masuk-cek', { id, jawaban });
-    const { error } = await sb.auth.setSession(hasil.sesi);
-    if (error) throw error;
-    await mulai(true);
-  } catch (e) {
-    if (BATAL(e)) pesan('Belum ada Face ID terdaftar di perangkat ini, atau dibatalkan. Masuk pakai kode dulu, lalu aktifkan Face ID.');
-    else if (e.message === 'TIDAK_DIKENAL') pesan('Face ID ini belum terdaftar. Masuk pakai kode dulu, lalu aktifkan Face ID.');
-    else pesan('Gagal masuk pakai Face ID. Coba lagi, atau pakai kode.');
+  try { await masukFaceId(); }
+  catch (e) {
+    if (BATAL(e)) pesan('Dibatalkan, atau Face ID belum aktif di perangkat ini. Pertama kali? Masuk pakai kode staff untuk mengaktifkannya.');
+    else if (e.message === 'TIDAK_DIKENAL') pesan('Face ID ini belum terdaftar. Masuk pakai kode staff untuk mengaktifkannya.');
+    else pesan('Gagal masuk pakai Face ID. Coba lagi.');
   } finally { b.disabled = false; b.textContent = 'Masuk pakai Face ID / sidik jari'; }
 };
 
@@ -267,18 +280,27 @@ $('form-kode').onsubmit = async ev => {
 };
 
 /* ---------- daftar passkey ---------- */
-$('btn-daftar').onclick = async () => {
-  const b = $('btn-daftar'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
+$('btn-aktifkan').onclick = async () => {
+  pesan(''); const b = $('btn-aktifkan'); b.disabled = true; b.textContent = 'Menunggu Face ID…';
   try {
     const { id, opsi } = await passkey('daftar-opsi', {}, true);
     const jawaban = await WA.startRegistration({ optionsJSON: opsi });
     await passkey('daftar-cek', { id, jawaban, perangkat: navigator.userAgent }, true);
-    $('ajak-passkey').innerHTML = '<div><b>Face ID / sidik jari aktif</b><span>Mulai besok, masuk Aura cukup sentuh.</span></div>';
+    b.textContent = 'Aktif. Sentuh sekali lagi untuk masuk…';
+    await masukFaceId();
   } catch (e) {
-    b.disabled = false; b.textContent = 'Aktifkan sekarang';
-    if (!BATAL(e)) alert(e.name === 'InvalidStateError' ? 'Perangkat ini sudah terdaftar.' : 'Gagal mengaktifkan. Coba lagi.');
-  }
+    if (BATAL(e)) pesan('Dibatalkan. Tekan tombolnya lagi untuk mengaktifkan.');
+    else if (e.name === 'InvalidStateError') pesan('Perangkat ini sudah terdaftar. Masuk pakai Face ID.');
+    else pesan('Gagal mengaktifkan. Coba lagi.');
+  } finally { b.disabled = false; b.textContent = 'Aktifkan Face ID / sidik jari'; }
 };
+$('btn-gate-keluar').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+function gerbang(mode){
+  $('gate').dataset.mode = mode; $('gate').classList.remove('hidden'); $('app').classList.add('hidden');
+  $('btn-gate-keluar').classList.toggle('hidden', mode === 'awal');
+  if (mode === 'aktifkan' && (!WA || !WA.browserSupportsWebAuthn())) { $('btn-aktifkan').classList.add('hidden'); pesan('Perangkat ini belum bisa Face ID atau sidik jari. Buka Aura di HP atau laptop yang punya Face ID, Touch ID, atau Windows Hello.'); }
+}
 
 /* ---------- aplikasi ---------- */
 function bukaMenu(m){
@@ -310,17 +332,23 @@ tampilSuara();
 
 async function mulai(dariTombol){
   const { data, error } = await sb.rpc('jarvis_saya');
-  if (error || !data){ $('gate').classList.remove('hidden'); $('app').classList.add('hidden'); if (error) pesan('Akun ini bukan akun internal.'); return; }
+  if (error || !data){ gerbang('awal'); if (error) pesan('Akun ini bukan akun internal.'); return false; }
+  // Aura hanya dibuka lewat Face ID / sidik jari; kode staff cuma untuk mengaktifkannya pertama kali
+  if (!data.sesi_passkey){
+    if (data.passkey > 0){ gerbang('faceid'); pesan('Akunmu sudah memakai Face ID. Masuk pakai Face ID / sidik jari.'); }
+    else gerbang('aktifkan');
+    return false;
+  }
   $('gate').classList.add('hidden'); $('app').classList.remove('hidden');
   $('siapa').textContent = data.nama;
   salam(data.nama);
-  $('ajak-passkey').classList.toggle('hidden', data.passkey > 0 || !WA || !WA.browserSupportsWebAuthn());
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
   bukaMenu(['beranda','tugas','palette','tes','onboarding'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
   Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama });
   cekTes();
   nyalakanIndra();
+  return true;
 }
 
 /* ---------- tab Tes hanya muncul kalau ada tes untukmu (atau kamu pimpinan) ---------- */
