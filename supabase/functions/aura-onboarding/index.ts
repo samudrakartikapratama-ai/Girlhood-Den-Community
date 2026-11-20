@@ -14,9 +14,9 @@ const cors = (o: string) => ({
 // Urutan tonton. Video tanpa berkas = belum dibuat.
 const VIDEO = [
   { no: 1, judul: "Alur uang", isi: "Dari mana uang kita datang dan bagaimana sampai ke kamu", berkas: "video-1" },
-  { no: 2, judul: "Website sisi creator", isi: "Cara creator memilih produk, request sampel, dan posting", berkas: null },
+  { no: 2, judul: "Website sisi creator", isi: "Tur semua menu creator: request sampel, cek status, report VT, poin, dan tier", berkas: "video-2" },
   { no: 3, judul: "Peran, KPI, dan alatmu", isi: "Tiga divisi KOL, target, bonus, Aura, dan Kantor AI", berkas: "video-3" },
-  { no: 4, judul: "Website sisi brand & internal", isi: "Cara brand dan tim KOL memakai website", berkas: null },
+  { no: 4, judul: "Website sisi brand", isi: "Tur semua menu brand: approval, pengiriman, report VT, dan harta karun", berkas: "video-4" },
   { no: 5, judul: "Budaya kerja", isi: "Integritas, transparan, adil, fun, dan inisiatif", berkas: "video-5" },
 ];
 const JAM = 6 * 3600;
