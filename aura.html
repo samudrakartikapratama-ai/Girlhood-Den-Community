@@ -47,8 +47,9 @@ canvas.orb.orb-cadangan{border-radius:50%;background:radial-gradient(circle at 4
 .gate h1 .logo{width:min(210px,56vw);height:auto;filter:drop-shadow(0 2px 14px rgba(0,0,0,.6))}
 .gate p{margin:0 0 6px;color:var(--ash);letter-spacing:.04em}
 .gate .btn{width:100%}
-.gate[data-mode=faceid] .awal-saja,.gate[data-mode=aktifkan] .awal-saja,.gate:not([data-mode=aktifkan]) .aktifkan-saja{display:none}
+.gate[data-mode=faceid] .awal-saja,.gate[data-mode=aktifkan] .awal-saja,.gate:not([data-mode=aktifkan]) .aktifkan-saja.aktifkan-kotak{display:none}
 .gate[data-mode=aktifkan] #btn-passkey{display:none}
+.aktifkan-kotak{display:grid;gap:12px;width:100%}
 .gate .aktifkan-saja p{margin:0;color:var(--ink);letter-spacing:0;line-height:1.5}
 .link-kecil{background:none;border:0;color:var(--ash);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:6px}
 .toast{position:fixed;left:50%;top:max(18px,env(safe-area-inset-top));z-index:50;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:999px;border:1px solid var(--garis);background:rgba(20,16,14,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:var(--ink);font-size:15px;
@@ -146,7 +147,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     <h1 id="g-judul"><svg class="logo" viewBox="0 0 196 40" role="img" aria-label="Aura"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 38 L20 2 L38 38"/><path d="M56 2 V26 Q56 38 68 38 H80 Q92 38 92 26 V2"/><path d="M110 38 V2 H134 Q144 2 144 11 Q144 20 134 20 H118 L144 38"/><path d="M158 38 L176 2 L194 38"/></g></svg></h1>
     <p id="g-sub">Asisten internal Girlhood Den</p>
     <button class="btn primary" id="btn-passkey" type="button">Masuk pakai Face ID / sidik jari</button>
-    <div class="aktifkan-saja" style="display:grid;gap:12px;width:100%">
+    <div class="aktifkan-saja aktifkan-kotak">
       <p>Aura wajib dibuka pakai Face ID atau sidik jari. Aktifkan sekali di perangkat ini, sesudah itu tidak perlu kode lagi.</p>
       <button class="btn primary" id="btn-aktifkan" type="button">Aktifkan Face ID / sidik jari</button>
     </div>
