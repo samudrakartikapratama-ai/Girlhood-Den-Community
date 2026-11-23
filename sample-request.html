@@ -6,6 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Girlhood Den Community — Sistem Final v2 (Popup Style)</title>
+<link rel="apple-touch-icon" href="/assets/icons/app-icon-180.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1314,9 +1315,9 @@ input.tp-asli::-webkit-calendar-picker-indicator{position:absolute;inset:0;width
     <svg style="position:absolute;width:170px;top:-50px;left:-55px;z-index:-1;animation:ghdBlobFloat1 10s ease-in-out infinite;filter:blur(2px)" viewBox="0 0 100 100"><g fill="#fff" fill-opacity=".45"><circle cx="30" cy="30" r="24"/><circle cx="70" cy="30" r="24"/><circle cx="30" cy="70" r="24"/><circle cx="70" cy="70" r="24"/></g></svg>
     <svg style="position:absolute;width:130px;bottom:-40px;right:-35px;z-index:-1;animation:ghdBlobFloat2 12s ease-in-out infinite;filter:blur(2px)" viewBox="0 0 100 100"><g fill="#fff" fill-opacity=".4"><circle cx="50" cy="16" r="21"/><circle cx="84" cy="38" r="21"/><circle cx="70" cy="78" r="21"/><circle cx="30" cy="78" r="21"/><circle cx="16" cy="38" r="21"/></g></svg>
     <svg style="position:absolute;width:80px;top:40%;right:-25px;z-index:-1;animation:ghdBlobFloat3 8s ease-in-out infinite;filter:blur(1.5px)" viewBox="0 0 100 100"><g fill="#fff" fill-opacity=".4"><circle cx="30" cy="30" r="24"/><circle cx="70" cy="30" r="24"/><circle cx="30" cy="70" r="24"/><circle cx="70" cy="70" r="24"/></g></svg>
-    <div style="position:relative;width:150px;height:150px;margin:0 auto 18px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(74,43,71,0.3);overflow:hidden"><img src="https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1/object/public/brand-assets/submark-ring.png" style="position:absolute;inset:0;width:100%;height:100%;animation:ghdLoginSpin 14s linear infinite"><div style="position:absolute;top:18%;left:18%;width:64%;height:64%;border-radius:50%;overflow:hidden"><img src="https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1/object/public/brand-assets/submark-g.png" style="width:100%;height:100%"></div></div><style>@keyframes ghdLoginSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+    <img src="/assets/icons/app-icon-512.png" alt="Girlhood Den Community" width="150" height="150" style="display:block;width:150px;height:150px;margin:0 auto 18px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(74,43,71,0.3)">
     <div class="role-option" onclick="togglePin('pin-internal')"><div class="role-icon-circle" style="background:#FFE566"><span style="font-size:18px">🛠️</span></div>&nbsp;&nbsp;<b>Masuk sebagai Internal</b></div>
-    <div class="pin-box" id="pin-internal"><input id="internal-pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="Kode Internal (6 digit)"><button class="btn btn-primary" id="internal-login-btn" onclick="loginInternal()">Masuk</button></div>
+    <div class="pin-box" id="pin-internal"><input id="internal-pin-input" type="password" inputmode="numeric" maxlength="12" placeholder="Kode staff"><button class="btn btn-primary" id="internal-login-btn" onclick="loginInternal()">Masuk</button></div>
     <div class="role-option" onclick="togglePin('pin-creator')"><div class="role-icon-circle" style="background:#E1F5EE"><span style="font-size:18px">👤</span></div>&nbsp;&nbsp;<b>Masuk sebagai Creator</b></div>
     <div class="pin-box" id="pin-creator">
       <input id="creator-login-input" placeholder="Contoh: GHD/26AB/08K7Q/133-47">
