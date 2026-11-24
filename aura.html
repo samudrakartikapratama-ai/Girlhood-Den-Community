@@ -172,7 +172,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
   </div>
   <nav class="tabs" role="tablist" aria-label="Menu Aura">
     <button class="tab" role="tab" data-m="beranda" aria-selected="true">Beranda</button>
-    <button class="tab" role="tab" data-m="tugas" aria-selected="false">Tugas</button>
+    <button class="tab hidden khusus-pimpinan" role="tab" data-m="tugas" aria-selected="false">Tugas</button>
     <button class="tab" role="tab" data-m="onboarding" aria-selected="false">Onboarding</button>
     <button class="tab hidden" role="tab" data-m="tes" aria-selected="false" id="tab-tes">Tes tim</button>
     <button class="tab" role="tab" data-m="palette" aria-selected="false">Product Palette</button>
@@ -199,11 +199,11 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     </div>
     <p class="kecil privasi">Mikrofon (untuk tepuk tangan dan bicara) dan kamera (untuk menyapa) diproses di perangkat ini saja, tidak direkam atau dikirim. Kamera tidak dipakai untuk masuk.</p>
     <nav class="menu" aria-label="Alat kerja">
-      <button type="button" data-buka="tugas"><b>Tugas hari ini</b><span>Tugas dari data, setor jam 16.30</span><i aria-hidden="true">›</i></button>
+      <button type="button" data-buka="tugas" class="hidden khusus-pimpinan"><b>Tugas hari ini</b><span>Tugas dari data, setor jam 16.30</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="onboarding"><b>Onboarding</b><span>Video wajib untuk anggota tim baru</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="tes" id="menu-tes" class="hidden"><b>Tes tim</b><span>Kerjakan tes, beri tes, lihat dan nilai hasil</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="palette"><b>Product Palette</b><span>Peta produk dari rambut sampai kaki</span><i aria-hidden="true">›</i></button>
-      <a href="/kantor.html"><b>Kantor AI</b><span>Kantor AI yang sudah berjalan, sementara masih terpisah</span><i aria-hidden="true">›</i></a>
+      <a href="/kantor.html" class="hidden khusus-pimpinan"><b>Kantor AI</b><span>Kantor AI yang sudah berjalan, sementara masih terpisah</span><i aria-hidden="true">›</i></a>
     </nav>
   </main>
   <div class="kamera hidden" id="kamera" aria-label="Kamera aktif"><video muted playsinline></video><span>Kamera aktif</span></div>
@@ -353,15 +353,21 @@ async function mulai(dariTombol){
   return true;
 }
 
-/* ---------- tab Tes hanya muncul kalau ada tes untukmu (atau kamu pimpinan) ---------- */
+/* ---------- menu per peran: tim hanya Beranda (ngobrol), Onboarding, Product Palette.
+   Tugas, Kantor AI, dan Tes (beri tes + hasil) khusus pimpinan. Anggota tim hanya melihat
+   menu Tes selama ada tes/simulasi yang diberikan untuknya, tanpa pernah melihat nilai. ---------- */
 async function cekTes(){
   try {
     const { data } = await sb.auth.getSession();
     const r = await fetch(SUPABASE_URL + '/functions/v1/aura-tes', {method:'POST', headers:{'Content-Type':'application/json', apikey:SUPABASE_ANON_KEY, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify({aksi:'status'})});
     const j = await r.json();
-    const ada = r.ok && (j.pimpinan || j.sesi);
-    $('tab-tes').classList.toggle('hidden', !ada); $('menu-tes').classList.toggle('hidden', !ada);
-    if (ada && j.sesi && !j.pimpinan) bukaMenu('tes');
+    const pimpinan = r.ok && j.pimpinan === true;
+    const adaTes = r.ok && (pimpinan || j.sesi || j.sim);
+    document.querySelectorAll('.khusus-pimpinan').forEach(x => x.classList.toggle('hidden', !pimpinan));
+    $('tab-tes').classList.toggle('hidden', !adaTes); $('menu-tes').classList.toggle('hidden', !adaTes);
+    $('menu-tes').querySelector('span').textContent = pimpinan ? 'Beri tes, lihat dan nilai hasil' : 'Tes yang harus kamu kerjakan';
+    if (adaTes && !pimpinan) bukaMenu('tes');
+    else if (!pimpinan && ['tugas','tes'].includes(document.querySelector('.tab[aria-selected=true]')?.dataset.m)) bukaMenu('beranda');
   } catch (e) {}
 }
 
