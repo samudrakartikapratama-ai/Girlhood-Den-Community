@@ -302,7 +302,11 @@ Deno.serve(async (req) => {
         const { data: semua } = await db.from("aura_tes_sesi").select("id, staff_id, status, dibuat_at, selesai_at, skor, mulai, selesai").order("dibuat_at", { ascending: false }).limit(50);
         const { data: orang } = await db.from("internal_staff").select("id, nama").eq("is_active", true).order("nama");
         out.daftar = (semua || []).map((x) => ({ ...x, nama: (orang || []).find((p) => p.id === x.staff_id)?.nama || "?", bagian: statusBagian(x) }));
-        out.orang = orang;
+        // Yang bisa diberi tes: terdaftar di Aura dan bukan tim lama
+        const { data: diAura } = await db.from("aura_staff").select("staff_id");
+        const { data: lama } = await db.from("app_config").select("value").eq("key", "aura_tim_lama").maybeSingle();
+        const timLama: string[] = JSON.parse(String(lama?.value || "[]"));
+        out.orang = (orang || []).filter((p) => (diAura || []).some((a) => a.staff_id === p.id) && !timLama.includes(p.id));
         const { data: sims } = await db.from("aura_simulasi").select("id, staff_id, status, dibuat_at, selesai_at, skor, mulai, selesai").order("dibuat_at", { ascending: false }).limit(50);
         out.daftar_sim = (sims || []).map((x) => ({ ...x, nama: (orang || []).find((p) => p.id === x.staff_id)?.nama || "?", langkah: statusSim(x) }));
       }
