@@ -292,6 +292,7 @@ $('btn-aktifkan').onclick = async () => {
   } catch (e) {
     if (BATAL(e)) pesan('Dibatalkan. Tekan tombolnya lagi untuk mengaktifkan.');
     else if (e.name === 'InvalidStateError') pesan('Perangkat ini sudah terdaftar. Masuk pakai Face ID.');
+    else if (e.message === 'BUKAN_INTERNAL') { await sb.auth.signOut(); gerbang('awal'); pesan('Sesi kode staff sudah habis. Masukkan kode staff lagi, lalu aktifkan Face ID.'); }
     else pesan('Gagal mengaktifkan. Coba lagi.');
   } finally { b.disabled = false; b.textContent = 'Aktifkan Face ID / sidik jari'; }
 };
