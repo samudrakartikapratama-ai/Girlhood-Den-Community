@@ -310,7 +310,7 @@ function bukaMenu(m){
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
   if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191548';
   if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611191548'; // muat ulang tiap dibuka supaya status terbaru
-  if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611191548';
+  if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611241830';
   if (m === 'onboarding' && !$('f-onboarding').src) $('f-onboarding').src = 'assets/aura/onboarding.html?v=202611201010';
   if (m !== 'onboarding' && $('f-onboarding').src) { try { $('f-onboarding').contentWindow.document.getElementById('pemutar').pause(); } catch (e) {} }
   if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : m === 'beranda' ? 0 : .6);

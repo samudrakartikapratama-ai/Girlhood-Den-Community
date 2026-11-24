@@ -3,6 +3,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { ARTI_GAYA, Bagian, JUDUL, KASUS, LOGIKA, nilaiGaya, nilaiLogika, RUBRIK, soalUntukKlien, URUTAN, WAKTU } from "./soal.ts";
+import { cariCreator, CREATOR, dataTurun, JUDUL_SIM, LANGKAH, Langkah, MAKS_CHAT, promptPeran, RUBRIK_SIM, tabelUntukKlien, WAKTU_SIM } from "./simulasi.ts";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
@@ -123,6 +124,164 @@ async function selesaikan(sesiId: string) {
     + (kesimpulan ? `\n\n${kesimpulan}` : "") + `\n\nRincian lengkap: girlhoodden.com/aura → Tes`);
 }
 
+// ---------- Simulasi Top Creator ----------
+function statusSim(s: any) {
+  const now = Date.now();
+  const out: Record<string, any> = {};
+  for (const l of LANGKAH) {
+    const m = s.mulai?.[l], sel = s.selesai?.[l];
+    out[l] = sel ? { status: "selesai" } : m ? { status: "jalan", sisa: Math.max(0, Math.round((Date.parse(m) + WAKTU_SIM[l] * 1000 - now) / 1000)) } : { status: "belum", waktu: WAKTU_SIM[l] };
+  }
+  return out;
+}
+const lewatWaktu = (s: any, l: Langkah) => Date.now() > Date.parse(s.mulai[l]) + (WAKTU_SIM[l] + LONGGAR) * 1000;
+
+async function claude(system: string, messages: any[], max_tokens: number) {
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+    body: JSON.stringify({ model: "claude-sonnet-5-5", max_tokens, system, messages }),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error("Claude " + r.status);
+  return (j.content || []).map((b: any) => b.text || "").join("").trim();
+}
+
+// Riwayat chat jadi pesan Claude: peserta = user, creator = assistant; pesan berurutan dari pihak sama digabung.
+function keMessages(chat: { dari: string; teks: string }[]) {
+  const out: { role: string; content: string }[] = [];
+  for (const c of chat) {
+    const role = c.dari === "peserta" ? "user" : "assistant";
+    if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += "\n" + c.teks;
+    else out.push({ role, content: c.teks });
+  }
+  if (out.length && out[0].role === "assistant") out.unshift({ role: "user", content: "(peserta membuka chat)" });
+  return out;
+}
+
+const transkrip = (chat: any[] = []) => chat.map((c) => (c.dari === "peserta" ? "PESERTA: " : "CREATOR: ") + c.teks).join("\n") || "(tidak ada chat)";
+
+async function selesaikanSim(simId: string) {
+  const { data: s } = await db.from("aura_simulasi").select("*").eq("id", simId).single();
+  if (!s || s.status === "selesai") return;
+  const d = s.data || {};
+  const pilih = (d.pilih || []).map((id: string) => cariCreator(id)).filter(Boolean) as any[];
+  const c = pilih[0] || cariCreator(d.creator) || CREATOR[0];
+  const kunciTabel = CREATOR.map((x) => `${x.akun}: ${x.kunci}`).join("\n");
+  const isi = `KUNCI TABEL (rahasia):\n${kunciTabel}\n\n=== 1 HUNTING ===\nPilihan berurutan: ${pilih.map((x) => x.akun).join(", ") || "(tidak memilih)"}\nAlasan:\n${(d.alasan || "(kosong)").slice(0, 5000)}\n\n=== 2 APPROACH (chat dengan ${c.akun}) ===\n${transkrip(d.chat?.approach).slice(0, 12000)}\n\n=== 3 NEGOSIASI KOMISI (brand memberi 15%, sisa perusahaan minimal 1%) ===\n${transkrip(d.chat?.negosiasi).slice(0, 12000)}\n\n=== 4 SEBULAN KEMUDIAN ===\nData:\n${dataTurun(c)}\n\nJawaban:\n${(d.turun || "(kosong)").slice(0, 6000)}`;
+  let nilai: any;
+  try {
+    const teks = await claude("Kamu penilai asesmen rekrutmen yang ketat dan adil untuk Girlhood Den. Nilai hanya dari isi jawaban dan chat, jangan murah hati.\n\n" + RUBRIK_SIM,
+      [{ role: "user", content: isi + '\n\nBalas HANYA JSON valid: {"hunting":n,"approach":n,"negosiasi":n,"diagnosis":n,"sikap":n,"jebakan_kena":["akun ..."],"komisi_akhir":"berapa % yang disepakati untuk creator dan sisa perusahaan, atau tidak ada kesepakatan","kekuatan":["..."],"kelemahan":["..."],"kesimpulan":"maksimal 4 kalimat bahasa sehari-hari untuk CEO: layak atau tidak di Top Creator, risiko terbesar, cara mengelolanya"}' }], 1500);
+    nilai = JSON.parse(teks.slice(teks.indexOf("{"), teks.lastIndexOf("}") + 1));
+    const dims = ["hunting", "approach", "negosiasi", "diagnosis", "sikap"];
+    nilai.rata = Math.round((dims.reduce((a, k) => a + (Number(nilai[k]) || 0), 0) / dims.length) * 10) / 10;
+  } catch (e) { nilai = { galat: String((e as Error)?.message || e) }; }
+  const catatan: Record<string, any> = {};
+  for (const l of LANGKAH) {
+    const m = Date.parse(s.mulai?.[l]), sel = Date.parse(s.selesai?.[l]);
+    catatan[l] = { menit: Math.round((sel - m) / 6000) / 10, keluar_halaman: d.keluar?.[l] || 0 };
+  }
+  nilai.catatan = catatan;
+  await db.from("aura_simulasi").update({ skor: nilai, status: "selesai", selesai_at: new Date().toISOString() }).eq("id", simId);
+  const { data: o } = await db.from("internal_staff").select("nama").eq("id", s.staff_id).maybeSingle();
+  await kirimLark(`Hasil Simulasi Top Creator ${o?.nama || "?"} — rahasia, hanya untuk skp & Gabriella\n\n`
+    + `Rata-rata: ${nilai.rata ?? "-"}/5 (3 = lulusan baru yang baik, 4 = profesional)\n`
+    + `Hunting ${nilai.hunting ?? "-"} · Approach ${nilai.approach ?? "-"} · Negosiasi ${nilai.negosiasi ?? "-"} · Diagnosis ${nilai.diagnosis ?? "-"} · Sikap ${nilai.sikap ?? "-"}\n\n`
+    + `Pilihan creator: ${pilih.map((x) => x.akun).join(", ") || "-"}\n`
+    + ((nilai.jebakan_kena || []).length ? `Kena jebakan: ${nilai.jebakan_kena.join(", ")}\n` : "Tidak kena jebakan.\n")
+    + `Komisi akhir: ${nilai.komisi_akhir || "-"}\n\n${nilai.kesimpulan || ""}\n\nChat lengkap: girlhoodden.com/aura → Tes → Hasil & nilai`);
+}
+
+async function aksiSim(b: any, staff: { id: string; nama: string; pimpinan: boolean }) {
+  const simSaya = async () => (await db.from("aura_simulasi").select("*").eq("staff_id", staff.id).neq("status", "selesai").order("dibuat_at", { ascending: false }).limit(1).maybeSingle()).data;
+
+  if (b.aksi === "sim-buat") {
+    if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
+    const { data, error } = await db.from("aura_simulasi").insert({ staff_id: b.staff_id, dibuat_oleh: staff.id }).select("id").single();
+    if (error) throw error;
+    return [{ id: data.id }, 200];
+  }
+  if (b.aksi === "sim-hapus") {
+    if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
+    await db.from("aura_simulasi").delete().eq("id", b.id);
+    return [{ ok: true }, 200];
+  }
+  if (b.aksi === "sim-detail") {
+    if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
+    const { data: s } = await db.from("aura_simulasi").select("*").eq("id", b.id).single();
+    if (!s) return [{ galat: "TIDAK_ADA" }, 404];
+    const d = s.data || {};
+    const pilih = (d.pilih || []).map((id: string) => cariCreator(id)).filter(Boolean).map((x: any) => ({ akun: x.akun, kunci: x.kunci }));
+    const c = cariCreator((d.pilih || [])[0]);
+    return [{ pilih, alasan: d.alasan || "", chat: d.chat || {}, turun: d.turun || "", data_turun: c ? dataTurun(c) : "", skor: s.skor }, 200];
+  }
+
+  const l = b.langkah as Langkah;
+  if (!LANGKAH.includes(l)) return [{ galat: "LANGKAH" }, 400];
+  const s = await simSaya();
+  if (!s) return [{ galat: "TIDAK_ADA_SIMULASI" }, 404];
+  const ke = LANGKAH.indexOf(l);
+  if (ke > 0 && !s.selesai?.[LANGKAH[ke - 1]]) return [{ galat: "URUTAN" }, 400];
+  if (s.selesai?.[l]) return [{ galat: "SUDAH_SELESAI" }, 409];
+  const d = s.data || {};
+  const c = cariCreator((d.pilih || [])[0]) || CREATOR[0];
+
+  if (b.aksi === "sim-mulai") {
+    const mulai = s.mulai?.[l] || new Date().toISOString();
+    const upd: any = {};
+    if (!s.mulai?.[l]) {
+      upd.mulai = { ...s.mulai, [l]: mulai }; upd.status = "jalan";
+      if (l === "negosiasi") { d.chat = { ...d.chat, negosiasi: [{ dari: "creator", teks: c.minta_komisi, t: mulai }] }; upd.data = d; }
+      await db.from("aura_simulasi").update(upd).eq("id", s.id);
+    }
+    const sisa = Math.max(0, Math.round((Date.parse(mulai) + WAKTU_SIM[l] * 1000 - Date.now()) / 1000));
+    const out: any = { langkah: l, sisa, waktu: WAKTU_SIM[l], ...JUDUL_SIM[l] };
+    if (l === "hunting") { out.tabel = tabelUntukKlien(); out.draf = { pilih: d.pilih || [], alasan: d.alasan || "" }; }
+    if (l === "approach" || l === "negosiasi") { out.creator = { akun: c.akun, followers: c.followers, kategori: c.kategori, mcn: c.mcn }; out.chat = d.chat?.[l] || []; out.maks = MAKS_CHAT; }
+    if (l === "turun") { out.data = dataTurun(c); out.draf = d.turun || ""; }
+    return [out, 200];
+  }
+  if (!s.mulai?.[l]) return [{ galat: "BELUM_MULAI" }, 400];
+
+  if (b.aksi === "sim-chat") {
+    if (l !== "approach" && l !== "negosiasi") return [{ galat: "LANGKAH" }, 400];
+    if (lewatWaktu(s, l)) return [{ galat: "WAKTU_HABIS" }, 409];
+    const pesan = String(b.pesan || "").trim().slice(0, 1500);
+    if (!pesan) return [{ galat: "KOSONG" }, 400];
+    const chat = [...(d.chat?.[l] || [])];
+    if (chat.filter((x: any) => x.dari === "peserta").length >= MAKS_CHAT) return [{ galat: "BATAS_CHAT" }, 409];
+    chat.push({ dari: "peserta", teks: pesan, t: new Date().toISOString() });
+    const riwayat = l === "negosiasi" ? [...(d.chat?.approach || []), ...chat] : chat;
+    const balasan = await claude(promptPeran(c, l), keMessages(riwayat), 300);
+    chat.push({ dari: "creator", teks: balasan, t: new Date().toISOString() });
+    d.chat = { ...d.chat, [l]: chat };
+    await db.from("aura_simulasi").update({ data: d }).eq("id", s.id);
+    return [{ balasan, sisa_pesan: MAKS_CHAT - chat.filter((x: any) => x.dari === "peserta").length }, 200];
+  }
+
+  if (b.aksi === "sim-simpan" || b.aksi === "sim-kirim") {
+    if (l === "hunting") {
+      const ids = Array.isArray(b.jawaban?.pilih) ? b.jawaban.pilih.filter((x: string, i: number, a: string[]) => cariCreator(x) && a.indexOf(x) === i).slice(0, 3) : [];
+      d.pilih = ids; d.alasan = String(b.jawaban?.alasan || "").slice(0, 8000);
+      if (b.aksi === "sim-kirim" && !ids.length) d.pilih = [CREATOR[0].id], d.tanpa_pilihan = true;
+    }
+    if (l === "turun") d.turun = String(b.jawaban || "").slice(0, 8000);
+    d.keluar = { ...d.keluar, [l]: Number(b.keluar) || 0 };
+    const upd: any = { data: d };
+    if (b.aksi === "sim-kirim") upd.selesai = { ...s.selesai, [l]: new Date().toISOString() };
+    else if (lewatWaktu(s, l)) return [{ galat: "WAKTU_HABIS" }, 409];
+    await db.from("aura_simulasi").update(upd).eq("id", s.id);
+    if (b.aksi === "sim-kirim" && l === "turun") {
+      const kerja = selesaikanSim(s.id).catch((e) => console.error("sim nilai", e));
+      // @ts-ignore
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kerja); else await kerja;
+      return [{ ok: true, selesai: true }, 200];
+    }
+    return [{ ok: true }, 200];
+  }
+  return [{ galat: "AKSI" }, 400];
+}
+
 Deno.serve(async (req) => {
   const o = req.headers.get("origin") || "";
   const h = { ...cors(o), "content-type": "application/json" };
@@ -144,8 +303,18 @@ Deno.serve(async (req) => {
         const { data: orang } = await db.from("internal_staff").select("id, nama").eq("is_active", true).order("nama");
         out.daftar = (semua || []).map((x) => ({ ...x, nama: (orang || []).find((p) => p.id === x.staff_id)?.nama || "?", bagian: statusBagian(x) }));
         out.orang = orang;
+        const { data: sims } = await db.from("aura_simulasi").select("id, staff_id, status, dibuat_at, selesai_at, skor, mulai, selesai").order("dibuat_at", { ascending: false }).limit(50);
+        out.daftar_sim = (sims || []).map((x) => ({ ...x, nama: (orang || []).find((p) => p.id === x.staff_id)?.nama || "?", langkah: statusSim(x) }));
       }
+      const sim = (await db.from("aura_simulasi").select("*").eq("staff_id", staff.id).neq("status", "selesai").order("dibuat_at", { ascending: false }).limit(1).maybeSingle()).data;
+      out.sim = sim ? { id: sim.id, langkah: statusSim(sim) } : null;
+      out.judul_sim = JUDUL_SIM;
       return balas(out);
+    }
+
+    if (String(b.aksi || "").startsWith("sim-")) {
+      const [hasil, kode] = await aksiSim(b, staff);
+      return balas(hasil, kode as number);
     }
 
     if (b.aksi === "buat") {

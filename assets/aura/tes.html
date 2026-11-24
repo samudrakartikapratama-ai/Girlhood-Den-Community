@@ -58,6 +58,17 @@ td,th{padding:7px 8px;border-bottom:1px solid var(--garis);text-align:left;verti
 th{color:var(--ash);font-weight:500}
 .jawab{white-space:pre-line;line-height:1.6;background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px}
 .salah{color:var(--bad)}.benar{color:var(--ok)}
+/* simulasi */
+.tabel-geser{overflow-x:auto}
+.tabel-geser table{min-width:900px;font-size:13px}
+.pilih-urut{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.pilih-urut label{display:grid;gap:4px}
+.obrolan{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;padding:4px}
+.gelembung{max-width:78%;padding:9px 13px;border-radius:16px;line-height:1.5;font-size:14.5px;white-space:pre-line}
+.gelembung.peserta{align-self:flex-end;background:rgba(255,90,31,.2);border:1px solid rgba(255,90,31,.35);border-bottom-right-radius:4px}
+.gelembung.creator{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid var(--garis);border-bottom-left-radius:4px}
+.ketik{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.ketik textarea{min-height:52px}
 </style>
 </head>
 <body>
@@ -100,14 +111,14 @@ function pilih(v){
   document.querySelectorAll('#submenu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
   render();
 }
-document.querySelectorAll('#submenu button').forEach(b => b.onclick = () => { stopTimer(); bagianKini = null; pilih(b.dataset.v); });
+document.querySelectorAll('#submenu button').forEach(b => b.onclick = () => { stopTimer(); stopSim(); bagianKini = null; simKini = null; pilih(b.dataset.v); });
 
 async function muat(awal){
   stopTimer();
   try { st = await panggil({ aksi:'status' }); }
   catch (e) { isi.innerHTML = `<div class="panel">${e.message === 'BUKAN_INTERNAL' ? 'Masuk dulu lewat Aura.' : 'Tes belum bisa dimuat. Coba lagi.'}</div>`; return; }
   document.querySelectorAll('#submenu [data-v=beri], #submenu [data-v=hasil]').forEach(b => b.classList.toggle('hidden', !st.pimpinan));
-  if (awal) tampilan = st.sesi ? 'kerjakan' : st.pimpinan ? ((st.daftar || []).some(d => d.status === 'selesai') ? 'hasil' : 'beri') : 'kerjakan';
+  if (awal) tampilan = (st.sesi || st.sim) ? 'kerjakan' : st.pimpinan ? ((st.daftar || []).some(d => d.status === 'selesai') ? 'hasil' : 'beri') : 'kerjakan';
   pilih(tampilan);
 }
 function render(){
@@ -118,7 +129,8 @@ function render(){
 
 /* ---------------- kerjakan ---------------- */
 function renderKerjakan(){
-  if (!st.sesi){ isi.innerHTML = `<div class="panel"><h2>Belum ada tes untukmu</h2><p class="muted" style="margin-top:6px">${st.pimpinan ? 'Kamu bisa memberi tes ke dirimu sendiri lewat menu "Beri tes" untuk mencoba.' : 'Tes akan muncul di sini kalau pimpinan memberikannya.'}</p></div>`; return; }
+  if (!st.sesi && !st.sim){ isi.innerHTML = `<div class="panel"><h2>Belum ada tes untukmu</h2><p class="muted" style="margin-top:6px">${st.pimpinan ? 'Kamu bisa memberi tes ke dirimu sendiri lewat menu "Beri tes" untuk mencoba.' : 'Tes akan muncul di sini kalau pimpinan memberikannya.'}</p></div>`; return; }
+  if (!st.sesi){ isi.innerHTML = htmlSim(); pasangSim(); return; }
   const b = st.sesi.bagian, lanjut = URUT.find(x => b[x].status !== 'selesai');
   isi.innerHTML = `<div class="blok">
     <div class="panel"><h2>Sebelum mulai</h2><ol class="aturan" style="margin-top:10px">
@@ -132,7 +144,8 @@ function renderKerjakan(){
       const durasi = s.waktu ? `${Math.round(s.waktu/60)} menit` : s.status === 'jalan' ? `sisa ${mmss(s.sisa)}` : '';
       return `<div class="panel ${sel ? 'selesai' : ''}"><span class="no">${sel ? '✓' : i+1}</span><h2>${NAMA[x]}${durasi ? ` <span class="muted kecil" style="font-weight:400">· ${durasi}</span>` : ''}</h2><div class="aksi">${kanan}</div><p class="ket">${esc(st.judul[x].petunjuk)}</p></div>`;
     }).join('')}</div>
-    ${!lanjut ? `<div class="panel"><h2>Semua bagian selesai</h2><p class="muted" style="margin-top:6px">Terima kasih. Hasilnya dikirim ke pimpinan.</p></div>` : ''}</div>`;
+    ${!lanjut ? `<div class="panel"><h2>Semua bagian selesai</h2><p class="muted" style="margin-top:6px">Terima kasih. Hasilnya dikirim ke pimpinan.</p></div>` : ''}</div>${htmlSim()}`;
+  pasangSim();
   isi.querySelectorAll('[data-mulai]').forEach(btn => btn.onclick = () => {
     const x = btn.dataset.mulai;
     if (b[x].status === 'belum' && !confirm(`Mulai ${NAMA[x]}? Waktumu ${Math.round(b[x].waktu/60)} menit dan tidak bisa dijeda.`)) return;
@@ -143,11 +156,16 @@ function renderKerjakan(){
 /* ---------------- beri tes (pimpinan) ---------------- */
 function renderBeri(){
   const aktif = (st.daftar || []).filter(d => d.status !== 'selesai');
+  const simAktif = (st.daftar_sim || []).filter(d => d.status !== 'selesai');
   isi.innerHTML = `<div class="blok">
     <div class="panel blok"><h2>Beri tes ke anggota tim</h2>
       <p class="muted kecil">Tes muncul di menu Tes tim milik orang itu. Hasilnya hanya terlihat di "Hasil & nilai" dan dikirim ke Lark kamu dan Gabriella.</p>
-      <div class="baris"><select id="pilih-orang" style="width:auto;min-width:200px">${(st.orang || []).map(o => `<option value="${o.id}">${esc(o.nama)}</option>`).join('')}</select><button class="btn utama" id="buat-tes">Beri tes</button></div></div>
-    <div class="panel blok"><h2>Tes yang sedang berjalan</h2>${aktif.length ? `<table><thead><tr><th>Nama</th><th>Diberi</th><th>Progres</th><th></th></tr></thead><tbody>${aktif.map(d => `<tr><td>${esc(d.nama)}</td><td>${tglPendek(d.dibuat_at)}</td><td>${URUT.map(x => `${NAMA[x]}: ${d.bagian[x].status === 'selesai' ? '✓' : d.bagian[x].status === 'jalan' ? 'jalan' : '–'}`).join(' · ')}</td><td><button class="btn" data-hapus="${d.id}">Batalkan</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Tidak ada.</p>'}</div></div>`;
+      <div class="baris"><select id="pilih-orang" style="width:auto;min-width:200px">${(st.orang || []).map(o => `<option value="${o.id}">${esc(o.nama)}</option>`).join('')}</select><button class="btn utama" id="buat-tes">Beri tes</button><button class="btn" id="buat-sim">Beri Simulasi Top Creator</button></div></div>
+    <div class="panel blok"><h2>Tes yang sedang berjalan</h2>${aktif.length ? `<table><thead><tr><th>Nama</th><th>Diberi</th><th>Progres</th><th></th></tr></thead><tbody>${aktif.map(d => `<tr><td>${esc(d.nama)}</td><td>${tglPendek(d.dibuat_at)}</td><td>${URUT.map(x => `${NAMA[x]}: ${d.bagian[x].status === 'selesai' ? '✓' : d.bagian[x].status === 'jalan' ? 'jalan' : '–'}`).join(' · ')}</td><td><button class="btn" data-hapus="${d.id}">Batalkan</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Tidak ada.</p>'}</div>
+    <div class="panel blok"><h2>Simulasi yang sedang berjalan</h2>${simAktif.length ? `<table><thead><tr><th>Nama</th><th>Diberi</th><th>Progres</th><th></th></tr></thead><tbody>${simAktif.map(d => `<tr><td>${esc(d.nama)}</td><td>${tglPendek(d.dibuat_at)}</td><td>${SIM_URUT.map(x => `${SIM_NAMA[x]}: ${d.langkah[x].status === 'selesai' ? '✓' : d.langkah[x].status === 'jalan' ? 'jalan' : '–'}`).join(' · ')}</td><td><button class="btn" data-hapus-sim="${d.id}">Batalkan</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Tidak ada.</p>'}</div></div>`;
+  const bs = document.getElementById('buat-sim');
+  bs.onclick = async () => { bs.disabled = true; try { await panggil({ aksi:'sim-buat', staff_id: document.getElementById('pilih-orang').value }); await muat(); pilih('beri'); } catch (e) { alert('Gagal memberi simulasi.'); bs.disabled = false; } };
+  isi.querySelectorAll('[data-hapus-sim]').forEach(x => x.onclick = async () => { if (!confirm('Batalkan simulasi ini beserta jawabannya?')) return; await panggil({ aksi:'sim-hapus', id:x.dataset.hapusSim }); await muat(); pilih('beri'); });
   const b = document.getElementById('buat-tes');
   b.onclick = async () => { b.disabled = true; try { await panggil({ aksi:'buat', staff_id: document.getElementById('pilih-orang').value }); await muat(); pilih('beri'); } catch (e) { alert('Gagal memberi tes.'); b.disabled = false; } };
   isi.querySelectorAll('[data-hapus]').forEach(x => x.onclick = async () => { if (!confirm('Batalkan tes ini beserta jawabannya?')) return; await panggil({ aksi:'hapus', id:x.dataset.hapus }); await muat(); pilih('beri'); });
@@ -156,12 +174,15 @@ function renderBeri(){
 /* ---------------- hasil & nilai (pimpinan) ---------------- */
 function renderHasil(){
   const sel = (st.daftar || []).filter(d => d.status === 'selesai');
-  if (!sel.length){ isi.innerHTML = '<div class="panel">Belum ada tes yang selesai.</div>'; return; }
+  const sims = (st.daftar_sim || []).filter(d => d.status === 'selesai');
+  const tabelSim = sims.length ? `<div class="panel blok"><h2>Simulasi Top Creator</h2><table><thead><tr><th>Nama</th><th>Selesai</th><th>Rata-rata</th><th>Hunting</th><th>Approach</th><th>Negosiasi</th><th>Diagnosis</th><th></th></tr></thead><tbody>${sims.map(d => { const k = d.skor || {}; return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td class="angka">${k.rata ?? '-'}/5</td><td class="angka">${k.hunting ?? '-'}</td><td class="angka">${k.approach ?? '-'}</td><td class="angka">${k.negosiasi ?? '-'}</td><td class="angka">${k.diagnosis ?? '-'}</td><td><button class="btn" data-lihat-sim="${d.id}">Buka</button></td></tr>`; }).join('')}</tbody></table></div>` : '';
+  if (!sel.length){ isi.innerHTML = sims.length ? `<div class="blok">${tabelSim}<div id="detail"></div></div>` : '<div class="panel">Belum ada tes yang selesai.</div>'; pasangLihatSim(sims); return; }
   isi.innerHTML = `<div class="blok"><div class="panel"><table><thead><tr><th>Nama</th><th>Selesai</th><th>Gaya</th><th>Logika</th><th>Kasus</th><th>Keputusanmu</th><th></th></tr></thead><tbody>${sel.map(d => {
     const s = d.skor || {};
     return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td>${s.gaya ? s.gaya.utama + '/' + s.gaya.kedua : '-'}</td><td class="angka">${s.logika ? s.logika.persen_berbobot + '%' : '-'}</td><td class="angka">${s.kasus?.rata ?? '-'}/5</td><td>${esc(s.skp?.keputusan || '–')}</td><td><button class="btn" data-lihat="${d.id}">Buka</button></td></tr>`;
-  }).join('')}</tbody></table></div><div id="detail"></div></div>`;
+  }).join('')}</tbody></table></div>${tabelSim}<div id="detail"></div></div>`;
   isi.querySelectorAll('[data-lihat]').forEach(x => x.onclick = () => buka(sel.find(d => d.id === x.dataset.lihat)));
+  pasangLihatSim(sims);
 }
 
 async function buka(d){
@@ -301,6 +322,161 @@ async function selesai(habis){
   bagianKini = null;
   document.getElementById('submenu').classList.remove('hidden');
   await muat(); pilih('kerjakan');
+}
+
+/* ---------------- simulasi top creator ---------------- */
+const SIM_URUT = ['hunting','approach','negosiasi','turun'];
+const SIM_NAMA = {hunting:'Hunting', approach:'Approach', negosiasi:'Negosiasi', turun:'Sebulan kemudian'};
+const rp = n => 'Rp' + n + ' jt';
+
+function htmlSim(){
+  if (!st.sim) return '';
+  const b = st.sim.langkah, lanjut = SIM_URUT.find(x => b[x].status !== 'selesai');
+  return `<div class="blok" style="margin-top:18px">
+    <div class="panel"><h2>Simulasi Top Creator</h2><p class="muted" style="margin-top:6px;line-height:1.6">Satu cerita nyambung, sekitar 75 menit. Pilihanmu di langkah 1 menentukan creator yang kamu hadapi sampai akhir. Aura berperan sebagai creator. Waktu tiap langkah tidak bisa dijeda. Kerjakan sendiri tanpa AI atau bantuan orang lain.</p></div>
+    <div class="langkah">${SIM_URUT.map((x, i) => {
+      const s = b[x], sel = s.status === 'selesai';
+      const kanan = sel ? '<span class="chip ok">Selesai</span>' : x === lanjut ? `<button class="btn utama" data-sim="${x}">${s.status === 'jalan' ? `Lanjutkan · ${mmss(s.sisa)}` : 'Mulai'}</button>` : '<span class="chip">Terkunci</span>';
+      const durasi = s.waktu ? `${Math.round(s.waktu/60)} menit` : s.status === 'jalan' ? `sisa ${mmss(s.sisa)}` : '';
+      return `<div class="panel ${sel ? 'selesai' : ''}"><span class="no">${sel ? '✓' : i+1}</span><h2>${SIM_NAMA[x]}${durasi ? ` <span class="muted kecil" style="font-weight:400">· ${durasi}</span>` : ''}</h2><div class="aksi">${kanan}</div><p class="ket">${esc(st.judul_sim[x].petunjuk)}</p></div>`;
+    }).join('')}</div>
+    ${!lanjut ? `<div class="panel"><h2>Simulasi selesai</h2><p class="muted" style="margin-top:6px">Terima kasih. Hasilnya dikirim ke pimpinan.</p></div>` : ''}</div>`;
+}
+function pasangSim(){
+  isi.querySelectorAll('[data-sim]').forEach(btn => btn.onclick = () => {
+    const x = btn.dataset.sim, s = st.sim.langkah[x];
+    if (s.status === 'belum' && !confirm(`Mulai ${SIM_NAMA[x]}? Waktumu ${Math.round(s.waktu/60)} menit dan tidak bisa dijeda.`)) return;
+    mulaiSim(x);
+  });
+}
+
+let simKini = null, simJawab = {}, simKeluar = 0, simAkhir = 0, simTotal = 0, simTimer = 0, simSimpan = 0, simKirim = false;
+document.addEventListener('visibilitychange', () => { if (document.hidden && simKini) simKeluar++; });
+function stopSim(){ clearInterval(simTimer); clearInterval(simSimpan); simTimer = simSimpan = 0; }
+
+async function mulaiSim(l){
+  let d;
+  try { d = await panggil({ aksi:'sim-mulai', langkah:l }); }
+  catch (e) { alert('Gagal memulai. Coba lagi.'); return muat(); }
+  simKini = l; simKeluar = 0; simKirim = false; simTotal = d.waktu; simAkhir = Date.now() + d.sisa * 1000;
+  document.getElementById('submenu').classList.add('hidden');
+  let h = '';
+  if (l === 'hunting'){
+    simJawab = { pilih: d.draf.pilih || [], alasan: d.draf.alasan || '' };
+    const opsi = v => `<option value="">— pilih —</option>` + d.tabel.map(c => `<option value="${c.id}" ${v === c.id ? 'selected' : ''}>${esc(c.akun)}</option>`).join('');
+    h = `<div class="panel tabel-geser"><table><thead><tr><th>Akun</th><th>Followers</th><th>GMV 30 hari</th><th>vs bulan lalu</th><th>Video</th><th>Live</th><th>Kategori</th><th>Porsi 1 brand</th><th>Tampil wajah</th><th>MCN</th><th>Catatan cek profil</th></tr></thead><tbody>${d.tabel.map(c => `<tr><td>${esc(c.akun)}</td><td class="angka">${esc(c.followers)}</td><td class="angka">${rp(c.gmv)}</td><td class="angka">${esc(c.ubah)}</td><td class="angka">${c.video}</td><td class="angka">${c.live}</td><td>${esc(c.kategori)}</td><td class="angka">${esc(c.porsi_brand)}</td><td>${esc(c.wajah)}</td><td>${esc(c.mcn)}</td><td>${esc(c.catatan)}</td></tr>`).join('')}</tbody></table></div>
+      <div class="panel blok"><div class="pilih-urut">${[0,1,2].map(i => `<label><span class="label">Prioritas ${i+1}</span><select name="p${i}">${opsi(simJawab.pilih[i])}</select></label>`).join('')}</div>
+      <label class="label" for="alasan">Alasan (pakai angka di tabel)</label><textarea class="panjang" id="alasan" name="alasan" placeholder="Kenapa 3 creator ini, kenapa urutannya begitu, dan siapa yang sengaja kamu lewati…">${esc(simJawab.alasan)}</textarea></div>`;
+  }
+  if (l === 'approach' || l === 'negosiasi'){
+    simJawab = { chat: d.chat || [], sisa: d.maks - (d.chat || []).filter(x => x.dari === 'peserta').length };
+    h = `<div class="panel blok"><p class="kecil"><b>${esc(d.creator.akun)}</b> · ${esc(d.creator.followers)} followers · ${esc(d.creator.kategori)} · MCN: ${esc(d.creator.mcn)}</p>
+      <div class="obrolan" id="obrolan"></div>
+      <div class="ketik"><textarea id="tulis" placeholder="Tulis pesanmu…" aria-label="Pesan untuk creator"></textarea><button class="btn utama" type="button" id="kirim-chat">Kirim</button></div>
+      <p class="muted kecil" id="sisa-chat"></p></div>`;
+  }
+  if (l === 'turun'){
+    simJawab = { teks: d.draf || '' };
+    h = `<div class="panel"><div class="stem">${esc(d.data)}</div></div><div class="panel blok"><textarea class="panjang" id="jawab-turun" placeholder="1) Dugaan penyebab + bukti  2) Yang dicek dulu  3) Langkah minggu ini  4) Pesan ke creator">${esc(simJawab.teks)}</textarea></div>`;
+  }
+  const tombol = (l === 'approach' || l === 'negosiasi') ? 'Lanjut ke langkah berikutnya' : l === 'turun' ? 'Kirim & selesai' : 'Kirim pilihan';
+  isi.innerHTML = `<div class="panel timer" id="timer"><div class="baris antara"><div><p class="muted kecil">${esc(d.judul)}</p><p class="kecil">Sisa waktu</p></div><b id="sisa">--:--</b></div><div class="bar"><i id="bar-waktu" style="width:100%"></i></div></div>
+    <p class="petunjuk">${esc(d.petunjuk)}</p>
+    <form class="blok" id="form-sim" style="margin-top:12px">${h}<div class="baris antara"><span class="pesan" id="pesan-sim"></span><button class="btn utama" type="submit">${tombol}</button></div></form>`;
+  const f = document.getElementById('form-sim');
+  if (l === 'hunting'){
+    f.addEventListener('change', () => { simJawab.pilih = [0,1,2].map(i => f.querySelector(`[name=p${i}]`).value).filter(Boolean); });
+    f.addEventListener('input', ev => { if (ev.target.id === 'alasan') simJawab.alasan = ev.target.value; });
+  }
+  if (l === 'turun') f.addEventListener('input', ev => { simJawab.teks = ev.target.value; });
+  if (l === 'approach' || l === 'negosiasi') pasangChat();
+  f.onsubmit = ev => { ev.preventDefault(); selesaiSim(false); };
+  simTimer = setInterval(detikSim, 250); detikSim();
+  if (l === 'hunting' || l === 'turun') simSimpan = setInterval(() => kirimSim(false), 20000);
+  window.scrollTo(0, 0);
+}
+
+function gambarChat(){
+  const o = document.getElementById('obrolan'); if (!o) return;
+  o.innerHTML = simJawab.chat.map(c => `<div class="gelembung ${c.dari === 'peserta' ? 'peserta' : 'creator'}">${esc(c.teks)}</div>`).join('') || '<p class="muted kecil">Mulai chat dengan menyapa creator ini.</p>';
+  o.scrollTop = o.scrollHeight;
+  document.getElementById('sisa-chat').textContent = `Sisa ${simJawab.sisa} pesan. Enter untuk kirim, Shift+Enter untuk baris baru.`;
+}
+function pasangChat(){
+  gambarChat();
+  const t = document.getElementById('tulis'), b = document.getElementById('kirim-chat');
+  const kirimPesan = async () => {
+    const pesan = t.value.trim(); if (!pesan || b.disabled) return;
+    if (simJawab.sisa <= 0) { document.getElementById('pesan-sim').textContent = 'Batas pesan habis. Tekan Lanjut.'; return; }
+    b.disabled = true; t.value = '';
+    simJawab.chat.push({ dari:'peserta', teks:pesan }); simJawab.sisa--; gambarChat();
+    const o = document.getElementById('obrolan'); o.insertAdjacentHTML('beforeend', '<p class="muted kecil" id="mengetik">sedang mengetik…</p>'); o.scrollTop = o.scrollHeight;
+    try { const r = await panggil({ aksi:'sim-chat', langkah:simKini, pesan }); simJawab.chat.push({ dari:'creator', teks:r.balasan }); simJawab.sisa = r.sisa_pesan; }
+    catch (e) {
+      simJawab.chat.pop(); simJawab.sisa++; t.value = pesan;
+      document.getElementById('pesan-sim').textContent = e.message === 'WAKTU_HABIS' ? 'Waktu habis.' : e.message === 'BATAS_CHAT' ? 'Batas pesan habis. Tekan Lanjut.' : 'Pesan gagal terkirim. Coba lagi.';
+      if (e.message === 'WAKTU_HABIS') selesaiSim(true);
+    }
+    b.disabled = false; gambarChat(); t.focus();
+  };
+  b.onclick = kirimPesan;
+  t.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); kirimPesan(); } });
+  t.focus();
+}
+
+function detikSim(){
+  const s = Math.max(0, Math.ceil((simAkhir - Date.now()) / 1000));
+  const el = document.getElementById('sisa'); if (!el) return;
+  el.textContent = mmss(s);
+  document.getElementById('bar-waktu').style.width = Math.max(0, 100 * s / simTotal) + '%';
+  document.getElementById('timer').classList.toggle('mepet', s <= 60);
+  if (s <= 0) selesaiSim(true);
+}
+async function kirimSim(final){
+  if (!simKini) return;
+  const jawaban = simKini === 'hunting' ? { pilih: simJawab.pilih, alasan: simJawab.alasan } : simKini === 'turun' ? simJawab.teks : null;
+  try { await panggil({ aksi: final ? 'sim-kirim' : 'sim-simpan', langkah: simKini, jawaban, keluar: simKeluar }); return true; }
+  catch (e) { if (final) throw e; return false; }
+}
+async function selesaiSim(habis){
+  if (simKirim) return;
+  if (!habis){
+    if (simKini === 'hunting' && (simJawab.pilih || []).length < 3 && !confirm('Kamu belum memilih 3 creator. Tetap kirim?')) return;
+    if (simKini === 'hunting' && !confirm('Kirim pilihanmu? Creator prioritas 1 akan kamu hubungi di langkah berikutnya.')) return;
+    if ((simKini === 'approach' || simKini === 'negosiasi') && !confirm('Lanjut ke langkah berikutnya? Chat ini tidak bisa dibuka lagi.')) return;
+    if (simKini === 'turun' && !confirm('Kirim jawaban? Setelah ini simulasi selesai.')) return;
+  }
+  simKirim = true; stopSim();
+  const p = document.getElementById('pesan-sim'); if (p) p.textContent = habis ? 'Waktu habis, jawaban dikirim…' : 'Mengirim…';
+  for (let i = 0; i < 3; i++) {
+    try { await kirimSim(true); break; }
+    catch (e) { if (e.message === 'SUDAH_SELESAI') break; if (i === 2) { simKirim = false; if (p) p.textContent = 'Gagal mengirim. Cek internet lalu tekan tombol lagi.'; return; } await new Promise(r => setTimeout(r, 1500)); }
+  }
+  simKini = null;
+  document.getElementById('submenu').classList.remove('hidden');
+  await muat(); pilih('kerjakan');
+}
+
+function pasangLihatSim(sims){
+  isi.querySelectorAll('[data-lihat-sim]').forEach(x => x.onclick = () => bukaSim(sims.find(d => d.id === x.dataset.lihatSim)));
+}
+async function bukaSim(d){
+  const el = document.getElementById('detail');
+  el.innerHTML = '<div class="panel muted">Memuat…</div>';
+  let det; try { det = await panggil({ aksi:'sim-detail', id:d.id }); } catch (e) { el.innerHTML = '<div class="panel">Gagal memuat.</div>'; return; }
+  const k = det.skor || {};
+  const chatHtml = c => (c || []).map(x => `<div class="gelembung ${x.dari === 'peserta' ? 'peserta' : 'creator'}">${esc(x.teks)}</div>`).join('') || '<p class="muted">Tidak ada chat.</p>';
+  el.innerHTML = `<div class="blok">
+    <div class="baris antara"><h2>${esc(d.nama)} · Simulasi Top Creator</h2><span class="muted kecil">rahasia · hanya pimpinan</span></div>
+    <div class="kartu-angka">${['rata','hunting','approach','negosiasi','diagnosis','sikap'].map(x => `<div class="panel"><span class="muted kecil">${x === 'rata' ? 'Rata-rata' : x}</span><span class="besar">${k[x] ?? '-'}/5</span></div>`).join('')}</div>
+    ${k.kesimpulan ? `<div class="panel"><span class="muted kecil">Bacaan Aura</span><p style="margin-top:6px;line-height:1.6">${esc(k.kesimpulan)}</p>${(k.jebakan_kena || []).length ? `<p class="kecil" style="margin-top:6px"><b>Kena jebakan:</b> ${esc(k.jebakan_kena.join(', '))}</p>` : ''}${k.komisi_akhir ? `<p class="kecil"><b>Komisi akhir:</b> ${esc(k.komisi_akhir)}</p>` : ''}</div>` : ''}
+    <div class="panel blok"><h2>1 · Hunting</h2>${det.pilih.map((p, i) => `<p class="kecil"><b>${i+1}. ${esc(p.akun)}</b> <span class="muted">— ${esc(p.kunci)}</span></p>`).join('') || '<p class="muted">Tidak memilih.</p>'}<div class="jawab">${esc(det.alasan || '(kosong)')}</div></div>
+    <div class="panel blok"><h2>2 · Approach</h2><div class="obrolan" style="max-height:none">${chatHtml(det.chat.approach)}</div></div>
+    <div class="panel blok"><h2>3 · Negosiasi</h2><div class="obrolan" style="max-height:none">${chatHtml(det.chat.negosiasi)}</div></div>
+    <div class="panel blok"><h2>4 · Sebulan kemudian</h2><div class="stem">${esc(det.data_turun)}</div><div class="jawab">${esc(det.turun || '(kosong)')}</div></div>
+    ${(k.kekuatan || []).length ? `<p><b>Kekuatan:</b> ${esc(k.kekuatan.join('; '))}</p>` : ''}${(k.kelemahan || []).length ? `<p><b>Kelemahan:</b> ${esc(k.kelemahan.join('; '))}</p>` : ''}
+  </div>`;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 muat(true);
