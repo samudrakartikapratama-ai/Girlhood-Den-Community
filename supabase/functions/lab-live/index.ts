@@ -391,6 +391,17 @@ async function koreksiSebelumnya(akunId: string) {
   return daftar.slice(0, 15).join("\n");
 }
 
+// Bacaan Pantau Live (tiap 30 detik saat live berjalan) untuk akun & tanggal yang sama: angka per waktu yang paling rinci
+async function bacaanPantau(l: any) {
+  const { data: sesi } = await db.from("lab_pantau").select("id").eq("akun_id", l.akun_id).eq("tanggal", l.tanggal);
+  if (!sesi?.length) return [];
+  const { data: titik } = await db.from("lab_pantau_titik").select("jam, angka, peringatan").in("pantau_id", sesi.map((x: any) => x.id)).order("dibuat_at").limit(800);
+  const detikDari = (jam: string) => { const [h, m, d] = String(jam || "").split(":").map(Number); return h * 3600 + m * 60 + (d || 0); };
+  const awal = l.jam_mulai ? detikDari(l.jam_mulai) : null;
+  return (titik || []).filter((t: any) => t.angka?.terbaca && (awal == null || (detikDari(t.jam) >= awal - 300 && detikDari(t.jam) <= awal + (l.durasi_detik || 0) + 300)))
+    .map((t: any) => `${t.jam}: GMV=${t.angka.gmv ?? "-"}, penonton=${t.angka.penonton_sekarang ?? "-"}, terjual=${t.angka.terjual ?? "-"}${(t.peringatan || []).length ? " [peringatan: " + t.peringatan.map((x: any) => x.jenis).join(", ") + "]" : ""}`);
+}
+
 async function tahapAnalisis(l: any) {
   const { data: akun } = await db.from("lab_akun").select("nama").eq("id", l.akun_id).maybeSingle();
   const { data: host } = l.host_id ? await db.from("lab_host").select("nama").eq("id", l.host_id).maybeSingle() : { data: null };
@@ -408,6 +419,7 @@ DIAGNOSIS POHON KEPUTUSAN (sistem): ${a.diagnosis?.arti}
 PER 30 MENIT: ${JSON.stringify(a.per30)}
 Catatan data: ${(a.catatan || []).join("; ") || "-"}` : "(tidak ada file ekspor: tidak ada angka resmi)";
   const koreksi = await koreksiSebelumnya(l.akun_id);
+  const pantau = await bacaanPantau(l);
   const isi = `Akun: ${akun?.nama || "?"} · Host: ${host?.nama || "?"} · Tanggal ${l.tanggal} · Mulai jam ${l.jam_mulai || "?"} · Durasi ${mmss(l.durasi_detik || 0)}
 Catatan orang di studio: ${l.catatan || "-"}
 
@@ -415,6 +427,9 @@ ANGKA RESMI
 ${angka}
 
 DASHBOARD LAIN (dibaca dari screenshot): ${l.layar ? JSON.stringify(l.layar) : "-"}
+
+PANTAU LIVE (dibaca dari dashboard tiap 30 detik selama live; jam = jam dinding; ini angka per waktu yang paling rinci):
+${pantau.length ? pantau.join("\n") : "(tidak ada)"}
 
 GRAFIK (dibaca dari screenshot, perkiraan; jam = jam dinding):
 ${grafik}
@@ -429,7 +444,7 @@ ${teksTranskrip(l.transkrip?.seg || []).slice(0, 150000)}`;
 Aturan akurasi:
 - Semua total dan rasio sudah dihitung sistem. Pakai angka itu apa adanya, jangan menghitung rasio baru.
 - Diagnosis harus mengikuti pohon keputusan sistem; tugasmu memberi bukti dari ucapan/topik yang menjelaskan kenapa titik itu lemah.
-- Momen "terbaik/terburuk" hanya boleh disebut naik/turun kalau ada angka per waktu yang mendukung (grafik atau per 30 menit). Kalau tidak ada, nilai dari kualitas ucapan saja dan beri yakin "rendah".
+- Momen "terbaik/terburuk" hanya boleh disebut naik/turun kalau ada angka per waktu yang mendukung (pantau live, grafik, atau per 30 menit). Pantau live paling rinci: utamakan itu. Kalau tidak ada, nilai dari kualitas ucapan saja dan beri yakin "rendah".
 - Kalau status cek grafik "meragukan", jangan bersandar pada angka grafik.
 - Kalimat berbahaya = klaim berlebihan/menyesatkan (misal "pasti hilang dalam 3 hari"), tekanan beli palsu, janji yang tidak bisa dipenuhi, atau melanggar aturan TikTok.
 - Kutipan harus persis dari transkrip.
@@ -446,6 +461,7 @@ Bahasa Indonesia sehari-hari, lugas.`,
       },
       required: ["ringkas", "momen", "diagnosis", "saran"],
     }, 8000);
+  hasil.pantau_n = pantau.length;
   await db.from("lab_live").update({ laporan: hasil }).eq("id", l.id);
   return true;
 }

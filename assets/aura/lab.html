@@ -66,6 +66,7 @@ details summary{cursor:pointer;color:var(--ash)}
   <header class="kepala-hal">
     <div><h1>Lab Live</h1><p class="muted kecil">Bedah replay live: momen terbaik, terburuk, kalimat berbahaya, dan saran untuk live berikutnya.</p></div>
     <nav class="submenu" id="submenu" aria-label="Menu Lab Live">
+      <button data-v="pantau" aria-pressed="false">Pantau live</button>
       <button data-v="unggah" aria-pressed="true">Unggah live</button>
       <button data-v="daftar" aria-pressed="false">Laporan</button>
       <button data-v="banding" aria-pressed="false">Perbandingan</button>
@@ -92,10 +93,10 @@ const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {weekday:
 const jamDinding = (jam, detik) => { if (!jam) return ''; const [h, m] = jam.split(':').map(Number); const t = h*3600 + m*60 + Math.round(detik); return String(Math.floor(t/3600)%24).padStart(2,'0') + ':' + String(Math.floor(t%3600/60)).padStart(2,'0'); };
 const PESAN = { JAM_MULAI:'Isi jam mulai live dulu.', BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses Lab Live. Minta ke pimpinan.', AKUN:'Pilih akun dulu.', TANPA_SUARA:'Video tidak punya suara.', SUARA_BELUM_LENGKAP:'Unggahan suara belum lengkap. Coba unggah lagi.' };
 
-async function panggil(body){
+async function panggil(body, fungsi = 'lab-live'){
   const { data } = await sb.auth.getSession();
   if (!data.session) throw new Error('BUKAN_INTERNAL');
-  const r = await fetch(URL_SB + '/functions/v1/lab-live', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
+  const r = await fetch(URL_SB + '/functions/v1/' + fungsi, {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
   return j;
@@ -121,6 +122,7 @@ function render(){
   clearTimeout(putar);
   if (tampilan === 'daftar') return renderDaftar();
   if (tampilan === 'atur') return renderAtur();
+  if (tampilan === 'pantau') return renderPantau();
   if (tampilan === 'banding') return muat().then(ok => ok && tampilan === 'banding' && renderBanding());
   renderUnggah();
 }
@@ -342,6 +344,7 @@ async function renderLaporan(id){
     ${l.layar.lain ? `<p class="muted">${esc(l.layar.lain)}</p>` : ''}</div>` : ''}
   <div class="panel kualitas"><h2 style="margin-bottom:6px">Kualitas data laporan ini</h2>
     <span>File ekspor: ${a ? 'ada' : '<b style="color:var(--warn);font-weight:500">tidak ada</b>'}${(a?.catatan || []).map(c => ' · ' + esc(c)).join('')}</span>
+    <span>Pantau live (angka tiap 30 detik): ${lap.pantau_n ? `ada, ${lap.pantau_n} bacaan` : 'tidak ada'}</span>
     <span>Grafik per waktu: ${l.n_grafik ? `ada, cek ke ekspor: <b style="font-weight:500;color:${cekG?.status === 'cocok' ? 'var(--ok)' : 'var(--warn)'}">${esc(cekG?.status || '-')}</b>${cekG?.selisih_persen != null ? ` (selisih GMV ${cekG.selisih_persen}%)` : ''}` : '<b style="color:var(--warn);font-weight:500">tidak ada</b>, momen tidak bisa dicocokkan ke naik-turun angka'}</span>
     <span>Ucapan host: ${ragu != null ? `${ragu}% bagian kurang jelas terdengar${ragu > 20 ? ' <b style="color:var(--warn);font-weight:500">(tinggi, cek musik/mic)</b>' : ''}` : '-'}</span>
     ${st.pimpinan && l.token_masuk != null ? `<span class="muted">Biaya AI: ±Rp${Math.round((l.token_masuk * 3 + l.token_keluar * 15) / 1e6 * 16500).toLocaleString('id-ID')} (${(l.token_masuk + l.token_keluar).toLocaleString('id-ID')} token; perkiraan tarif Sonnet)</span>` : ''}</div>
@@ -357,6 +360,135 @@ async function renderLaporan(id){
     try { await panggil({ aksi:'ulas', id, momen: i, nilai, catatan }); renderLaporan(id); } catch { b.disabled = false; alert('Gagal menyimpan. Coba lagi.'); }
   });
 }
+
+/* ---------------- pantau live (saat live berjalan) ---------------- */
+const TIAP_MS = 30000;
+let pantau = null; // { id, layar, suara, video, perekam, putaran, kunci, mulai, timer }
+function bunyi(tingkat){
+  try { const ac = new AudioContext(); const nada = tingkat === 'merah' ? [880, 660, 880] : [740];
+    nada.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f; o.connect(g); g.connect(ac.destination);
+      const t = ac.currentTime + i * 0.22; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); o.start(t); o.stop(t + 0.2); });
+  } catch {}
+}
+function renderPantau(){
+  if (pantau) return tampilPantau();
+  const akun = (st.akun || []).filter(a => a.aktif);
+  if (!akun.length){ isi.innerHTML = `<div class="panel">Tambahkan akun live dulu di Pengaturan.</div>`; return; }
+  const bisa = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && window.MediaRecorder);
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:14px">
+    <div><h2>Pantau live yang sedang berjalan</h2><p class="muted kecil" style="margin-top:4px">Aura membaca dashboard live dan mendengar host tiap 30 detik, lalu memberi peringatan ke operator. Foto layar dan suara tidak disimpan.</p></div>
+    ${bisa ? '' : '<p class="pesan">Browser ini belum bisa. Pakai Google Chrome di laptop.</p>'}
+    <div class="form">
+      <label><span class="label">Akun</span><select id="p-akun">${akun.map(a => `<option value="${a.id}">${esc(a.nama)}</option>`).join('')}</select></label>
+      <label><span class="label">Host</span><select id="p-host"></select></label>
+    </div>
+    <ol class="daftar" style="list-style:decimal;padding-left:20px">
+      <li style="background:none">Buka dashboard live TikTok di tab lain. Tampilkan GMV, penonton, dan komentar.</li>
+      <li style="background:none">Klik Mulai, lalu pilih tab dashboard itu.</li>
+      <li style="background:none">Letakkan laptop dekat host supaya mikrofon mendengar suaranya. Atau centang di bawah kalau suara live diputar di tab itu.</li>
+      <li style="background:none">Biarkan tab Aura ini terbuka sampai live selesai.</li>
+    </ol>
+    <label class="cek"><input type="checkbox" id="p-tab"> Ambil suara dari tab (centang juga "Bagikan audio tab" saat memilih)</label>
+    <div class="baris"><button class="btn utama" id="p-mulai" ${bisa ? '' : 'disabled'}>Mulai pantau</button><span class="pesan" id="p-pesan"></span></div>
+  </div>`;
+  const pilihHost = () => { const a = document.getElementById('p-akun').value; document.getElementById('p-host').innerHTML = `<option value="">Belum tahu</option>` + (st.host || []).filter(h => h.aktif && (!h.akun_id || h.akun_id === a)).map(h => `<option value="${h.id}">${esc(h.nama)}</option>`).join(''); };
+  document.getElementById('p-akun').onchange = pilihHost; pilihHost();
+  document.getElementById('p-mulai').onclick = mulaiPantau;
+}
+
+async function mulaiPantau(){
+  const pesan = document.getElementById('p-pesan'); pesan.textContent = '';
+  const pakaiTab = document.getElementById('p-tab').checked;
+  let layar, mic;
+  try { layar = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 1 }, audio: pakaiTab }); }
+  catch { pesan.textContent = 'Berbagi layar dibatalkan. Klik Mulai lagi dan pilih tab dashboard.'; return; }
+  let suara = pakaiTab && layar.getAudioTracks().length ? new MediaStream(layar.getAudioTracks()) : null;
+  if (!suara){ try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); suara = mic; } catch { pesan.textContent = 'Izinkan mikrofon supaya Aura bisa mendengar host.'; layar.getTracks().forEach(t => t.stop()); return; } }
+  let p; try { p = await panggil({ aksi:'mulai', akun_id: document.getElementById('p-akun').value, host_id: document.getElementById('p-host').value || null }, 'lab-pantau'); }
+  catch (e) { pesan.textContent = PESAN[e.message] || 'Belum bisa mulai. Coba lagi.'; layar.getTracks().forEach(t => t.stop()); mic?.getTracks().forEach(t => t.stop()); return; }
+  const video = document.createElement('video'); video.muted = true; video.playsInline = true; video.srcObject = layar; await video.play().catch(() => {});
+  pantau = { id: p.id, layar, mic, suara, video, mulai: Date.now(), peringatan: [], angka: null, teks: '', pertanyaan: [], galat: 0, akun: namaAkun(document.getElementById('p-akun').value) };
+  sibuk = true;
+  try { pantau.kunci = await navigator.wakeLock?.request('screen'); } catch {}
+  layar.getVideoTracks()[0].addEventListener('ended', () => selesaiPantau());
+  putaranPantau();
+  pantau.timer = setInterval(() => { const el = document.getElementById('p-waktu'); if (el && pantau) el.textContent = mmss((Date.now() - pantau.mulai) / 1000); }, 1000);
+  tampilPantau();
+}
+
+function fotoLayar(){
+  const v = pantau.video; if (!v.videoWidth) return null;
+  const skala = Math.min(1, 1600 / v.videoWidth);
+  const c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * skala); c.height = Math.round(v.videoHeight * skala);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.8).split(',')[1];
+}
+const keBase64 = blob => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
+
+// tiap 30 detik: rekaman suara baru (file utuh), lalu kirim bersama 1 foto layar
+function putaranPantau(){
+  if (!pantau) return;
+  const tipe = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const potongan = [];
+  const rec = new MediaRecorder(pantau.suara, tipe ? { mimeType: tipe, audioBitsPerSecond: 32000 } : undefined);
+  rec.ondataavailable = e => e.data.size && potongan.push(e.data);
+  rec.onstop = async () => {
+    if (!pantau) return;
+    const gambar = fotoLayar();
+    const blob = new Blob(potongan, { type: rec.mimeType || 'audio/webm' });
+    putaranPantau(); // langsung rekam 30 detik berikutnya
+    try {
+      const j = await panggil({ aksi:'kirim', id: pantau.id, gambar, audio: await keBase64(blob), tipe: blob.type }, 'lab-pantau');
+      if (!pantau) return;
+      pantau.galat = 0; pantau.angka = j.angka; pantau.teks = j.teks || pantau.teks; pantau.pertanyaan = j.pertanyaan || [];
+      for (const x of j.peringatan || []) { pantau.peringatan.unshift({ ...x, waktu: new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }) }); bunyi(x.tingkat); }
+    } catch (e) { if (pantau) pantau.galat++; if (e.message === 'STATUS') return selesaiPantau(); }
+    if (tampilan === 'pantau') tampilPantau();
+  };
+  rec.start();
+  pantau.perekam = rec;
+  pantau.putaran = setTimeout(() => rec.state !== 'inactive' && rec.stop(), TIAP_MS);
+}
+
+function tampilPantau(){
+  const p = pantau, a = p.angka || {};
+  const warna = { merah:'var(--bad)', kuning:'var(--warn)', biru:'var(--corona)' };
+  const ang = v => v == null ? '–' : Math.round(v).toLocaleString('id-ID');
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:12px">
+    <div class="baris antara"><div><h2>Memantau ${esc(p.akun)}</h2><p class="muted kecil">Berjalan <span id="p-waktu" class="angka">${mmss((Date.now() - p.mulai) / 1000)}</span> · dibaca tiap 30 detik${p.galat ? ` · <span style="color:var(--warn)">koneksi tersendat, mencoba lagi</span>` : ''}</p></div><button class="btn" id="p-selesai">Selesai</button></div>
+    <div class="angka-baris">
+      <div class="panel"><span class="muted kecil">GMV</span><span class="besar angka">${rupiah(a.gmv)}</span></div>
+      <div class="panel"><span class="muted kecil">Penonton sekarang</span><span class="besar angka">${ang(a.penonton_sekarang)}</span></div>
+      <div class="panel"><span class="muted kecil">Terjual</span><span class="besar angka">${ang(a.terjual)}</span></div>
+    </div>
+    ${p.angka && !a.terbaca ? '<p class="pesan">Angka dashboard tidak terbaca. Pastikan tab dashboard yang dibagikan dan angkanya terlihat (tidak tertutup).</p>' : ''}
+  </div>
+  <div class="panel" style="display:grid;gap:10px"><h2>Peringatan</h2>
+    ${p.peringatan.length ? p.peringatan.slice(0, 12).map((x, i) => `<div style="border-left:4px solid ${warna[x.tingkat] || 'var(--garis2)'};padding:8px 12px;border-radius:8px;background:rgba(255,255,255,${i ? '.03' : '.07'})"><div class="baris"><b style="font-weight:600;font-size:${i ? 15 : 18}px">${esc(x.judul)}</b><span class="muted kecil">${esc(x.waktu)}</span></div><p style="margin-top:4px;${i ? '' : 'font-size:16px'}">${esc(x.isi)}</p></div>`).join('') : '<p class="muted">Belum ada peringatan. Aman.</p>'}
+  </div>
+  <div class="panel" style="display:grid;gap:8px">
+    <span class="muted kecil">Ucapan host terakhir</span><p>${esc(p.teks || '(belum terdengar)')}</p>
+    ${p.pertanyaan.length ? `<span class="muted kecil" style="margin-top:6px">Pertanyaan penonton di layar</span><div class="baris">${p.pertanyaan.map(q => `<span class="chip">${esc(q)}</span>`).join('')}</div>` : ''}
+  </div>`;
+  document.getElementById('p-selesai').onclick = () => { if (confirm('Akhiri pantau live?')) selesaiPantau(); };
+}
+
+async function selesaiPantau(){
+  const p = pantau; if (!p) return;
+  pantau = null; sibuk = false;
+  clearTimeout(p.putaran); clearInterval(p.timer);
+  try { if (p.perekam && p.perekam.state !== 'inactive') p.perekam.stop(); } catch {}
+  p.layar.getTracks().forEach(t => t.stop()); p.mic?.getTracks().forEach(t => t.stop());
+  try { await p.kunci?.release(); } catch {}
+  let r = {}; try { r = await panggil({ aksi:'selesai', id: p.id }, 'lab-pantau'); } catch {}
+  const nama = { bahaya:'kalimat berbahaya', anjlok:'penonton anjlok', gmv_diam:'GMV diam', tanpa_jualan:'lama tidak jualan', pertanyaan:'pertanyaan penonton' };
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:8px"><h2>Pantau selesai</h2><p>${mmss((Date.now() - p.mulai) / 1000)} dipantau, ${r.titik || 0} kali dibaca.</p>
+    <p class="muted">${Object.entries(r.peringatan || {}).map(([k, n]) => `${n}× ${nama[k] || k}`).join(' · ') || 'Tidak ada peringatan.'}</p>
+    <p class="muted kecil">Bacaan per 30 detik ini otomatis dipakai saat replay live ini dibedah di menu Unggah live.</p>
+    <div class="baris"><button class="btn utama" id="p-lagi">Pantau live lain</button></div></div>`;
+  document.getElementById('p-lagi').onclick = () => renderPantau();
+}
+window.addEventListener('beforeunload', e => { if (pantau){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------------- perbandingan ---------------- */
 function renderBanding(){
