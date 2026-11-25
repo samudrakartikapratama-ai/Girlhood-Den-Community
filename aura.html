@@ -114,7 +114,11 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 .msg.saya{justify-self:end;background:rgba(255,120,60,.18);border:1px solid rgba(255,120,60,.3);border-radius:16px 16px 4px 16px;padding:8px 14px}
 .msg.sementara{color:var(--ash);font-style:italic}
 .info-chat{margin:-4px 0 0;min-height:18px;font-size:13px;color:var(--ash);width:100%;text-align:left;padding-left:20px}
-.btn.mic{width:50px;min-height:50px;flex:none}
+.btn.mic,.btn.lampir{width:50px;min-height:50px;flex:none}
+.lampiran-pilih{display:flex;align-items:center;gap:8px;align-self:flex-start;max-width:100%;font-size:13px;padding:5px 6px 5px 14px;border-radius:999px;border:1px solid var(--garis);background:var(--kaca)}
+.lampiran-pilih span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lampiran-pilih button{width:26px;height:26px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:var(--ink);cursor:pointer;font-size:16px;line-height:1}
+.msg .berkas{display:block;font-size:12.5px;opacity:.8;margin-bottom:4px}
 .btn.mic.aktif{background:var(--ember);border-color:var(--ember);color:#160500;animation:denyut-mic 1.2s ease-in-out infinite}
 @keyframes denyut-mic{50%{box-shadow:0 0 0 8px rgba(255,90,31,.18)}}
 .kecil{font-size:12px;color:var(--ash);margin:12px 0 0}
@@ -193,9 +197,12 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     <div class="panel percakapan hidden" id="percakapan"></div>
     <form class="chat" id="form-chat">
       <button class="btn ikon mic" id="btn-mic" type="button" aria-label="Bicara dengan Aura"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="btn ikon lampir" id="btn-lampir" type="button" aria-label="Lampirkan file" title="Lampirkan foto, PDF, Excel, atau Word"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg></button>
+      <input type="file" id="file-lampir" class="hidden" accept="image/*,.pdf,.xlsx,.xls,.csv,.docx,.txt,.md">
       <input id="chat-isi" placeholder="Tanya Aura…" autocomplete="off" aria-label="Tulis pesan untuk Aura">
       <button class="btn primary" type="submit" id="btn-kirim">Kirim</button>
     </form>
+    <div class="lampiran-pilih hidden" id="lampiran-pilih"><span id="lampiran-nama"></span><button type="button" id="lampiran-hapus" aria-label="Batalkan lampiran">×</button></div>
     <p class="info-chat" id="info-chat"></p>
     </div>
     <p class="kecil privasi">Mikrofon (untuk tepuk tangan dan bicara) dan kamera (untuk menyapa) diproses di perangkat ini saja, tidak direkam atau dikirim. Kamera tidak dipakai untuk masuk.</p>
@@ -221,7 +228,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <script src="assets/aura/orb.js?v=202611191548"></script>
 <script src="assets/aura/scene.js?v=202611191548"></script>
 <script src="assets/aura/intro-suara.js?v=202611191548"></script>
-<script src="assets/aura/chat.js?v=202611191548"></script>
+<script src="assets/aura/chat.js?v=202611251720"></script>
 <script src="assets/aura/telinga.js?v=202611191548"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';

@@ -25,6 +25,8 @@
     PENUH: 'Aku sedang ramai sekali hari ini. Coba lagi sebentar lagi.',
     SALDO: 'Saldo API Aura habis. skp perlu mengisi ulang di console.anthropic.com.',
     BUKAN_INTERNAL: 'Sesi kamu habis. Keluar lalu masuk lagi.',
+    LAMPIRAN_BESAR: 'File terlalu besar. Maksimal sekitar 9 MB.',
+    LAMPIRAN_TIPE: 'Jenis file ini belum bisa dibaca. Pakai foto, PDF, Excel, CSV, atau Word.',
   };
 
   // ---------- tampilan ----------
@@ -64,7 +66,8 @@
     box.classList.remove('hidden');
     const el = document.createElement('div');
     el.className = 'msg ' + (peran === 'user' ? 'saya' : 'aura') + (opsi.sementara ? ' sementara' : '');
-    el.textContent = teks;
+    if (opsi.lampiran) { const f = document.createElement('span'); f.className = 'berkas'; f.textContent = 'Lampiran: ' + opsi.lampiran; el.appendChild(f); }
+    el.appendChild(document.createTextNode(teks));
     box.appendChild(el);
     box.scrollTop = box.scrollHeight;
     return el;
@@ -123,17 +126,66 @@
   A.ucap = ucap;
   A.diam = () => { giliran++; antrian = []; $('kata-aura').classList.remove('dibaca'); if (window.speechSynthesis) speechSynthesis.cancel(); };
 
+  // ---------- lampiran: foto & PDF dikirim apa adanya; Excel/CSV/Word diubah jadi teks di browser ----------
+  let lampiran = null; // { nama, tipe, data }
+  const skrip = {};
+  const muatSkrip = src => skrip[src] || (skrip[src] = new Promise((ok, gagal) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => { delete skrip[src]; gagal(new Error('SKRIP')); }; document.head.appendChild(s); }));
+  const keBase64 = blob => new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
+  const MAKS_FILE = 9.5 * 1024 * 1024, MAKS_TEKS = 150000;
+
+  async function fotoKecil(file) {
+    // foto besar dikecilkan (sisi terpanjang 1600 px) supaya cepat terkirim dan tetap terbaca
+    const img = await createImageBitmap(file);
+    const skala = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * skala); c.height = Math.round(img.height * skala);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.86));
+  }
+  async function siapkanLampiran(file) {
+    const n = file.name.toLowerCase();
+    if (file.type.startsWith('image/')) return { tipe: 'image/jpeg', data: await keBase64(await fotoKecil(file)) };
+    if (n.endsWith('.pdf')) { if (file.size > MAKS_FILE) throw new Error('LAMPIRAN_BESAR'); return { tipe: 'application/pdf', data: await keBase64(file) }; }
+    if (/\.(xlsx|xls|csv)$/.test(n)) {
+      await muatSkrip('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+      const wb = XLSX.read(await file.arrayBuffer());
+      const teks = wb.SheetNames.map(s => '### Sheet: ' + s + '\n' + XLSX.utils.sheet_to_csv(wb.Sheets[s], { blankrows: false })).join('\n\n');
+      return { tipe: 'text/plain', data: teks.slice(0, MAKS_TEKS) };
+    }
+    if (n.endsWith('.docx')) {
+      await muatSkrip('https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js');
+      const r = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      return { tipe: 'text/plain', data: r.value.slice(0, MAKS_TEKS) };
+    }
+    if (/\.(txt|md)$/.test(n)) return { tipe: 'text/plain', data: (await file.text()).slice(0, MAKS_TEKS) };
+    throw new Error('LAMPIRAN_TIPE');
+  }
+  function tampilLampiran() {
+    $('lampiran-pilih').classList.toggle('hidden', !lampiran);
+    $('lampiran-nama').textContent = lampiran ? lampiran.nama : '';
+    $('chat-isi').placeholder = lampiran ? 'Tanya soal file ini (boleh kosong)…' : 'Tanya Aura…';
+  }
+  async function pilihLampiran(file) {
+    if (!file) return;
+    $('lampiran-pilih').classList.remove('hidden'); $('lampiran-nama').textContent = 'Menyiapkan ' + file.name + '…';
+    try { lampiran = { nama: file.name, ...(await siapkanLampiran(file)) }; }
+    catch (e) { lampiran = null; $('info-chat').textContent = PESAN_GALAT[e.message] || 'File tidak bisa dibaca. Coba simpan ulang sebagai PDF.'; }
+    tampilLampiran();
+    $('chat-isi').focus();
+  }
+
   // ---------- percakapan ----------
   async function kirim(teks, lewatSuara) {
     teks = (teks || '').trim();
-    if (!teks || sibuk) return;
+    const file = lewatSuara ? null : lampiran;
+    if ((!teks && !file) || sibuk) return;
     sibuk = true;
-    tambah('user', teks);
+    tambah('user', teks || (file ? 'Tolong baca file ini.' : ''), { lampiran: file && file.nama });
     $('chat-isi').value = '';
-    const tunggu = lewatSuara ? null : tambah('aura', 'Aura sedang berpikir…', { sementara: true });
+    lampiran = null; tampilLampiran();
+    const tunggu = lewatSuara ? null : tambah('aura', file ? 'Aura sedang membaca file…' : 'Aura sedang berpikir…', { sementara: true });
     if (lewatSuara) setKeadaan('pikir');
     try {
-      const j = await panggil({ aksi: 'chat', pesan: teks, suara: !!lewatSuara });
+      const j = await panggil({ aksi: 'chat', pesan: teks, suara: !!lewatSuara, lampiran: file || undefined });
       if (tunggu) tunggu.remove();
       tambah('aura', j.jawab.isi);
       infoKuota(j.kuota);
@@ -141,6 +193,7 @@
       if (lewatSuara) ucap(j.jawab.isi, lanjutDengar);
     } catch (e) {
       if (tunggu) tunggu.remove();
+      if (file && !lampiran) { lampiran = file; tampilLampiran(); } // gagal: file tetap terpasang untuk dicoba lagi
       const t = PESAN_GALAT[e.message] || 'Maaf, aku gagal menjawab. Coba lagi sebentar lagi.';
       tambah('aura', t);
       if (e.data) infoKuota(e.data.kuota, e.data.jam);
@@ -276,6 +329,10 @@
       $('ke-ketik').onclick = () => setMode('ketik');
       $('btn-mic').onclick = () => { setMode('suara'); bangun(); };
       $('form-chat').onsubmit = ev => { ev.preventDefault(); kirim($('chat-isi').value, false); };
+      $('btn-lampir').onclick = () => $('file-lampir').click();
+      $('file-lampir').onchange = ev => { pilihLampiran(ev.target.files[0]); ev.target.value = ''; };
+      $('lampiran-hapus').onclick = () => { lampiran = null; tampilLampiran(); };
+      $('chat-isi').addEventListener('paste', ev => { const f = [...(ev.clipboardData?.files || [])][0]; if (f) { ev.preventDefault(); pilihLampiran(f); } });
       document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && suaraMode()) setMode('ketik'); });
     }
     let m = 'suara'; try { m = localStorage.getItem('aura-mode') || 'suara'; } catch (e) {}
@@ -283,7 +340,7 @@
     try {
       const j = await panggil({ aksi: 'riwayat' });
       $('percakapan').innerHTML = '';
-      (j.pesan || []).forEach(p => tambah(p.peran === 'assistant' ? 'aura' : 'user', p.isi));
+      (j.pesan || []).forEach(p => tambah(p.peran === 'assistant' ? 'aura' : 'user', p.isi, { lampiran: p.nama }));
       if (!(j.pesan || []).length) $('percakapan').classList.add('hidden');
       infoKuota(j.kuota, j.jam);
       pakaiServerDengar = !!j.dengarServer;

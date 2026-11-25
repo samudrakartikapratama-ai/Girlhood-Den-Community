@@ -172,9 +172,49 @@ const ALAT_SETOR = {
   }, required: ["urut", "status", "hasil"] },
 };
 
+// ---------- Lampiran chat: gambar, PDF, atau teks (Excel/Word/CSV sudah diubah jadi teks di browser) ----------
+const TIPE_LAMPIRAN: Record<string, { jenis: string; ext: string }> = {
+  "image/jpeg": { jenis: "gambar", ext: "jpg" }, "image/png": { jenis: "gambar", ext: "png" }, "image/webp": { jenis: "gambar", ext: "webp" },
+  "image/gif": { jenis: "gambar", ext: "gif" }, "application/pdf": { jenis: "pdf", ext: "pdf" }, "text/plain": { jenis: "teks", ext: "txt" },
+};
+const MAKS_BASE64 = 13_000_000; // ±9,5 MB file asli
+const MAKS_TEKS = 150_000;
+type Lampiran = { nama: string; jenis: string; tipe: string; path: string };
+
+async function simpanLampiran(staffId: string, l: any): Promise<Lampiran | null> {
+  if (!l) return null;
+  const tipe = String(l.tipe || "");
+  const t = TIPE_LAMPIRAN[tipe];
+  if (!t) throw new Error("LAMPIRAN_TIPE");
+  const data = String(l.data || "");
+  if (!data) throw new Error("LAMPIRAN_KOSONG");
+  let isi: Uint8Array;
+  if (t.jenis === "teks") isi = new TextEncoder().encode(data.slice(0, MAKS_TEKS));
+  else {
+    if (data.length > MAKS_BASE64) throw new Error("LAMPIRAN_BESAR");
+    isi = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+  }
+  const path = `${staffId}/${crypto.randomUUID()}.${t.ext}`;
+  const { error } = await db.storage.from("aura-lampiran").upload(path, isi, { contentType: tipe });
+  if (error) throw new Error("simpan lampiran gagal: " + error.message);
+  return { nama: String(l.nama || "lampiran").slice(0, 120), jenis: t.jenis, tipe, path };
+}
+
+// Lampiran jadi blok pesan untuk Claude (diberi cache supaya pertanyaan lanjutan tentang file yang sama lebih hemat)
+async function blokLampiran(l: Lampiran) {
+  const { data, error } = await db.storage.from("aura-lampiran").download(l.path);
+  if (error || !data) throw new Error("lampiran hilang");
+  if (l.jenis === "teks") return { type: "text", text: `ISI FILE "${l.nama}":\n${await data.text()}`, cache_control: { type: "ephemeral" } };
+  const buf = new Uint8Array(await data.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  const sumber = { type: "base64", media_type: l.tipe, data: btoa(bin) };
+  return l.jenis === "pdf" ? { type: "document", source: sumber, title: l.nama, cache_control: { type: "ephemeral" } } : { type: "image", source: sumber, cache_control: { type: "ephemeral" } };
+}
+
 type Ekstra = { alat: any[]; jalankan: (nama: string, input: any) => Promise<string> };
 
-async function tanya(pesanBaru: string, riwayat: any[], dinamis: string, maks = 1500, ekstra?: Ekstra): Promise<{ teks: string; masuk: number; keluar: number }> {
+async function tanya(pesanBaru: string | any[], riwayat: any[], dinamis: string, maks = 1500, ekstra?: Ekstra): Promise<{ teks: string; masuk: number; keluar: number }> {
   const sistem = [
     { type: "text", text: PERSONA },
     { type: "text", text: "BIBLE GIRLHOOD DEN (dari skp)\n\n" + (await bible()) },
@@ -232,7 +272,7 @@ Deno.serve(async (req) => {
 
   try {
     if (b.aksi === "riwayat") {
-      const { data } = await db.from("kantor_chat").select("id, peran, isi, created_at").eq("staff_id", staff.id).eq("agent", AGENT)
+      const { data } = await db.from("kantor_chat").select("id, peran, isi, created_at, lampiran->nama").eq("staff_id", staff.id).eq("agent", AGENT)
         .order("id", { ascending: false }).limit(30);
       return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran, dengarServer: !!GROQ_KEY });
     }
@@ -303,7 +343,8 @@ Deno.serve(async (req) => {
     }
 
     if (b.aksi === "chat") {
-      const pesan = String(b.pesan || "").trim().slice(0, 2000);
+      const adaLampiran = !!b.lampiran;
+      const pesan = String(b.pesan || "").trim().slice(0, 2000) || (adaLampiran ? "Tolong baca file ini lalu sampaikan poin pentingnya." : "");
       if (!pesan) return balas({ galat: "KOSONG" }, 400);
       if (jam.tutup) return balas({ galat: "TUTUP", jam }, 403);
       const kq = await kuota(staff.id);
@@ -311,26 +352,41 @@ Deno.serve(async (req) => {
       const { count } = await db.from("kantor_chat").select("id", { count: "exact", head: true }).eq("peran", "user").gte("created_at", awalHariIso());
       if ((count || 0) > BATAS_GLOBAL) return balas({ galat: "PENUH" }, 429);
 
-      const { data: lalu } = await db.from("kantor_chat").select("peran, isi").eq("staff_id", staff.id).eq("agent", AGENT)
+      const { data: lalu } = await db.from("kantor_chat").select("peran, isi, lampiran").eq("staff_id", staff.id).eq("agent", AGENT)
         .gte("created_at", new Date(Date.now() - 3 * 86400 * 1000).toISOString()).order("id", { ascending: false }).limit(12);
-      // riwayat harus selang-seling user/assistant dan diawali user
-      const riwayat: { role: string; content: string }[] = [];
-      for (const r of (lalu || []).reverse()) {
+      // riwayat harus selang-seling user/assistant dan diawali user.
+      // File terakhir yang dilampirkan ikut dikirim lagi supaya pertanyaan lanjutan tentang file itu tetap nyambung
+      // (kecuali pesan ini membawa file baru); file yang lebih lama cukup disebut namanya.
+      const baris = (lalu || []).reverse();
+      const iLampiran = adaLampiran ? -1 : baris.map((r) => !!r.lampiran && r.peran === "user").lastIndexOf(true);
+      const riwayat: { role: string; content: any[] }[] = [];
+      for (let k = 0; k < baris.length; k++) {
+        const r = baris[k];
         const role = r.peran === "assistant" ? "assistant" : "user";
-        if (!riwayat.length && role !== "user") riwayat.push({ role: "user", content: "(Aura membuka percakapan)" });
-        if (riwayat.length && riwayat[riwayat.length - 1].role === role) riwayat[riwayat.length - 1].content += "\n" + r.isi;
-        else riwayat.push({ role, content: r.isi });
+        const blok: any[] = [];
+        if (r.lampiran && role === "user") {
+          if (k === iLampiran) { try { blok.push(await blokLampiran(r.lampiran)); } catch { blok.push({ type: "text", text: `[file "${r.lampiran.nama}" sudah tidak tersedia]` }); } }
+          else blok.push({ type: "text", text: `[melampirkan file "${r.lampiran.nama}"]` });
+        }
+        if (String(r.isi || "").trim()) blok.push({ type: "text", text: r.isi });
+        if (!blok.length) continue;
+        if (!riwayat.length && role !== "user") riwayat.push({ role: "user", content: [{ type: "text", text: "(Aura membuka percakapan)" }] });
+        if (riwayat.length && riwayat[riwayat.length - 1].role === role) riwayat[riwayat.length - 1].content.push(...blok);
+        else riwayat.push({ role, content: blok });
       }
       if (riwayat.length && riwayat[riwayat.length - 1].role === "user") riwayat.pop();
 
-      const { data: pUser, error: e1 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "user", isi: pesan })
-        .select("id, peran, isi, created_at").single();
+      const lampiran = await simpanLampiran(staff.id, b.lampiran);
+      const { data: pUser, error: e1 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "user", isi: pesan, lampiran })
+        .select("id, peran, isi, created_at, lampiran->nama").single();
       if (e1) throw new Error("simpan pesan gagal: " + e1.message);
+      const pesanBaru = lampiran ? [await blokLampiran(lampiran), { type: "text", text: pesan }] : pesan;
 
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
         + (staff.pimpinan ? "" : "\nDia BUKAN pimpinan: jangan pernah menyebut kunci jawaban, rubrik penilaian, atau jawaban yang diharapkan dari tes, studi kasus, atau simulasi onboarding (termasuk yang tertulis di Bible). Boleh menyebut nama dan bentuk tesnya saja.")
+        + (lampiran ? `\nDia melampirkan file "${lampiran.nama}" (${lampiran.jenis}). Baca isinya dengan teliti dan jawab berdasarkan isi file itu. Kalau ada bagian yang tidak terbaca (gambar buram, tabel terpotong), katakan terus terang.` : "")
         + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: bicara natural seperti ngobrol dengan rekan kerja, panjang secukupnya sesuai kebutuhan pertanyaan (tidak perlu dipendek-pendekkan). Karena dibacakan, JANGAN pakai daftar bernomor, poin-poin, atau simbol; kalau ada beberapa poin, sampaikan sebagai kalimat mengalir (pertama..., lalu..., terakhir...). Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
       const tg = await tugasHari(staff.id);
       const ekstra: Ekstra | undefined = tg.length ? { alat: [ALAT_SETOR], jalankan: (_n, input) => catatSetoran(staff.id, input) } : undefined;
@@ -338,7 +394,7 @@ Deno.serve(async (req) => {
         + "SETORAN: kalau dia melaporkan hasil tugas (terutama 16.00–17.00), cocokkan dengan nomor tugasnya lalu panggil catat_setoran sekali per tugas. "
         + "Tugas yang belum selesai WAJIB disertai opsi solusi: kalau dia belum menyebut opsi, tanyakan dulu \"opsimu apa?\" sebelum mencatat (prinsip Bible: bawahan membawa opsi). "
         + "Setelah mencatat, sebut singkat apa yang tercatat lalu tanyakan tugas berikutnya yang belum disetor. Kalau semua sudah disetor, beri umpan balik jujur satu-dua kalimat soal kualitas setorannya." : "";
-      const hsl = await tanya(pesan, riwayat, dinamis + dinamisTugas, 2000, ekstra);
+      const hsl = await tanya(pesanBaru, riwayat, dinamis + dinamisTugas, 2000, ekstra);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);
@@ -349,6 +405,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const g = String((e as Error)?.message || e).slice(0, 300);
     console.error("aura", g);
+    if (g.startsWith("LAMPIRAN_")) return balas({ galat: g }, 400);
     return balas({ galat: /credit|balance|billing/i.test(g) ? "SALDO" : "GAGAL" }, 500);
   }
 });
