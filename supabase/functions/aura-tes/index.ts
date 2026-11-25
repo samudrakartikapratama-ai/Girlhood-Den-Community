@@ -126,9 +126,10 @@ async function claudeJson(system: string, isi: string, schema: any, max_tokens =
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
-          model: "claude-sonnet-5-5", max_tokens, system,
+          model: "claude-sonnet-5-5", max_tokens,
+          system: system + "\n\nSimpan hasil penilaianmu HANYA dengan memanggil alat simpan_nilai. Jangan menulis jawaban di luar alat itu.",
           tools: [{ name: "simpan_nilai", description: "Simpan hasil penilaian.", input_schema: schema }],
-          tool_choice: { type: "tool", name: "simpan_nilai" },
+          tool_choice: { type: "auto" },
           messages: [{ role: "user", content: isi }],
         }),
       });
