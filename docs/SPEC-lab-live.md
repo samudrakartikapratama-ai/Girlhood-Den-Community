@@ -58,3 +58,12 @@ Replay tersimpan 30 hari, jadi diunggah di hari yang sama.
 1. Siapa orang Saturnine di Solo yang mengunggah (nama, mulai kapan)?
 2. Akun mana yang jadi 2 akun laboratorium?
 3. Laptop studio: Windows atau Mac?
+
+## Pembaruan 25 Nov 2026: akurasi
+- Angka dan rasio 五维四率 (masuk live, klik produk, klik ke bayar) dihitung kode dari file ekspor, bukan AI. Diagnosis titik lemah memakai pohon keputusan (berhenti di rasio pertama di bawah patokan).
+- Patokan awal 12% / 18% / 5% (referensi live beauty China); otomatis diganti median akun sendiri setelah 5 live selesai.
+- Grafik dicek silang ke GMV ekspor (selisih ≤15% = cocok). Bagian transkrip yang kurang jelas ditandai; kata kunci produk per akun dikirim ke Whisper.
+- Screenshot: maks 3 grafik + 4 layar lain (sumber penonton, produk). Jam mulai wajib.
+- Setiap momen punya tingkat yakin dan tombol Tepat/Kurang tepat; koreksi masuk ke prompt bedah berikutnya. Tab Perbandingan per host/akun menampilkan persentase penilaian AI yang tepat (target >80%).
+- Diuji: video 2 jam diolah di browser ±60 detik, unggahan ±26 MB.
+- Masih menunggu data dari dashboard: angka per menit dan komentar penonton.

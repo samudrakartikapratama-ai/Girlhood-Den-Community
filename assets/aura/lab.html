@@ -48,6 +48,17 @@ th{color:var(--ash);font-weight:500}
 details summary{cursor:pointer;color:var(--ash)}
 .cek{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0}
 .cek input{accent-color:var(--ember);width:18px;height:18px}
+.corong{display:grid;gap:6px}
+.corong .r{display:grid;grid-template-columns:minmax(150px,1.2fr) 90px 1fr;gap:12px;align-items:center;font-size:14px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.035)}
+.corong .r.lemah{background:rgba(255,143,156,.1);outline:1px solid rgba(255,143,156,.35)}
+.corong .nilai{font-size:18px;font-weight:500;font-variant-numeric:tabular-nums}
+.corong .ket{color:var(--ash);font-size:13px}
+.ulas{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ulas button{min-height:32px;padding:0 12px;font-size:13px}
+.ulas button[aria-pressed=true]{border-color:var(--ember);background:rgba(255,90,31,.16)}
+.kualitas{display:grid;gap:4px;font-size:13.5px}
+.galeri{display:flex;flex-wrap:wrap;gap:10px}
+.galeri img{max-width:min(100%,420px)}
 </style>
 </head>
 <body>
@@ -57,6 +68,7 @@ details summary{cursor:pointer;color:var(--ash)}
     <nav class="submenu" id="submenu" aria-label="Menu Lab Live">
       <button data-v="unggah" aria-pressed="true">Unggah live</button>
       <button data-v="daftar" aria-pressed="false">Laporan</button>
+      <button data-v="banding" aria-pressed="false">Perbandingan</button>
       <button data-v="atur" aria-pressed="false" class="hidden">Pengaturan</button>
     </nav>
   </header>
@@ -78,7 +90,7 @@ const mmss = d => { d = Math.max(0, Math.round(d || 0)); const j = Math.floor(d/
 const rupiah = n => n == null ? '–' : 'Rp' + Math.round(n).toLocaleString('id-ID');
 const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
 const jamDinding = (jam, detik) => { if (!jam) return ''; const [h, m] = jam.split(':').map(Number); const t = h*3600 + m*60 + Math.round(detik); return String(Math.floor(t/3600)%24).padStart(2,'0') + ':' + String(Math.floor(t%3600/60)).padStart(2,'0'); };
-const PESAN = { BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses Lab Live. Minta ke pimpinan.', AKUN:'Pilih akun dulu.', TANPA_SUARA:'Video tidak punya suara.', SUARA_BELUM_LENGKAP:'Unggahan suara belum lengkap. Coba unggah lagi.' };
+const PESAN = { JAM_MULAI:'Isi jam mulai live dulu.', BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses Lab Live. Minta ke pimpinan.', AKUN:'Pilih akun dulu.', TANPA_SUARA:'Video tidak punya suara.', SUARA_BELUM_LENGKAP:'Unggahan suara belum lengkap. Coba unggah lagi.' };
 
 async function panggil(body){
   const { data } = await sb.auth.getSession();
@@ -109,6 +121,7 @@ function render(){
   clearTimeout(putar);
   if (tampilan === 'daftar') return renderDaftar();
   if (tampilan === 'atur') return renderAtur();
+  if (tampilan === 'banding') return muat().then(ok => ok && tampilan === 'banding' && renderBanding());
   renderUnggah();
 }
 const namaAkun = id => (st.akun || []).find(a => a.id === id)?.nama || '–';
@@ -125,11 +138,12 @@ function renderUnggah(){
       <label><span class="label">Akun</span><select id="u-akun">${akun.map(a => `<option value="${a.id}">${esc(a.nama)}</option>`).join('')}</select></label>
       <label><span class="label">Host</span><select id="u-host"></select></label>
       <label><span class="label">Tanggal live</span><input type="date" id="u-tgl" value="${hariIni}"></label>
-      <label><span class="label">Jam mulai live</span><input type="time" id="u-jam"></label>
+      <label><span class="label">Jam mulai live (wajib)</span><input type="time" id="u-jam" required></label>
     </div>
     <label class="berkas"><b>1. Video replay (wajib)</b><span class="muted kecil">File .mp4 dari tombol unduh replay di dashboard live.</span><input type="file" id="u-video" accept="video/*"></label>
     <label class="berkas"><b>2. File ekspor (disarankan)</b><span class="muted kecil">File .xlsx dari tombol Export di dashboard live yang sama.</span><input type="file" id="u-xlsx" accept=".xlsx,.xls,.csv"></label>
-    <label class="berkas"><b>3. Screenshot grafik (disarankan)</b><span class="muted kecil">Grafik "Performance trends" yang menampilkan GMV, penonton, dan klik produk.</span><input type="file" id="u-grafik" accept="image/png,image/jpeg,image/webp"></label>
+    <label class="berkas"><b>3. Screenshot grafik (disarankan, maks 3)</b><span class="muted kecil">Grafik "Performance trends". Pilih GMV, penonton, dan klik produk; kalau garisnya terlalu banyak, bagi jadi 2–3 screenshot.</span><input type="file" id="u-grafik" accept="image/png,image/jpeg,image/webp" multiple></label>
+    <label class="berkas"><b>4. Screenshot lain (boleh kosong, maks 4)</b><span class="muted kecil">Sumber penonton (FYP, iklan, follow), daftar produk dengan klik dan penjualan, data penonton.</span><input type="file" id="u-layar" accept="image/png,image/jpeg,image/webp" multiple></label>
     <label><span class="label">Catatan dari studio (boleh kosong)</span><textarea id="u-cat" placeholder="Contoh: lampu kiri mati 10 menit, stok serum habis di tengah live"></textarea></label>
     <div class="baris"><button class="btn utama" id="u-kirim">Proses dan kirim</button><span class="pesan" id="u-pesan"></span></div>
     <div class="tahapan hidden" id="u-tahap"></div>
@@ -172,7 +186,7 @@ async function ambilSuara(file, kabar){
   if (kode !== 0) throw new Error('SUARA');
   const daftar = (await ff.listDir('/')).filter(f => /^a\d{3}\.mp3$/.test(f.name)).map(f => f.name).sort();
   const hasil = [];
-  for (const n of daftar) hasil.push(new Blob([await ff.readFile('/' + n)], { type: 'audio/mpeg' }));
+  for (const n of daftar) { const isi = await ff.readFile('/' + n); if (isi.length > 4000) hasil.push(new Blob([isi], { type: 'audio/mpeg' })); } // potongan sisa <1 detik dibuang (Whisper menolaknya)
   ff.terminate();
   return hasil;
 }
@@ -216,6 +230,9 @@ async function kirim(){
   const pesan = document.getElementById('u-pesan'); pesan.textContent = '';
   const video = document.getElementById('u-video').files[0];
   if (!video){ pesan.textContent = 'Pilih video replay dulu.'; return; }
+  const grafik = [...document.getElementById('u-grafik').files].slice(0, 3), layar = [...document.getElementById('u-layar').files].slice(0, 4);
+  if (!document.getElementById('u-jam').value){ const r = await bacaEkspor(document.getElementById('u-xlsx').files[0]).catch(() => ({})); if (r.jam) document.getElementById('u-jam').value = r.jam; }
+  if (!document.getElementById('u-jam').value){ pesan.textContent = 'Isi jam mulai live. Lihat di dashboard live, bagian waktu mulai.'; return; }
   const tombol = document.getElementById('u-kirim');
   tombol.disabled = true; sibuk = true;
   document.querySelectorAll('#isi input, #isi select, #isi textarea').forEach(x => x.disabled = true);
@@ -230,16 +247,16 @@ async function kirim(){
     tahap('foto', '0');
     const lembar = await ambilFoto(v, tahap);
     URL.revokeObjectURL(v.src);
-    const grafik = document.getElementById('u-grafik').files[0] || null;
     tahap('kirim', '');
     const b = await panggil({ aksi:'buat', akun_id: document.getElementById('u-akun').value, host_id: document.getElementById('u-host').value || null,
-      tanggal: document.getElementById('u-tgl').value, jam_mulai: document.getElementById('u-jam').value || ekspor.jam || null, durasi_detik: Math.round(durasi),
-      catatan: document.getElementById('u-cat').value.trim(), ekspor: ekspor.rows, potongan_audio: audio.length, lembar: lembar.length, ada_grafik: !!grafik });
-    const antre = [...audio.map((x, i) => [`audio/${i}.mp3`, x]), ...lembar.map((x, i) => [`lembar/${i}.jpg`, x]), ...(grafik ? [['grafik', grafik]] : [])];
+      tanggal: document.getElementById('u-tgl').value, jam_mulai: document.getElementById('u-jam').value, durasi_detik: Math.round(durasi),
+      catatan: document.getElementById('u-cat').value.trim(), ekspor: ekspor.rows, potongan_audio: audio.length, lembar: lembar.length, n_grafik: grafik.length, n_layar: layar.length });
+    const antre = [...audio.map((x, i) => [`audio/${i}.mp3`, x]), ...lembar.map((x, i) => [`lembar/${i}.jpg`, x]), ...grafik.map((x, i) => [`grafik/${i}`, x]), ...layar.map((x, i) => [`layar/${i}`, x])];
+    const semua = antre.length;
     let beres = 0;
     const kerja = async () => { while (antre.length){ const [p, berkas] = antre.shift(); let galat;
       for (let c = 0; c < 3; c++){ ({ error: galat } = await sb.storage.from('lab-live').uploadToSignedUrl(`${b.id}/${p}`, b.token[p], berkas, { contentType: berkas.type || 'image/jpeg', upsert: true })); if (!galat) break; }
-      if (galat) throw new Error('UNGGAH'); tahap('kirim', `${++beres}/${audio.length + lembar.length + (grafik ? 1 : 0)}`); } };
+      if (galat) throw new Error('UNGGAH'); tahap('kirim', `${++beres}/${semua}`); } };
     await Promise.all([kerja(), kerja(), kerja()]);
     await panggil({ aksi:'siap', id: b.id });
     tahap('antre', '');
@@ -267,7 +284,7 @@ async function renderDaftar(){
   isi.innerHTML = `<div class="panel tabel-geser"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Host</th><th>Durasi</th><th>GMV</th><th>Status</th><th></th></tr></thead><tbody>${live.map(l => {
     const [n, k] = STATUS[l.status] || [l.status, ''];
     const ket = l.status === 'proses' || l.status === 'antre' ? (NAMA_TAHAP[l.tahap] || '') : l.status === 'gagal' ? 'Ada kendala' : '';
-    return `<tr><td>${tgl(l.tanggal)}${l.jam_mulai ? ' · ' + esc(l.jam_mulai) : ''}</td><td>${esc(namaAkun(l.akun_id))}</td><td>${esc(namaHost(l.host_id))}</td><td class="angka">${mmss(l.durasi_detik)}</td><td class="angka">${rupiah(l.angka?.gmv)}</td>
+    return `<tr><td>${tgl(l.tanggal)}${l.jam_mulai ? ' · ' + esc(l.jam_mulai) : ''}</td><td>${esc(namaAkun(l.akun_id))}</td><td>${esc(namaHost(l.host_id))}</td><td class="angka">${mmss(l.durasi_detik)}</td><td class="angka">${rupiah(l.angka?.total?.gmv)}</td>
       <td><span class="chip ${k}">${n}</span>${ket ? `<div class="muted kecil" style="margin-top:4px">${esc(ket)}</div>` : ''}</td>
       <td><div class="baris">${l.status === 'selesai' ? `<button class="btn" data-lihat="${l.id}">Lihat</button>` : ''}${l.status === 'gagal' && st.pimpinan ? `<button class="btn" data-ulang="${l.id}">Coba lagi</button>` : ''}${st.pimpinan ? `<button class="btn" data-hapus="${l.id}" aria-label="Hapus">Hapus</button>` : ''}</div></td></tr>`;
   }).join('')}</tbody></table></div>`;
@@ -280,33 +297,83 @@ async function renderDaftar(){
 async function renderLaporan(id){
   isi.innerHTML = `<p class="muted">Memuat laporan…</p>`;
   let l; try { l = await panggil({ aksi:'detail', id }); } catch { isi.innerHTML = `<div class="panel">Laporan belum bisa dibuka. Coba lagi.</div>`; return; }
-  const lap = l.laporan || {}, a = lap.angka || {};
+  const lap = l.laporan || {}, a = l.angka, t = a?.total || {}, r = a?.rasio || {}, p = a?.patokan || {};
   const urut = { bahaya:0, terburuk:1, terbaik:2 };
-  const momen = [...(lap.momen || [])].sort((x, y) => (urut[x.jenis] - urut[y.jenis]) || (x.mulai - y.mulai));
+  const momen = (lap.momen || []).map((m, i) => ({ ...m, i })).sort((x, y) => (urut[x.jenis] - urut[y.jenis]) || (x.mulai - y.mulai));
   const label = { terbaik:['Terbaik','ok'], terburuk:['Terburuk','bad'], bahaya:['Kalimat berbahaya','warn'] };
-  const fotoDi = t => { const i = Math.min(l.url_lembar.length - 1, Math.floor(t / l.lembar_detik)); return l.url_lembar[i] || null; };
-  const waktu = t => `${mmss(t)}${l.jam_mulai ? ` <span class="muted">(jam ${jamDinding(l.jam_mulai, t)})</span>` : ''}`;
+  const yakinLabel = { tinggi:['didukung angka','ok'], sedang:['sebagian didukung angka',''], rendah:['hanya dari ucapan','warn'] };
+  const fotoDi = s => { const i = Math.min(l.url_lembar.length - 1, Math.floor(s / l.lembar_detik)); return l.url_lembar[i] || null; };
+  const waktu = s => `${mmss(s)}${l.jam_mulai ? ` <span class="muted">(jam ${jamDinding(l.jam_mulai, s)})</span>` : ''}`;
+  const pr = v => v == null ? '–' : String(v).replace('.', ',') + '%';
+  const ang = v => v == null ? '–' : Math.round(v).toLocaleString('id-ID');
+  const baris = (k, nama, dari, ke, arti) => { const lemah = a?.diagnosis?.titik === k; const v = r[k]; const ada = p[k] != null;
+    return `<div class="r ${lemah ? 'lemah' : ''}"><span>${nama}<br><span class="ket">${dari} → ${ke}</span></span><span class="nilai">${pr(v)}</span><span class="ket">${ada ? `patokan ${pr(p[k])} · ` : ''}${v == null ? 'tidak bisa dihitung' : ada ? (v < p[k] ? '<b style="color:var(--bad);font-weight:500">di bawah patokan</b>' : 'aman') : ''} · ${arti}</span></div>`; };
+  const ulasan = l.ulasan || {};
+  const ragu = l.transkrip?.ragu_persen, cekG = l.grafik?.cek;
   isi.innerHTML = `<div class="baris"><button class="btn" id="kembali">‹ Daftar laporan</button></div>
   <div class="panel" style="display:grid;gap:8px"><h2>${esc(namaAkun(l.akun_id))} · ${esc(namaHost(l.host_id))}</h2><p class="muted kecil">${tgl(l.tanggal)}${l.jam_mulai ? ' · mulai ' + esc(l.jam_mulai) : ''} · durasi ${mmss(l.durasi_detik)}</p><p style="margin-top:4px">${esc(lap.ringkas)}</p></div>
-  <div class="angka-baris">
-    <div class="panel"><span class="muted kecil">GMV</span><span class="besar angka">${rupiah(a.gmv)}</span></div>
-    <div class="panel"><span class="muted kecil">Terjual</span><span class="besar angka">${a.terjual ?? '–'}</span></div>
-    <div class="panel"><span class="muted kecil">Penonton</span><span class="besar angka">${a.penonton?.toLocaleString('id-ID') ?? '–'}</span></div>
-    <div class="panel"><span class="muted kecil">Klik produk</span><span class="besar angka">${a.klik_produk_persen != null ? a.klik_produk_persen + '%' : '–'}</span><span class="muted kecil">patokan 18%</span></div>
-    <div class="panel"><span class="muted kecil">Klik ke bayar</span><span class="besar angka">${a.klik_ke_bayar_persen != null ? a.klik_ke_bayar_persen + '%' : '–'}</span><span class="muted kecil">patokan 5%</span></div>
-  </div>
+  ${a ? `<div class="panel" style="display:grid;gap:10px"><h2>Corong penjualan</h2><p class="muted kecil">Dihitung sistem dari file ekspor (bukan tebakan AI). Patokan: ${esc(p.sumber || '-')}.</p>
+    <div class="angka-baris">
+      <div class="panel"><span class="muted kecil">GMV</span><span class="besar angka">${rupiah(t.gmv)}</span></div>
+      <div class="panel"><span class="muted kecil">Terjual</span><span class="besar angka">${ang(t.terjual)}</span></div>
+      <div class="panel"><span class="muted kecil">Penonton</span><span class="besar angka">${ang(t.penonton)}</span></div>
+      <div class="panel"><span class="muted kecil">GPM</span><span class="besar angka">${rupiah(a.gpm)}</span><span class="muted kecil">GMV per 1.000 tontonan</span></div>
+    </div>
+    <div class="corong">
+      ${baris('masuk', 'Masuk live', `${ang(t.tayang)} lihat di FYP`, `${ang(t.penonton)} masuk`, 'kekuatan cover, judul, pembuka, iklan')}
+      ${baris('klik_produk', 'Klik produk', `${ang(t.produk_tayang)} lihat produk`, `${ang(t.produk_klik)} klik`, 'kekuatan host menjelaskan produk')}
+      ${baris('bayar', 'Klik ke bayar', `${ang(t.produk_klik)} klik`, `${ang(t.pembeli)} ${a.pembeli_dari === 'pesanan' ? 'pesanan' : 'pembeli'}`, 'kepercayaan dan closing')}
+    </div>
+    <p style="line-height:1.6"><b style="font-weight:500">Titik lemah:</b> ${esc(a.diagnosis?.arti)}</p>
+    ${(a.per30 || []).length > 1 ? `<details><summary>Per 30 menit</summary><div class="tabel-geser" style="margin-top:8px"><table><thead><tr><th>Waktu</th><th>GMV</th><th>Penonton</th><th>Masuk</th><th>Klik produk</th><th>Klik ke bayar</th></tr></thead><tbody>${a.per30.map(x => `<tr><td>${esc(x.waktu)}</td><td class="angka">${rupiah(x.gmv)}</td><td class="angka">${ang(x.penonton)}</td><td class="angka">${pr(x.masuk)}</td><td class="angka">${pr(x.klik_produk)}</td><td class="angka">${pr(x.bayar)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+  </div>` : `<div class="panel"><b style="font-weight:500">Tanpa file ekspor.</b> <span class="muted">Corong penjualan tidak bisa dihitung; momen hanya dinilai dari ucapan host.</span></div>`}
   <div class="panel" style="display:grid;gap:8px"><h2>Live berikutnya</h2><ol class="daftar" style="list-style:decimal;padding-left:20px">${(lap.saran || []).map(s => `<li style="background:none;padding:2px 0">${esc(s)}</li>`).join('')}</ol>
-    <details style="margin-top:6px"><summary>Kenapa (diagnosis)</summary><p style="margin-top:8px;line-height:1.6">${esc(lap.diagnosis)}</p></details></div>
-  <div class="panel momen"><h2>Momen penting</h2>${momen.map(m => { const [n, k] = label[m.jenis] || [m.jenis, '']; const f = m.jenis !== 'bahaya' ? fotoDi(m.mulai) : null; return `<article class="${esc(m.jenis)}">
-    <div class="baris"><span class="chip ${k}">${n}</span><span class="angka kecil">${waktu(m.mulai)} – ${mmss(m.selesai)}</span></div>
+    <details style="margin-top:6px"><summary>Penjelasan diagnosis</summary><p style="margin-top:8px;line-height:1.6">${esc(lap.diagnosis)}</p></details></div>
+  <div class="panel momen"><h2>Momen penting</h2><p class="muted kecil">Tandai Tepat atau Kurang tepat. Koreksi kamu dipakai Aura saat membedah live berikutnya.</p>${momen.map(m => { const [n, k] = label[m.jenis] || [m.jenis, '']; const [yn, yk] = yakinLabel[m.yakin] || ['', '']; const f = m.jenis !== 'bahaya' ? fotoDi(m.mulai) : null; const u = ulasan[m.i] || {}; return `<article class="${esc(m.jenis)}">
+    <div class="baris"><span class="chip ${k}">${n}</span>${yn ? `<span class="chip ${yk}">${yn}</span>` : ''}<span class="angka kecil">${waktu(m.mulai)} – ${mmss(m.selesai)}</span></div>
     <b>${esc(m.judul)}</b><p class="kutip">${esc(m.kutipan)}</p><p class="muted">${esc(m.alasan)}</p>
     ${m.bukti ? `<p class="kecil"><span class="muted">Angka:</span> ${esc(m.bukti)}</p>` : ''}${m.visual ? `<p class="kecil"><span class="muted">Terlihat di layar:</span> ${esc(m.visual)}</p>` : ''}
-    ${f ? `<img class="lembar" src="${esc(f)}" alt="Foto layar sekitar menit ${mmss(m.mulai)}" loading="lazy" style="max-width:420px">` : ''}</article>`; }).join('')}</div>
-  <div class="panel" style="display:grid;gap:8px"><h2>Urutan topik</h2><div class="topik">${(l.topik || []).map(t => `<div><span class="angka muted">${mmss(t.mulai)}–${mmss(t.selesai)}</span><span><b style="font-weight:500">${esc(t.judul)}</b>${t.produk ? ' · ' + esc(t.produk) : ''}<br><span class="muted">${esc(t.ringkas)}</span></span></div>`).join('')}</div></div>
-  ${l.url_grafik ? `<div class="panel" style="display:grid;gap:8px"><h2>Grafik yang dikirim</h2><img class="lembar" src="${esc(l.url_grafik)}" alt="Screenshot grafik performa live"></div>` : ''}
-  <div class="panel"><details><summary>Semua ucapan host (${(l.transkrip?.seg || []).length} baris)</summary><div class="transkrip" style="margin-top:10px">${(l.transkrip?.seg || []).map(s => `<span class="muted angka">${mmss(s.a)}</span>  ${esc(s.t)}`).join('\n')}</div></details></div>`;
+    ${f ? `<img class="lembar" src="${esc(f)}" alt="Foto layar sekitar menit ${mmss(m.mulai)}" loading="lazy" style="max-width:420px">` : ''}
+    <div class="ulas" data-m="${m.i}"><button class="btn" data-nilai="tepat" aria-pressed="${u.nilai === 'tepat'}">Tepat</button><button class="btn" data-nilai="kurang" aria-pressed="${u.nilai === 'kurang'}">Kurang tepat</button>${u.catatan ? `<span class="muted kecil">“${esc(u.catatan)}” · ${esc(u.oleh || '')}</span>` : u.nilai ? `<span class="muted kecil">${esc(u.oleh || '')}</span>` : ''}</div></article>`; }).join('')}</div>
+  <div class="panel" style="display:grid;gap:8px"><h2>Urutan topik</h2><div class="topik">${(l.topik || []).map(x => `<div><span class="angka muted">${mmss(x.mulai)}–${mmss(x.selesai)}</span><span><b style="font-weight:500">${esc(x.judul)}</b>${x.produk ? ' · ' + esc(x.produk) : ''}<br><span class="muted">${esc(x.ringkas)}</span></span></div>`).join('')}</div></div>
+  ${l.layar ? `<div class="panel" style="display:grid;gap:8px"><h2>Dari screenshot dashboard</h2>
+    ${(l.layar.sumber_penonton || []).length ? `<p><span class="muted">Sumber penonton:</span> ${l.layar.sumber_penonton.map(x => esc(x.sumber) + (x.persen != null ? ' ' + pr(x.persen) : '')).join(' · ')}</p>` : ''}
+    ${(l.layar.produk || []).length ? `<div class="tabel-geser"><table><thead><tr><th>Produk</th><th>Klik</th><th>Terjual</th><th>GMV</th></tr></thead><tbody>${l.layar.produk.map(x => `<tr><td>${esc(x.nama)}</td><td class="angka">${ang(x.klik)}</td><td class="angka">${ang(x.terjual)}</td><td class="angka">${rupiah(x.gmv)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${l.layar.lain ? `<p class="muted">${esc(l.layar.lain)}</p>` : ''}</div>` : ''}
+  <div class="panel kualitas"><h2 style="margin-bottom:6px">Kualitas data laporan ini</h2>
+    <span>File ekspor: ${a ? 'ada' : '<b style="color:var(--warn);font-weight:500">tidak ada</b>'}${(a?.catatan || []).map(c => ' · ' + esc(c)).join('')}</span>
+    <span>Grafik per waktu: ${l.n_grafik ? `ada, cek ke ekspor: <b style="font-weight:500;color:${cekG?.status === 'cocok' ? 'var(--ok)' : 'var(--warn)'}">${esc(cekG?.status || '-')}</b>${cekG?.selisih_persen != null ? ` (selisih GMV ${cekG.selisih_persen}%)` : ''}` : '<b style="color:var(--warn);font-weight:500">tidak ada</b>, momen tidak bisa dicocokkan ke naik-turun angka'}</span>
+    <span>Ucapan host: ${ragu != null ? `${ragu}% bagian kurang jelas terdengar${ragu > 20 ? ' <b style="color:var(--warn);font-weight:500">(tinggi, cek musik/mic)</b>' : ''}` : '-'}</span>
+    ${st.pimpinan && l.token_masuk != null ? `<span class="muted">Biaya AI: ±Rp${Math.round((l.token_masuk * 3 + l.token_keluar * 15) / 1e6 * 16500).toLocaleString('id-ID')} (${(l.token_masuk + l.token_keluar).toLocaleString('id-ID')} token; perkiraan tarif Sonnet)</span>` : ''}</div>
+  ${(l.url_grafik || []).length ? `<div class="panel" style="display:grid;gap:8px"><h2>Screenshot yang dikirim</h2><div class="galeri">${[...l.url_grafik, ...(l.url_layar || [])].filter(Boolean).map(u => `<img class="lembar" src="${esc(u)}" alt="Screenshot dashboard live">`).join('')}</div></div>` : ''}
+  <div class="panel"><details><summary>Semua ucapan host (${(l.transkrip?.seg || []).length} baris)</summary><div class="transkrip" style="margin-top:10px">${(l.transkrip?.seg || []).map(s => `<span class="muted angka">${mmss(s.a)}</span>  ${s.r ? '<span title="kurang jelas terdengar" style="color:var(--warn)">?</span> ' : ''}${esc(s.t)}`).join('\n')}</div></details></div>`;
   document.getElementById('kembali').onclick = () => renderDaftar();
-  isi.querySelectorAll('img.lembar').forEach(im => im.onclick = () => { im.classList.toggle('lebar'); im.style.maxWidth = im.classList.contains('lebar') ? '100%' : (im.closest('.momen') ? '420px' : '100%'); });
+  isi.querySelectorAll('img.lembar').forEach(im => im.onclick = () => { im.classList.toggle('lebar'); im.style.maxWidth = im.classList.contains('lebar') ? '100%' : (im.closest('.momen') ? '420px' : ''); });
+  isi.querySelectorAll('.ulas button').forEach(b => b.onclick = async () => {
+    const nilai = b.dataset.nilai, i = Number(b.parentElement.dataset.m);
+    const catatan = nilai === 'kurang' ? prompt('Apa yang kurang tepat? Tulis singkat, nanti dipakai Aura belajar.') : '';
+    if (catatan === null) return;
+    b.disabled = true;
+    try { await panggil({ aksi:'ulas', id, momen: i, nilai, catatan }); renderLaporan(id); } catch { b.disabled = false; alert('Gagal menyimpan. Coba lagi.'); }
+  });
+}
+
+/* ---------------- perbandingan ---------------- */
+function renderBanding(){
+  const selesai = (st.live || []).filter(l => l.status === 'selesai' && l.angka);
+  if (!selesai.length){ isi.innerHTML = `<div class="panel"><h2>Belum ada data</h2><p class="muted" style="margin-top:6px">Perbandingan muncul setelah ada laporan yang selesai dengan file ekspor.</p></div>`; return; }
+  const med = v => { v = v.filter(x => typeof x === 'number').sort((a, b) => a - b); if (!v.length) return null; const m = Math.floor(v.length / 2); return Math.round((v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2) * 10) / 10; };
+  const pr = v => v == null ? '–' : String(v).replace('.', ',') + '%';
+  const kelompok = (kunci, nama) => { const g = {}; for (const l of selesai) (g[l[kunci] || '-'] ||= []).push(l); return Object.entries(g).map(([k, ls]) => {
+    const perJam = ls.map(l => l.durasi_detik ? (l.angka.total?.gmv || 0) / (l.durasi_detik / 3600) : null);
+    const lemah = {}; ls.forEach(l => { if (l.angka.titik) lemah[l.angka.titik] = (lemah[l.angka.titik] || 0) + 1; });
+    const sering = Object.entries(lemah).sort((a, b) => b[1] - a[1])[0];
+    const dinilai = ls.flatMap(l => Object.values(l.ulasan || {})); const tepat = dinilai.filter(u => u.nilai === 'tepat').length;
+    return { nama: nama(k), n: ls.length, gmvJam: med(perJam), masuk: med(ls.map(l => l.angka.rasio?.masuk)), klik: med(ls.map(l => l.angka.rasio?.klik_produk)), bayar: med(ls.map(l => l.angka.rasio?.bayar)), lemah: sering ? `${{ masuk:'Masuk live', klik_produk:'Klik produk', bayar:'Klik ke bayar' }[sering[0]]} (${sering[1]}×)` : '–', akurasi: dinilai.length ? Math.round(tepat / dinilai.length * 100) + '% dari ' + dinilai.length : '–' }; }).sort((a, b) => (b.gmvJam || 0) - (a.gmvJam || 0)); };
+  const tabel = (judul, rows) => `<div class="panel tabel-geser" style="display:grid;gap:8px"><h2>${judul}</h2><table><thead><tr><th>Nama</th><th>Live</th><th>GMV/jam</th><th>Masuk</th><th>Klik produk</th><th>Klik ke bayar</th><th>Paling sering lemah</th><th>Penilaian AI tepat</th></tr></thead><tbody>${rows.map(x => `<tr><td>${esc(x.nama)}</td><td class="angka">${x.n}</td><td class="angka">${rupiah(x.gmvJam)}</td><td class="angka">${pr(x.masuk)}</td><td class="angka">${pr(x.klik)}</td><td class="angka">${pr(x.bayar)}</td><td>${esc(x.lemah)}</td><td class="angka">${esc(x.akurasi)}</td></tr>`).join('')}</tbody></table></div>`;
+  isi.innerHTML = `<p class="muted kecil">Nilai tengah (median) dari semua live yang selesai. "Penilaian AI tepat" = persen momen yang ditandai Tepat oleh pimpinan; targetnya di atas 80% sebelum laporan dipakai tanpa diperiksa.</p>`
+    + tabel('Per host', kelompok('host_id', id => id === '-' ? 'Host belum diisi' : namaHost(id)))
+    + tabel('Per akun', kelompok('akun_id', namaAkun));
 }
 
 /* ---------------- pengaturan ---------------- */
@@ -314,7 +381,8 @@ function renderAtur(){
   const akun = st.akun || [], host = st.host || [];
   isi.innerHTML = `
   <div class="panel" style="display:grid;gap:10px"><h2>Akun live</h2>
-    <table><tbody>${akun.map(a => `<tr><td>${esc(a.nama)}${a.laboratorium ? ' <span class="chip">akun lab</span>' : ''}</td><td style="text-align:right"><button class="btn" data-akun="${a.id}">${a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td class="muted">Belum ada.</td></tr>'}</tbody></table>
+    <table><tbody>${akun.map(a => `<tr><td>${esc(a.nama)}${a.laboratorium ? ' <span class="chip">akun lab</span>' : ''}<div class="muted kecil" style="margin-top:4px">${a.kosakata ? 'Kata kunci: ' + esc(a.kosakata) : 'Belum ada kata kunci produk'}</div></td><td style="text-align:right;white-space:nowrap"><button class="btn" data-kata="${a.id}">Kata kunci</button> <button class="btn" data-akun="${a.id}">${a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td class="muted">Belum ada.</td></tr>'}</tbody></table>
+    <p class="muted kecil">Kata kunci = nama produk, bahan, dan istilah yang sering diucapkan host (contoh: KIME Glow Serum, niacinamide, keranjang kuning). Membantu Aura menulis ucapan host dengan benar.</p>
     <div class="form"><label><span class="label">Nama akun baru</span><input type="text" id="a-nama" placeholder="Contoh: KIME Official"></label><label class="cek" style="align-self:end"><input type="checkbox" id="a-lab"> Akun lab (untuk uji coba)</label></div>
     <div class="baris"><button class="btn utama" id="a-tambah">Tambah akun</button></div></div>
   <div class="panel" style="display:grid;gap:10px"><h2>Host</h2>
@@ -329,6 +397,7 @@ function renderAtur(){
   document.getElementById('a-tambah').onclick = e => { const nama = document.getElementById('a-nama').value.trim(); if (nama) simpan({ aksi:'akun-simpan', nama, laboratorium: document.getElementById('a-lab').checked }, e.currentTarget); };
   document.getElementById('h-tambah').onclick = e => { const nama = document.getElementById('h-nama').value.trim(); if (nama) simpan({ aksi:'host-simpan', nama, akun_id: document.getElementById('h-akun').value || null }, e.currentTarget); };
   isi.querySelectorAll('[data-akun]').forEach(b => b.onclick = () => { const a = akun.find(x => x.id === b.dataset.akun); simpan({ aksi:'akun-simpan', id: a.id, nama: a.nama, laboratorium: a.laboratorium, aktif: !a.aktif }, b); });
+  isi.querySelectorAll('[data-kata]').forEach(b => b.onclick = () => { const a = akun.find(x => x.id === b.dataset.kata); const k = prompt('Kata kunci untuk ' + a.nama + ' (pisahkan dengan koma):', a.kosakata || ''); if (k !== null) simpan({ aksi:'akun-simpan', id: a.id, nama: a.nama, laboratorium: a.laboratorium, aktif: a.aktif, kosakata: k.trim() }, b); });
   isi.querySelectorAll('[data-host]').forEach(b => b.onclick = () => { const h = host.find(x => x.id === b.dataset.host); simpan({ aksi:'host-simpan', id: h.id, nama: h.nama, akun_id: h.akun_id, aktif: !h.aktif }, b); });
   document.getElementById('o-simpan').onclick = async e => { const ids = [...isi.querySelectorAll('.cek input[type=checkbox][value]')].filter(x => x.checked).map(x => x.value); e.currentTarget.disabled = true; try { await panggil({ aksi:'akses-simpan', staff_ids: ids }); document.getElementById('o-pesan').textContent = 'Tersimpan.'; } catch { document.getElementById('o-pesan').textContent = 'Gagal menyimpan.'; } e.currentTarget.disabled = false; };
 }

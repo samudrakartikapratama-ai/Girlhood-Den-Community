@@ -1,7 +1,8 @@
-// Lab Live: bedah replay live TikTok. Browser studio mengirim suara (mp3 per 10 menit), lembar foto
-// (12 foto tiap 15 detik = 3 menit per lembar), screenshot grafik 5 menit, dan file ekspor 30 menit.
+// Lab Live: bedah replay live TikTok (复盘). Browser studio mengirim suara (mp3 per 10 menit), lembar foto
+// (12 foto tiap 15 detik = 3 menit per lembar), screenshot grafik, screenshot lain (sumber penonton, produk), dan file ekspor.
 // Server memproses bertahap (satu tahap per panggilan, berantai sendiri + cron tiap menit sebagai cadangan):
-// transkrip (Groq Whisper) → grafik (baca gambar) → topik (potong ucapan per topik) → analisis → visual → selesai.
+// transkrip (Groq Whisper) → angka (rumus, tanpa AI) → grafik (baca gambar + dicek ke ekspor) → layar → topik → analisis → visual.
+// Prinsip akurasi: angka & rasio dihitung kode; AI hanya membaca gambar/ucapan dan menjelaskan sebab.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -23,6 +24,11 @@ const cors = (o: string) => ({
   "access-control-allow-headers": "authorization, apikey, content-type, x-client-info",
   "access-control-allow-methods": "POST, OPTIONS", "vary": "origin",
 });
+
+// Patokan awal sebelum akun punya cukup riwayat: model 五维四率 live beauty berbayar (woshipm, 2025).
+// Diganti otomatis dengan median akun sendiri setelah minimal 5 live selesai.
+const PATOKAN_AWAL = { masuk: 12, klik_produk: 18, bayar: 5 };
+const MIN_LIVE_PATOKAN = 5;
 
 // ---------- akses ----------
 function idSesi(jwt: string): string | null {
@@ -55,6 +61,7 @@ async function dariMesin(req: Request) {
 
 // ---------- alat bantu ----------
 const mmss = (d: number) => { d = Math.max(0, Math.round(d)); const j = Math.floor(d / 3600), m = Math.floor((d % 3600) / 60), s = d % 60; return (j ? j + ":" + String(m).padStart(2, "0") : String(m)) + ":" + String(s).padStart(2, "0"); };
+const pakai = { masuk: 0, keluar: 0 }; // token Claude dalam satu panggilan tahap
 
 async function claudeJson(system: string, content: any, schema: any, max_tokens = 8000) {
   let galat: unknown;
@@ -73,6 +80,8 @@ async function claudeJson(system: string, content: any, schema: any, max_tokens 
       const teks = await r.text();
       if (!r.ok) throw new Error("Claude " + r.status + " " + teks.slice(0, 200));
       const j = JSON.parse(teks);
+      pakai.masuk += j.usage?.input_tokens || 0;
+      pakai.keluar += j.usage?.output_tokens || 0;
       const blok = (j.content || []).find((b: any) => b.type === "tool_use");
       if (!blok?.input) throw new Error("Claude tanpa hasil (" + j.stop_reason + ")");
       return blok.input;
@@ -87,7 +96,15 @@ async function unduhBase64(path: string) {
   const buf = new Uint8Array(await data.arrayBuffer());
   let bin = "";
   for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-  return { b64: btoa(bin), tipe: data.type || "image/jpeg" };
+  const tipe = ["image/png", "image/jpeg", "image/webp"].includes(data.type) ? data.type : "image/jpeg";
+  return { b64: btoa(bin), tipe };
+}
+async function gambarBlok(prefix: string, n: number, label: string) {
+  const blok: any[] = [];
+  for (let i = 0; i < n; i++) {
+    try { const g = await unduhBase64(`${prefix}/${i}`); blok.push({ type: "text", text: `${label} ${i + 1}:` }, { type: "image", source: { type: "base64", media_type: g.tipe, data: g.b64 } }); } catch { /* gambar hilang: lewati */ }
+  }
+  return blok;
 }
 
 async function kirimLark(teks: string) {
@@ -104,12 +121,123 @@ async function kirimLark(teks: string) {
   } catch (e) { console.error("lark", e); }
 }
 
+// ---------- angka dari ekspor: dihitung rumus, bukan AI ----------
+// "Rp3.120.000" → 3120000, "12,4%" → 12.4, "1.2K" → 1200, "1,234" → 1234
+function angkaDari(v: unknown): number | null {
+  if (v == null) return null;
+  if (typeof v === "number") return isFinite(v) ? v : null;
+  let s = String(v).trim().replace(/rp|idr|%|\s/gi, "");
+  if (!s || /^-+$/.test(s)) return null;
+  let kali = 1;
+  const akhiran = s.match(/([kmb])$/i);
+  if (akhiran) { kali = { k: 1e3, m: 1e6, b: 1e9 }[akhiran[1].toLowerCase() as "k" | "m" | "b"]; s = s.slice(0, -1); }
+  const titik = s.lastIndexOf("."), koma = s.lastIndexOf(",");
+  if (titik >= 0 && koma >= 0) s = titik > koma ? s.replace(/,/g, "") : s.replace(/\./g, "").replace(",", ".");
+  else if (titik >= 0) s = /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, "") : s;
+  else if (koma >= 0) s = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".");
+  const n = parseFloat(s);
+  return isFinite(n) ? n * kali : null;
+}
+const KOLOM: Record<string, RegExp[]> = {
+  waktu: [/^(time|waktu|jam|periode)/i],
+  gmv: [/^(attributed |live )?gmv$/i, /gmv/i],
+  terjual: [/items? sold/i, /terjual/i],
+  pembeli: [/buyers?|customers?|pembeli/i],
+  pesanan: [/orders?|pesanan/i],
+  tayang: [/^(live )?impressions?$/i, /^tayangan( live)?$/i, /exposure/i],
+  penonton: [/^(unique )?viewers?$/i, /^penonton/i],
+  tontonan: [/^views?$/i, /^ditonton$/i],
+  produk_tayang: [/product impressions?/i, /tayangan produk/i],
+  produk_klik: [/product clicks?/i, /klik produk/i],
+  komentar: [/comments?|komentar/i],
+  follower: [/new followers?|pengikut baru/i],
+};
+function cariKolom(kepala: string[]) {
+  const peta: Record<string, string> = {};
+  const terpakai = new Set<string>();
+  for (const [kunci, pola] of Object.entries(KOLOM)) {
+    for (const p of pola) {
+      const k = kepala.find((h) => !terpakai.has(h) && p.test(h.trim()));
+      if (k) { peta[kunci] = k; terpakai.add(k); break; }
+    }
+  }
+  return peta;
+}
+const persen = (a: number | null, b: number | null) => (a != null && b ? Math.round((a / b) * 1000) / 10 : null);
+
+function hitungAngka(rows: any[] | null) {
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const peta = cariKolom(Object.keys(rows[0]));
+  const ambil = (r: any, k: string) => (peta[k] ? angkaDari(r[peta[k]]) : null);
+  // baris total (kalau ekspor punya) dipakai apa adanya; kalau tidak, baris per 30 menit dijumlah
+  const iTotal = peta.waktu ? rows.findIndex((r) => /total|jumlah|keseluruhan/i.test(String(r[peta.waktu] ?? ""))) : -1;
+  const sesi = rows.filter((_, i) => i !== iTotal);
+  const jumlah = (k: string) => { if (!peta[k]) return null; if (iTotal >= 0) return ambil(rows[iTotal], k); const v = sesi.map((r) => ambil(r, k)).filter((x) => x != null) as number[]; return v.length ? v.reduce((a, b) => a + b, 0) : null; };
+  const t: Record<string, number | null> = {};
+  for (const k of Object.keys(KOLOM)) if (k !== "waktu") t[k] = jumlah(k);
+  const pembeliDari = t.pembeli != null ? "pembeli" : t.pesanan != null ? "pesanan" : null;
+  const pembeli = t.pembeli ?? t.pesanan;
+  const rasio = (x: Record<string, number | null>, beli: number | null) => ({
+    masuk: persen(x.penonton, x.tayang), // dari yang melihat live di FYP, berapa yang masuk
+    lihat_produk: persen(x.produk_tayang, x.penonton), // produk dilihat per penonton (bisa >100%: dihitung per tayang, bukan per orang)
+    klik_produk: persen(x.produk_klik, x.produk_tayang), // menarik untuk diklik = kekuatan host menjelaskan
+    bayar: persen(beli, x.produk_klik), // dari yang klik, berapa yang bayar = kepercayaan & closing
+  });
+  const per30 = sesi.map((r) => {
+    const x: Record<string, number | null> = {};
+    for (const k of Object.keys(KOLOM)) if (k !== "waktu") x[k] = ambil(r, k);
+    return { waktu: peta.waktu ? String(r[peta.waktu] ?? "") : "", gmv: x.gmv, penonton: x.penonton, ...rasio(x, x.pembeli ?? x.pesanan) };
+  });
+  const catatan: string[] = [];
+  if (!peta.gmv) catatan.push("kolom GMV tidak ditemukan di ekspor");
+  if (pembeliDari === "pesanan") catatan.push("jumlah pembeli tidak ada di ekspor; klik ke bayar memakai jumlah pesanan");
+  if (!pembeliDari) catatan.push("jumlah pembeli/pesanan tidak ada; klik ke bayar tidak bisa dihitung");
+  if (iTotal < 0 && sesi.length > 1 && (t.penonton != null)) catatan.push("penonton dijumlah dari beberapa baris 30 menit, bisa terhitung dobel (angka perkiraan)");
+  return {
+    total: { ...t, pembeli }, pembeli_dari: pembeliDari, rasio: rasio(t, pembeli),
+    gpm: t.gmv != null && t.tontonan ? Math.round((t.gmv / t.tontonan) * 1000) : null,
+    per30, kolom: peta, catatan,
+  };
+}
+
+async function patokanAkun(akunId: string, kecuali: string) {
+  const { data } = await db.from("lab_live").select("angka").eq("akun_id", akunId).eq("status", "selesai").neq("id", kecuali)
+    .not("angka", "is", null).order("tanggal", { ascending: false }).limit(30);
+  const median = (v: number[]) => { const s = [...v].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const hasil: Record<string, number> = {}, n: Record<string, number> = {};
+  for (const k of ["masuk", "klik_produk", "bayar"] as const) {
+    const v = (data || []).map((d: any) => d.angka?.rasio?.[k]).filter((x: any) => typeof x === "number");
+    n[k] = v.length;
+    hasil[k] = v.length >= MIN_LIVE_PATOKAN ? Math.round(median(v) * 10) / 10 : PATOKAN_AWAL[k];
+  }
+  const dariAkun = Object.values(n).every((x) => x >= MIN_LIVE_PATOKAN);
+  return { ...hasil, sumber: dariAkun ? `median ${Math.min(...Object.values(n))} live terakhir akun ini` : "patokan awal (referensi live beauty China, belum disesuaikan dengan akun ini)" };
+}
+
+// Pohon keputusan 五维四率: berhenti di rasio pertama yang di bawah patokan
+function pohon(r: any, p: any) {
+  const cek = [
+    ["masuk", "Trafik: orang melihat live di FYP tapi tidak masuk. Periksa cover, judul, 3 detik pembuka, dan target iklan."],
+    ["klik_produk", "Host: penjelasan produk belum membuat orang klik keranjang. Periksa demo, manfaat, dan ajakan klik."],
+    ["bayar", "Host: orang sudah klik tapi tidak bayar. Periksa kepercayaan (bukti, testimoni, garansi) dan cara closing."],
+  ] as const;
+  for (const [k, arti] of cek) {
+    if (r?.[k] == null) continue;
+    if (r[k] < p[k]) return { titik: k, nilai: r[k], patokan: p[k], arti };
+  }
+  const ada = cek.some(([k]) => r?.[k] != null);
+  return ada ? { titik: null, arti: "Semua rasio di atas patokan. Fokus berikutnya: menambah trafik (jam tayang, iklan, konten pemanas)." } : { titik: null, arti: "Rasio tidak bisa dihitung karena ekspor tidak lengkap." };
+}
+
 // ---------- tahap pemrosesan ----------
-const URUT_TAHAP = ["transkrip", "grafik", "topik", "analisis", "visual"] as const;
+const URUT_TAHAP = ["transkrip", "angka", "grafik", "layar", "topik", "analisis", "visual"] as const;
 const tahapBerikut = (t: string) => URUT_TAHAP[URUT_TAHAP.indexOf(t as any) + 1] || null;
 
 async function tahapTranskrip(l: any) {
   const tr = l.transkrip || { seg: [], selesai: 0 };
+  const { data: akun } = await db.from("lab_akun").select("nama, kosakata").eq("id", l.akun_id).maybeSingle();
+  // kosakata membantu Whisper menulis nama brand/produk dengan benar
+  const kosakata = `Live TikTok ${akun?.nama || ""}. ${akun?.kosakata || ""}`.slice(0, 600);
   const mulai = Date.now();
   while (tr.selesai < l.potongan_audio && Date.now() - mulai < 70_000) {
     const i = tr.selesai;
@@ -121,47 +249,93 @@ async function tahapTranskrip(l: any) {
     f.append("language", "id");
     f.append("response_format", "verbose_json");
     f.append("temperature", "0");
+    f.append("prompt", kosakata);
     const r = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", { method: "POST", headers: { authorization: "Bearer " + GROQ_KEY }, body: f });
     if (!r.ok) throw new Error("Groq " + r.status + " " + (await r.text()).slice(0, 200));
     const j = await r.json();
     for (const s of j.segments || []) {
       const teks = String(s.text || "").trim();
-      if (teks) tr.seg.push({ a: Math.round((s.start + i * AUDIO_DETIK) * 10) / 10, b: Math.round((s.end + i * AUDIO_DETIK) * 10) / 10, t: teks });
+      if (!teks || s.no_speech_prob > 0.8) continue; // hening/musik yang "dikarang" Whisper
+      const ragu = (s.avg_logprob ?? 0) < -1 || (s.compression_ratio ?? 0) > 2.4;
+      tr.seg.push({ a: Math.round((s.start + i * AUDIO_DETIK) * 10) / 10, b: Math.round((s.end + i * AUDIO_DETIK) * 10) / 10, t: teks, ...(ragu ? { r: 1 } : {}) });
     }
     tr.selesai++;
   }
+  if (tr.selesai >= l.potongan_audio) tr.ragu_persen = tr.seg.length ? Math.round((tr.seg.filter((s: any) => s.r).length / tr.seg.length) * 100) : 0;
   await db.from("lab_live").update({ transkrip: tr }).eq("id", l.id);
-  return tr.selesai >= l.potongan_audio; // selesai atau perlu lanjut di panggilan berikutnya
+  return tr.selesai >= l.potongan_audio;
+}
+
+async function tahapAngka(l: any) {
+  const a = hitungAngka(l.ekspor);
+  if (a) {
+    const p = await patokanAkun(l.akun_id, l.id);
+    Object.assign(a, { patokan: p, diagnosis: pohon(a.rasio, p) });
+  }
+  await db.from("lab_live").update({ angka: a }).eq("id", l.id);
+  return true;
 }
 
 async function tahapGrafik(l: any) {
-  if (!l.ada_grafik) { await db.from("lab_live").update({ grafik: null }).eq("id", l.id); return true; }
-  const img = await unduhBase64(`${l.id}/grafik`);
+  if (!l.n_grafik) { await db.from("lab_live").update({ grafik: null }).eq("id", l.id); return true; }
+  const gambar = await gambarBlok(`${l.id}/grafik`, l.n_grafik, "Screenshot grafik");
+  if (!gambar.length) return true;
   const hasil = await claudeJson(
-    "Kamu membaca screenshot grafik 'Performance trends' dashboard live TikTok Shop (titik data per 5 menit). Baca setiap titik sedekat mungkin. Kalau sebuah garis tidak ada di gambar, isi null. Angka mata uang dalam rupiah penuh (402.75K = 402750).",
-    [{ type: "image", source: { type: "base64", media_type: img.tipe, data: img.b64 } }, { type: "text", text: `Live dimulai jam ${l.jam_mulai || "(tidak diketahui)"}. Baca semua titik grafik.` }],
+    "Kamu membaca screenshot grafik 'Performance trends' dashboard live TikTok Shop. Baca setiap titik sedekat mungkin; kalau ada beberapa screenshot, gabungkan per jam. Kalau sebuah nilai tidak terbaca, isi null, jangan menebak. Angka mata uang dalam rupiah penuh (402.75K = 402750). Tentukan juga apakah garis GMV menunjukkan total berjalan (naik terus) atau nilai per interval.",
+    [...gambar, { type: "text", text: `Live dimulai jam ${l.jam_mulai || "(tidak diketahui)"}. Baca semua titik grafik.` }],
     {
       type: "object",
       properties: {
-        garis: { type: "array", items: { type: "string" }, description: "nama metrik yang tampil di legenda grafik" },
+        garis: { type: "array", items: { type: "string" }, description: "nama metrik yang tampil di legenda" },
+        interval_menit: { type: "integer", description: "jarak antar titik dalam menit" },
+        gmv_kumulatif: { type: "boolean", description: "true kalau GMV di grafik adalah total berjalan" },
         titik: { type: "array", items: { type: "object", properties: { jam: { type: "string", description: "HH:MM" }, nilai: { type: "object", additionalProperties: { type: ["number", "null"] }, description: "nama metrik → nilai" } }, required: ["jam", "nilai"] } },
         catatan: { type: "string" },
       },
       required: ["garis", "titik"],
-    }, 6000);
+    }, 8000);
+  // cek silang: total GMV dari grafik dibanding GMV resmi di ekspor
+  const gmvEkspor = l.angka?.total?.gmv;
+  const kunciGmv = (hasil.garis || []).find((g: string) => /gmv/i.test(g));
+  if (gmvEkspor && kunciGmv) {
+    const v = (hasil.titik || []).map((t: any) => t.nilai?.[kunciGmv]).filter((x: any) => typeof x === "number");
+    const dariGrafik = v.length ? (hasil.gmv_kumulatif ? Math.max(...v) : v.reduce((a: number, b: number) => a + b, 0)) : null;
+    const selisih = dariGrafik != null ? Math.round((Math.abs(dariGrafik - gmvEkspor) / gmvEkspor) * 100) : null;
+    hasil.cek = { gmv_grafik: dariGrafik, gmv_ekspor: gmvEkspor, selisih_persen: selisih, status: selisih == null ? "tidak bisa dicek" : selisih <= 15 ? "cocok" : "meragukan" };
+  } else hasil.cek = { status: "tidak bisa dicek", alasan: gmvEkspor ? "garis GMV tidak ada di grafik" : "tidak ada GMV di ekspor" };
   await db.from("lab_live").update({ grafik: hasil }).eq("id", l.id);
   return true;
 }
 
+async function tahapLayar(l: any) {
+  if (!l.n_layar) return true;
+  const gambar = await gambarBlok(`${l.id}/layar`, l.n_layar, "Screenshot dashboard");
+  if (!gambar.length) return true;
+  const hasil = await claudeJson(
+    "Kamu membaca screenshot dashboard live TikTok Shop (misalnya sumber penonton, daftar produk, data penonton). Salin angka persis seperti tertulis; jangan menghitung atau menebak. Kalau tidak terbaca, tulis tidak terbaca.",
+    [...gambar, { type: "text", text: "Ambil semua angka penting dari screenshot ini." }],
+    {
+      type: "object",
+      properties: {
+        sumber_penonton: { type: "array", items: { type: "object", properties: { sumber: { type: "string" }, persen: { type: ["number", "null"] }, jumlah: { type: ["number", "null"] } }, required: ["sumber"] }, description: "contoh: For You, iklan/GMV Max, Following, Search" },
+        produk: { type: "array", items: { type: "object", properties: { nama: { type: "string" }, klik: { type: ["number", "null"] }, terjual: { type: ["number", "null"] }, gmv: { type: ["number", "null"] } }, required: ["nama"] } },
+        lain: { type: "string", description: "angka penting lain yang terlihat (misal rata-rata durasi tonton, penonton puncak)" },
+      },
+      required: ["lain"],
+    }, 4000);
+  await db.from("lab_live").update({ layar: hasil }).eq("id", l.id);
+  return true;
+}
+
 function teksTranskrip(seg: any[]) {
-  return seg.map((s) => `[${mmss(s.a)}] ${s.t}`).join("\n");
+  return seg.map((s) => `[${mmss(s.a)}]${s.r ? "?" : ""} ${s.t}`).join("\n");
 }
 
 async function tahapTopik(l: any) {
   const seg = l.transkrip?.seg || [];
   if (!seg.length) { await db.from("lab_live").update({ topik: [] }).eq("id", l.id); return true; }
   const hasil = await claudeJson(
-    "Kamu analis live streaming e-commerce (TikTok Shop, kategori beauty). Potong transkrip ucapan host menjadi topik berurutan yang tidak tumpang-tindih dan menutupi seluruh live. Satu topik = satu kegiatan utuh (misalnya membuka live, menjelaskan satu produk, menjawab komentar, promo/flash sale, closing, ngobrol bebas). Panjang wajar 1–8 menit. Tulis dalam bahasa Indonesia.",
+    "Kamu analis live streaming e-commerce (TikTok Shop, kategori beauty). Potong transkrip ucapan host menjadi topik berurutan yang tidak tumpang-tindih dan menutupi seluruh live. Satu topik = satu kegiatan utuh (membuka live, menjelaskan satu produk, menjawab komentar, promo/flash sale, closing, ngobrol bebas). Panjang wajar 1–8 menit. Baris bertanda ? kurang jelas terdengar. Tulis dalam bahasa Indonesia.",
     `Durasi live: ${mmss(l.durasi_detik || 0)}\nTranskrip (waktu sejak live mulai):\n${teksTranskrip(seg).slice(0, 180000)}`,
     {
       type: "object",
@@ -188,14 +362,6 @@ async function tahapTopik(l: any) {
   return true;
 }
 
-function ringkasEkspor(rows: any[]) {
-  if (!Array.isArray(rows) || !rows.length) return "(tidak ada file ekspor)";
-  const kolom = ["Time", "Attributed GMV", "Attributed items sold", "Viewers", "Views", "Impressions", "Product Impressions", "Product Clicks", "LIVE CTR", "Tap-through rate", "Comments", "New followers", "Watch GPM", "Show GPM", "CTOR", "Payment Rate", "AOV"];
-  let ada = kolom.filter((k) => k in rows[0]);
-  if (ada.length < 4) ada = Object.keys(rows[0]).slice(0, 30); // nama kolom ekspor berbeda: kirim apa adanya
-  return [ada.join(" | "), ...rows.slice(0, 60).map((r) => ada.map((k) => r[k]).join(" | "))].join("\n");
-}
-
 const SKEMA_MOMEN = {
   type: "object",
   properties: {
@@ -203,43 +369,80 @@ const SKEMA_MOMEN = {
     mulai: { type: "number", description: "detik sejak live mulai" },
     selesai: { type: "number" },
     judul: { type: "string", description: "maksimal 8 kata" },
-    bukti: { type: "string", description: "angka dari grafik/ekspor yang menunjukkan naik/turun; kosong kalau tidak ada" },
+    bukti: { type: "string", description: "angka dari grafik/ekspor yang menunjukkan naik/turun, sebut sumbernya; kosong kalau tidak ada" },
     kutipan: { type: "string", description: "ucapan host persis dari transkrip (maks 25 kata)" },
     alasan: { type: "string", description: "1-2 kalimat kenapa momen ini berhasil/gagal/berbahaya" },
+    yakin: { type: "string", enum: ["tinggi", "sedang", "rendah"], description: "tinggi = didukung angka per waktu yang cocok; rendah = hanya dari ucapan" },
   },
-  required: ["jenis", "mulai", "selesai", "judul", "kutipan", "alasan"],
+  required: ["jenis", "mulai", "selesai", "judul", "kutipan", "alasan", "yakin"],
 };
+
+async function koreksiSebelumnya(akunId: string) {
+  // ulasan "kurang tepat" dari pimpinan pada live sebelumnya: dipakai supaya kesalahan yang sama tidak terulang
+  const { data } = await db.from("lab_live").select("laporan, ulasan").eq("akun_id", akunId).eq("status", "selesai").order("selesai_at", { ascending: false }).limit(20);
+  const daftar: string[] = [];
+  for (const d of data || []) {
+    for (const [i, u] of Object.entries(d.ulasan || {}) as [string, any][]) {
+      if (u?.nilai !== "kurang" || !u.catatan) continue;
+      const m = d.laporan?.momen?.[Number(i)];
+      daftar.push(`- AI menilai "${m?.judul || "?"}" (${m?.jenis || "?"}); koreksi pimpinan: ${u.catatan}`);
+    }
+  }
+  return daftar.slice(0, 15).join("\n");
+}
 
 async function tahapAnalisis(l: any) {
   const { data: akun } = await db.from("lab_akun").select("nama").eq("id", l.akun_id).maybeSingle();
   const { data: host } = l.host_id ? await db.from("lab_host").select("nama").eq("id", l.host_id).maybeSingle() : { data: null };
   const topik = (l.topik || []).map((t: any) => `${mmss(t.mulai)}–${mmss(t.selesai)} [${t.jenis}] ${t.judul}${t.produk ? " · " + t.produk : ""}: ${t.ringkas}`).join("\n");
-  const grafik = l.grafik?.titik?.length ? `Garis: ${(l.grafik.garis || []).join(", ")}\n` + l.grafik.titik.map((t: any) => `${t.jam}: ${Object.entries(t.nilai || {}).map(([k, v]) => `${k}=${v ?? "-"}`).join(", ")}`).join("\n") : "(tidak ada screenshot grafik)";
+  const g = l.grafik;
+  const grafik = g?.titik?.length
+    ? `Status cek grafik vs ekspor: ${g.cek?.status}${g.cek?.selisih_persen != null ? ` (selisih GMV ${g.cek.selisih_persen}%)` : ""}. Interval ${g.interval_menit || "?"} menit. Garis: ${(g.garis || []).join(", ")}\n`
+      + g.titik.map((t: any) => `${t.jam}: ${Object.entries(t.nilai || {}).map(([k, v]) => `${k}=${v ?? "-"}`).join(", ")}`).join("\n")
+    : "(tidak ada screenshot grafik: tidak ada angka per waktu, jadi momen hanya bisa dinilai dari ucapan dan angka per 30 menit)";
+  const a = l.angka;
+  const angka = a ? `TOTAL (dihitung sistem dari ekspor, JANGAN dihitung ulang): ${JSON.stringify(a.total)}
+RASIO % (dihitung sistem): ${JSON.stringify(a.rasio)}
+PATOKAN (${a.patokan?.sumber}): masuk ${a.patokan?.masuk}%, klik produk ${a.patokan?.klik_produk}%, klik ke bayar ${a.patokan?.bayar}%
+DIAGNOSIS POHON KEPUTUSAN (sistem): ${a.diagnosis?.arti}
+PER 30 MENIT: ${JSON.stringify(a.per30)}
+Catatan data: ${(a.catatan || []).join("; ") || "-"}` : "(tidak ada file ekspor: tidak ada angka resmi)";
+  const koreksi = await koreksiSebelumnya(l.akun_id);
   const isi = `Akun: ${akun?.nama || "?"} · Host: ${host?.nama || "?"} · Tanggal ${l.tanggal} · Mulai jam ${l.jam_mulai || "?"} · Durasi ${mmss(l.durasi_detik || 0)}
 Catatan orang di studio: ${l.catatan || "-"}
 
-GRAFIK PER 5 MENIT (dibaca dari screenshot, perkiraan; jam = jam dinding):
-${grafik}
+ANGKA RESMI
+${angka}
 
-EKSPOR PER 30 MENIT (angka resmi):
-${ringkasEkspor(l.ekspor)}
+DASHBOARD LAIN (dibaca dari screenshot): ${l.layar ? JSON.stringify(l.layar) : "-"}
+
+GRAFIK (dibaca dari screenshot, perkiraan; jam = jam dinding):
+${grafik}
 
 TOPIK (waktu = sejak live mulai; jam dinding = jam mulai + waktu):
 ${topik}
 
-TRANSKRIP LENGKAP:
+TRANSKRIP (baris bertanda ? kurang jelas terdengar, jangan dijadikan kutipan utama):
 ${teksTranskrip(l.transkrip?.seg || []).slice(0, 150000)}`;
   const hasil = await claudeJson(
-    `Kamu kepala tim live di MCN TikTok beauty Girlhood Den, terbiasa 复盘 (bedah ulang live) ala MCN China. Cocokkan ucapan dan topik host dengan naik-turun angka. Jangan mengarang angka: pakai hanya angka dari grafik/ekspor, dan sebut kalau angka hanya perkiraan dari grafik. Kalimat berbahaya = klaim berlebihan/menyesatkan (misalnya "pasti hilang dalam 3 hari"), tekanan beli palsu, janji yang tidak bisa dipenuhi, atau melanggar aturan TikTok. Patokan live beauty (sementara): rasio klik produk di bawah 18% berarti host lemah menjelaskan; klik ke bayar di bawah 5% berarti host lemah di kepercayaan/closing. Bahasa Indonesia sehari-hari, lugas.`,
+    `Kamu kepala tim live di MCN TikTok beauty Girlhood Den, terbiasa 复盘 ala MCN China (人货场 + 五维四率). Tugasmu menjelaskan SEBAB di balik angka dengan mencocokkan ucapan/topik host dengan naik-turun angka per waktu.
+Aturan akurasi:
+- Semua total dan rasio sudah dihitung sistem. Pakai angka itu apa adanya, jangan menghitung rasio baru.
+- Diagnosis harus mengikuti pohon keputusan sistem; tugasmu memberi bukti dari ucapan/topik yang menjelaskan kenapa titik itu lemah.
+- Momen "terbaik/terburuk" hanya boleh disebut naik/turun kalau ada angka per waktu yang mendukung (grafik atau per 30 menit). Kalau tidak ada, nilai dari kualitas ucapan saja dan beri yakin "rendah".
+- Kalau status cek grafik "meragukan", jangan bersandar pada angka grafik.
+- Kalimat berbahaya = klaim berlebihan/menyesatkan (misal "pasti hilang dalam 3 hari"), tekanan beli palsu, janji yang tidak bisa dipenuhi, atau melanggar aturan TikTok.
+- Kutipan harus persis dari transkrip.
+${koreksi ? "Koreksi pimpinan atas penilaianmu di live sebelumnya (jangan ulangi kesalahan yang sama):\n" + koreksi : ""}
+Bahasa Indonesia sehari-hari, lugas.`,
     isi,
     {
       type: "object",
       properties: {
         ringkas: { type: "string", description: "maksimal 3 kalimat: bagaimana live ini secara keseluruhan" },
-        angka: { type: "object", properties: { gmv: { type: ["number", "null"] }, terjual: { type: ["number", "null"] }, penonton: { type: ["number", "null"] }, klik_produk_persen: { type: ["number", "null"] }, klik_ke_bayar_persen: { type: ["number", "null"] } } },
         momen: { type: "array", items: SKEMA_MOMEN, description: "maksimal 3 terbaik, 3 terburuk, dan semua kalimat bahaya (maks 5)" },
-        diagnosis: { type: "string", description: "masalah utama ada di host, produk, atau trafik, beserta buktinya" },
-        saran: { type: "array", items: { type: "string" }, description: "maksimal 3 saran konkret untuk live berikutnya; satu saran = satu hal yang diubah" },
+        diagnosis: { type: "string", description: "jelaskan diagnosis pohon keputusan sistem dengan bukti dari ucapan/topik" },
+        saran: { type: "array", items: { type: "string" }, description: "maksimal 3 saran konkret untuk live berikutnya; satu saran = satu hal yang diubah, sebaiknya di titik lemah pohon" },
       },
       required: ["ringkas", "momen", "diagnosis", "saran"],
     }, 8000);
@@ -254,12 +457,12 @@ async function tahapVisual(l: any) {
   if (!idx.length || !l.lembar) return true;
   const gambar: any[] = [];
   for (const i of idx) {
-    try { const g = await unduhBase64(`${l.id}/lembar/${i}.jpg`); gambar.push({ type: "text", text: `Lembar ${i}: menit ${mmss(i * LEMBAR_DETIK)}–${mmss((i + 1) * LEMBAR_DETIK)} (12 foto, tiap 15 detik, kiri ke kanan lalu ke bawah)` }, { type: "image", source: { type: "base64", media_type: "image/jpeg", data: g.b64 } }); } catch { /* lembar hilang: lewati */ }
+    try { const g = await unduhBase64(`${l.id}/lembar/${i}.jpg`); gambar.push({ type: "text", text: `Lembar ${i}: menit ${mmss(i * LEMBAR_DETIK)}–${mmss((i + 1) * LEMBAR_DETIK)} (12 foto, tiap 15 detik, kiri ke kanan lalu ke bawah; tiap foto ada label waktunya)` }, { type: "image", source: { type: "base64", media_type: "image/jpeg", data: g.b64 } }); } catch { /* lembar hilang: lewati */ }
   }
   if (!gambar.length) return true;
   const daftar = momen.map((m: any, k: number) => `${k}. [${m.jenis}] ${mmss(m.mulai)}–${mmss(m.selesai)} ${m.judul}`).join("\n");
   const hasil = await claudeJson(
-    "Kamu melihat foto-foto layar live TikTok beauty. Untuk setiap momen, jelaskan apa yang terlihat: gerakan dan ekspresi host, produk yang dipegang, demo atau tidak, tulisan/stiker di layar, set dan pencahayaan. Hanya yang benar-benar terlihat; jangan menebak. Bahasa Indonesia, 1-2 kalimat per momen.",
+    "Kamu melihat foto-foto layar live TikTok beauty. Untuk setiap momen, jelaskan apa yang terlihat (人货场): gerakan dan ekspresi host, produk yang dipegang, demo atau tidak, tulisan/stiker/harga di layar, set dan pencahayaan. Hanya yang benar-benar terlihat; jangan menebak. Bahasa Indonesia, 1-2 kalimat per momen.",
     [...gambar, { type: "text", text: "Momen yang perlu dijelaskan:\n" + daftar }],
     { type: "object", properties: { visual: { type: "array", items: { type: "object", properties: { no: { type: "integer" }, terlihat: { type: "string" } }, required: ["no", "terlihat"] } } }, required: ["visual"] }, 3000);
   for (const v of hasil.visual || []) if (momen[v.no]) momen[v.no].visual = v.terlihat;
@@ -269,12 +472,13 @@ async function tahapVisual(l: any) {
 
 async function selesaikan(l: any) {
   await db.from("lab_live").update({ status: "selesai", tahap: null, selesai_at: new Date().toISOString(), galat: null }).eq("id", l.id);
+  if (String(l.catatan || "").startsWith("[uji]")) return; // uji sistem: tanpa pesan Lark
   const { data: akun } = await db.from("lab_akun").select("nama").eq("id", l.akun_id).maybeSingle();
   const { data: host } = l.host_id ? await db.from("lab_host").select("nama").eq("id", l.host_id).maybeSingle() : { data: null };
   const lap = l.laporan || {};
   const ikon: Record<string, string> = { terbaik: "🟢", terburuk: "🔴", bahaya: "⚠️" };
-  if (String(l.catatan || "").startsWith("[uji]")) return; // uji sistem: tanpa pesan Lark
   await kirimLark(`Lab Live · ${akun?.nama || "?"} · ${host?.nama || "host ?"} · ${l.tanggal}\n\n${lap.ringkas || ""}\n\n`
+    + (l.angka?.diagnosis?.arti ? `Titik lemah: ${l.angka.diagnosis.arti}\n\n` : "")
     + (lap.momen || []).slice(0, 8).map((m: any) => `${ikon[m.jenis] || "•"} ${mmss(m.mulai)} ${m.judul}`).join("\n")
     + (lap.saran?.length ? `\n\nLive berikutnya:\n- ${lap.saran.join("\n- ")}` : "")
     + `\n\nLaporan lengkap: girlhoodden.com/aura → Lab Live`);
@@ -296,16 +500,19 @@ async function jalankanSatu(id?: string) {
   if (!klaim) return false;
   const l = klaim;
   const tahap = l.tahap || "transkrip";
+  pakai.masuk = 0; pakai.keluar = 0;
   try {
-    const fungsi: Record<string, (l: any) => Promise<boolean>> = { transkrip: tahapTranskrip, grafik: tahapGrafik, topik: tahapTopik, analisis: tahapAnalisis, visual: tahapVisual };
+    const fungsi: Record<string, (l: any) => Promise<boolean>> = { transkrip: tahapTranskrip, angka: tahapAngka, grafik: tahapGrafik, layar: tahapLayar, topik: tahapTopik, analisis: tahapAnalisis, visual: tahapVisual };
     const tuntas = await fungsi[tahap](l);
     const berikut = tuntas ? tahapBerikut(tahap) : tahap;
+    const token = { token_masuk: (l.token_masuk || 0) + pakai.masuk, token_keluar: (l.token_keluar || 0) + pakai.keluar };
     if (!berikut) {
+      await db.from("lab_live").update(token).eq("id", l.id);
       const { data: segar } = await db.from("lab_live").select("*").eq("id", l.id).single();
       await selesaikan(segar);
       return true;
     }
-    await db.from("lab_live").update({ status: "antre", tahap: berikut, coba: 0, galat: null }).eq("id", l.id);
+    await db.from("lab_live").update({ status: "antre", tahap: berikut, coba: 0, galat: null, ...token }).eq("id", l.id);
     return true;
   } catch (e) {
     const pesan = String((e as Error)?.message || e).slice(0, 500);
@@ -322,6 +529,13 @@ function sambungLagi() {
   // @ts-ignore
   if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kerja);
 }
+
+const jalurFile = (l: any) => [
+  ...Array.from({ length: l.potongan_audio }, (_, i) => `audio/${i}.mp3`),
+  ...Array.from({ length: l.lembar }, (_, i) => `lembar/${i}.jpg`),
+  ...Array.from({ length: l.n_grafik }, (_, i) => `grafik/${i}`),
+  ...Array.from({ length: l.n_layar }, (_, i) => `layar/${i}`),
+];
 
 // ---------- server ----------
 Deno.serve(async (req) => {
@@ -348,9 +562,9 @@ Deno.serve(async (req) => {
       const [{ data: akun }, { data: host }, { data: live }] = await Promise.all([
         db.from("lab_akun").select("*").order("nama"),
         db.from("lab_host").select("*").order("nama"),
-        db.from("lab_live").select("id, akun_id, host_id, tanggal, jam_mulai, durasi_detik, status, tahap, galat, dibuat_at, selesai_at, laporan->ringkas, laporan->angka").order("tanggal", { ascending: false }).order("dibuat_at", { ascending: false }).limit(60),
+        db.from("lab_live").select("id, akun_id, host_id, tanggal, jam_mulai, durasi_detik, status, tahap, galat, dibuat_at, selesai_at, angka, ulasan").order("tanggal", { ascending: false }).order("dibuat_at", { ascending: false }).limit(200),
       ]);
-      const out: any = { pimpinan: staff.pimpinan, akun, host, live };
+      const out: any = { pimpinan: staff.pimpinan, akun, host, live: (live || []).map((x: any) => ({ ...x, angka: x.angka ? { total: x.angka.total, rasio: x.angka.rasio, gpm: x.angka.gpm, titik: x.angka.diagnosis?.titik } : null })) };
       if (staff.pimpinan) {
         const { data: orang } = await db.from("internal_staff").select("id, nama").eq("is_active", true).order("nama");
         const { data: cfg } = await db.from("app_config").select("value").eq("key", "lab_live_akses").maybeSingle();
@@ -366,7 +580,8 @@ Deno.serve(async (req) => {
       const nama = String(b.nama || "").trim().slice(0, 80);
       if (!nama) return balas({ galat: "NAMA_KOSONG" }, 400);
       const isi: any = { nama, aktif: b.aktif !== false };
-      if (tabel === "lab_akun") isi.laboratorium = !!b.laboratorium; else isi.akun_id = b.akun_id || null;
+      if (tabel === "lab_akun") { isi.laboratorium = !!b.laboratorium; if (b.kosakata !== undefined) isi.kosakata = String(b.kosakata || "").slice(0, 600) || null; }
+      else isi.akun_id = b.akun_id || null;
       const q = b.id ? db.from(tabel).update(isi).eq("id", b.id) : db.from(tabel).insert(isi);
       const { error } = await q;
       if (error) throw error;
@@ -385,31 +600,29 @@ Deno.serve(async (req) => {
       if (!akun) return balas({ galat: "AKUN" }, 400);
       const nAudio = Math.min(40, Math.max(0, Number(b.potongan_audio) || 0));
       const nLembar = Math.min(150, Math.max(0, Number(b.lembar) || 0));
+      const nGrafik = Math.min(3, Math.max(0, Number(b.n_grafik) || 0));
+      const nLayar = Math.min(4, Math.max(0, Number(b.n_layar) || 0));
       if (!nAudio) return balas({ galat: "TANPA_SUARA" }, 400);
+      if (!/^\d{2}:\d{2}$/.test(String(b.jam_mulai || ""))) return balas({ galat: "JAM_MULAI" }, 400);
       const ekspor = Array.isArray(b.ekspor) ? b.ekspor.slice(0, 500) : null;
       const { data: l, error } = await db.from("lab_live").insert({
         akun_id: akun.id, host_id: b.host_id || null, tanggal: String(b.tanggal || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
-        jam_mulai: String(b.jam_mulai || "").slice(0, 5) || null, durasi_detik: Math.round(Number(b.durasi_detik) || 0),
+        jam_mulai: String(b.jam_mulai).slice(0, 5), durasi_detik: Math.round(Number(b.durasi_detik) || 0),
         catatan: String(b.catatan || "").slice(0, 3000) || null, ekspor, potongan_audio: nAudio, lembar: nLembar,
-        ada_grafik: !!b.ada_grafik, dibuat_oleh: staff.id,
-      }).select("id").single();
+        n_grafik: nGrafik, n_layar: nLayar, dibuat_oleh: staff.id,
+      }).select("*").single();
       if (error) throw error;
-      const jalur = [
-        ...Array.from({ length: nAudio }, (_, i) => `${l.id}/audio/${i}.mp3`),
-        ...Array.from({ length: nLembar }, (_, i) => `${l.id}/lembar/${i}.jpg`),
-        ...(b.ada_grafik ? [`${l.id}/grafik`] : []),
-      ];
-      const url: Record<string, string> = {};
-      for (const p of jalur) {
-        const { data: s, error: e2 } = await db.storage.from(BUCKET).createSignedUploadUrl(p);
+      const token: Record<string, string> = {};
+      for (const p of jalurFile(l)) {
+        const { data: s, error: e2 } = await db.storage.from(BUCKET).createSignedUploadUrl(`${l.id}/${p}`);
         if (e2 || !s) throw e2 || new Error("signed url");
-        url[p.slice(l.id.length + 1)] = s.token;
+        token[p] = s.token;
       }
-      return balas({ id: l.id, token: url });
+      return balas({ id: l.id, token });
     }
 
     if (b.aksi === "siap") {
-      const { data: l } = await db.from("lab_live").select("id, status, potongan_audio, lembar, ada_grafik").eq("id", b.id).single();
+      const { data: l } = await db.from("lab_live").select("id, status, potongan_audio").eq("id", b.id).single();
       if (!l || l.status !== "unggah") return balas({ galat: "STATUS" }, 409);
       const { data: audio } = await db.storage.from(BUCKET).list(`${l.id}/audio`, { limit: 100 });
       if ((audio || []).length < l.potongan_audio) return balas({ galat: "SUARA_BELUM_LENGKAP", ada: (audio || []).length }, 409);
@@ -423,10 +636,25 @@ Deno.serve(async (req) => {
     if (b.aksi === "detail") {
       const { data: l } = await db.from("lab_live").select("*").eq("id", b.id).single();
       if (!l) return balas({ galat: "TIDAK_ADA" }, 404);
-      const jalur = Array.from({ length: l.lembar }, (_, i) => `${l.id}/lembar/${i}.jpg`);
-      const { data: s } = jalur.length ? await db.storage.from(BUCKET).createSignedUrls(jalur, 6 * 3600) : { data: [] };
-      const { data: g } = l.ada_grafik ? await db.storage.from(BUCKET).createSignedUrl(`${l.id}/grafik`, 6 * 3600) : { data: null };
-      return balas({ ...l, url_lembar: (s || []).map((x: any) => x.signedUrl || null), url_grafik: g?.signedUrl || null, lembar_detik: LEMBAR_DETIK });
+      const tanda = async (prefix: string, n: number, ext = "") => {
+        if (!n) return [];
+        const { data: s } = await db.storage.from(BUCKET).createSignedUrls(Array.from({ length: n }, (_, i) => `${l.id}/${prefix}/${i}${ext}`), 6 * 3600);
+        return (s || []).map((x: any) => x.signedUrl || null);
+      };
+      const [url_lembar, url_grafik, url_layar] = await Promise.all([tanda("lembar", l.lembar, ".jpg"), tanda("grafik", l.n_grafik), tanda("layar", l.n_layar)]);
+      const out: any = { ...l, ekspor: undefined, url_lembar, url_grafik, url_layar, lembar_detik: LEMBAR_DETIK };
+      if (!staff.pimpinan) { delete out.token_masuk; delete out.token_keluar; }
+      return balas(out);
+    }
+
+    if (b.aksi === "ulas") {
+      const i = Number(b.momen);
+      if (!Number.isInteger(i) || i < 0 || !["tepat", "kurang"].includes(b.nilai)) return balas({ galat: "FORMAT" }, 400);
+      const { data: l } = await db.from("lab_live").select("ulasan").eq("id", b.id).single();
+      if (!l) return balas({ galat: "TIDAK_ADA" }, 404);
+      const ulasan = { ...(l.ulasan || {}), [i]: { nilai: b.nilai, catatan: String(b.catatan || "").slice(0, 500) || null, oleh: staff.nama, at: new Date().toISOString() } };
+      await db.from("lab_live").update({ ulasan }).eq("id", b.id);
+      return balas({ ok: true, ulasan });
     }
 
     if (b.aksi === "ulang") {
@@ -438,14 +666,9 @@ Deno.serve(async (req) => {
 
     if (b.aksi === "hapus") {
       if (!staff.pimpinan) return balas({ galat: "KHUSUS_PIMPINAN" }, 403);
-      const { data: l } = await db.from("lab_live").select("id, potongan_audio, lembar").eq("id", b.id).single();
+      const { data: l } = await db.from("lab_live").select("id, potongan_audio, lembar, n_grafik, n_layar").eq("id", b.id).single();
       if (!l) return balas({ ok: true });
-      const jalur = [
-        ...Array.from({ length: l.potongan_audio }, (_, i) => `${l.id}/audio/${i}.mp3`),
-        ...Array.from({ length: l.lembar }, (_, i) => `${l.id}/lembar/${i}.jpg`),
-        `${l.id}/grafik`,
-      ];
-      await db.storage.from(BUCKET).remove(jalur);
+      await db.storage.from(BUCKET).remove(jalurFile(l).map((p) => `${l.id}/${p}`));
       await db.from("lab_live").delete().eq("id", l.id);
       return balas({ ok: true });
     }
