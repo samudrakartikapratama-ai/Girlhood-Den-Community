@@ -173,7 +173,7 @@ function renderProduk(edit){
     const data = {}; isi.querySelectorAll('[data-k]').forEach(el => data[el.dataset.k] = el.value.trim());
     if (!data.nama) return alert('Nama produk wajib diisi.');
     e.target.disabled = true;
-    try { await panggil({ aksi:'produk-simpan', id: edit?.id, akun_id: document.getElementById('p-akun').value || null, data }); await muat(); renderProduk(); } catch (er) { e.target.disabled = false; salah(er); }
+    try { const r = await panggil({ aksi:'produk-simpan', id: edit?.id, akun_id: document.getElementById('p-akun').value || null, data }); if (r.peringatan?.length) alert(`Tersimpan, tapi ada klaim berisiko di kartu produk: ${r.peringatan.join(', ')}. Aura tidak akan mengucapkannya, tapi sebaiknya diperbaiki.`); await muat(); renderProduk(); } catch (er) { e.target.disabled = false; salah(er); }
   };
 }
 
@@ -256,7 +256,7 @@ function bukaPrompter(n, blok){
   prompter = { ch, i: 0, blok, n };
   const kirim = () => { const b = blok[prompter.i]; ch.send({ type:'broadcast', event:'tampil', payload: { judul: b.judul, baris: b.baris, posisi: `${prompter.i + 1}/${blok.length}`, berikut: blok[prompter.i + 1]?.judul || '', catatan: (n.isi.catatan_host || []).join(' · ') } }); };
   ch.on('broadcast', { event:'minta' }, kirim).subscribe(s => s === 'SUBSCRIBED' && kirim());
-  const link = location.origin + location.pathname.replace(/ip\.html$/, 'prompter.html') + '?kode=' + kode;
+  const link = new URL('prompter.html?kode=' + kode, location.href).href; // situs memakai URL tanpa .html, jadi jangan bergantung pada nama halaman ini
   const gambar = () => {
     const b = blok[prompter.i];
     isi.innerHTML = `<div class="panel prompter"><div class="baris antara"><div><h2>Teleprompter · ${esc(n.judul)}</h2><p class="muted kecil">Di tablet/HP host buka <b>${esc(location.host)}/assets/aura/prompter.html</b> lalu masukkan kode:</p><div class="kode">${kode}</div></div>

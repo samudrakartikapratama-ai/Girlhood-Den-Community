@@ -131,8 +131,10 @@ Koreksi pimpinan atas bedah live: ${b.ulasan.join(" | ") || "-"}
 Pertanyaan penonton terbanyak (Pantau Live): ${b.pertanyaan.map((p: any) => `${p.teks} (${p.n}×)`).join(", ") || "-"}`;
 
 function cekKata(teks: string) {
-  const t = " " + normal(teks).replace(/seratus persen/g, "seratus persen") + " ";
-  const mentah = String(teks || "").toLowerCase();
+  // "keranjang nomor 1" / "etalase no 2" itu petunjuk letak produk, bukan klaim "nomor 1"
+  const letak = /\b(keranjang|etalase|link|produk|kode)\s+(nomor|no\.?)\s*\d+/gi;
+  const t = " " + normal(String(teks || "").replace(letak, " ")) + " ";
+  const mentah = String(teks || "").toLowerCase().replace(letak, " ");
   return KATA_BAHAYA.filter((k) => k.includes("%") ? mentah.includes(k) : t.includes(" " + normal(k) + " "));
 }
 
@@ -307,7 +309,8 @@ Bahasa Indonesia sehari-hari, singkat.`,
       const q = b.id ? db.from("ip_produk").update({ data, akun_id: b.akun_id || null }).eq("id", b.id) : db.from("ip_produk").insert({ data, akun_id: b.akun_id || null });
       const { error } = await q;
       if (error) throw error;
-      return balas({ ok: true });
+      // klaim berisiko di kartu produk ikut dilaporkan supaya tim tahu sumber faktanya bermasalah
+      return balas({ ok: true, peringatan: cekKata([data.keunggulan, data.bukti, data.promo, data.cara_pakai].join(" ")) });
     }
     if (b.aksi === "produk-hapus") {
       await db.from("ip_produk").update({ aktif: false }).eq("id", b.id);
