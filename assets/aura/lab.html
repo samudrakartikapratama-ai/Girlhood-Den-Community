@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Lab Live · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=2">
+<style>
+body{text-align:left}
+.wrap{max-width:900px;gap:18px}
+.kepala-hal{display:grid;gap:12px}
+.submenu{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--garis);padding-bottom:12px}
+.submenu button{border:1px solid transparent;background:none;color:var(--ash);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500}
+.submenu button[aria-pressed=true]{color:var(--ink);background:rgba(255,90,31,.16);border-color:rgba(255,90,31,.35)}
+.submenu button:focus-visible{outline:2px solid var(--corona);outline-offset:2px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 14px}
+.form .penuh{grid-column:1 / -1}
+input[type=date],input[type=time]{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--garis);border-radius:12px;padding:10px 12px;color-scheme:dark}
+.berkas{display:grid;gap:4px;padding:12px 14px;border:1px dashed var(--garis2);border-radius:14px;cursor:pointer}
+.berkas:has(input:valid:not([value=""])){border-style:solid}
+.berkas input{font-size:13px;color:var(--ash)}
+.berkas b{font-weight:500}
+.tahapan{display:grid;gap:10px;margin-top:6px}
+.tahapan .t{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;font-size:14px;color:var(--ash)}
+.tahapan .t i{width:10px;height:10px;border-radius:50%;border:1px solid var(--garis2);justify-self:center}
+.tahapan .t.jalan{color:var(--ink)}.tahapan .t.jalan i{background:var(--ember);border-color:var(--ember)}
+.tahapan .t.beres{color:var(--ok)}.tahapan .t.beres i{background:var(--ok);border-color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:8px;border-bottom:1px solid var(--garis);text-align:left;vertical-align:top}
+th{color:var(--ash);font-weight:500}
+.tabel-geser{overflow-x:auto}
+.angka-baris{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.angka-baris .panel{padding:12px 14px;display:grid;gap:2px}
+.besar{font-size:22px;font-weight:500}
+.momen{display:grid;gap:10px}
+.momen article{display:grid;gap:8px;border-left:3px solid var(--garis2);padding:4px 0 4px 14px}
+.momen article.terbaik{border-color:var(--ok)}.momen article.terburuk{border-color:var(--bad)}.momen article.bahaya{border-color:var(--warn)}
+.kutip{font-size:15px;line-height:1.55;color:#f3e6dc}
+.kutip::before{content:"“"}.kutip::after{content:"”"}
+.lembar{max-width:100%;border-radius:10px;border:1px solid var(--garis);cursor:zoom-in}
+.lembar.lebar{cursor:zoom-out}
+.topik{display:grid;gap:4px}
+.topik div{display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:13.5px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.035)}
+.transkrip{max-height:420px;overflow-y:auto;font-size:13.5px;line-height:1.6;white-space:pre-line;color:#e9dcd2}
+details summary{cursor:pointer;color:var(--ash)}
+.cek{display:flex;align-items:center;gap:8px;font-size:14px;padding:4px 0}
+.cek input{accent-color:var(--ember);width:18px;height:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="kepala-hal">
+    <div><h1>Lab Live</h1><p class="muted kecil">Bedah replay live: momen terbaik, terburuk, kalimat berbahaya, dan saran untuk live berikutnya.</p></div>
+    <nav class="submenu" id="submenu" aria-label="Menu Lab Live">
+      <button data-v="unggah" aria-pressed="true">Unggah live</button>
+      <button data-v="daftar" aria-pressed="false">Laporan</button>
+      <button data-v="atur" aria-pressed="false" class="hidden">Pengaturan</button>
+    </nav>
+  </header>
+  <main id="isi"><p class="muted">Memuat…</p></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { FFmpeg } from '../vendor/ffmpeg/index.js';
+
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const CORE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/';
+const AUDIO_DETIK = 600, FOTO_TIAP = 15, KOLOM = 4, BARIS_FOTO = 3; // 12 foto per lembar = 3 menit
+const sb = supabase.createClient(URL_SB, ANON);
+const isi = document.getElementById('isi');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mmss = d => { d = Math.max(0, Math.round(d || 0)); const j = Math.floor(d/3600), m = Math.floor(d%3600/60), s = d%60; return (j ? j + ':' + String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0'); };
+const rupiah = n => n == null ? '–' : 'Rp' + Math.round(n).toLocaleString('id-ID');
+const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
+const jamDinding = (jam, detik) => { if (!jam) return ''; const [h, m] = jam.split(':').map(Number); const t = h*3600 + m*60 + Math.round(detik); return String(Math.floor(t/3600)%24).padStart(2,'0') + ':' + String(Math.floor(t%3600/60)).padStart(2,'0'); };
+const PESAN = { BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses Lab Live. Minta ke pimpinan.', AKUN:'Pilih akun dulu.', TANPA_SUARA:'Video tidak punya suara.', SUARA_BELUM_LENGKAP:'Unggahan suara belum lengkap. Coba unggah lagi.' };
+
+async function panggil(body){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error('BUKAN_INTERNAL');
+  const r = await fetch(URL_SB + '/functions/v1/lab-live', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
+  return j;
+}
+
+/* ---------------- menu ---------------- */
+let st = null, tampilan = 'unggah', sibuk = false, putar = null;
+function pilih(v){
+  if (sibuk) return; // video sedang diolah: tetap di halaman unggah
+  tampilan = v;
+  document.querySelectorAll('#submenu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  render();
+}
+document.querySelectorAll('#submenu button').forEach(b => b.onclick = () => pilih(b.dataset.v));
+
+async function muat(){
+  try { st = await panggil({ aksi:'status' }); }
+  catch (e) { isi.innerHTML = `<div class="panel">${esc(PESAN[e.message] || 'Lab Live belum bisa dimuat. Coba lagi.')}</div>`; return false; }
+  document.querySelector('#submenu [data-v=atur]').classList.toggle('hidden', !st.pimpinan);
+  return true;
+}
+function render(){
+  clearTimeout(putar);
+  if (tampilan === 'daftar') return renderDaftar();
+  if (tampilan === 'atur') return renderAtur();
+  renderUnggah();
+}
+const namaAkun = id => (st.akun || []).find(a => a.id === id)?.nama || '–';
+const namaHost = id => (st.host || []).find(h => h.id === id)?.nama || '–';
+
+/* ---------------- unggah ---------------- */
+function renderUnggah(){
+  const akun = (st.akun || []).filter(a => a.aktif);
+  if (!akun.length){ isi.innerHTML = `<div class="panel"><h2>Belum ada akun live</h2><p class="muted" style="margin-top:6px">${st.pimpinan ? 'Tambahkan akun KIME dan host di menu Pengaturan dulu.' : 'Minta pimpinan menambahkan akun live di Pengaturan.'}</p></div>`; return; }
+  const hariIni = new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:14px">
+    <div><h2>Live yang mau dibedah</h2><p class="muted kecil" style="margin-top:4px">Video diolah di laptop ini dulu (suara + foto layar), baru dikirim. Video aslinya tidak diunggah.</p></div>
+    <div class="form">
+      <label><span class="label">Akun</span><select id="u-akun">${akun.map(a => `<option value="${a.id}">${esc(a.nama)}</option>`).join('')}</select></label>
+      <label><span class="label">Host</span><select id="u-host"></select></label>
+      <label><span class="label">Tanggal live</span><input type="date" id="u-tgl" value="${hariIni}"></label>
+      <label><span class="label">Jam mulai live</span><input type="time" id="u-jam"></label>
+    </div>
+    <label class="berkas"><b>1. Video replay (wajib)</b><span class="muted kecil">File .mp4 dari tombol unduh replay di dashboard live.</span><input type="file" id="u-video" accept="video/*"></label>
+    <label class="berkas"><b>2. File ekspor (disarankan)</b><span class="muted kecil">File .xlsx dari tombol Export di dashboard live yang sama.</span><input type="file" id="u-xlsx" accept=".xlsx,.xls,.csv"></label>
+    <label class="berkas"><b>3. Screenshot grafik (disarankan)</b><span class="muted kecil">Grafik "Performance trends" yang menampilkan GMV, penonton, dan klik produk.</span><input type="file" id="u-grafik" accept="image/png,image/jpeg,image/webp"></label>
+    <label><span class="label">Catatan dari studio (boleh kosong)</span><textarea id="u-cat" placeholder="Contoh: lampu kiri mati 10 menit, stok serum habis di tengah live"></textarea></label>
+    <div class="baris"><button class="btn utama" id="u-kirim">Proses dan kirim</button><span class="pesan" id="u-pesan"></span></div>
+    <div class="tahapan hidden" id="u-tahap"></div>
+  </div>`;
+  const pilihHost = () => { const a = document.getElementById('u-akun').value; const hs = (st.host || []).filter(h => h.aktif && (!h.akun_id || h.akun_id === a)); document.getElementById('u-host').innerHTML = `<option value="">Belum tahu</option>` + hs.map(h => `<option value="${h.id}">${esc(h.nama)}</option>`).join(''); };
+  document.getElementById('u-akun').onchange = pilihHost; pilihHost();
+  document.getElementById('u-xlsx').onchange = async e => { try { const r = await bacaEkspor(e.target.files[0]); const jamEl = document.getElementById('u-jam'); if (r.jam && !jamEl.value) jamEl.value = r.jam; if (r.tanggal) document.getElementById('u-tgl').value = r.tanggal; } catch { /* dibaca ulang saat kirim */ } };
+  document.getElementById('u-kirim').onclick = kirim;
+}
+
+const TAHAP = [['muat','Menyiapkan alat pengolah'],['suara','Mengambil suara'],['foto','Mengambil foto layar'],['kirim','Mengirim ke Aura'],['antre','Masuk antrean bedah']];
+function tahap(kini, ket = ''){
+  const el = document.getElementById('u-tahap'); el.classList.remove('hidden');
+  const i = TAHAP.findIndex(t => t[0] === kini);
+  el.innerHTML = TAHAP.map(([k, n], j) => `<div class="t ${j < i ? 'beres' : j === i ? 'jalan' : ''}"><i></i><span>${n}</span><span class="angka kecil">${j === i ? esc(ket) : j < i ? 'beres' : ''}</span></div>`).join('');
+}
+
+async function bacaEkspor(file){
+  if (!file) return { rows: null };
+  const wb = XLSX.read(await file.arrayBuffer(), { cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+  const h = aoa.findIndex(r => r.filter(c => String(c).trim()).length >= 5); // baris judul kolom
+  if (h < 0) return { rows: null };
+  const kepala = aoa[h].map(c => String(c).trim());
+  const rows = aoa.slice(h + 1).filter(r => r.some(c => String(c).trim())).map(r => Object.fromEntries(kepala.map((k, i) => [k || 'kolom' + i, r[i]])));
+  const waktu = String(rows[0]?.[kepala.find(k => /time|waktu|jam/i.test(k))] || '');
+  const m = waktu.match(/(\d{4})[-/](\d{2})[-/](\d{2})\D+(\d{1,2}):(\d{2})/);
+  return { rows, tanggal: m ? `${m[1]}-${m[2]}-${m[3]}` : null, jam: m ? `${m[4].padStart(2,'0')}:${m[5]}` : null };
+}
+
+async function ambilSuara(file, kabar){
+  const ff = new FFmpeg();
+  await ff.load({ coreURL: CORE + 'ffmpeg-core.js', wasmURL: CORE + 'ffmpeg-core.wasm' });
+  kabar('suara', 'mulai…');
+  await ff.createDir('/in');
+  await ff.mount('WORKERFS', { files: [file] }, '/in');
+  ff.on('progress', ({ progress }) => { if (progress > 0 && progress <= 1) kabar('suara', Math.round(progress * 100) + '%'); });
+  const kode = await ff.exec(['-i', '/in/' + file.name, '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'libmp3lame', '-b:a', '24k', '-f', 'segment', '-segment_time', String(AUDIO_DETIK), '-reset_timestamps', '1', '/a%03d.mp3']);
+  if (kode !== 0) throw new Error('SUARA');
+  const daftar = (await ff.listDir('/')).filter(f => /^a\d{3}\.mp3$/.test(f.name)).map(f => f.name).sort();
+  const hasil = [];
+  for (const n of daftar) hasil.push(new Blob([await ff.readFile('/' + n)], { type: 'audio/mpeg' }));
+  ff.terminate();
+  return hasil;
+}
+
+function bukaVideo(file){
+  return new Promise((ok, gagal) => {
+    const v = document.createElement('video');
+    v.muted = true; v.preload = 'auto'; v.playsInline = true;
+    v.onloadedmetadata = () => ok(v);
+    v.onerror = () => gagal(new Error('VIDEO'));
+    v.src = URL.createObjectURL(file);
+  });
+}
+const lompat = (v, t) => new Promise(ok => { v.onseeked = () => ok(); v.currentTime = t; });
+
+async function ambilFoto(v, kabar){
+  const dur = v.duration, w = v.videoWidth, h = v.videoHeight;
+  const tw = 240, th = Math.round(tw * h / w);
+  const kanvas = document.createElement('canvas'); kanvas.width = tw * KOLOM; kanvas.height = th * BARIS_FOTO;
+  const cx = kanvas.getContext('2d');
+  const perLembar = KOLOM * BARIS_FOTO, total = Math.ceil(dur / (FOTO_TIAP * perLembar));
+  const lembar = [];
+  for (let s = 0; s < total; s++){
+    cx.fillStyle = '#000'; cx.fillRect(0, 0, kanvas.width, kanvas.height);
+    for (let k = 0; k < perLembar; k++){
+      const t = (s * perLembar + k) * FOTO_TIAP;
+      if (t >= dur) break;
+      await lompat(v, Math.min(t + 0.5, dur - 0.1));
+      const x = (k % KOLOM) * tw, y = Math.floor(k / KOLOM) * th;
+      cx.drawImage(v, x, y, tw, th);
+      cx.fillStyle = 'rgba(0,0,0,.6)'; cx.fillRect(x, y, 58, 20);
+      cx.fillStyle = '#fff'; cx.font = '600 13px system-ui'; cx.fillText(mmss(t), x + 6, y + 15);
+    }
+    lembar.push(await new Promise(ok => kanvas.toBlob(ok, 'image/jpeg', 0.72)));
+    kabar('foto', `${s + 1}/${total}`);
+  }
+  return lembar;
+}
+
+async function kirim(){
+  const pesan = document.getElementById('u-pesan'); pesan.textContent = '';
+  const video = document.getElementById('u-video').files[0];
+  if (!video){ pesan.textContent = 'Pilih video replay dulu.'; return; }
+  const tombol = document.getElementById('u-kirim');
+  tombol.disabled = true; sibuk = true;
+  document.querySelectorAll('#isi input, #isi select, #isi textarea').forEach(x => x.disabled = true);
+  try {
+    tahap('muat', 'mengunduh ±30 MB, sekali saja');
+    const ekspor = await bacaEkspor(document.getElementById('u-xlsx').files[0]).catch(() => ({ rows: null }));
+    const v = await bukaVideo(video);
+    const durasi = v.duration;
+    if (!isFinite(durasi) || durasi < 60) throw new Error('VIDEO');
+    const audio = await ambilSuara(video, tahap);
+    if (!audio.length) throw new Error('SUARA');
+    tahap('foto', '0');
+    const lembar = await ambilFoto(v, tahap);
+    URL.revokeObjectURL(v.src);
+    const grafik = document.getElementById('u-grafik').files[0] || null;
+    tahap('kirim', '');
+    const b = await panggil({ aksi:'buat', akun_id: document.getElementById('u-akun').value, host_id: document.getElementById('u-host').value || null,
+      tanggal: document.getElementById('u-tgl').value, jam_mulai: document.getElementById('u-jam').value || ekspor.jam || null, durasi_detik: Math.round(durasi),
+      catatan: document.getElementById('u-cat').value.trim(), ekspor: ekspor.rows, potongan_audio: audio.length, lembar: lembar.length, ada_grafik: !!grafik });
+    const antre = [...audio.map((x, i) => [`audio/${i}.mp3`, x]), ...lembar.map((x, i) => [`lembar/${i}.jpg`, x]), ...(grafik ? [['grafik', grafik]] : [])];
+    let beres = 0;
+    const kerja = async () => { while (antre.length){ const [p, berkas] = antre.shift(); let galat;
+      for (let c = 0; c < 3; c++){ ({ error: galat } = await sb.storage.from('lab-live').uploadToSignedUrl(`${b.id}/${p}`, b.token[p], berkas, { contentType: berkas.type || 'image/jpeg', upsert: true })); if (!galat) break; }
+      if (galat) throw new Error('UNGGAH'); tahap('kirim', `${++beres}/${audio.length + lembar.length + (grafik ? 1 : 0)}`); } };
+    await Promise.all([kerja(), kerja(), kerja()]);
+    await panggil({ aksi:'siap', id: b.id });
+    tahap('antre', '');
+    sibuk = false;
+    isi.querySelector('.panel').insertAdjacentHTML('beforeend', `<div class="panel" style="background:rgba(127,224,168,.08);border-color:rgba(127,224,168,.3)"><b>Terkirim.</b> <span class="muted">Laporan siap sekitar 5–10 menit lagi dan dikirim juga ke Lark. Laptop boleh ditutup.</span><div class="baris" style="margin-top:10px"><button class="btn" id="u-lagi">Unggah live lain</button><button class="btn" id="u-lihat">Lihat daftar laporan</button></div></div>`);
+    document.getElementById('u-lagi').onclick = () => renderUnggah();
+    document.getElementById('u-lihat').onclick = async () => { await muat(); pilih('daftar'); };
+  } catch (e) {
+    sibuk = false;
+    console.error(e);
+    const arti = { VIDEO:'Video tidak bisa dibuka di browser ini. Pakai Chrome dan file .mp4 asli dari dashboard.', SUARA:'Suara video tidak bisa diambil. Pastikan file .mp4 asli dari dashboard.', UNGGAH:'Unggahan terputus. Cek internet, lalu coba lagi.' };
+    pesan.textContent = arti[e.message] || PESAN[e.message] || 'Gagal memproses. Coba lagi; kalau tetap gagal, kirim screenshot layar ini ke pimpinan.';
+    tombol.disabled = false;
+    document.querySelectorAll('#isi input, #isi select, #isi textarea').forEach(x => x.disabled = false);
+  }
+}
+window.addEventListener('beforeunload', e => { if (sibuk){ e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------------- daftar ---------------- */
+const STATUS = { unggah:['Belum lengkap','warn'], antre:['Antre',''], proses:['Diproses',''], selesai:['Selesai','ok'], gagal:['Gagal','bad'] };
+const NAMA_TAHAP = { transkrip:'menulis ucapan', grafik:'membaca grafik', topik:'memotong topik', analisis:'membedah', visual:'melihat foto' };
+async function renderDaftar(){
+  const live = st.live || [];
+  if (!live.length){ isi.innerHTML = `<div class="panel"><h2>Belum ada laporan</h2><p class="muted" style="margin-top:6px">Unggah replay live pertama di menu Unggah live.</p></div>`; return; }
+  isi.innerHTML = `<div class="panel tabel-geser"><table><thead><tr><th>Tanggal</th><th>Akun</th><th>Host</th><th>Durasi</th><th>GMV</th><th>Status</th><th></th></tr></thead><tbody>${live.map(l => {
+    const [n, k] = STATUS[l.status] || [l.status, ''];
+    const ket = l.status === 'proses' || l.status === 'antre' ? (NAMA_TAHAP[l.tahap] || '') : l.status === 'gagal' ? 'Ada kendala' : '';
+    return `<tr><td>${tgl(l.tanggal)}${l.jam_mulai ? ' · ' + esc(l.jam_mulai) : ''}</td><td>${esc(namaAkun(l.akun_id))}</td><td>${esc(namaHost(l.host_id))}</td><td class="angka">${mmss(l.durasi_detik)}</td><td class="angka">${rupiah(l.angka?.gmv)}</td>
+      <td><span class="chip ${k}">${n}</span>${ket ? `<div class="muted kecil" style="margin-top:4px">${esc(ket)}</div>` : ''}</td>
+      <td><div class="baris">${l.status === 'selesai' ? `<button class="btn" data-lihat="${l.id}">Lihat</button>` : ''}${l.status === 'gagal' && st.pimpinan ? `<button class="btn" data-ulang="${l.id}">Coba lagi</button>` : ''}${st.pimpinan ? `<button class="btn" data-hapus="${l.id}" aria-label="Hapus">Hapus</button>` : ''}</div></td></tr>`;
+  }).join('')}</tbody></table></div>`;
+  isi.querySelectorAll('[data-lihat]').forEach(b => b.onclick = () => renderLaporan(b.dataset.lihat));
+  isi.querySelectorAll('[data-ulang]').forEach(b => b.onclick = async () => { b.disabled = true; await panggil({ aksi:'ulang', id: b.dataset.ulang }).catch(() => {}); await muat(); renderDaftar(); });
+  isi.querySelectorAll('[data-hapus]').forEach(b => b.onclick = async () => { if (!confirm('Hapus laporan ini beserta suara dan fotonya? Tidak bisa dikembalikan.')) return; b.disabled = true; await panggil({ aksi:'hapus', id: b.dataset.hapus }).catch(() => {}); await muat(); renderDaftar(); });
+  if (live.some(l => l.status === 'antre' || l.status === 'proses')) putar = setTimeout(async () => { if (tampilan === 'daftar' && await muat()) renderDaftar(); }, 15000);
+}
+
+async function renderLaporan(id){
+  isi.innerHTML = `<p class="muted">Memuat laporan…</p>`;
+  let l; try { l = await panggil({ aksi:'detail', id }); } catch { isi.innerHTML = `<div class="panel">Laporan belum bisa dibuka. Coba lagi.</div>`; return; }
+  const lap = l.laporan || {}, a = lap.angka || {};
+  const urut = { bahaya:0, terburuk:1, terbaik:2 };
+  const momen = [...(lap.momen || [])].sort((x, y) => (urut[x.jenis] - urut[y.jenis]) || (x.mulai - y.mulai));
+  const label = { terbaik:['Terbaik','ok'], terburuk:['Terburuk','bad'], bahaya:['Kalimat berbahaya','warn'] };
+  const fotoDi = t => { const i = Math.min(l.url_lembar.length - 1, Math.floor(t / l.lembar_detik)); return l.url_lembar[i] || null; };
+  const waktu = t => `${mmss(t)}${l.jam_mulai ? ` <span class="muted">(jam ${jamDinding(l.jam_mulai, t)})</span>` : ''}`;
+  isi.innerHTML = `<div class="baris"><button class="btn" id="kembali">‹ Daftar laporan</button></div>
+  <div class="panel" style="display:grid;gap:8px"><h2>${esc(namaAkun(l.akun_id))} · ${esc(namaHost(l.host_id))}</h2><p class="muted kecil">${tgl(l.tanggal)}${l.jam_mulai ? ' · mulai ' + esc(l.jam_mulai) : ''} · durasi ${mmss(l.durasi_detik)}</p><p style="margin-top:4px">${esc(lap.ringkas)}</p></div>
+  <div class="angka-baris">
+    <div class="panel"><span class="muted kecil">GMV</span><span class="besar angka">${rupiah(a.gmv)}</span></div>
+    <div class="panel"><span class="muted kecil">Terjual</span><span class="besar angka">${a.terjual ?? '–'}</span></div>
+    <div class="panel"><span class="muted kecil">Penonton</span><span class="besar angka">${a.penonton?.toLocaleString('id-ID') ?? '–'}</span></div>
+    <div class="panel"><span class="muted kecil">Klik produk</span><span class="besar angka">${a.klik_produk_persen != null ? a.klik_produk_persen + '%' : '–'}</span><span class="muted kecil">patokan 18%</span></div>
+    <div class="panel"><span class="muted kecil">Klik ke bayar</span><span class="besar angka">${a.klik_ke_bayar_persen != null ? a.klik_ke_bayar_persen + '%' : '–'}</span><span class="muted kecil">patokan 5%</span></div>
+  </div>
+  <div class="panel" style="display:grid;gap:8px"><h2>Live berikutnya</h2><ol class="daftar" style="list-style:decimal;padding-left:20px">${(lap.saran || []).map(s => `<li style="background:none;padding:2px 0">${esc(s)}</li>`).join('')}</ol>
+    <details style="margin-top:6px"><summary>Kenapa (diagnosis)</summary><p style="margin-top:8px;line-height:1.6">${esc(lap.diagnosis)}</p></details></div>
+  <div class="panel momen"><h2>Momen penting</h2>${momen.map(m => { const [n, k] = label[m.jenis] || [m.jenis, '']; const f = m.jenis !== 'bahaya' ? fotoDi(m.mulai) : null; return `<article class="${esc(m.jenis)}">
+    <div class="baris"><span class="chip ${k}">${n}</span><span class="angka kecil">${waktu(m.mulai)} – ${mmss(m.selesai)}</span></div>
+    <b>${esc(m.judul)}</b><p class="kutip">${esc(m.kutipan)}</p><p class="muted">${esc(m.alasan)}</p>
+    ${m.bukti ? `<p class="kecil"><span class="muted">Angka:</span> ${esc(m.bukti)}</p>` : ''}${m.visual ? `<p class="kecil"><span class="muted">Terlihat di layar:</span> ${esc(m.visual)}</p>` : ''}
+    ${f ? `<img class="lembar" src="${esc(f)}" alt="Foto layar sekitar menit ${mmss(m.mulai)}" loading="lazy" style="max-width:420px">` : ''}</article>`; }).join('')}</div>
+  <div class="panel" style="display:grid;gap:8px"><h2>Urutan topik</h2><div class="topik">${(l.topik || []).map(t => `<div><span class="angka muted">${mmss(t.mulai)}–${mmss(t.selesai)}</span><span><b style="font-weight:500">${esc(t.judul)}</b>${t.produk ? ' · ' + esc(t.produk) : ''}<br><span class="muted">${esc(t.ringkas)}</span></span></div>`).join('')}</div></div>
+  ${l.url_grafik ? `<div class="panel" style="display:grid;gap:8px"><h2>Grafik yang dikirim</h2><img class="lembar" src="${esc(l.url_grafik)}" alt="Screenshot grafik performa live"></div>` : ''}
+  <div class="panel"><details><summary>Semua ucapan host (${(l.transkrip?.seg || []).length} baris)</summary><div class="transkrip" style="margin-top:10px">${(l.transkrip?.seg || []).map(s => `<span class="muted angka">${mmss(s.a)}</span>  ${esc(s.t)}`).join('\n')}</div></details></div>`;
+  document.getElementById('kembali').onclick = () => renderDaftar();
+  isi.querySelectorAll('img.lembar').forEach(im => im.onclick = () => { im.classList.toggle('lebar'); im.style.maxWidth = im.classList.contains('lebar') ? '100%' : (im.closest('.momen') ? '420px' : '100%'); });
+}
+
+/* ---------------- pengaturan ---------------- */
+function renderAtur(){
+  const akun = st.akun || [], host = st.host || [];
+  isi.innerHTML = `
+  <div class="panel" style="display:grid;gap:10px"><h2>Akun live</h2>
+    <table><tbody>${akun.map(a => `<tr><td>${esc(a.nama)}${a.laboratorium ? ' <span class="chip">akun lab</span>' : ''}</td><td style="text-align:right"><button class="btn" data-akun="${a.id}">${a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td class="muted">Belum ada.</td></tr>'}</tbody></table>
+    <div class="form"><label><span class="label">Nama akun baru</span><input type="text" id="a-nama" placeholder="Contoh: KIME Official"></label><label class="cek" style="align-self:end"><input type="checkbox" id="a-lab"> Akun lab (untuk uji coba)</label></div>
+    <div class="baris"><button class="btn utama" id="a-tambah">Tambah akun</button></div></div>
+  <div class="panel" style="display:grid;gap:10px"><h2>Host</h2>
+    <table><tbody>${host.map(h => `<tr><td>${esc(h.nama)} <span class="muted kecil">${h.akun_id ? esc(namaAkun(h.akun_id)) : 'semua akun'}</span></td><td style="text-align:right"><button class="btn" data-host="${h.id}">${h.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td class="muted">Belum ada.</td></tr>'}</tbody></table>
+    <div class="form"><label><span class="label">Nama host baru</span><input type="text" id="h-nama"></label><label><span class="label">Biasanya di akun</span><select id="h-akun"><option value="">Semua akun</option>${akun.filter(a => a.aktif).map(a => `<option value="${a.id}">${esc(a.nama)}</option>`).join('')}</select></label></div>
+    <div class="baris"><button class="btn utama" id="h-tambah">Tambah host</button></div></div>
+  <div class="panel" style="display:grid;gap:10px"><h2>Siapa yang boleh membuka Lab Live</h2><p class="muted kecil">Pimpinan selalu bisa. Centang orang yang mengunggah replay, misalnya tim di Solo.</p>
+    <div>${(st.orang || []).map(o => `<label class="cek"><input type="checkbox" value="${o.id}" ${o.akses ? 'checked' : ''}> ${esc(o.nama)}</label>`).join('')}</div>
+    <div class="baris"><button class="btn utama" id="o-simpan">Simpan akses</button><span class="pesan" id="o-pesan"></span></div></div>`;
+  const segar = async () => { await muat(); renderAtur(); };
+  const simpan = async (body, tombol) => { tombol.disabled = true; try { await panggil(body); await segar(); } catch { tombol.disabled = false; alert('Gagal menyimpan. Coba lagi.'); } };
+  document.getElementById('a-tambah').onclick = e => { const nama = document.getElementById('a-nama').value.trim(); if (nama) simpan({ aksi:'akun-simpan', nama, laboratorium: document.getElementById('a-lab').checked }, e.currentTarget); };
+  document.getElementById('h-tambah').onclick = e => { const nama = document.getElementById('h-nama').value.trim(); if (nama) simpan({ aksi:'host-simpan', nama, akun_id: document.getElementById('h-akun').value || null }, e.currentTarget); };
+  isi.querySelectorAll('[data-akun]').forEach(b => b.onclick = () => { const a = akun.find(x => x.id === b.dataset.akun); simpan({ aksi:'akun-simpan', id: a.id, nama: a.nama, laboratorium: a.laboratorium, aktif: !a.aktif }, b); });
+  isi.querySelectorAll('[data-host]').forEach(b => b.onclick = () => { const h = host.find(x => x.id === b.dataset.host); simpan({ aksi:'host-simpan', id: h.id, nama: h.nama, akun_id: h.akun_id, aktif: !h.aktif }, b); });
+  document.getElementById('o-simpan').onclick = async e => { const ids = [...isi.querySelectorAll('.cek input[type=checkbox][value]')].filter(x => x.checked).map(x => x.value); e.currentTarget.disabled = true; try { await panggil({ aksi:'akses-simpan', staff_ids: ids }); document.getElementById('o-pesan').textContent = 'Tersimpan.'; } catch { document.getElementById('o-pesan').textContent = 'Gagal menyimpan.'; } e.currentTarget.disabled = false; };
+}
+
+(async () => { if (await muat()) pilih(st.pimpinan && !(st.akun || []).some(a => a.aktif) ? 'atur' : 'unggah'); })();
+</script>
+</body>
+</html>

@@ -176,6 +176,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
     <button class="tab" role="tab" data-m="onboarding" aria-selected="false">Onboarding</button>
     <button class="tab hidden" role="tab" data-m="tes" aria-selected="false" id="tab-tes">Tes tim</button>
     <button class="tab" role="tab" data-m="palette" aria-selected="false">Product Palette</button>
+    <button class="tab hidden" role="tab" data-m="lab" aria-selected="false" id="tab-lab">Lab Live</button>
   </nav>
 
   <main id="m-beranda" class="menu-isi utama">
@@ -203,6 +204,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
       <button type="button" data-buka="onboarding"><b>Onboarding</b><span>Video wajib untuk anggota tim baru</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="tes" id="menu-tes" class="hidden"><b>Tes tim</b><span>Kerjakan tes, beri tes, lihat dan nilai hasil</span><i aria-hidden="true">›</i></button>
       <button type="button" data-buka="palette"><b>Product Palette</b><span>Peta produk dari rambut sampai kaki</span><i aria-hidden="true">›</i></button>
+      <button type="button" data-buka="lab" id="menu-lab" class="hidden"><b>Lab Live</b><span>Bedah replay live: momen terbaik, terburuk, dan saran</span><i aria-hidden="true">›</i></button>
       <a href="/kantor.html" class="hidden khusus-pimpinan"><b>Kantor AI</b><span>Kantor AI yang sudah berjalan, sementara masih terpisah</span><i aria-hidden="true">›</i></a>
     </nav>
   </main>
@@ -210,6 +212,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
   <main id="m-tugas" class="menu-isi hidden"><iframe class="frame bening" id="f-tugas" title="Tugas hari ini" loading="lazy"></iframe></main>
   <main id="m-onboarding" class="menu-isi hidden"><iframe class="frame bening" id="f-onboarding" title="Onboarding" loading="lazy" allow="fullscreen; autoplay" allowfullscreen></iframe></main>
   <main id="m-tes" class="menu-isi hidden"><iframe class="frame bening" id="f-tes" title="Tes" loading="lazy"></iframe></main>
+  <main id="m-lab" class="menu-isi hidden"><iframe class="frame bening" id="f-lab" title="Lab Live" loading="lazy"></iframe></main>
   <main id="m-palette" class="menu-isi hidden"><iframe class="frame" id="f-palette" title="Product Palette" loading="lazy"></iframe></main>
 </div>
 
@@ -311,6 +314,7 @@ function bukaMenu(m){
   if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191548';
   if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611191548'; // muat ulang tiap dibuka supaya status terbaru
   if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611250955';
+  if (m === 'lab' && !$('f-lab').src) $('f-lab').src = 'assets/aura/lab.html?v=202611251500';
   if (m === 'onboarding' && !$('f-onboarding').src) $('f-onboarding').src = 'assets/aura/onboarding.html?v=202611201010';
   if (m !== 'onboarding' && $('f-onboarding').src) { try { $('f-onboarding').contentWindow.document.getElementById('pemutar').pause(); } catch (e) {} }
   if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : m === 'beranda' ? 0 : .6);
@@ -345,10 +349,11 @@ async function mulai(dariTombol){
   $('siapa').textContent = data.nama;
   salam(data.nama);
   let m = 'beranda'; try { m = localStorage.getItem('aura-menu') || 'beranda'; } catch (e) {}
-  bukaMenu(['beranda','tugas','palette','tes','onboarding'].includes(m) ? m : 'beranda');
+  bukaMenu(['beranda','tugas','palette','tes','onboarding','lab'].includes(m) ? m : 'beranda');
   if (dariTombol){ if (window.adeganMulai) adeganMulai(); if (suaraNyala() && window.auraIntro) auraIntro(); }
   Aura.mulai({ sb, url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, nama: data.nama });
   cekTes();
+  cekLab();
   nyalakanIndra();
   return true;
 }
@@ -369,6 +374,18 @@ async function cekTes(){
     if (adaTes && !pimpinan) bukaMenu('tes');
     else if (!pimpinan && ['tugas','tes'].includes(document.querySelector('.tab[aria-selected=true]')?.dataset.m)) bukaMenu('beranda');
   } catch (e) {}
+}
+
+/* ---------- Lab Live: pimpinan + staff yang diberi akses di Pengaturan Lab Live ---------- */
+async function cekLab(){
+  let boleh = false;
+  try {
+    const { data } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/lab-live', {method:'POST', headers:{'Content-Type':'application/json', apikey:SUPABASE_ANON_KEY, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify({aksi:'status'})});
+    boleh = r.ok;
+  } catch (e) {}
+  $('tab-lab').classList.toggle('hidden', !boleh); $('menu-lab').classList.toggle('hidden', !boleh);
+  if (!boleh && document.querySelector('.tab[aria-selected=true]')?.dataset.m === 'lab') bukaMenu('beranda');
 }
 
 /* ---------- kamera: hanya "melihat" saat Aura tidur (sekali tiap membuka Aura) ---------- */
