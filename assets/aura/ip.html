@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Studio IP · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=2">
+<style>
+body{text-align:left}
+.wrap{max-width:1040px;gap:18px}
+.kepala-hal{display:grid;gap:12px}
+.submenu{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--garis);padding-bottom:12px}
+.submenu button{border:1px solid transparent;background:none;color:var(--ash);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500}
+.submenu button[aria-pressed=true]{color:var(--ink);background:rgba(255,90,31,.16);border-color:rgba(255,90,31,.35)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 14px}
+.dua{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.dua{grid-template-columns:1fr}}
+.bidang{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid var(--garis)}
+.bidang:last-child{border-bottom:0}
+.bidang .kepala{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.bidang b{font-weight:500;font-size:14px}
+.bidang textarea{min-height:56px}
+.bidang .bukti{font-size:12.5px;color:var(--ash)}
+.st-draf{color:var(--ash)}.st-uji{color:var(--warn);border-color:rgba(255,196,107,.35)}.st-kunci{color:var(--ok);border-color:rgba(127,224,168,.35)}
+.kecil-btn{min-height:30px;padding:0 11px;font-size:12.5px}
+.obrolan{display:flex;flex-direction:column;gap:8px;max-height:48vh;overflow-y:auto;padding:2px}
+.gel{max-width:92%;padding:9px 12px;border-radius:14px;line-height:1.5;font-size:14px;white-space:pre-line}
+.gel.tim{align-self:flex-end;background:rgba(255,90,31,.18);border:1px solid rgba(255,90,31,.3)}
+.gel.aura{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--garis)}
+.usulan{display:grid;gap:6px;margin-top:8px}
+.usulan div{border:1px dashed var(--garis2);border-radius:10px;padding:8px 10px;font-size:13px;white-space:normal}
+.ketik{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:8px;border-bottom:1px solid var(--garis);text-align:left;vertical-align:top}
+th{color:var(--ash);font-weight:500}
+.produk-pilih label{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px}
+.produk-pilih input{accent-color:var(--ember);width:18px;height:18px}
+.blok{display:grid;gap:6px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--garis)}
+.blok h3{margin:0;font:500 16px/1.3 var(--font)}
+.blok .lbl{font-size:12px;color:var(--ash);margin-top:4px}
+.blok ul{margin:0;padding-left:18px;display:grid;gap:3px}
+.temuan{border-left:3px solid var(--warn);padding:6px 10px;font-size:13.5px;display:grid;gap:4px}
+.prompter{display:grid;gap:12px}
+.prompter .daftar-blok{display:flex;flex-wrap:wrap;gap:6px}
+.prompter .daftar-blok button[aria-current=true]{background:var(--ember);color:#160500;border-color:var(--ember)}
+.kode{font:600 34px/1 var(--font);letter-spacing:.25em;color:var(--corona)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="kepala-hal">
+    <div><h1>Studio IP</h1><p class="muted kecil">Kembangkan karakter host bersama Aura, tulis poin live per produk dengan gayanya, tampilkan di teleprompter.</p></div>
+    <nav class="submenu" id="submenu">
+      <button data-v="karakter" aria-pressed="true">Karakter</button>
+      <button data-v="produk" aria-pressed="false">Produk</button>
+      <button data-v="naskah" aria-pressed="false">Naskah</button>
+    </nav>
+  </header>
+  <main id="isi"><p class="muted">Memuat…</p></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON);
+const isi = document.getElementById('isi');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PESAN = { BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses. Minta ke pimpinan (Pengaturan Lab Live).', KHUSUS_PIMPINAN:'Hanya pimpinan yang bisa mengunci atau mengubah bidang yang sudah terkunci.', KARTU_KURANG:'Isi dulu minimal Label persona dan Gaya bicara di kartu karakter.', TANPA_PRODUK:'Pilih minimal 1 produk.', NAMA_KOSONG:'Nama wajib diisi.' };
+const STATUS = { draf:'Draf', uji:'Diuji di live', kunci:'Terkunci' };
+async function panggil(body){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error('BUKAN_INTERNAL');
+  const r = await fetch(URL_SB + '/functions/v1/ip-studio', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.galat || 'GAGAL'), {data:j});
+  return j;
+}
+const salah = e => alert(PESAN[e.message] || 'Gagal. Coba lagi.');
+
+let st = null, tampilan = 'karakter', prompter = null;
+async function muat(){ try { st = await panggil({ aksi:'status' }); return true; } catch (e) { isi.innerHTML = `<div class="panel">${esc(PESAN[e.message] || 'Studio IP belum bisa dimuat.')}</div>`; return false; } }
+function pilih(v){ if (prompter) tutupPrompter(); tampilan = v; document.querySelectorAll('#submenu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); render(); }
+document.querySelectorAll('#submenu button').forEach(b => b.onclick = async () => { await muat(); pilih(b.dataset.v); });
+function render(){ if (tampilan === 'produk') return renderProduk(); if (tampilan === 'naskah') return renderNaskah(); renderKarakter(); }
+const namaAkun = id => (st.akun || []).find(a => a.id === id)?.nama || '';
+const namaHost = id => (st.host || []).find(h => h.id === id)?.nama || '';
+const terkunci = k => Object.values(k.kartu || {}).filter(x => x.status === 'kunci').length;
+
+/* ---------------- karakter ---------------- */
+function renderKarakter(){
+  const n = Object.keys(st.bidang).length;
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Karakter IP</h2>
+    ${(st.karakter || []).length ? `<table><thead><tr><th>Nama</th><th>Host</th><th>Akun</th><th>Terkunci</th><th></th></tr></thead><tbody>${st.karakter.map(k => `<tr><td>${esc(k.nama)}</td><td>${esc(namaHost(k.host_id) || '–')}</td><td>${esc(namaAkun(k.akun_id) || '–')}</td><td class="angka">${terkunci(k)}/${n}</td><td><button class="btn kecil-btn" data-buka="${k.id}">Buka</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Belum ada karakter. Buat satu per host.</p>'}
+    <div class="form"><label><span class="label">Nama karakter / host</span><input type="text" id="k-nama" placeholder="Contoh: Nadia KIME"></label>
+      <label><span class="label">Host di Lab Live</span><select id="k-host"><option value="">Belum ada</option>${(st.host || []).map(h => `<option value="${h.id}" data-akun="${h.akun_id || ''}">${esc(h.nama)}</option>`).join('')}</select></label>
+      <label><span class="label">Akun</span><select id="k-akun"><option value="">–</option>${(st.akun || []).map(a => `<option value="${a.id}">${esc(a.nama)}</option>`).join('')}</select></label></div>
+    <p class="muted kecil">Hubungkan ke host di Lab Live supaya Aura bisa memakai bukti dari live-nya: ungkapan yang sering diucapkan, momen terbaik, dan pertanyaan penonton.</p>
+    <div class="baris"><button class="btn utama" id="k-buat">Buat karakter</button></div></div>`;
+  document.getElementById('k-host').onchange = e => { const a = e.target.selectedOptions[0]?.dataset.akun; if (a) document.getElementById('k-akun').value = a; };
+  document.getElementById('k-buat').onclick = async e => { const nama = document.getElementById('k-nama').value.trim(); if (!nama) return; e.target.disabled = true;
+    try { const r = await panggil({ aksi:'karakter-buat', nama, host_id: document.getElementById('k-host').value || null, akun_id: document.getElementById('k-akun').value || null }); await muat(); bukaKarakter(r.id); } catch (er) { salah(er); e.target.disabled = false; } };
+  isi.querySelectorAll('[data-buka]').forEach(b => b.onclick = () => bukaKarakter(b.dataset.buka));
+}
+
+async function bukaKarakter(id){
+  isi.innerHTML = '<p class="muted">Memuat karakter…</p>';
+  let d; try { d = await panggil({ aksi:'karakter-detail', id }); } catch (e) { return salah(e); }
+  const k = d.karakter, kartu = k.kartu || {}, b = d.bukti;
+  isi.innerHTML = `<div class="baris"><button class="btn" id="kembali">‹ Semua karakter</button></div>
+  <div class="dua">
+    <div class="panel"><h2>${esc(k.nama)}</h2><p class="muted kecil" style="margin-top:4px">Draf → diuji di live → terkunci. Hanya pimpinan yang bisa mengunci. Naskah hanya berpegang pada bidang yang terkunci.</p>
+      ${Object.entries(d.bidang).map(([bd, nama]) => { const x = kartu[bd] || {}; const s = x.status || 'draf'; return `<div class="bidang" data-b="${bd}">
+        <div class="kepala"><b>${esc(nama)}</b><span class="chip st-${s}">${x.isi ? STATUS[s] : 'Kosong'}</span></div>
+        <textarea ${s === 'kunci' && !st.pimpinan ? 'disabled' : ''}>${esc(x.isi || '')}</textarea>
+        ${x.bukti ? `<span class="bukti">Dasar: ${esc(x.bukti)}</span>` : ''}
+        <div class="baris"><button class="btn kecil-btn" data-s="">Simpan</button><button class="btn kecil-btn" data-s="uji">Uji di live</button>${st.pimpinan ? `<button class="btn kecil-btn" data-s="kunci">Kunci</button>${s === 'kunci' ? '<button class="btn kecil-btn" data-s="uji">Buka kunci</button>' : ''}` : ''}</div></div>`; }).join('')}
+    </div>
+    <div style="display:grid;gap:14px">
+      <div class="panel" style="display:grid;gap:10px"><h2>Ngobrol dengan Aura</h2>
+        <div class="obrolan" id="obrolan">${d.obrolan.map(gelembung).join('') || '<p class="muted kecil">Ceritakan tentang host ini (latar, sifat, cerita hidup, cara bicara), atau minta Aura menggali. Aura akan bertanya kalau ada yang belum jelas dan mengusulkan isi kartu.</p>'}</div>
+        <div class="ketik"><textarea id="o-isi" placeholder="Contoh: Nadia mantan BA di mall 3 tahun, suka bercanda, jujur soal produk yang tidak cocok…"></textarea><button class="btn utama" id="o-kirim">Kirim</button></div>
+      </div>
+      <div class="panel" style="display:grid;gap:8px"><h2>Bukti dari live</h2>
+        <p class="muted kecil">${b.jumlah_live ? `Dari ${b.jumlah_live} live yang sudah dibedah di Lab Live.` : 'Belum ada live host ini yang dibedah. Bukti muncul setelah replay diunggah di Lab Live.'}</p>
+        ${b.ungkapan.length ? `<span class="label" style="margin:0">Ungkapan yang sering diucapkan (calon kalimat andalan)</span><div class="chips">${b.ungkapan.map(u => `<span class="chip">"${esc(u.teks)}" · ${u.kali}×</span>`).join('')}</div>` : ''}
+        ${b.terbaik.length ? `<span class="label" style="margin:0">Momen terbaik</span><ul class="daftar">${b.terbaik.slice(0, 5).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+        ${b.pertanyaan.length ? `<span class="label" style="margin:0">Pertanyaan penonton terbanyak (Pantau Live)</span><div class="chips">${b.pertanyaan.slice(0, 10).map(p => `<span class="chip">${esc(p.teks)} · ${p.n}×</span>`).join('')}</div>` : ''}
+        ${b.bahaya.length ? `<span class="label" style="margin:0">Kalimat berbahaya yang pernah diucapkan</span><ul class="daftar">${b.bahaya.slice(0, 5).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('kembali').onclick = async () => { await muat(); renderKarakter(); };
+  const ob = document.getElementById('obrolan'); ob.scrollTop = ob.scrollHeight;
+  isi.querySelectorAll('.bidang [data-s]').forEach(btn => btn.onclick = async () => {
+    const el = btn.closest('.bidang'); btn.disabled = true;
+    try { await panggil({ aksi:'bidang-ubah', id, bidang: el.dataset.b, isi: el.querySelector('textarea').value, ...(btn.dataset.s ? { status: btn.dataset.s } : {}) }); bukaKarakter(id); } catch (e) { btn.disabled = false; salah(e); }
+  });
+  pasangUsulan(id);
+  document.getElementById('o-kirim').onclick = async e => {
+    const t = document.getElementById('o-isi'); const pesan = t.value.trim(); if (!pesan) return;
+    e.target.disabled = true; ob.insertAdjacentHTML('beforeend', `<div class="gel tim">${esc(pesan)}</div><div class="gel aura muted" id="tunggu">Aura sedang berpikir…</div>`); ob.scrollTop = ob.scrollHeight; t.value = '';
+    try { const r = await panggil({ aksi:'obrolan', id, pesan }); document.getElementById('tunggu').outerHTML = gelembung(r); pasangUsulan(id); }
+    catch (er) { document.getElementById('tunggu').textContent = PESAN[er.message] || 'Aura gagal menjawab. Coba lagi.'; }
+    e.target.disabled = false; ob.scrollTop = ob.scrollHeight;
+  };
+}
+function gelembung(m){
+  if (m.peran === 'user') return `<div class="gel tim">${esc(m.isi)}</div>`;
+  const u = (m.usulan || []).map((x, i) => `<div><b style="font-weight:500">${esc(st.bidang[x.bidang] || x.bidang)}:</b> ${esc(x.isi)}<br><span class="muted">${esc(x.alasan)}${x.bukti ? ' · ' + esc(x.bukti) : ''}</span><br>${x.diterima ? '<span class="chip ok" style="margin-top:6px">Diterima</span>' : `<button class="btn kecil-btn" style="margin-top:6px" data-ob="${m.id}" data-idx="${i}">Terima ke kartu (diuji)</button>`}</div>`).join('');
+  return `<div class="gel aura">${esc(m.isi)}${u ? `<div class="usulan">${u}</div>` : ''}</div>`;
+}
+function pasangUsulan(id){ isi.querySelectorAll('[data-ob]').forEach(b => b.onclick = async () => { b.disabled = true; try { await panggil({ aksi:'usulan-terima', obrolan_id: Number(b.dataset.ob), idx: Number(b.dataset.idx) }); bukaKarakter(id); } catch (e) { b.disabled = false; salah(e); } }); }
+
+/* ---------------- produk ---------------- */
+const KOLOM_PRODUK = [['nama','Nama produk'],['harga_normal','Harga normal'],['harga_live','Harga live'],['promo','Promo / gimmick (bonus, bundling, voucher)'],['nomor_keranjang','Nomor keranjang'],['keunggulan','Keunggulan utama'],['bahan','Bahan aktif'],['cara_pakai','Cara pakai'],['bukti','Bukti (BPOM, uji klinis, testimoni asli)'],['larangan','Klaim yang tidak boleh diucapkan untuk produk ini']];
+function renderProduk(edit){
+  const p = edit || { data: {} };
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Kartu produk</h2><p class="muted kecil">Fakta di sini satu-satunya sumber naskah. Yang tidak ditulis tidak akan diucapkan.</p>
+    ${(st.produk || []).length ? `<table><thead><tr><th>Produk</th><th>Harga live</th><th>Promo</th><th>Akun</th><th></th></tr></thead><tbody>${st.produk.map(x => `<tr><td>${esc(x.data.nama)}</td><td>${esc(x.data.harga_live || '–')}</td><td>${esc(x.data.promo || '–')}</td><td>${esc(namaAkun(x.akun_id) || '–')}</td><td style="white-space:nowrap"><button class="btn kecil-btn" data-ubah="${x.id}">Ubah</button> <button class="btn kecil-btn" data-hapus="${x.id}">Hapus</button></td></tr>`).join('')}</tbody></table>` : ''}
+  </div>
+  <div class="panel" style="display:grid;gap:6px"><h2>${edit ? 'Ubah ' + esc(p.data.nama) : 'Tambah produk'}</h2>
+    <div class="form">${KOLOM_PRODUK.map(([k, l]) => `<label${['keunggulan','bahan','cara_pakai','bukti','larangan','promo'].includes(k) ? ' style="grid-column:1/-1"' : ''}><span class="label">${l}</span>${['keunggulan','bahan','cara_pakai','bukti','larangan','promo'].includes(k) ? `<textarea data-k="${k}">${esc(p.data[k] || '')}</textarea>` : `<input type="text" data-k="${k}" value="${esc(p.data[k] || '')}">`}</label>`).join('')}
+      <label><span class="label">Akun</span><select id="p-akun"><option value="">Semua akun</option>${(st.akun || []).map(a => `<option value="${a.id}" ${a.id === p.akun_id ? 'selected' : ''}>${esc(a.nama)}</option>`).join('')}</select></label></div>
+    <div class="baris"><button class="btn utama" id="p-simpan">Simpan produk</button>${edit ? '<button class="btn" id="p-batal">Batal</button>' : ''}</div></div>`;
+  isi.querySelectorAll('[data-ubah]').forEach(b => b.onclick = () => renderProduk(st.produk.find(x => x.id === b.dataset.ubah)));
+  isi.querySelectorAll('[data-hapus]').forEach(b => b.onclick = async () => { if (!confirm('Hapus produk ini dari daftar?')) return; await panggil({ aksi:'produk-hapus', id: b.dataset.hapus }).catch(salah); await muat(); renderProduk(); });
+  if (edit) document.getElementById('p-batal').onclick = () => renderProduk();
+  document.getElementById('p-simpan').onclick = async e => {
+    const data = {}; isi.querySelectorAll('[data-k]').forEach(el => data[el.dataset.k] = el.value.trim());
+    if (!data.nama) return alert('Nama produk wajib diisi.');
+    e.target.disabled = true;
+    try { await panggil({ aksi:'produk-simpan', id: edit?.id, akun_id: document.getElementById('p-akun').value || null, data }); await muat(); renderProduk(); } catch (er) { e.target.disabled = false; salah(er); }
+  };
+}
+
+/* ---------------- naskah ---------------- */
+function renderNaskah(){
+  const karakter = st.karakter || [];
+  let urutan = [];
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Naskah live</h2>
+    ${(st.naskah || []).length ? `<table><thead><tr><th>Judul</th><th>Karakter</th><th>Versi</th><th>Cek</th><th></th></tr></thead><tbody>${st.naskah.map(n => `<tr><td>${esc(n.judul)}</td><td>${esc(karakter.find(k => k.id === n.karakter_id)?.nama || '–')}</td><td class="angka">v${n.versi}</td><td>${n.aman == null ? '–' : n.aman ? '<span class="chip ok">Aman</span>' : '<span class="chip warn">Ada catatan</span>'}</td><td><button class="btn kecil-btn" data-lihat="${n.id}">Buka</button></td></tr>`).join('')}</tbody></table>` : '<p class="muted">Belum ada naskah.</p>'}</div>
+  <div class="panel" style="display:grid;gap:8px"><h2>Buat naskah baru</h2>
+    ${karakter.length && (st.produk || []).length ? `<div class="form">
+      <label><span class="label">Karakter</span><select id="n-k">${karakter.map(k => `<option value="${k.id}">${esc(k.nama)}</option>`).join('')}</select></label>
+      <label><span class="label">Durasi sesi (menit)</span><input type="text" id="n-dur" value="60" inputmode="numeric"></label>
+      <label><span class="label">Judul (boleh kosong)</span><input type="text" id="n-judul"></label></div>
+      <span class="label">Produk (klik sesuai urutan tampil)</span><div class="produk-pilih">${st.produk.map(p => `<label><input type="checkbox" value="${p.id}"> <span>${esc(p.data.nama)}</span> <span class="muted kecil" data-no="${p.id}"></span></label>`).join('')}</div>
+      <label><span class="label">Catatan untuk sesi ini (boleh kosong)</span><textarea id="n-cat" placeholder="Contoh: hari gajian, fokus bundling, ada flash sale jam 20.00"></textarea></label>
+      <div class="baris"><button class="btn utama" id="n-buat">Tulis naskah</button><span class="pesan" id="n-pesan"></span></div>`
+      : '<p class="muted">Buat karakter dan tambahkan produk dulu.</p>'}</div>`;
+  isi.querySelectorAll('[data-lihat]').forEach(b => b.onclick = () => bukaNaskah(b.dataset.lihat));
+  isi.querySelectorAll('.produk-pilih input').forEach(c => c.onchange = () => {
+    urutan = c.checked ? [...urutan, c.value] : urutan.filter(x => x !== c.value);
+    isi.querySelectorAll('[data-no]').forEach(s => { const i = urutan.indexOf(s.dataset.no); s.textContent = i >= 0 ? '#' + (i + 1) : ''; });
+  });
+  const tombol = document.getElementById('n-buat');
+  if (tombol) tombol.onclick = async () => {
+    const pesan = document.getElementById('n-pesan');
+    if (!urutan.length) { pesan.textContent = PESAN.TANPA_PRODUK; return; }
+    tombol.disabled = true; pesan.textContent = 'Aura menulis dan memeriksa naskah, ±1 menit…';
+    try { const r = await panggil({ aksi:'naskah-buat', karakter_id: document.getElementById('n-k').value, produk_ids: urutan, durasi: Number(document.getElementById('n-dur').value) || 60, judul: document.getElementById('n-judul').value, catatan: document.getElementById('n-cat').value }); await muat(); bukaNaskah(r.id); }
+    catch (e) { tombol.disabled = false; pesan.textContent = PESAN[e.message] || 'Gagal menulis naskah. Coba lagi.'; }
+  };
+}
+
+// susun naskah jadi blok-blok yang dipakai di layar & teleprompter
+function blokNaskah(x){
+  const b = [{ judul:'Pembuka', baris:(x.pembuka?.poin || []).map(p => ['Poin', p]) }];
+  for (const p of x.produk || []) b.push({ judul: p.nama, baris: [
+    ['Pancingan', p.pembuka], ['Masalah', p.masalah], ...(p.demo || []).map(d => ['Demo', d]), ...(p.manfaat || []).map(m => ['Manfaat', m]), ...(p.bukti || []).map(m => ['Bukti', m]),
+    ['Harga', p.harga, 'harga'], ['Ajakan', p.ajakan], ...(p.interaksi || []).map(m => ['Komentar', m]), ...(p.jawaban || []).map(j => ['Jawab', `${j.tanya} → ${j.jawab}`]),
+  ].filter(r => r[1]) });
+  b.push({ judul:'Penutup', baris:(x.penutup?.poin || []).map(p => ['Poin', p]) });
+  return b;
+}
+
+async function bukaNaskah(id){
+  isi.innerHTML = '<p class="muted">Memuat naskah…</p>';
+  let d; try { d = await panggil({ aksi:'naskah-detail', id }); } catch (e) { return salah(e); }
+  const n = d.naskah, x = n.isi, cek = n.cek || {};
+  const blok = blokNaskah(x);
+  isi.innerHTML = `<div class="baris"><button class="btn" id="kembali">‹ Semua naskah</button></div>
+  <div class="panel" style="display:grid;gap:10px"><div class="baris antara"><div><h2>${esc(n.judul)} · v${n.versi}</h2><p class="muted kecil">Karakter: ${esc(d.karakter?.nama)} · ${x._durasi || '?'} menit</p></div>
+    <div class="baris"><button class="btn utama" id="tp">Buka teleprompter</button><button class="btn" id="perbarui">Perbarui dari komentar</button><button class="btn" id="hapus">Hapus</button></div></div>
+    ${(x.catatan_host || []).length ? `<div class="chips">${x.catatan_host.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : ''}
+    ${(x._pertanyaan_dipakai || []).length ? `<p class="muted kecil">Menjawab pertanyaan penonton: ${x._pertanyaan_dipakai.map(p => esc(p.teks)).join(' · ')}</p>` : ''}
+    <span class="pesan" id="pesan"></span></div>
+  <div class="panel" style="display:grid;gap:8px"><h2>Cek kalimat berbahaya</h2>
+    ${cek.aman ? '<p><span class="chip ok">Aman</span> <span class="muted">Tidak ada klaim berisiko menurut pemeriksa.</span></p>' : ''}
+    ${(cek.ai || []).map((t, i) => `<div class="temuan"><b style="font-weight:500">${esc(t.lokasi)}</b><span>"${esc(t.kalimat)}"</span><span class="muted">${esc(t.alasan)}</span><span>Ganti: "${esc(t.ganti)}"</span><div><button class="btn kecil-btn" data-ganti="${i}">Pakai pengganti</button></div></div>`).join('')}
+    ${(cek.kata || []).length ? `<details><summary>Kata yang perlu dicek ulang (${cek.kata.length})</summary><ul class="daftar">${cek.kata.map(k => `<li>${esc(k.lokasi)}: ${esc(k.kata.join(', '))}</li>`).join('')}</ul></details>` : ''}</div>
+  ${blok.map(bk => `<div class="blok"><h3>${esc(bk.judul)}</h3>${bk.baris.map(([t, v]) => `<div><span class="lbl">${esc(t)}</span><div>${esc(v)}</div></div>`).join('')}</div>`).join('')}`;
+  document.getElementById('kembali').onclick = async () => { await muat(); renderNaskah(); };
+  document.getElementById('hapus').onclick = async () => { if (!confirm('Hapus naskah ini?')) return; await panggil({ aksi:'naskah-hapus', id }).catch(salah); await muat(); renderNaskah(); };
+  document.getElementById('perbarui').onclick = async e => { e.target.disabled = true; document.getElementById('pesan').textContent = 'Aura menulis versi baru dari pertanyaan penonton terbaru, ±1 menit…';
+    try { const r = await panggil({ aksi:'naskah-perbarui', id }); await muat(); bukaNaskah(r.id); } catch (er) { e.target.disabled = false; document.getElementById('pesan').textContent = PESAN[er.message] || 'Gagal. Coba lagi.'; } };
+  isi.querySelectorAll('[data-ganti]').forEach(b => b.onclick = async () => {
+    const t = cek.ai[Number(b.dataset.ganti)];
+    const teks = JSON.stringify(x);
+    if (!teks.includes(JSON.stringify(t.kalimat).slice(1, -1))) return alert('Kalimatnya tidak ditemukan persis di naskah. Ubah manual.');
+    b.disabled = true;
+    const baru = JSON.parse(teks.split(JSON.stringify(t.kalimat).slice(1, -1)).join(JSON.stringify(t.ganti).slice(1, -1)));
+    try { await panggil({ aksi:'naskah-ubah', id, isi: baru }); bukaNaskah(id); } catch (e) { b.disabled = false; salah(e); }
+  });
+  document.getElementById('tp').onclick = () => bukaPrompter(n, blok);
+}
+
+/* ---------------- teleprompter (laptop operator mengontrol layar host) ---------------- */
+function bukaPrompter(n, blok){
+  const kode = Array.from(crypto.getRandomValues(new Uint8Array(5)), v => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v % 32]).join('');
+  const ch = sb.channel('prompter-' + kode);
+  prompter = { ch, i: 0, blok, n };
+  const kirim = () => { const b = blok[prompter.i]; ch.send({ type:'broadcast', event:'tampil', payload: { judul: b.judul, baris: b.baris, posisi: `${prompter.i + 1}/${blok.length}`, berikut: blok[prompter.i + 1]?.judul || '', catatan: (n.isi.catatan_host || []).join(' · ') } }); };
+  ch.on('broadcast', { event:'minta' }, kirim).subscribe(s => s === 'SUBSCRIBED' && kirim());
+  const link = location.origin + location.pathname.replace(/ip\.html$/, 'prompter.html') + '?kode=' + kode;
+  const gambar = () => {
+    const b = blok[prompter.i];
+    isi.innerHTML = `<div class="panel prompter"><div class="baris antara"><div><h2>Teleprompter · ${esc(n.judul)}</h2><p class="muted kecil">Di tablet/HP host buka <b>${esc(location.host)}/assets/aura/prompter.html</b> lalu masukkan kode:</p><div class="kode">${kode}</div></div>
+      <div class="baris"><button class="btn" id="tp-jendela">Tampilkan di layar ke-2 laptop ini</button><button class="btn" id="tp-tutup">Selesai</button></div></div>
+      <div class="daftar-blok">${blok.map((x, i) => `<button class="btn kecil-btn" data-i="${i}" aria-current="${i === prompter.i}">${i + 1}. ${esc(x.judul)}</button>`).join('')}</div>
+      <div class="blok"><h3>${esc(b.judul)}</h3>${b.baris.map(([t, v]) => `<div><span class="lbl">${esc(t)}</span><div>${esc(v)}</div></div>`).join('')}</div>
+      <div class="baris"><button class="btn" id="tp-mundur">‹ Sebelumnya</button><button class="btn utama" id="tp-maju">Berikutnya ›</button><span class="muted kecil">Tombol panah kiri/kanan juga bisa.</span></div></div>`;
+    document.getElementById('tp-maju').onclick = () => geser(1);
+    document.getElementById('tp-mundur').onclick = () => geser(-1);
+    document.getElementById('tp-tutup').onclick = () => { tutupPrompter(); bukaNaskah(n.id); };
+    document.getElementById('tp-jendela').onclick = () => window.open(link, 'layar-host', 'width=1280,height=800');
+    isi.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { prompter.i = Number(x.dataset.i); kirim(); gambar(); });
+  };
+  const geser = d => { const j = Math.min(blok.length - 1, Math.max(0, prompter.i + d)); if (j !== prompter.i) { prompter.i = j; kirim(); gambar(); } };
+  prompter.tombol = e => { if (e.target.closest('textarea,input')) return; if (e.key === 'ArrowRight' || e.key === 'PageDown') geser(1); if (e.key === 'ArrowLeft' || e.key === 'PageUp') geser(-1); };
+  window.addEventListener('keydown', prompter.tombol);
+  gambar();
+}
+function tutupPrompter(){ if (!prompter) return; window.removeEventListener('keydown', prompter.tombol); sb.removeChannel(prompter.ch); prompter = null; }
+
+(async () => { if (await muat()) pilih('karakter'); })();
+</script>
+</body>
+</html>

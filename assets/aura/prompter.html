@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Layar host · Teleprompter</title>
+<style>
+:root{--ember:#ff5a1f;--corona:#ffd7a1;--ash:#a59ca8;--ink:#f6efe9;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0b0706;color:var(--ink);font:400 18px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.layar{min-height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:2vh;padding:4vh 5vw}
+.atas{display:flex;justify-content:space-between;align-items:baseline;gap:16px;color:var(--ash);font-size:clamp(14px,2.2vw,22px)}
+.judul{font-size:clamp(28px,6vw,64px);font-weight:700;line-height:1.1;color:var(--corona);margin:0}
+.isi{display:grid;align-content:start;gap:2.2vh;font-size:clamp(22px,4.2vw,46px);font-weight:500}
+.isi .baris{display:grid;grid-template-columns:auto 1fr;gap:.6em;align-items:baseline}
+.isi .tag{font-size:.45em;font-weight:600;color:var(--ember);letter-spacing:.04em;padding-top:.5em;min-width:5.5em}
+.harga{color:#fff;font-weight:700}
+.bawah{color:var(--ash);font-size:clamp(14px,2vw,20px)}
+.cermin{transform:scaleX(-1)}
+.masuk{display:grid;place-content:center;gap:14px;height:100%;text-align:center;padding:24px}
+.masuk input{font:inherit;font-size:32px;letter-spacing:.3em;text-align:center;width:9ch;padding:10px;border-radius:12px;border:1px solid #533;background:#1a1110;color:var(--ink);text-transform:uppercase}
+.masuk button,.alat button{font:inherit;padding:10px 18px;border-radius:999px;border:1px solid #533;background:#1a1110;color:var(--ink);cursor:pointer}
+.alat{position:fixed;right:12px;bottom:12px;display:flex;gap:8px;opacity:.35}
+.alat:hover{opacity:1}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// Layar host: tidak perlu login. Isi dikirim dari laptop operator (Studio IP → Teleprompter) lewat kode sesi.
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON, { auth: { persistSession: false } });
+const app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let cermin = false, kunci = null;
+
+function minta(){
+  app.innerHTML = `<div class="masuk"><p>Masukkan kode dari laptop operator</p><input id="k" maxlength="6" autocomplete="off" autofocus><button id="b">Sambungkan</button></div>`;
+  const go = () => { const k = document.getElementById('k').value.trim().toUpperCase(); if (k.length >= 4) sambung(k); };
+  document.getElementById('b').onclick = go;
+  document.getElementById('k').onkeydown = e => e.key === 'Enter' && go();
+}
+function tampil(d){
+  const baris = (d.baris || []).map(([tag, teks, kelas]) => `<div class="baris"><span class="tag">${esc(tag)}</span><span class="${kelas || ''}">${esc(teks)}</span></div>`).join('');
+  app.innerHTML = `<div class="layar ${cermin ? 'cermin' : ''}"><div class="atas"><span>${esc(d.posisi || '')}</span><span>${esc(d.berikut ? 'Berikutnya: ' + d.berikut : '')}</span></div>
+    <div class="isi"><h1 class="judul">${esc(d.judul || '')}</h1>${baris}</div><div class="bawah">${esc(d.catatan || '')}</div></div>
+    <div class="alat"><button id="c">Cermin</button><button id="f">Layar penuh</button></div>`;
+  document.getElementById('c').onclick = () => { cermin = !cermin; tampil(d); };
+  document.getElementById('f').onclick = () => document.documentElement.requestFullscreen?.();
+}
+function sambung(kode){
+  kunci = kode;
+  app.innerHTML = `<div class="masuk"><p>Tersambung ke kode ${esc(kode)}. Menunggu operator…</p></div>`;
+  try { navigator.wakeLock?.request('screen'); } catch {}
+  const ch = sb.channel('prompter-' + kode);
+  ch.on('broadcast', { event: 'tampil' }, ({ payload }) => tampil(payload))
+    .subscribe(st => { if (st === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'minta', payload: {} }); }); // minta isi terbaru saat baru tersambung
+}
+const k = new URLSearchParams(location.search).get('kode');
+k ? sambung(k.toUpperCase()) : minta();
+</script>
+</body>
+</html>
