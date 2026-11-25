@@ -175,11 +175,11 @@ function renderBeri(){
 function renderHasil(){
   const sel = (st.daftar || []).filter(d => d.status === 'selesai');
   const sims = (st.daftar_sim || []).filter(d => d.status === 'selesai');
-  const tabelSim = sims.length ? `<div class="panel blok"><h2>Simulasi Top Creator</h2><table><thead><tr><th>Nama</th><th>Selesai</th><th>Rata-rata</th><th>Hunting</th><th>Approach</th><th>Negosiasi</th><th>Diagnosis</th><th></th></tr></thead><tbody>${sims.map(d => { const k = d.skor || {}; return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td class="angka">${k.rata ?? '-'}/5</td><td class="angka">${k.hunting ?? '-'}</td><td class="angka">${k.approach ?? '-'}</td><td class="angka">${k.negosiasi ?? '-'}</td><td class="angka">${k.diagnosis ?? '-'}</td><td><button class="btn" data-lihat-sim="${d.id}">Buka</button></td></tr>`; }).join('')}</tbody></table></div>` : '';
+  const tabelSim = sims.length ? `<div class="panel blok"><h2>Simulasi Top Creator</h2><table><thead><tr><th>Nama</th><th>Selesai</th><th>Rata-rata</th><th>Hunting</th><th>Approach</th><th>Negosiasi</th><th>Diagnosis</th><th></th></tr></thead><tbody>${sims.map(d => { const k = d.skor || {}; return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td class="angka">${k.rata ?? '-'}/5</td><td class="angka">${k.hunting ?? '-'}</td><td class="angka">${k.approach ?? '-'}</td><td class="angka">${k.negosiasi ?? '-'}</td><td class="angka">${k.diagnosis ?? '-'}</td><td>${k.galat ? `<button class="btn utama" data-ulang-sim="${d.id}">Nilai ulang</button>` : `<button class="btn" data-lihat-sim="${d.id}">Buka</button>`}</td></tr>`; }).join('')}</tbody></table></div>` : '';
   if (!sel.length){ isi.innerHTML = sims.length ? `<div class="blok">${tabelSim}<div id="detail"></div></div>` : '<div class="panel">Belum ada tes yang selesai.</div>'; pasangLihatSim(sims); return; }
   isi.innerHTML = `<div class="blok"><div class="panel"><table><thead><tr><th>Nama</th><th>Selesai</th><th>Gaya</th><th>Logika</th><th>Kasus</th><th>Keputusanmu</th><th></th></tr></thead><tbody>${sel.map(d => {
     const s = d.skor || {};
-    return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td>${s.gaya ? s.gaya.utama + '/' + s.gaya.kedua : '-'}</td><td class="angka">${s.logika ? s.logika.persen_berbobot + '%' : '-'}</td><td class="angka">${s.kasus?.rata ?? '-'}/5</td><td>${esc(s.skp?.keputusan || '–')}</td><td><button class="btn" data-lihat="${d.id}">Buka</button></td></tr>`;
+    return `<tr><td>${esc(d.nama)}</td><td>${d.selesai_at ? tglPendek(d.selesai_at) : ''}</td><td>${s.gaya ? s.gaya.utama + '/' + s.gaya.kedua : '-'}</td><td class="angka">${s.logika ? s.logika.persen_berbobot + '%' : '-'}</td><td class="angka">${s.kasus?.rata ?? '-'}/5</td><td>${esc(s.skp?.keputusan || '–')}</td><td>${s.kasus?.galat ? `<button class="btn utama" data-ulang="${d.id}">Nilai ulang</button> ` : ""}<button class="btn" data-lihat="${d.id}">Buka</button></td></tr>`;
   }).join('')}</tbody></table></div>${tabelSim}<div id="detail"></div></div>`;
   isi.querySelectorAll('[data-lihat]').forEach(x => x.onclick = () => buka(sel.find(d => d.id === x.dataset.lihat)));
   pasangLihatSim(sims);
@@ -457,7 +457,14 @@ async function selesaiSim(habis){
   await muat(); pilih('kerjakan');
 }
 
+async function nilaiUlang(btn, aksi, id){
+  btn.disabled = true; btn.textContent = 'Menilai… ±1 menit';
+  try { await panggil({ aksi, id }); await muat(); pilih('hasil'); }
+  catch (e) { btn.disabled = false; btn.textContent = 'Gagal, coba lagi'; }
+}
 function pasangLihatSim(sims){
+  isi.querySelectorAll('[data-ulang-sim]').forEach(x => x.onclick = () => nilaiUlang(x, 'sim-nilai-ulang', x.dataset.ulangSim));
+  isi.querySelectorAll('[data-ulang]').forEach(x => x.onclick = () => nilaiUlang(x, 'nilai-ulang', x.dataset.ulang));
   isi.querySelectorAll('[data-lihat-sim]').forEach(x => x.onclick = () => bukaSim(sims.find(d => d.id === x.dataset.lihatSim)));
 }
 async function bukaSim(d){

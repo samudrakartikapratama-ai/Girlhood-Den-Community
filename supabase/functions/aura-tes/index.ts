@@ -66,18 +66,10 @@ function statusBagian(s: any) {
 
 async function nilaiKasus(jawab: Record<string, string>) {
   const isi = KASUS.map((k) => `### ${k.id} · ${k.judul}\nSOAL:\n${k.teks}\n\nJAWABAN PESERTA:\n${(jawab?.[k.id] || "(kosong)").slice(0, 6000)}`).join("\n\n");
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify({
-      model: "claude-sonnet-5-5", max_tokens: 2000,
-      system: "Kamu penilai asesmen rekrutmen yang ketat dan adil untuk agensi MCN TikTok (Girlhood Den). Nilai hanya dari isi jawaban, jangan murah hati.\n\n" + RUBRIK,
-      messages: [{ role: "user", content: isi + '\n\nBalas HANYA JSON valid: {"k1":{"struktur":n,"data":n,"akar_masalah":n,"opsi":n,"eksekusi":n,"catatan":"1-2 kalimat"},"k2":{...},"k3":{...},"tanda_bahaya":["..."],"kekuatan":["..."]}' }],
-    }),
-  });
-  const j = await r.json();
-  if (!r.ok) throw new Error("Claude " + r.status);
-  const teks = (j.content || []).map((b: any) => b.text || "").join("");
-  const hasil = JSON.parse(teks.slice(teks.indexOf("{"), teks.lastIndexOf("}") + 1));
+  const per = { type: "object", properties: { struktur: ANGKA, data: ANGKA, akar_masalah: ANGKA, opsi: ANGKA, eksekusi: ANGKA, catatan: { type: "string" } }, required: ["struktur", "data", "akar_masalah", "opsi", "eksekusi", "catatan"] };
+  const hasil: any = await claudeJson(
+    "Kamu penilai asesmen rekrutmen yang ketat dan adil untuk agensi MCN TikTok (Girlhood Den). Nilai hanya dari isi jawaban, jangan murah hati. Catatan per kasus 1-2 kalimat bahasa Indonesia.\n\n" + RUBRIK,
+    isi, { type: "object", properties: { k1: per, k2: per, k3: per, tanda_bahaya: DAFTAR, kekuatan: DAFTAR }, required: ["k1", "k2", "k3", "tanda_bahaya", "kekuatan"] });
   let total = 0, n = 0;
   for (const k of KASUS) for (const d of ["struktur", "data", "akar_masalah", "opsi", "eksekusi"]) { total += Number(hasil[k.id]?.[d]) || 0; n++; }
   hasil.rata = Math.round((total / n) * 10) / 10;
@@ -99,7 +91,7 @@ async function ringkasan(nama: string, peran: string, gaya: any, logika: any, ka
 
 async function selesaikan(sesiId: string) {
   const { data: s } = await db.from("aura_tes_sesi").select("*, internal_staff!aura_tes_sesi_staff_id_fkey(nama)").eq("id", sesiId).single();
-  if (!s || s.status === "selesai") return;
+  if (!s || (s.status === "selesai" && !s.skor?.kasus?.galat)) return;
   const gaya = nilaiGaya(s.jawaban?.gaya || {});
   const logika = nilaiLogika(s.jawaban?.logika || {});
   let kasus: any = null;
@@ -115,6 +107,7 @@ async function selesaikan(sesiId: string) {
   const kesimpulan = await ringkasan(nama, peran, gaya, logika, kasus, catatan).catch(() => "");
   const skor = { gaya, logika, kasus, catatan, kesimpulan };
   await db.from("aura_tes_sesi").update({ skor, status: "selesai", selesai_at: new Date().toISOString() }).eq("id", sesiId);
+  if (kasus?.galat) { console.error("nilai kasus gagal", kasus.galat); return; } // rapor dikirim setelah dinilai ulang
   const g = gaya.skor;
   await kirimLark(`Hasil tes ${nama} (${peran}) — rahasia, hanya untuk skp & Gabriella\n\n`
     + `Gaya kerja: ${gaya.utama}/${gaya.kedua} (D ${g.D}, I ${g.I}, S ${g.S}, C ${g.C})\n${ARTI_GAYA[gaya.utama as "D"]}\n\n`
@@ -123,6 +116,34 @@ async function selesaikan(sesiId: string) {
     + `Pengerjaan: ` + URUTAN.map((b) => `${b} ${catatan[b].menit} mnt${catatan[b].terlambat ? " (lewat waktu)" : ""}${catatan[b].keluar_halaman ? `, keluar halaman ${catatan[b].keluar_halaman}×` : ""}`).join(" · ")
     + (kesimpulan ? `\n\n${kesimpulan}` : "") + `\n\nRincian lengkap: girlhoodden.com/aura → Tes`);
 }
+
+// Nilai terstruktur: Claude wajib mengisi "alat" dengan skema tetap, jadi hasilnya selalu JSON yang sah
+// (tidak lagi mem-parse teks bebas yang bisa terpotong atau berisi tanda kutip liar).
+async function claudeJson(system: string, isi: string, schema: any, max_tokens = 4000) {
+  let galat: unknown;
+  for (let coba = 0; coba < 2; coba++) {
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-sonnet-5-5", max_tokens, system,
+          tools: [{ name: "simpan_nilai", description: "Simpan hasil penilaian.", input_schema: schema }],
+          tool_choice: { type: "tool", name: "simpan_nilai" },
+          messages: [{ role: "user", content: isi }],
+        }),
+      });
+      const teks = await r.text();
+      if (!r.ok) throw new Error("Claude " + r.status + " " + teks.slice(0, 200));
+      const j = JSON.parse(teks);
+      const blok = (j.content || []).find((b: any) => b.type === "tool_use");
+      if (!blok?.input) throw new Error("Claude tanpa hasil (" + j.stop_reason + ")");
+      return blok.input;
+    } catch (e) { galat = e; }
+  }
+  throw galat;
+}
+const DAFTAR = { type: "array", items: { type: "string" } };
+const ANGKA = { type: "integer", minimum: 1, maximum: 5 };
 
 // ---------- Simulasi Top Creator ----------
 function statusSim(s: any) {
@@ -162,7 +183,7 @@ const transkrip = (chat: any[] = []) => chat.map((c) => (c.dari === "peserta" ? 
 
 async function selesaikanSim(simId: string) {
   const { data: s } = await db.from("aura_simulasi").select("*").eq("id", simId).single();
-  if (!s || s.status === "selesai") return;
+  if (!s || (s.status === "selesai" && !s.skor?.galat)) return;
   const d = s.data || {};
   const pilih = (d.pilih || []).map((id: string) => cariCreator(id)).filter(Boolean) as any[];
   const c = pilih[0] || cariCreator(d.creator) || CREATOR[0];
@@ -170,9 +191,17 @@ async function selesaikanSim(simId: string) {
   const isi = `KUNCI TABEL (rahasia):\n${kunciTabel}\n\n=== 1 HUNTING ===\nPilihan berurutan: ${pilih.map((x) => x.akun).join(", ") || "(tidak memilih)"}\nAlasan:\n${(d.alasan || "(kosong)").slice(0, 5000)}\n\n=== 2 APPROACH (chat dengan ${c.akun}) ===\n${transkrip(d.chat?.approach).slice(0, 12000)}\n\n=== 3 NEGOSIASI KOMISI (brand memberi 15%, sisa perusahaan minimal 1%) ===\n${transkrip(d.chat?.negosiasi).slice(0, 12000)}\n\n=== 4 SEBULAN KEMUDIAN ===\nData:\n${dataTurun(c)}\n\nJawaban:\n${(d.turun || "(kosong)").slice(0, 6000)}`;
   let nilai: any;
   try {
-    const teks = await claude("Kamu penilai asesmen rekrutmen yang ketat dan adil untuk Girlhood Den. Nilai hanya dari isi jawaban dan chat, jangan murah hati.\n\n" + RUBRIK_SIM,
-      [{ role: "user", content: isi + '\n\nBalas HANYA JSON valid: {"hunting":n,"approach":n,"negosiasi":n,"diagnosis":n,"sikap":n,"jebakan_kena":["akun ..."],"komisi_akhir":"berapa % yang disepakati untuk creator dan sisa perusahaan, atau tidak ada kesepakatan","kekuatan":["..."],"kelemahan":["..."],"kesimpulan":"maksimal 4 kalimat bahasa sehari-hari untuk CEO: layak atau tidak di Top Creator, risiko terbesar, cara mengelolanya"}' }], 1500);
-    nilai = JSON.parse(teks.slice(teks.indexOf("{"), teks.lastIndexOf("}") + 1));
+    nilai = await claudeJson("Kamu penilai asesmen rekrutmen yang ketat dan adil untuk Girlhood Den. Nilai hanya dari isi jawaban dan chat, jangan murah hati. Tulis teks dalam bahasa Indonesia sehari-hari.\n\n" + RUBRIK_SIM, isi, {
+      type: "object",
+      properties: {
+        hunting: ANGKA, approach: ANGKA, negosiasi: ANGKA, diagnosis: ANGKA, sikap: ANGKA,
+        jebakan_kena: { ...DAFTAR, description: "akun jebakan yang dipilih peserta, kosong kalau tidak ada" },
+        komisi_akhir: { type: "string", description: "berapa % yang disepakati untuk creator dan sisa perusahaan, atau tidak ada kesepakatan" },
+        kekuatan: DAFTAR, kelemahan: DAFTAR,
+        kesimpulan: { type: "string", description: "maksimal 4 kalimat untuk CEO: layak atau tidak di Top Creator, risiko terbesar, cara mengelolanya" },
+      },
+      required: ["hunting", "approach", "negosiasi", "diagnosis", "sikap", "jebakan_kena", "komisi_akhir", "kekuatan", "kelemahan", "kesimpulan"],
+    });
     const dims = ["hunting", "approach", "negosiasi", "diagnosis", "sikap"];
     nilai.rata = Math.round((dims.reduce((a, k) => a + (Number(nilai[k]) || 0), 0) / dims.length) * 10) / 10;
   } catch (e) { nilai = { galat: String((e as Error)?.message || e) }; }
@@ -183,6 +212,7 @@ async function selesaikanSim(simId: string) {
   }
   nilai.catatan = catatan;
   await db.from("aura_simulasi").update({ skor: nilai, status: "selesai", selesai_at: new Date().toISOString() }).eq("id", simId);
+  if (nilai.galat) { console.error("sim nilai gagal", nilai.galat); return; }
   const { data: o } = await db.from("internal_staff").select("nama").eq("id", s.staff_id).maybeSingle();
   await kirimLark(`Hasil Simulasi Top Creator ${o?.nama || "?"} — rahasia, hanya untuk skp & Gabriella\n\n`
     + `Rata-rata: ${nilai.rata ?? "-"}/5 (3 = lulusan baru yang baik, 4 = profesional)\n`
@@ -205,6 +235,12 @@ async function aksiSim(b: any, staff: { id: string; nama: string; pimpinan: bool
     if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
     await db.from("aura_simulasi").delete().eq("id", b.id);
     return [{ ok: true }, 200];
+  }
+  if (b.aksi === "sim-nilai-ulang") {
+    if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
+    await selesaikanSim(b.id);
+    const { data: s } = await db.from("aura_simulasi").select("skor").eq("id", b.id).single();
+    return [{ ok: !s?.skor?.galat, skor: s?.skor }, s?.skor?.galat ? 500 : 200];
   }
   if (b.aksi === "sim-detail") {
     if (!staff.pimpinan) return [{ galat: "KHUSUS_PIMPINAN" }, 403];
@@ -339,6 +375,12 @@ Deno.serve(async (req) => {
         logika: LOGIKA.map((q) => ({ id: q.id, level: q.level, jenis: q.jenis, tanya: q.tanya, dipilih: (q.opsi.find((o) => o[0] === jl[q.id]) || [])[1] || "", kunci: (q.opsi.find((o) => o[0] === q.kunci) || [])[1], benar: jl[q.id] === q.kunci })),
         skp: s.skor?.skp || null,
       });
+    }
+    if (b.aksi === "nilai-ulang") {
+      if (!staff.pimpinan) return balas({ galat: "KHUSUS_PIMPINAN" }, 403);
+      await selesaikan(b.id);
+      const { data: s } = await db.from("aura_tes_sesi").select("skor").eq("id", b.id).single();
+      return balas({ ok: !s?.skor?.kasus?.galat }, s?.skor?.kasus?.galat ? 500 : 200);
     }
     if (b.aksi === "nilai") {
       if (!staff.pimpinan) return balas({ galat: "KHUSUS_PIMPINAN" }, 403);
