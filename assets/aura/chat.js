@@ -24,7 +24,7 @@
     KUOTA: 'Jatah chat hari ini sudah habis. Minta tambahan ke skp lewat Kantor AI.',
     PENUH: 'Aku sedang ramai sekali hari ini. Coba lagi sebentar lagi.',
     SALDO: 'Saldo API Aura habis. skp perlu mengisi ulang di console.anthropic.com.',
-    BUKAN_INTERNAL: 'Sesi kamu habis. Keluar lalu masuk lagi.',
+    BUKAN_INTERNAL: 'Sesimu berakhir. Masuk lagi pakai Face ID.',
     LAMPIRAN_BESAR: 'File terlalu besar. Maksimal sekitar 9 MB.',
     LAMPIRAN_TIPE: 'Jenis file ini belum bisa dibaca. Pakai foto, PDF, Excel, CSV, atau Word.',
   };
@@ -193,6 +193,7 @@
       if (lewatSuara) ucap(j.jawab.isi, lanjutDengar);
     } catch (e) {
       if (tunggu) tunggu.remove();
+      if (e.message === 'BUKAN_INTERNAL' && A.sesiHabis) { sibuk = false; akhiriSesi(); A.diam && A.diam(); A.sesiHabis(); return; } // langsung ke layar Face ID
       if (file && !lampiran) { lampiran = file; tampilLampiran(); } // gagal: file tetap terpasang untuk dicoba lagi
       const t = PESAN_GALAT[e.message] || 'Maaf, aku gagal menjawab. Coba lagi sebentar lagi.';
       tambah('aura', t);

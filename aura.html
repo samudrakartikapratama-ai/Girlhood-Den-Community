@@ -234,7 +234,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <script src="assets/aura/orb.js?v=202611191548"></script>
 <script src="assets/aura/scene.js?v=202611191548"></script>
 <script src="assets/aura/intro-suara.js?v=202611191548"></script>
-<script src="assets/aura/chat.js?v=202611251720"></script>
+<script src="assets/aura/chat.js?v=202611261710"></script>
 <script src="assets/aura/telinga.js?v=202611191548"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
@@ -351,7 +351,16 @@ function tampilSuara(){ $('btn-suara').setAttribute('aria-pressed', String(suara
 $('btn-suara').onclick = () => { try { localStorage.setItem('aura-suara', suaraNyala() ? 'mati' : 'nyala'); } catch (e) {} tampilSuara(); };
 tampilSuara();
 
+// sesi sudah dicabut di server (mis. keluar dari tempat lain): bersihkan, lalu minta Face ID lagi
+async function sesiHabis(){
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+  gerbang('awal'); pesan('Sesimu berakhir. Masuk lagi pakai Face ID / sidik jari.');
+}
+Aura.sesiHabis = sesiHabis;
+
 async function mulai(dariTombol){
+  const { error: eSesi } = await sb.auth.getUser(); // cek ke server, bukan cuma token di browser
+  if (eSesi && eSesi.status){ await sesiHabis(); return false; }
   const { data, error } = await sb.rpc('jarvis_saya');
   if (error || !data){ gerbang('awal'); if (error) pesan('Akun ini bukan akun internal.'); return false; }
   // Aura hanya dibuka lewat Face ID / sidik jari; kode staff cuma untuk mengaktifkannya pertama kali
