@@ -141,6 +141,16 @@ Deno.serve(async (req) => {
       return balas(await ambil(staff, "creator-cari", "rank", "/tiktok/creator/rank", body, 0.1));
     }
 
+    // cari creator lewat @username (semua jenis creator, termasuk yang sudah di MCN lain); hasil yang handle-nya persis dinaikkan ke atas
+    if (b.aksi === "creator-username") {
+      const nama = String(b.username || "").trim().replace(/^@/, "").toLowerCase();
+      if (!/^[a-z0-9._]{2,40}$/.test(nama)) throw new Galat("USERNAME_SALAH");
+      const body = { ...DASAR, date_range: pilih(b.rentang, RENTANG, "last30Day"), page_number: 1, page_size: 10, sort_field: { field: "revenue", type: "DESC" }, keyword: nama };
+      const hsl: any = await ambil(staff, "creator-username", "rank", "/tiktok/creator/rank", body, 0.1);
+      const persis = (x: any) => String(x.creator_handle || "").replace(/^@/, "").toLowerCase() === nama;
+      return balas({ ...hsl, data: [...(hsl.data || [])].sort((a: any, c: any) => Number(persis(c)) - Number(persis(a))) });
+    }
+
     if (b.aksi === "creator-detail") {
       const id = String(b.id || "");
       if (!/^\d+$/.test(id)) throw new Galat("ID_SALAH");

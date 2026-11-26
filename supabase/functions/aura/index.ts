@@ -231,6 +231,8 @@ const ALAT_RISET = [
       periode: { type: "string", enum: ["7", "30", "90"], description: "hari terakhir, bawaan 30" },
       halaman: { type: "integer", description: "1-5" },
     }, required: ["kategori"] } },
+  { name: "riset_cek_username", description: "Cek GMV satu creator lewat @username TikTok (data Kalodata, termasuk creator yang sudah ikut MCN lain). Hasil: GMV, follower, porsi live/video, dan creator_id untuk riset_detail_creator. Pakai ini kalau ditanya data creator tertentu. Status MCN TIDAK ada di Kalodata: arahkan cek di Dashboard TAP.",
+    input_schema: { type: "object", properties: { username: { type: "string", description: "tanpa @" }, periode: { type: "string", enum: ["7", "30", "90"], description: "hari terakhir, bawaan 30" } }, required: ["username"] } },
   { name: "riset_detail_creator", description: "Detail satu creator (pakai creator_id dari riset_cari_creator): GMV 30 hari, porsi live/video, GPM live & video, jumlah live/video, jumlah toko & produk, follower baru, bio, kontak bila ada. Memakai kredit; panggil maksimal 5 creator per pertanyaan kecuali diminta.",
     input_schema: { type: "object", properties: { creator_id: { type: "string" } }, required: ["creator_id"] } },
   { name: "riset_cari_brand", description: "Toko/brand teratas di TikTok Shop Indonesia (Kalodata). Urut 'affiliate' = GMV dari creator affiliate (calon brand TAP terbaik untuk tim BD).",
@@ -239,6 +241,7 @@ const ALAT_RISET = [
     input_schema: { type: "object", properties: { kategori: { type: "string", enum: ["skincare", "makeup", "parfum", "semua"] }, urut: { type: "string", enum: ["gmv", "penonton", "pertumbuhan"] }, periode: { type: "string", enum: ["7", "30", "90"] } }, required: ["kategori"] } },
 ];
 const PESAN_RISET: Record<string, string> = {
+  USERNAME_SALAH: "Username tidak valid. Minta @username TikTok yang benar.",
   TANPA_AKSES: "Orang ini belum punya akses Riset Pasar. Katakan dia perlu minta pimpinan mencentang namanya di Riset Pasar > Pengaturan.",
   BATAS_HARIAN: "Jatah kredit riset harian orang ini habis. Sarankan lanjut besok atau pakai hasil yang sudah ada.",
   SALDO_HABIS: "Saldo kredit Kalodata habis. Minta dia mengabari pimpinan untuk top up.",
@@ -250,6 +253,7 @@ async function jalankanRiset(jwt: string, nama: string, i: any): Promise<string>
   const body: any =
     nama === "riset_cari_creator" ? { aksi: "creator-cari", kategori: kat, follower: rng(i.follower_min, i.follower_max), gmv: rng(i.gmv_min, i.gmv_max), rentang: periode, halaman: i.halaman || 1,
       urut: ({ gmv: "revenue", pertumbuhan: "revenue_growth_rate", gmv_live: "live_revenue", gmv_video: "video_revenue" } as any)[i.urut] || "revenue" }
+    : nama === "riset_cek_username" ? { aksi: "creator-username", username: String(i?.username || ""), rentang: periode }
     : nama === "riset_detail_creator" ? { aksi: "creator-detail", id: String(i?.creator_id || "") }
     : nama === "riset_cari_brand" ? { aksi: "toko-cari", kategori: kat, rentang: periode, urut: ({ affiliate: "affiliate_revenue", gmv: "revenue", pertumbuhan: "revenue_growth_rate" } as any)[i.urut] || "affiliate_revenue" }
     : { aksi: "video-cari", kategori: kat, rentang: periode, urut: ({ gmv: "revenue", penonton: "views", pertumbuhan: "revenue_growth_rate" } as any)[i.urut] || "revenue" };
@@ -260,7 +264,7 @@ async function jalankanRiset(jwt: string, nama: string, i: any): Promise<string>
   const jt = (v: any) => Math.round(Number(v || 0) / 1e5) / 10; // rupiah -> juta (1 desimal)
   let ringkas: any;
   if (Array.isArray(d)) {
-    ringkas = d.map((x: any) => body.aksi === "creator-cari"
+    ringkas = d.map((x: any) => ["creator-cari", "creator-username"].includes(body.aksi)
       ? { creator_id: x.creator_id, handle: x.creator_handle, nama: x.creator_nickname, follower: Number(x.creator_followers), gmv_jt: jt(x.revenue), tumbuh_persen: x.revenue_growth_rate, live_persen: x.revenue ? Math.round(x.live_revenue / x.revenue * 100) : null, video_persen: x.revenue ? Math.round(x.video_revenue / x.revenue * 100) : null }
       : body.aksi === "toko-cari"
       ? { toko: x.shop_name, gmv_jt: jt(x.revenue), affiliate_jt: jt(x.affiliate_revenue), affiliate_persen: x.revenue ? Math.round(x.affiliate_revenue / x.revenue * 100) : null, tumbuh_persen: x.revenue_growth_rate, terjual: x.sales_volumn }
