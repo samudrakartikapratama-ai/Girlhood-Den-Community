@@ -181,6 +181,9 @@ const MAKS_BASE64 = 13_000_000; // ±9,5 MB file asli
 const MAKS_TEKS = 150_000;
 type Lampiran = { nama: string; jenis: string; tipe: string; path: string };
 
+// kolom kantor_chat.lampiran wajib terisi (default []); file sungguhan disimpan sebagai objek {nama, jenis, tipe, path}
+const adaFile = (l: any) => !!l && typeof l === "object" && !Array.isArray(l) && typeof l.path === "string";
+
 async function simpanLampiran(staffId: string, l: any): Promise<Lampiran | null> {
   if (!l) return null;
   const tipe = String(l.tipe || "");
@@ -358,13 +361,13 @@ Deno.serve(async (req) => {
       // File terakhir yang dilampirkan ikut dikirim lagi supaya pertanyaan lanjutan tentang file itu tetap nyambung
       // (kecuali pesan ini membawa file baru); file yang lebih lama cukup disebut namanya.
       const baris = (lalu || []).reverse();
-      const iLampiran = adaLampiran ? -1 : baris.map((r) => !!r.lampiran && r.peran === "user").lastIndexOf(true);
+      const iLampiran = adaLampiran ? -1 : baris.map((r) => adaFile(r.lampiran) && r.peran === "user").lastIndexOf(true);
       const riwayat: { role: string; content: any[] }[] = [];
       for (let k = 0; k < baris.length; k++) {
         const r = baris[k];
         const role = r.peran === "assistant" ? "assistant" : "user";
         const blok: any[] = [];
-        if (r.lampiran && role === "user") {
+        if (adaFile(r.lampiran) && role === "user") {
           if (k === iLampiran) { try { blok.push(await blokLampiran(r.lampiran)); } catch { blok.push({ type: "text", text: `[file "${r.lampiran.nama}" sudah tidak tersedia]` }); } }
           else blok.push({ type: "text", text: `[melampirkan file "${r.lampiran.nama}"]` });
         }
@@ -377,7 +380,7 @@ Deno.serve(async (req) => {
       if (riwayat.length && riwayat[riwayat.length - 1].role === "user") riwayat.pop();
 
       const lampiran = await simpanLampiran(staff.id, b.lampiran);
-      const { data: pUser, error: e1 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "user", isi: pesan, lampiran })
+      const { data: pUser, error: e1 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "user", isi: pesan, ...(lampiran ? { lampiran } : {}) })
         .select("id, peran, isi, created_at, lampiran->nama").single();
       if (e1) throw new Error("simpan pesan gagal: " + e1.message);
       const pesanBaru = lampiran ? [await blokLampiran(lampiran), { type: "text", text: pesan }] : pesan;
