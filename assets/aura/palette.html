@@ -300,7 +300,7 @@ openZone(CATS[1]);touched=false;target=null;
 <script>
 // Data palette diambil dari Supabase (khusus internal), bukan ditanam di file publik.
 (async()=>{
-  const sb=supabase.createClient('https://ovfwbjeotrhkzjaxpuwq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E');
+  const sb=supabase.createClient('https://ovfwbjeotrhkzjaxpuwq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E', { auth: { storageKey: 'aura-auth' } }); // sesi Aura
   const gagal=t=>{document.getElementById('panel').innerHTML='<p style="padding:16px;color:var(--muted)">'+t+'</p>';document.getElementById('loading').textContent='';};
   const {data,error}=await sb.rpc('jarvis_palette_get');
   if(error){gagal(/JARVIS_BUKAN_INTERNAL|JWT|permission denied/.test(error.message||'')?'Khusus tim internal. Masuk dulu lewat <a href="/aura">Aura</a>.':'Data palette belum bisa dimuat. Cek internet lalu muat ulang.');return;}

@@ -66,7 +66,7 @@ th{color:var(--ash);font-weight:500}
 <script>
 const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
-const sb = supabase.createClient(URL_SB, ANON);
+const sb = supabase.createClient(URL_SB, ANON, { auth: { storageKey: 'aura-auth' } }); // sesi Aura
 const isi = document.getElementById('isi');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PESAN = { BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses. Minta ke pimpinan (Pengaturan Lab Live).', KHUSUS_PIMPINAN:'Hanya pimpinan yang bisa mengunci atau mengubah bidang yang sudah terkunci.', KARTU_KURANG:'Isi dulu minimal Label persona dan Gaya bicara di kartu karakter.', TANPA_PRODUK:'Pilih minimal 1 produk.', NAMA_KOSONG:'Nama wajib diisi.' };

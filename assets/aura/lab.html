@@ -84,7 +84,7 @@ const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
 const CORE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/';
 const AUDIO_DETIK = 600, FOTO_TIAP = 15, KOLOM = 4, BARIS_FOTO = 3; // 12 foto per lembar = 3 menit
-const sb = supabase.createClient(URL_SB, ANON);
+const sb = supabase.createClient(URL_SB, ANON, { auth: { storageKey: 'aura-auth' } }); // sesi Aura
 const isi = document.getElementById('isi');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const mmss = d => { d = Math.max(0, Math.round(d || 0)); const j = Math.floor(d/3600), m = Math.floor(d%3600/60), s = d%60; return (j ? j + ':' + String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0'); };

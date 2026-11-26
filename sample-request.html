@@ -6536,7 +6536,7 @@ async function savePicBrand(){
 
 async function logout(){
     if(!confirm('Yakin mau keluar?')) return;
-    try{ await db.auth.signOut(); }catch(e){}
+    try{ await db.auth.signOut({ scope: 'local' }); }catch(e){} // hanya keluar dari website ini, sesi Aura tetap
       document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); });
     currentSession = { role: null, memberId: null, memberData: null, brandId: null, brandData: null };
     document.getElementById('app-creator').classList.remove('active');

@@ -40,7 +40,7 @@
 <script>
 const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
-const sb = supabase.createClient(URL_SB, ANON);
+const sb = supabase.createClient(URL_SB, ANON, { auth: { storageKey: 'aura-auth' } }); // sesi Aura
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let daftar = [], aktif = null;

@@ -283,7 +283,11 @@ textarea{width:100%;min-height:64px;font:inherit;font-size:14px;color:var(--ink)
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, (() => {
+  // Kantor AI bisa dibuka dari Aura (login Aura) atau dari menu Internal website (login website): pakai yang ada
+  try { if (localStorage.getItem('aura-auth')) return { auth: { storageKey: 'aura-auth' } }; } catch (e) {}
+  return undefined;
+})());
 /* Koordinat dalam piksel gambar kantor (1376 x 768) */
 const W = 1376, H = 768;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -701,7 +705,7 @@ let sudahMasuk = false;
 async function muat(){
   const { data, error } = await sb.rpc("kantor_data");
   if (error){
-    if (/KANTOR_BUKAN_INTERNAL|JWT|permission denied/i.test(error.message || "")) tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true);
+    if (/KANTOR_BUKAN_INTERNAL|JWT|permission denied/i.test(error.message || "")) tutupGerbang("Khusus tim internal", "Masuk dulu lewat Aura atau menu Internal di website, lalu buka Kantor AI lagi.", true);
     else if (!sudahMasuk) tutupGerbang("Kantor belum bisa dibuka", "Cek koneksi internet lalu muat ulang halaman.", false);
     return;
   }
@@ -1130,7 +1134,7 @@ function mulaiNgobrol(){
 }
 (async () => {
   const { data } = await sb.auth.getSession();
-  if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
+  if (!data.session){ tutupGerbang("Khusus tim internal", "Masuk dulu lewat Aura atau menu Internal di website, lalu buka Kantor AI lagi.", true); return; }
   await muat();
   if (sudahMasuk){ muatFm(); mulaiNgobrol(); muatRh(); langgananRh(); muatPg(); }
   setInterval(() => { if (!document.hidden){ muat(); if (sudahMasuk) muatRh(); } }, 60000);

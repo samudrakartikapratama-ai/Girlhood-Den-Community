@@ -239,7 +239,7 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storageKey: 'aura-auth' } }); // login Aura disimpan terpisah dari website utama
 const WA = window.SimpleWebAuthnBrowser;
 const $ = id => document.getElementById(id);
 const pesan = t => { $('pesan').textContent = t || ''; };
@@ -308,11 +308,11 @@ $('btn-aktifkan').onclick = async () => {
   } catch (e) {
     if (BATAL(e)) pesan('Dibatalkan. Tekan tombolnya lagi untuk mengaktifkan.');
     else if (e.name === 'InvalidStateError') pesan('Perangkat ini sudah terdaftar. Masuk pakai Face ID.');
-    else if (e.message === 'BUKAN_INTERNAL') { await sb.auth.signOut(); gerbang('awal'); pesan('Sesi kode staff sudah habis. Masukkan kode staff lagi, lalu aktifkan Face ID.'); }
+    else if (e.message === 'BUKAN_INTERNAL') { await sb.auth.signOut({ scope: 'local' }); gerbang('awal'); pesan('Sesi kode staff sudah habis. Masukkan kode staff lagi, lalu aktifkan Face ID.'); }
     else pesan('Gagal mengaktifkan. Coba lagi.');
   } finally { b.disabled = false; b.textContent = 'Aktifkan Face ID / sidik jari'; }
 };
-$('btn-gate-keluar').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$('btn-gate-keluar').onclick = async () => { await sb.auth.signOut({ scope: 'local' }); location.reload(); };
 
 function gerbang(mode){
   $('gate').dataset.mode = mode; $('gate').classList.remove('hidden'); $('app').classList.add('hidden');
@@ -324,20 +324,20 @@ function gerbang(mode){
 function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
-  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611191548';
-  if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611191548'; // muat ulang tiap dibuka supaya status terbaru
-  if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611250955';
-  if (m === 'riset' && !$('f-riset').src) $('f-riset').src = 'assets/aura/riset.html?v=202611261100';
-  if (m === 'ip' && !$('f-ip').src) $('f-ip').src = 'assets/aura/ip.html?v=202611251930';
-  if (m === 'lab' && !$('f-lab').src) $('f-lab').src = 'assets/aura/lab.html?v=202611251800';
-  if (m === 'onboarding' && !$('f-onboarding').src) $('f-onboarding').src = 'assets/aura/onboarding.html?v=202611201010';
+  if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611261200';
+  if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611261200'; // muat ulang tiap dibuka supaya status terbaru
+  if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611261200';
+  if (m === 'riset' && !$('f-riset').src) $('f-riset').src = 'assets/aura/riset.html?v=202611261200';
+  if (m === 'ip' && !$('f-ip').src) $('f-ip').src = 'assets/aura/ip.html?v=202611261200';
+  if (m === 'lab' && !$('f-lab').src) $('f-lab').src = 'assets/aura/lab.html?v=202611261200';
+  if (m === 'onboarding' && !$('f-onboarding').src) $('f-onboarding').src = 'assets/aura/onboarding.html?v=202611261200';
   if (m !== 'onboarding' && $('f-onboarding').src) { try { $('f-onboarding').contentWindow.document.getElementById('pemutar').pause(); } catch (e) {} }
   if (window.adeganRedup) adeganRedup(m === 'palette' ? .45 : m === 'beranda' ? 0 : .6);
   try { localStorage.setItem('aura-menu', m); } catch (e) {}
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => bukaMenu(t.dataset.m));
 document.querySelectorAll('[data-buka]').forEach(t => t.onclick = () => bukaMenu(t.dataset.buka));
-$('btn-keluar').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$('btn-keluar').onclick = async () => { await sb.auth.signOut({ scope: 'local' }); location.reload(); };
 
 function salam(nama){
   const j = Number(new Intl.DateTimeFormat('en-GB', {hour:'2-digit', hour12:false, timeZone:'Asia/Jakarta'}).format(new Date()));
