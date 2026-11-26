@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Riset Pasar · Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
+<link rel="stylesheet" href="halaman.css?v=2">
+<style>
+body{text-align:left}
+.wrap{max-width:1100px;gap:16px}
+.kepala-hal{display:grid;gap:12px}
+.atas{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.saldo{display:flex;gap:8px;flex-wrap:wrap}
+.submenu{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--garis);padding-bottom:12px}
+.submenu button{border:1px solid transparent;background:none;color:var(--ash);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;transition:background-color .15s ease-out,color .15s ease-out}
+.submenu button:active{transform:scale(.97)}
+.submenu button[aria-pressed=true]{color:var(--ink);background:rgba(255,90,31,.16);border-color:rgba(255,90,31,.35)}
+.filter{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:4px 12px;align-items:end}
+.tabel{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:8px;border-bottom:1px solid var(--garis);text-align:left;vertical-align:top}
+th{color:var(--ash);font-weight:500;white-space:nowrap}
+td.angka,th.angka{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.naik{color:var(--ok)}.turun{color:var(--warn)}
+.kecil-btn{min-height:30px;padding:0 11px;font-size:12.5px}
+.detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.detail div{background:rgba(255,255,255,.035);border:1px solid var(--garis);border-radius:12px;padding:10px}
+.detail span{display:block;font-size:12px;color:var(--ash)}
+.detail b{font-weight:500;font-size:16px}
+.ket{font-size:12.5px;color:var(--ash)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="kepala-hal">
+    <div class="atas">
+      <div><h1>Riset Pasar</h1><p class="muted kecil">Data TikTok Shop Indonesia dari Kalodata. Setiap pencarian baru memotong kredit, hasil yang sama dalam 24 jam gratis.</p></div>
+      <div class="saldo" id="saldo"></div>
+    </div>
+    <nav class="submenu" id="submenu">
+      <button data-v="creator" aria-pressed="true">Cari Creator</button>
+      <button data-v="brand" aria-pressed="false">Cari Brand</button>
+      <button data-v="iklan" aria-pressed="false">Video Iklan</button>
+      <button data-v="incaran" aria-pressed="false">Daftar Incaran</button>
+      <button data-v="atur" aria-pressed="false" id="m-atur" hidden>Pengaturan</button>
+    </nav>
+  </header>
+  <main id="isi"><p class="muted">Memuat…</p></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const URL_SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
+const sb = supabase.createClient(URL_SB, ANON);
+const isi = document.getElementById('isi');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PESAN = {
+  BUKAN_INTERNAL:'Masuk dulu lewat Aura (Face ID).', TANPA_AKSES:'Kamu belum punya akses Riset Pasar. Minta ke pimpinan.',
+  BATAS_HARIAN:'Jatah kredit harianmu sudah habis. Coba lagi besok, atau pakai hasil yang sudah tersimpan.',
+  SALDO_HABIS:'Saldo kredit Kalodata habis. Kabari pimpinan untuk top up.', KUNCI_DITOLAK:'Kunci Kalodata ditolak. Kabari pimpinan.',
+  KUNCI_KOSONG:'Kalodata belum disambungkan. Kabari pimpinan.', KALODATA_GAGAL:'Kalodata sedang bermasalah. Coba lagi beberapa menit lagi.',
+};
+async function panggil(body){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) throw new Error('BUKAN_INTERNAL');
+  const r = await fetch(URL_SB + '/functions/v1/riset', {method:'POST', headers:{'Content-Type':'application/json', apikey: ANON, Authorization:'Bearer ' + data.session.access_token}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.galat || 'GAGAL');
+  return j;
+}
+const salah = e => PESAN[e.message] || 'Gagal mengambil data. Coba lagi.';
+
+// Rp 3.439.049.699 → "Rp3,4 M"
+const rp = n => { n = Number(n) || 0; const a = Math.abs(n); return 'Rp' + (a >= 1e9 ? (n/1e9).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' M' : a >= 1e6 ? (n/1e6).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' jt' : a >= 1e3 ? Math.round(n/1e3).toLocaleString('id-ID') + ' rb' : Math.round(n).toLocaleString('id-ID')); };
+const ribu = n => { n = Number(n) || 0; return n >= 1e6 ? (n/1e6).toLocaleString('id-ID',{maximumFractionDigits:1}) + ' jt' : n >= 1e3 ? Math.round(n/1e3).toLocaleString('id-ID') + ' rb' : String(n); };
+const persen = n => n == null ? '–' : `<span class="${n >= 0 ? 'naik' : 'turun'}">${n >= 0 ? '+' : ''}${Number(n).toLocaleString('id-ID',{maximumFractionDigits:1})}%</span>`;
+const porsi = (a, t) => t ? Math.round(Number(a) / Number(t) * 100) + '%' : '–';
+const tiktok = h => h ? `<a href="https://www.tiktok.com/${esc(h.startsWith('@') ? h : '@' + h)}" target="_blank" rel="noopener">${esc(h.startsWith('@') ? h : '@' + h)}</a>` : '';
+
+let st = null, tampilan = 'creator';
+async function muat(){
+  try { st = await panggil({ aksi:'status' }); }
+  catch (e) { isi.innerHTML = `<div class="panel">${esc(salah(e))}</div>`; return false; }
+  document.getElementById('m-atur').hidden = !st.pimpinan;
+  document.getElementById('saldo').innerHTML = `<span class="chip">Saldo ${st.saldo == null ? '–' : Number(st.saldo).toLocaleString('id-ID')} kredit</span>`
+    + (st.pimpinan ? '' : `<span class="chip">Hari ini ${Number(st.dipakai_hari_ini).toLocaleString('id-ID')} / ${st.batas} kredit</span>`);
+  return true;
+}
+function pilih(v){ tampilan = v; document.querySelectorAll('#submenu button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); render(); }
+document.querySelectorAll('#submenu button').forEach(b => b.onclick = () => pilih(b.dataset.v));
+function render(){ ({ creator: viewCreator, brand: viewBrand, iklan: viewIklan, incaran: viewIncaran, atur: viewAtur })[tampilan](); }
+
+const opsiKategori = () => '<option value="">Semua kategori</option>' + Object.entries(st.kategori).map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('');
+const opsiRentang = '<option value="last7Day">7 hari terakhir</option><option value="last30Day" selected>30 hari terakhir</option><option value="last90Day">90 hari terakhir</option>';
+const sumber = r => `<p class="ket">${r.dari_cache ? 'Dari simpanan (gratis)' : 'Data baru (0,1 kredit)'} · diambil ${new Date(r.diambil_at).toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}</p>`;
+const sudahIncar = (jenis, id) => (st.incaran || []).some(x => x.jenis === jenis && x.kalo_id === String(id));
+
+async function simpanIncaran(btn, jenis, x){
+  btn.disabled = true;
+  try { await panggil({ aksi:'incaran-simpan', jenis, id: x.id, nama: x.nama, handle: x.handle, data: x.data }); btn.textContent = 'Tersimpan'; st.incaran = [...(st.incaran || []), { jenis, kalo_id: String(x.id) }]; }
+  catch (e) { btn.disabled = false; alert(salah(e)); }
+}
+
+/* ---------- cari creator (tim KOL) ---------- */
+function viewCreator(){
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Cari creator</h2>
+    <p class="muted kecil">Hanya creator independen (akun resmi brand tidak ikut). Contoh: creator skincare, 10 rb–500 rb follower, urut pertumbuhan, untuk mencari yang sedang naik sebelum diambil MCN lain.</p>
+    <div class="filter">
+      <label><span class="label">Kategori</span><select id="f-kat">${opsiKategori()}</select></label>
+      <label><span class="label">Follower</span><select id="f-fol"><option value="">Semua</option><option value="1000-10000">1 rb–10 rb</option><option value="10000-100000" selected>10 rb–100 rb</option><option value="100000-500000">100 rb–500 rb</option><option value="500000-">di atas 500 rb</option></select></label>
+      <label><span class="label">GMV minimal</span><select id="f-gmv"><option value="">Semua</option><option value="10000000-">Rp10 jt</option><option value="50000000-" selected>Rp50 jt</option><option value="200000000-">Rp200 jt</option></select></label>
+      <label><span class="label">Urutkan</span><select id="f-urut"><option value="revenue">GMV terbesar</option><option value="revenue_growth_rate">Pertumbuhan tercepat</option><option value="live_revenue">GMV live terbesar</option><option value="video_revenue">GMV video terbesar</option></select></label>
+      <label><span class="label">Periode</span><select id="f-rentang">${opsiRentang}</select></label>
+      <label><span class="label">Nama/handle (opsional)</span><input type="text" id="f-kata"></label>
+    </div>
+    <div class="baris"><button class="btn utama" id="cari">Cari</button><span class="pesan" id="pesan"></span></div></div>
+    <div id="hasil"></div>`;
+  let halaman = 1;
+  const cari = async () => {
+    const pesan = document.getElementById('pesan'), hasil = document.getElementById('hasil');
+    pesan.textContent = 'Mencari…';
+    try {
+      const r = await panggil({ aksi:'creator-cari', kategori: [document.getElementById('f-kat').value].filter(Boolean), follower: document.getElementById('f-fol').value, gmv: document.getElementById('f-gmv').value, urut: document.getElementById('f-urut').value, rentang: document.getElementById('f-rentang').value, kata: document.getElementById('f-kata').value.trim(), halaman });
+      pesan.textContent = ''; muat();
+      const rows = Array.isArray(r.data) ? r.data : [];
+      hasil.innerHTML = `<div class="panel" style="display:grid;gap:8px">${sumber(r)}${rows.length ? `<div class="tabel"><table><thead><tr><th>Creator</th><th class="angka">Follower</th><th class="angka">GMV</th><th class="angka">Tumbuh</th><th class="angka">Dari live</th><th></th></tr></thead><tbody>${rows.map((x, i) => `<tr><td>${esc(x.creator_nickname)}<br>${tiktok(x.creator_handle)}</td><td class="angka">${ribu(x.creator_followers)}</td><td class="angka">${rp(x.revenue)}</td><td class="angka">${persen(x.revenue_growth_rate)}</td><td class="angka">${porsi(x.live_revenue, x.revenue)}</td><td style="white-space:nowrap"><button class="btn kecil-btn" data-detail="${i}">Detail</button> <button class="btn kecil-btn" data-incar="${i}" ${sudahIncar('creator', x.creator_id) ? 'disabled' : ''}>${sudahIncar('creator', x.creator_id) ? 'Tersimpan' : 'Incar'}</button></td></tr><tr hidden id="d-${i}"><td colspan="6"></td></tr>`).join('')}</tbody></table></div>
+        <div class="baris">${halaman > 1 ? '<button class="btn kecil-btn" id="mundur">‹ Sebelumnya</button>' : ''}${rows.length === 20 && halaman < 5 ? '<button class="btn kecil-btn" id="maju">Berikutnya ›</button>' : ''}<span class="ket">Halaman ${halaman}</span></div>` : '<p class="muted">Tidak ada creator yang cocok. Longgarkan filter.</p>'}</div>`;
+      hasil.querySelectorAll('[data-incar]').forEach(b => b.onclick = () => { const x = rows[b.dataset.incar]; simpanIncaran(b, 'creator', { id: x.creator_id, nama: x.creator_nickname, handle: x.creator_handle, data: { follower: x.creator_followers, gmv: x.revenue, tumbuh: x.revenue_growth_rate } }); });
+      hasil.querySelectorAll('[data-detail]').forEach(b => b.onclick = () => detailCreator(rows[b.dataset.detail], document.getElementById('d-' + b.dataset.detail), b));
+      document.getElementById('maju')?.addEventListener('click', () => { halaman++; cari(); });
+      document.getElementById('mundur')?.addEventListener('click', () => { halaman--; cari(); });
+    } catch (e) { pesan.textContent = salah(e); }
+  };
+  document.getElementById('cari').onclick = () => { halaman = 1; cari(); };
+}
+
+async function detailCreator(x, baris, btn){
+  if (!baris.hidden) { baris.hidden = true; return; }
+  baris.hidden = false; const sel = baris.firstElementChild; sel.innerHTML = '<span class="muted">Memuat detail…</span>'; btn.disabled = true;
+  try {
+    const r = await panggil({ aksi:'creator-detail', id: x.creator_id }); muat();
+    const d = r.data || {};
+    const kontak = [['TikTok', d.creator_contact_tiktok], ['Email', d.creator_contact_email], ['WhatsApp', d.creator_contact_whatsapp], ['Instagram', d.creator_contact_ins], ['Facebook', d.creator_contact_facebook]].filter(k => k[1]);
+    sel.innerHTML = `<div style="display:grid;gap:10px">${sumber(r)}<div class="detail">
+      <div><span>GMV 30 hari</span><b>${rp(d.revenue)}</b></div>
+      <div><span>Live / video</span><b>${porsi(d.live_revenue, d.revenue)} / ${porsi(d.video_revenue, d.revenue)}</b></div>
+      <div><span>GPM live</span><b>${rp(d.live_gpm)}</b></div>
+      <div><span>GPM video</span><b>${rp(d.video_gpm)}</b></div>
+      <div><span>Jumlah live / video</span><b>${d.live_number ?? '–'} / ${d.video_number ?? '–'}</b></div>
+      <div><span>Toko yang dijualkan</span><b>${d.shop_number ?? '–'}</b></div>
+      <div><span>Produk yang dijual</span><b>${d.product_number ?? '–'}</b></div>
+      <div><span>Follower baru</span><b>${ribu(d.new_followers)}</b></div>
+      <div><span>Harga rata-rata</span><b>${rp(d.unit_price)}</b></div></div>
+      ${d.creator_bio ? `<p class="kecil"><span class="muted">Bio:</span> ${esc(d.creator_bio)}</p>` : ''}
+      <p class="kecil"><span class="muted">Kontak:</span> ${kontak.length ? kontak.map(k => `${k[0]}: ${esc(k[1])}`).join(' · ') : 'tidak tersedia, hubungi lewat DM TikTok atau undangan TAP'}</p>
+      <p class="ket">GPM = GMV per 1.000 penonton. Makin tinggi, makin jago jualan.</p></div>`;
+  } catch (e) { sel.innerHTML = `<span class="pesan">${esc(salah(e))}</span>`; }
+  btn.disabled = false;
+}
+
+/* ---------- cari brand (tim BD) ---------- */
+function viewBrand(){
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Cari brand</h2>
+    <p class="muted kecil">Urutkan "GMV dari affiliate" untuk menemukan brand yang paling bergantung pada creator affiliate. Itu calon brand paling cocok untuk TAP Girlhood Den.</p>
+    <div class="filter">
+      <label><span class="label">Kategori</span><select id="f-kat">${opsiKategori()}</select></label>
+      <label><span class="label">Urutkan</span><select id="f-urut"><option value="affiliate_revenue">GMV dari affiliate</option><option value="revenue">GMV total</option><option value="revenue_growth_rate">Pertumbuhan tercepat</option></select></label>
+      <label><span class="label">Periode</span><select id="f-rentang">${opsiRentang}</select></label>
+      <label><span class="label">Nama toko (opsional)</span><input type="text" id="f-kata"></label>
+    </div>
+    <div class="baris"><button class="btn utama" id="cari">Cari</button><span class="pesan" id="pesan"></span></div></div>
+    <div id="hasil"></div>`;
+  document.getElementById('cari').onclick = async () => {
+    const pesan = document.getElementById('pesan'), hasil = document.getElementById('hasil');
+    pesan.textContent = 'Mencari…';
+    try {
+      const r = await panggil({ aksi:'toko-cari', kategori: [document.getElementById('f-kat').value].filter(Boolean), urut: document.getElementById('f-urut').value, rentang: document.getElementById('f-rentang').value, kata: document.getElementById('f-kata').value.trim() });
+      pesan.textContent = ''; muat();
+      const rows = Array.isArray(r.data) ? r.data : [];
+      hasil.innerHTML = `<div class="panel" style="display:grid;gap:8px">${sumber(r)}${rows.length ? `<div class="tabel"><table><thead><tr><th>Toko / brand</th><th class="angka">GMV</th><th class="angka">Dari affiliate</th><th class="angka">Tumbuh</th><th class="angka">Terjual</th><th></th></tr></thead><tbody>${rows.map((x, i) => `<tr><td>${esc(x.shop_name)}</td><td class="angka">${rp(x.revenue)}</td><td class="angka">${rp(x.affiliate_revenue)} <span class="ket">(${porsi(x.affiliate_revenue, x.revenue)})</span></td><td class="angka">${persen(x.revenue_growth_rate)}</td><td class="angka">${ribu(x.sales_volumn)}</td><td><button class="btn kecil-btn" data-incar="${i}" ${sudahIncar('toko', x.shop_id) ? 'disabled' : ''}>${sudahIncar('toko', x.shop_id) ? 'Tersimpan' : 'Incar'}</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Tidak ada toko yang cocok.</p>'}</div>`;
+      hasil.querySelectorAll('[data-incar]').forEach(b => b.onclick = () => { const x = rows[b.dataset.incar]; simpanIncaran(b, 'toko', { id: x.shop_id, nama: x.shop_name, data: { gmv: x.revenue, affiliate: x.affiliate_revenue, tumbuh: x.revenue_growth_rate } }); });
+    } catch (e) { pesan.textContent = salah(e); }
+  };
+}
+
+/* ---------- video iklan (tim BD) ---------- */
+function viewIklan(){
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Video iklan & video laris</h2>
+    <p class="muted kecil">Video yang paling banyak menjual. Kolom "Iklan?" menunjukkan video yang diiklankan: brand-nya sedang belanja iklan dan punya budget. Creator di video itu juga bisa jadi incaran tim KOL.</p>
+    <div class="filter">
+      <label><span class="label">Kategori</span><select id="f-kat">${opsiKategori()}</select></label>
+      <label><span class="label">Urutkan</span><select id="f-urut"><option value="revenue">GMV terbesar</option><option value="views">Penonton terbanyak</option></select></label>
+      <label><span class="label">Periode</span><select id="f-rentang">${opsiRentang}</select></label>
+    </div>
+    <div class="baris"><button class="btn utama" id="cari">Cari</button><span class="pesan" id="pesan"></span></div></div>
+    <div id="hasil"></div>`;
+  document.getElementById('cari').onclick = async () => {
+    const pesan = document.getElementById('pesan'), hasil = document.getElementById('hasil');
+    pesan.textContent = 'Mencari…';
+    try {
+      const r = await panggil({ aksi:'video-cari', kategori: [document.getElementById('f-kat').value].filter(Boolean), urut: document.getElementById('f-urut').value, rentang: document.getElementById('f-rentang').value });
+      pesan.textContent = ''; muat();
+      const rows = Array.isArray(r.data) ? r.data : [];
+      hasil.innerHTML = `<div class="panel" style="display:grid;gap:8px">${sumber(r)}${rows.length ? `<div class="tabel"><table><thead><tr><th>Video</th><th>Creator</th><th class="angka">GMV</th><th class="angka">Penonton</th><th class="angka">ROAS</th><th>Iklan?</th></tr></thead><tbody>${rows.map(x => `<tr><td><a href="https://www.tiktok.com/@${esc((x.belonged_creator_handle || '').replace('@',''))}/video/${esc(x.video_id)}" target="_blank" rel="noopener">${esc((x.video_title || 'Tanpa judul').slice(0, 80))}</a></td><td>${tiktok(x.belonged_creator_handle)}</td><td class="angka">${rp(x.revenue)}</td><td class="angka">${ribu(x.views)}</td><td class="angka">${x.ads_roas ? Number(x.ads_roas).toLocaleString('id-ID',{maximumFractionDigits:1}) + '×' : '–'}</td><td>${x.ad == 1 ? 'Ya' : 'Organik'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Tidak ada video yang cocok.</p>'}</div>`;
+    } catch (e) { pesan.textContent = salah(e); }
+  };
+}
+
+/* ---------- daftar incaran (bersama) ---------- */
+function viewIncaran(){
+  const daftar = st.incaran || [];
+  const nama = id => (st.staff || []).find(s => s.id === id)?.nama || '';
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Daftar incaran</h2>
+    <p class="muted kecil">Creator dan brand yang sudah ditandai tim. Ubah status setelah dihubungi supaya tidak dikontak dua kali. Membuka daftar ini gratis.</p>
+    ${daftar.length ? `<div class="tabel"><table><thead><tr><th>Jenis</th><th>Nama</th><th class="angka">GMV saat disimpan</th><th>Status</th><th>Catatan</th></tr></thead><tbody>${daftar.map(x => `<tr data-id="${x.id}"><td>${x.jenis === 'toko' ? 'Brand' : 'Creator'}</td><td>${esc(x.nama)}${x.handle ? '<br>' + tiktok(x.handle) : ''}${nama(x.oleh) ? `<br><span class="ket">oleh ${esc(nama(x.oleh))}</span>` : ''}</td><td class="angka">${x.data?.gmv ? rp(x.data.gmv) : '–'}</td>
+      <td><select data-status>${['baru','dihubungi','bergabung','tolak'].map(s => `<option value="${s}" ${x.status === s ? 'selected' : ''}>${({baru:'Baru',dihubungi:'Sudah dihubungi',bergabung:'Bergabung',tolak:'Menolak'})[s]}</option>`).join('')}</select></td>
+      <td><input type="text" data-catatan value="${esc(x.catatan || '')}" placeholder="Contoh: DM 26/11, minta rate card"></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Belum ada. Tekan "Incar" di hasil pencarian.</p>'}</div>`;
+  isi.querySelectorAll('tr[data-id]').forEach(tr => {
+    const simpan = async ubah => { try { await panggil({ aksi:'incaran-ubah', id: tr.dataset.id, ...ubah }); } catch (e) { alert(salah(e)); } };
+    tr.querySelector('[data-status]').onchange = e => simpan({ status: e.target.value });
+    tr.querySelector('[data-catatan]').onchange = e => simpan({ catatan: e.target.value });
+  });
+}
+
+/* ---------- pengaturan (pimpinan) ---------- */
+function viewAtur(){
+  if (!st.pimpinan) return pilih('creator');
+  const pakai = st.pemakaian || {};
+  isi.innerHTML = `<div class="panel" style="display:grid;gap:10px"><h2>Akses dan batas</h2>
+    <p class="muted kecil">1 kredit ±Rp1.800. Satu pencarian atau satu detail = 0,1 kredit. Batas harian berlaku per orang. Pimpinan tidak dibatasi.</p>
+    <label style="max-width:260px"><span class="label">Batas kredit per orang per hari</span><input type="text" inputmode="decimal" id="a-batas" value="${st.batas}"></label>
+    <span class="label" style="margin:0">Yang boleh memakai Riset Pasar</span>
+    <div class="tabel"><table><thead><tr><th>Akses</th><th>Nama</th><th class="angka">Kredit 30 hari</th><th class="angka">Pencarian baru</th><th class="angka">Dari simpanan</th></tr></thead><tbody>${(st.staff || []).map(s => { const p = pakai[s.id] || { kredit: 0, panggil: 0, cache: 0 }; return `<tr><td><input type="checkbox" value="${s.id}" ${st.akses.includes(s.id) ? 'checked' : ''}></td><td>${esc(s.nama)}</td><td class="angka">${p.kredit.toLocaleString('id-ID',{maximumFractionDigits:1})} <span class="ket">(${rp(p.kredit * 1800)})</span></td><td class="angka">${p.panggil}</td><td class="angka">${p.cache}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="baris"><button class="btn utama" id="a-simpan">Simpan</button><span class="pesan" id="a-pesan"></span></div></div>`;
+  document.getElementById('a-simpan').onclick = async () => {
+    const akses = [...isi.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value);
+    try { await panggil({ aksi:'atur', akses, batas: Number(document.getElementById('a-batas').value.replace(',', '.')) }); await muat(); document.getElementById('a-pesan').textContent = 'Tersimpan.'; }
+    catch (e) { document.getElementById('a-pesan').textContent = salah(e); }
+  };
+}
+
+(async () => { if (await muat()) pilih('creator'); })();
+</script>
+</body>
+</html>
