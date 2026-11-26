@@ -217,6 +217,63 @@ async function blokLampiran(l: Lampiran) {
 
 type Ekstra = { alat: any[]; jalankan: (nama: string, input: any) => Promise<string> };
 
+// ---------- Riset pasar (Kalodata) lewat chat: memanggil function `riset` dengan login orang itu sendiri,
+// jadi akses, batas kredit harian, cache, dan catatan pemakaian sama persis dengan tab Riset Pasar ----------
+const KAT_KALO: Record<string, string> = { skincare: "848776", makeup: "848648", parfum: "856208" };
+const PERIODE: Record<string, string> = { "7": "last7Day", "30": "last30Day", "90": "last90Day" };
+const ALAT_RISET = [
+  { name: "riset_cari_creator", description: "Cari creator INDEPENDEN di seluruh TikTok Shop Indonesia (data Kalodata, bukan hanya jaringan Girlhood Den). Hasil 20 creator per halaman. Tidak ada filter persen pertumbuhan: urutkan 'pertumbuhan' lalu saring sendiri. Memakai kredit (±Rp180 per pencarian baru).",
+    input_schema: { type: "object", properties: {
+      kategori: { type: "string", enum: ["skincare", "makeup", "parfum", "semua"] },
+      follower_min: { type: "integer" }, follower_max: { type: "integer" },
+      gmv_min: { type: "integer", description: "GMV minimal dalam rupiah pada periode itu" }, gmv_max: { type: "integer" },
+      urut: { type: "string", enum: ["gmv", "pertumbuhan", "gmv_live", "gmv_video"] },
+      periode: { type: "string", enum: ["7", "30", "90"], description: "hari terakhir, bawaan 30" },
+      halaman: { type: "integer", description: "1-5" },
+    }, required: ["kategori"] } },
+  { name: "riset_detail_creator", description: "Detail satu creator (pakai creator_id dari riset_cari_creator): GMV 30 hari, porsi live/video, GPM live & video, jumlah live/video, jumlah toko & produk, follower baru, bio, kontak bila ada. Memakai kredit; panggil maksimal 5 creator per pertanyaan kecuali diminta.",
+    input_schema: { type: "object", properties: { creator_id: { type: "string" } }, required: ["creator_id"] } },
+  { name: "riset_cari_brand", description: "Toko/brand teratas di TikTok Shop Indonesia (Kalodata). Urut 'affiliate' = GMV dari creator affiliate (calon brand TAP terbaik untuk tim BD).",
+    input_schema: { type: "object", properties: { kategori: { type: "string", enum: ["skincare", "makeup", "parfum", "semua"] }, urut: { type: "string", enum: ["affiliate", "gmv", "pertumbuhan"] }, periode: { type: "string", enum: ["7", "30", "90"] } }, required: ["kategori"] } },
+  { name: "riset_video_laris", description: "Video paling laku di TikTok Shop Indonesia (Kalodata), termasuk penanda video iklan dan ROAS.",
+    input_schema: { type: "object", properties: { kategori: { type: "string", enum: ["skincare", "makeup", "parfum", "semua"] }, urut: { type: "string", enum: ["gmv", "penonton", "pertumbuhan"] }, periode: { type: "string", enum: ["7", "30", "90"] } }, required: ["kategori"] } },
+];
+const PESAN_RISET: Record<string, string> = {
+  TANPA_AKSES: "Orang ini belum punya akses Riset Pasar. Katakan dia perlu minta pimpinan mencentang namanya di Riset Pasar > Pengaturan.",
+  BATAS_HARIAN: "Jatah kredit riset harian orang ini habis. Sarankan lanjut besok atau pakai hasil yang sudah ada.",
+  SALDO_HABIS: "Saldo kredit Kalodata habis. Minta dia mengabari pimpinan untuk top up.",
+};
+async function jalankanRiset(jwt: string, nama: string, i: any): Promise<string> {
+  const kat = KAT_KALO[i?.kategori] ? [KAT_KALO[i.kategori]] : [];
+  const periode = PERIODE[String(i?.periode || "30")] || "last30Day";
+  const rng = (a: any, b: any) => (a || b ? `${Number(a) || 0}-${Number(b) || ""}` : "");
+  const body: any =
+    nama === "riset_cari_creator" ? { aksi: "creator-cari", kategori: kat, follower: rng(i.follower_min, i.follower_max), gmv: rng(i.gmv_min, i.gmv_max), rentang: periode, halaman: i.halaman || 1,
+      urut: ({ gmv: "revenue", pertumbuhan: "revenue_growth_rate", gmv_live: "live_revenue", gmv_video: "video_revenue" } as any)[i.urut] || "revenue" }
+    : nama === "riset_detail_creator" ? { aksi: "creator-detail", id: String(i?.creator_id || "") }
+    : nama === "riset_cari_brand" ? { aksi: "toko-cari", kategori: kat, rentang: periode, urut: ({ affiliate: "affiliate_revenue", gmv: "revenue", pertumbuhan: "revenue_growth_rate" } as any)[i.urut] || "affiliate_revenue" }
+    : { aksi: "video-cari", kategori: kat, rentang: periode, urut: ({ gmv: "revenue", penonton: "views", pertumbuhan: "revenue_growth_rate" } as any)[i.urut] || "revenue" };
+  const r = await fetch(Deno.env.get("SUPABASE_URL") + "/functions/v1/riset", { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + jwt }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return "GALAT: " + (PESAN_RISET[j.galat] || "Kalodata sedang bermasalah, coba lagi nanti.");
+  const d = j.data;
+  const jt = (v: any) => Math.round(Number(v || 0) / 1e5) / 10; // rupiah -> juta (1 desimal)
+  let ringkas: any;
+  if (Array.isArray(d)) {
+    ringkas = d.map((x: any) => body.aksi === "creator-cari"
+      ? { creator_id: x.creator_id, handle: x.creator_handle, nama: x.creator_nickname, follower: Number(x.creator_followers), gmv_jt: jt(x.revenue), tumbuh_persen: x.revenue_growth_rate, live_persen: x.revenue ? Math.round(x.live_revenue / x.revenue * 100) : null, video_persen: x.revenue ? Math.round(x.video_revenue / x.revenue * 100) : null }
+      : body.aksi === "toko-cari"
+      ? { toko: x.shop_name, gmv_jt: jt(x.revenue), affiliate_jt: jt(x.affiliate_revenue), affiliate_persen: x.revenue ? Math.round(x.affiliate_revenue / x.revenue * 100) : null, tumbuh_persen: x.revenue_growth_rate, terjual: x.sales_volumn }
+      : { judul: String(x.video_title || "").slice(0, 80), creator: x.belonged_creator_handle, gmv_jt: jt(x.revenue), penonton: x.views, iklan: x.ad == 1, roas: x.ads_roas, link: `https://www.tiktok.com/@${String(x.belonged_creator_handle || "").replace("@", "")}/video/${x.video_id}` });
+  } else if (d) {
+    ringkas = { handle: d.creator_handle, nama: d.creator_nickname, gmv_jt: jt(d.revenue), live_persen: d.revenue ? Math.round(d.live_revenue / d.revenue * 100) : null, video_persen: d.revenue ? Math.round(d.video_revenue / d.revenue * 100) : null,
+      gpm_live: Math.round(Number(d.live_gpm || 0)), gpm_video: Math.round(Number(d.video_gpm || 0)), jumlah_live: d.live_number, jumlah_video: d.video_number, jumlah_toko: d.shop_number, jumlah_produk: d.product_number,
+      follower: Number(d.creator_followers), follower_baru: d.new_followers, harga_rata: Math.round(Number(d.unit_price || 0)), bio: String(d.creator_bio || "").slice(0, 200),
+      kontak: Object.fromEntries([["tiktok", d.creator_contact_tiktok], ["email", d.creator_contact_email], ["whatsapp", d.creator_contact_whatsapp], ["instagram", d.creator_contact_ins]].filter((k) => k[1])) };
+  }
+  return JSON.stringify({ sumber: j.dari_cache ? "simpanan (gratis)" : "data baru Kalodata", diambil: j.diambil_at, periode, hasil: ringkas }).slice(0, 12000);
+}
+
 async function tanya(pesanBaru: string | any[], riwayat: any[], dinamis: string, maks = 1500, ekstra?: Ekstra): Promise<{ teks: string; masuk: number; keluar: number }> {
   const sistem = [
     { type: "text", text: PERSONA },
@@ -269,6 +326,7 @@ Deno.serve(async (req) => {
 
   const staff = await staffDari(req);
   if (!staff) return balas({ galat: "BUKAN_INTERNAL" }, 401);
+  const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   let b: any = {};
   try { b = await req.json(); } catch { return balas({ galat: "FORMAT" }, 400); }
   const jam = statusJam(staff.pimpinan);
@@ -388,11 +446,13 @@ Deno.serve(async (req) => {
       const w = sekarangWib();
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.`
         + (jam.sesiRefleksi ? "\nSEKARANG JAM SESI 16.30: pandu refleksi harian sesuai aturan sesi." : "")
+        + "\nRISET PASAR: untuk mencari creator atau brand di LUAR jaringan Girlhood Den (seluruh TikTok Shop Indonesia), pakai alat riset_* (data Kalodata). Data internal Girlhood Den tetap lewat query_data. Tiap pencarian baru memakai kredit berbayar: jangan memanggil berulang tanpa perlu, dan cek detail maksimal 5 creator per pertanyaan kecuali diminta. Sajikan hasil sebagai daftar ringkas (nama, @handle, follower, GMV, tumbuh, porsi live/video) lalu beri pendapatmu siapa yang paling layak dihubungi dan kenapa. Kontak creator sering kosong: arahkan DM TikTok atau undangan TAP, dan sarankan menandai yang dipilih di tab Riset Pasar > Daftar Incaran."
         + (staff.pimpinan ? "" : "\nDia BUKAN pimpinan: jangan pernah menyebut kunci jawaban, rubrik penilaian, atau jawaban yang diharapkan dari tes, studi kasus, atau simulasi onboarding (termasuk yang tertulis di Bible). Boleh menyebut nama dan bentuk tesnya saja.")
         + (lampiran ? `\nDia melampirkan file "${lampiran.nama}" (${lampiran.jenis}). Baca isinya dengan teliti dan jawab berdasarkan isi file itu. Kalau ada bagian yang tidak terbaca (gambar buram, tabel terpotong), katakan terus terang.` : "")
         + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: bicara natural seperti ngobrol dengan rekan kerja, panjang secukupnya sesuai kebutuhan pertanyaan (tidak perlu dipendek-pendekkan). Karena dibacakan, JANGAN pakai daftar bernomor, poin-poin, atau simbol; kalau ada beberapa poin, sampaikan sebagai kalimat mengalir (pertama..., lalu..., terakhir...). Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
       const tg = await tugasHari(staff.id);
-      const ekstra: Ekstra | undefined = tg.length ? { alat: [ALAT_SETOR], jalankan: (_n, input) => catatSetoran(staff.id, input) } : undefined;
+      const ekstra: Ekstra = { alat: [...ALAT_RISET, ...(tg.length ? [ALAT_SETOR] : [])],
+        jalankan: (n, input) => n === "catat_setoran" ? catatSetoran(staff.id, input) : jalankanRiset(jwt, n, input) };
       const dinamisTugas = tg.length ? `\n\nTUGAS HARIAN ${staff.nama} HARI INI (dari data, dikirim 08.00):\n${teksTugas(tg)}\n`
         + "SETORAN: kalau dia melaporkan hasil tugas (terutama 16.00–17.00), cocokkan dengan nomor tugasnya lalu panggil catat_setoran sekali per tugas. "
         + "Tugas yang belum selesai WAJIB disertai opsi solusi: kalau dia belum menyebut opsi, tanyakan dulu \"opsimu apa?\" sebelum mencatat (prinsip Bible: bawahan membawa opsi). "
