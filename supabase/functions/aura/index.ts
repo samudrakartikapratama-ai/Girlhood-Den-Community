@@ -172,6 +172,54 @@ const ALAT_SETOR = {
   }, required: ["urut", "status", "hasil"] },
 };
 
+// ---------- Asisten proaktif (briefing pagi + pengingat siang), hanya untuk staff di app_config.aura_briefing ----------
+async function pakaiBriefing(staffId: string) {
+  const { data } = await db.from("app_config").select("value").eq("key", "aura_briefing").maybeSingle();
+  try { return (JSON.parse(String(data?.value || "[]")) as string[]).includes(staffId); } catch { return false; }
+}
+const rentangHari = (tgl: string) => [new Date(tgl + "T00:00:00+07:00").toISOString(), new Date(new Date(tgl + "T00:00:00+07:00").getTime() + 864e5).toISOString()];
+// creator incaran milik orang ini yang perlu digerakkan: belum dihubungi >1 hari, atau sudah dihubungi tapi diam >3 hari
+async function incaranMendesak(staffId: string) {
+  const { data } = await db.from("riset_incaran").select("nama, handle, status, catatan, diubah_at").eq("oleh", staffId).in("status", ["baru", "dihubungi"]);
+  const umur = (t: string) => (Date.now() - new Date(t).getTime()) / 864e5;
+  return (data || []).filter((x) => (x.status === "baru" && umur(x.diubah_at) > 1) || (x.status === "dihubungi" && umur(x.diubah_at) > 3))
+    .map((x) => ({ handle: x.handle || x.nama, status: x.status, hari: Math.floor(umur(x.diubah_at)), catatan: x.catatan || undefined }));
+}
+async function bahanBriefing(staffId: string) {
+  const hariIni = hariIniWib();
+  // hari kerja terakhir = hari terakhir sebelum hari ini yang ada obrolan dengan Aura
+  const { data: akhir } = await db.from("kantor_chat").select("created_at").eq("staff_id", staffId).eq("agent", AGENT).eq("peran", "user")
+    .lt("created_at", awalHariIso()).order("id", { ascending: false }).limit(1).maybeSingle();
+  const tglLalu = akhir ? new Date(new Date(akhir.created_at).getTime() + 7 * 3600e3).toISOString().slice(0, 10) : null;
+  let obrolan: string[] = [], tugasLalu: any[] = [];
+  if (tglLalu) {
+    const [a, b] = rentangHari(tglLalu);
+    const { data } = await db.from("kantor_chat").select("isi").eq("staff_id", staffId).eq("agent", AGENT).eq("peran", "user").gte("created_at", a).lt("created_at", b).order("id").limit(25);
+    obrolan = (data || []).map((x) => String(x.isi || "").slice(0, 400));
+    tugasLalu = (await db.from("aura_tugas").select("urut, judul, status, hasil, kendala, opsi, dilapor_at").eq("staff_id", staffId).eq("tanggal", tglLalu).order("urut")).data || [];
+  }
+  return { hari_kerja_terakhir: tglLalu, yang_dia_ceritakan_ke_aura: obrolan, tugas_hari_itu: tugasLalu, tugas_hari_ini: await tugasHari(staffId), incaran_perlu_digerakkan: await incaranMendesak(staffId), hari_ini: hariIni };
+}
+// pengingat tanpa AI: muncul sekali di slot 11.00 dan 14.00, hanya kalau memang ada yang mendesak
+const SLOT_PENGINGAT = [11, 14];
+async function pengingat(staff: { id: string; nama: string }) {
+  const w = sekarangWib();
+  if (!SLOT_PENGINGAT.includes(w.jam) || ["Sat", "Sun"].includes(w.hari)) return null;
+  const slot = String(w.jam);
+  const { data: ada } = await db.from("aura_pengingat").select("slot").eq("staff_id", staff.id).eq("tanggal", w.tanggal).eq("slot", slot).maybeSingle();
+  if (ada) return null;
+  const belum = (await tugasHari(staff.id)).filter((x: any) => !x.dilapor_at);
+  const inc = await incaranMendesak(staff.id);
+  const baris: string[] = [];
+  if (belum.length) baris.push(`Tugas yang belum selesai: ${belum.slice(0, 3).map((x: any) => `${x.urut}. ${x.judul}`).join("; ")}${belum.length > 3 ? ` (+${belum.length - 3} lagi)` : ""}.`);
+  if (inc.length) baris.push(`Creator incaran yang perlu digerakkan: ${inc.slice(0, 5).map((x) => `${x.handle} (${x.status === "baru" ? "belum dihubungi" : "belum dibalas"} ${x.hari} hari)`).join(", ")}${inc.length > 5 ? ` (+${inc.length - 5} lagi)` : ""}.`);
+  const teks = baris.length ? `Pengingat jam ${slot}.00, ${staff.nama}: ${baris.join(" ")} Mau dibahas sekarang?` : null;
+  const { error } = await db.from("aura_pengingat").insert({ staff_id: staff.id, tanggal: w.tanggal, slot, teks });
+  if (error || !teks) return null; // error = slot ini sudah diambil permintaan lain
+  await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: teks });
+  return teks;
+}
+
 // ---------- Lampiran chat: gambar, PDF, atau teks (Excel/Word/CSV sudah diubah jadi teks di browser) ----------
 const TIPE_LAMPIRAN: Record<string, { jenis: string; ext: string }> = {
   "image/jpeg": { jenis: "gambar", ext: "jpg" }, "image/png": { jenis: "gambar", ext: "png" }, "image/webp": { jenis: "gambar", ext: "webp" },
@@ -339,7 +387,7 @@ Deno.serve(async (req) => {
     if (b.aksi === "riwayat") {
       const { data } = await db.from("kantor_chat").select("id, peran, isi, created_at, lampiran->nama").eq("staff_id", staff.id).eq("agent", AGENT)
         .order("id", { ascending: false }).limit(30);
-      return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran, dengarServer: !!GROQ_KEY });
+      return balas({ pesan: (data || []).reverse(), kuota: await kuota(staff.id), jam, peran: staff.peran, dengarServer: !!GROQ_KEY, asisten: await pakaiBriefing(staff.id) });
     }
 
     // Aura membuka percakapan: sekali sehari dibuat dari data (disimpan), sesudahnya sapaan singkat tanpa AI.
@@ -357,8 +405,20 @@ Deno.serve(async (req) => {
       const { count: sudah } = await db.from("kantor_chat").select("id", { count: "exact", head: true })
         .eq("staff_id", staff.id).eq("agent", AGENT).gte("created_at", awalHariIso());
       if ((sudah || 0) > 0) return balas({ teks: `Hai lagi, ${staff.nama}. Mau lanjut bahas apa?`, baru: false });
-      const { data: kemarin } = await db.rpc("kantor_sapa_data");
       const w = sekarangWib();
+      if (await pakaiBriefing(staff.id)) {
+        const bahan = await bahanBriefing(staff.id);
+        const dinamisB = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
+          + `BAHAN BRIEFING (dari data, jangan mengarang di luar ini): ${JSON.stringify(bahan).slice(0, 9000)}\n`
+          + "TUGAS: kamu asisten pribadinya dan kamu yang MEMBUKA hari ini, tanpa ditanya. Buat briefing pagi singkat seperti asisten yang perhatian: "
+          + "1) sapa sesuai waktu; 2) ringkas apa yang dia kerjakan di hari kerja terakhir (dari yang dia ceritakan dan tugasnya), termasuk yang belum beres atau yang dia sendiri bilang mau dilakukan; "
+          + "3) apa yang perlu dilakukan hari ini: tugas hari ini dan creator incaran yang perlu digerakkan (sebut @handle-nya); kalau tidak ada tugas resmi, usulkan 1-2 prioritas yang masuk akal dari kelanjutan kemarin; "
+          + "4) tutup dengan SATU pertanyaan: mau mulai dari mana. Maksimal 6 kalimat, natural seperti ngobrol (jawaban bisa dibacakan), tanpa daftar dan simbol. Kalau bahannya kosong, sapa singkat dan tanya rencananya hari ini.";
+        const hb = await tanya("(Aura membuka percakapan)", [], dinamisB, 800);
+        await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hb.teks.slice(0, 4000), input_tokens: hb.masuk, output_tokens: hb.keluar });
+        return balas({ teks: hb.teks, baru: true });
+      }
+      const { data: kemarin } = await db.rpc("kantor_sapa_data");
       const dinamis = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
         + `Angka kemarin (sudah dihitung): ${JSON.stringify(kemarin)}\n`
         + "TUGAS: kamu yang MEMBUKA percakapan hari ini, jawabanmu akan DIBACAKAN. Sapa dia sesuai waktu (pagi/siang/sore), sampaikan hal paling penting dari angka kemarin dengan bahasa lisan beserta artinya (bukan cuma angka), lalu tutup dengan SATU pertanyaan untuknya (misal rencana atau fokus hari ini). Natural seperti ngobrol, tanpa daftar dan simbol.";
@@ -379,6 +439,11 @@ Deno.serve(async (req) => {
         for (const o of (org || []) as any[]) if (o.internal_staff?.is_active) out.tim.push({ nama: o.internal_staff.nama, jalur: o.jalur, tugas: await ambil(o.staff_id), kpi: await kpi(o.staff_id) });
       }
       return balas(out);
+    }
+    if (b.aksi === "pengingat") {
+      if (jam.tutup || !(await pakaiBriefing(staff.id))) return balas({});
+      const teks = await pengingat(staff);
+      return balas(teks ? { teks } : {});
     }
     if (b.aksi === "setor") {
       const r = await catatSetoran(staff.id, b);

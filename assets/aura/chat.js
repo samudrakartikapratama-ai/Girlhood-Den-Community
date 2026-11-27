@@ -320,6 +320,25 @@
     teksAura('Hai ' + cfg.nama + '. Tepuk 2× kalau mau ngobrol.');
   };
 
+  // ---------- asisten proaktif: briefing pagi tanpa ditanya + pengingat 11.00 & 14.00 ----------
+  function sampaikan(teks) {
+    tambah('aura', teks);
+    // di mode suara: teks tampil di orb, suara menyusul saat orb diketuk (browser tidak mengizinkan suara otomatis)
+    if (suaraMode() && (keadaan === 'tidur' || keadaan === 'diam')) {
+      teksAura(teks); tertunda = { teks, sesudah: () => { sesi = true; terakhirSuara = Date.now(); lanjutDengar(); } };
+      setKeadaan('diam', 'Ketuk Aura untuk mendengarkan');
+    }
+  }
+  let jedaPengingat = null;
+  async function mulaiAsisten() {
+    if (!sudahSapaHariIni) {
+      try { const j = await panggil({ aksi: 'sapa' }); sudahSapaHariIni = true; if (j.baru && !j.tutup) sampaikan(j.teks); } catch (e) {}
+    }
+    clearInterval(jedaPengingat);
+    const cek = async () => { if (sibuk) return; try { const j = await panggil({ aksi: 'pengingat' }); if (j.teks) sampaikan(j.teks); } catch (e) {} };
+    jedaPengingat = setInterval(cek, 5 * 60 * 1000); cek();
+  }
+
   // ---------- pasang ----------
   let terpasang = false;
   A.mulai = async function (c) {
@@ -347,6 +366,7 @@
       pakaiServerDengar = !!j.dengarServer;
       const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
       sudahSapaHariIni = (j.pesan || []).some(p => new Date(p.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) === hariIni);
+      if (j.asisten && !(j.jam && j.jam.tutup)) mulaiAsisten();
     } catch (e) { $('info-chat').textContent = 'Riwayat chat belum bisa dimuat.'; }
   };
 })();
