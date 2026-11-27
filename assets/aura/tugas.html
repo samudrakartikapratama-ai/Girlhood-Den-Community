@@ -79,6 +79,14 @@ function kartuKpi(k, judul){
     <p class="muted kecil">Proyeksi akhir bulan ${rp(k.proyeksi)} · perlu ${rp(k.perlu_per_hari)}/hari</p></div>`;
 }
 
+function kartuLaporan(l, judul){
+  if (!l) return '';
+  const jam = new Date(l.diubah_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta'});
+  const bag = (j, v) => v ? `<p><b>${j}</b></p><p style="white-space:pre-line">${esc(v)}</p>` : '';
+  return `<article class="panel"><div class="baris antara"><h2>${esc(judul || 'Laporan harian')}</h2><span class="chip ok">Tersimpan ${jam}</span></div>
+    <div class="hasil">${bag('Kegiatan', l.kegiatan)}${bag('Hasil', l.hasil)}${bag('Kendala', l.kendala)}${bag('Rencana besok', l.rencana)}</div></article>`;
+}
+
 function kartuTugas(t, bisaSetor){
   const [lbl, cls] = STATUS[t.dilapor_at ? t.status : 'baru'];
   const daftar = (t.data || []).length ? `<ul class="daftar">${t.data.map(item).join('')}</ul>` : '';
@@ -105,14 +113,15 @@ async function muat(){
   const lapor = data.saya.filter(t => t.dilapor_at).length;
   $('tgl').textContent = tglTeks + (data.saya.length ? ` · ${lapor}/${data.saya.length} disetor · setor paling lambat 17.00` : '');
   const bisa = data.tanggal === hariIni();
-  $('lihat-saya').innerHTML = kartuKpi(data.kpi)
+  $('lihat-saya').innerHTML = kartuKpi(data.kpi) + kartuLaporan(data.laporan)
     + (data.saya.length ? `<p class="muted kecil">Paling cepat: buka Beranda, tepuk 2× lalu ceritakan hasilmu ke Aura. Atau isi di sini.</p>` + data.saya.map(t => kartuTugas(t, bisa)).join('')
-       : `<div class="panel"><p>Tidak ada tugas untuk tanggal ini.</p><p class="muted kecil">Tugas dibuat otomatis tiap hari kerja jam 08.00.</p></div>`);
+       : data.laporan ? '' : `<div class="panel"><p>Tidak ada tugas untuk tanggal ini.</p><p class="muted kecil">Tugas dibuat otomatis tiap hari kerja jam 08.00.</p></div>`);
   $('pilih-lihat').classList.toggle('hidden', !data.pimpinan);
   if (data.pimpinan) $('lihat-tim').innerHTML = (data.tim || []).map(o => {
     const l = o.tugas.filter(t => t.dilapor_at).length, op = o.tugas.filter(t => (t.opsi || '').trim()).length;
-    return `<section class="tim"><div class="baris antara"><h2>${esc(o.nama)}</h2><span class="chip ${l ? 'ok' : 'bad'}">${o.tugas.length ? (l ? `Setor ${l}/${o.tugas.length} · opsi ${op}` : 'Belum setor') : 'Tidak ada tugas'}</span></div>`
-      + kartuKpi(o.kpi, 'KPI ' + o.nama) + o.tugas.map(t => kartuTugas(t, false)).join('') + `</section>`;
+    const chip = o.tugas.length ? (l ? `Setor ${l}/${o.tugas.length} · opsi ${op}` : 'Belum setor') : (o.laporan ? 'Laporan masuk' : 'Belum lapor');
+    return `<section class="tim"><div class="baris antara"><h2>${esc(o.nama)}</h2><span class="chip ${l || o.laporan ? 'ok' : 'bad'}">${chip}</span></div>`
+      + kartuKpi(o.kpi, 'KPI ' + o.nama) + kartuLaporan(o.laporan, 'Laporan harian ' + o.nama) + o.tugas.map(t => kartuTugas(t, false)).join('') + `</section>`;
   }).join('') || '<div class="panel">Belum ada anggota tim dengan tugas harian.</div>';
   sambung();
 }

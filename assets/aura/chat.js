@@ -259,7 +259,7 @@
       terakhirSuara = Date.now();
       teksSaya(koreksi((kumpul + sementara).trim()));
       clearTimeout(jeda);
-      jeda = setTimeout(() => { const t = koreksi((kumpul + ' ' + sementara).replace(/\s+/g, ' ').trim()); kumpul = sementara = ''; if (!t) return; berhentiBrowser(); kirim(t, true); }, sementara ? 2200 : 1100);
+      jeda = setTimeout(() => { const t = koreksi((kumpul + ' ' + sementara).replace(/\s+/g, ' ').trim()); kumpul = sementara = ''; if (!t) return; berhentiBrowser(); kirim(t, true); }, sementara ? 3200 : 2200);
     };
     r.onerror = ev => { if (rek === r && (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')) { berhentiBrowser(); setKeadaan('diam', 'Izinkan mikrofon di browser supaya aku bisa mendengar.'); } };
     r.onend = () => {

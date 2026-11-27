@@ -172,6 +172,26 @@ const ALAT_SETOR = {
   }, required: ["urut", "status", "hasil"] },
 };
 
+// ---------- Laporan harian resmi: disusun Aura dari cerita orangnya, satu per orang per hari (simpan ulang = memperbarui) ----------
+async function simpanLaporan(staffId: string, p: any): Promise<string> {
+  const kegiatan = String(p?.kegiatan || "").trim();
+  if (kegiatan.length < 20) return "GALAT: isi kegiatan terlalu pendek; tulis lengkap semua kegiatan hari ini";
+  const potong = (v: any, n: number) => String(v || "").trim().slice(0, n) || null;
+  const { error } = await db.from("aura_laporan").upsert({ staff_id: staffId, tanggal: hariIniWib(), kegiatan: kegiatan.slice(0, 6000),
+    hasil: potong(p?.hasil, 3000), kendala: potong(p?.kendala, 2000), rencana: potong(p?.rencana_besok, 2000), diubah_at: new Date().toISOString() });
+  return error ? "GALAT: " + error.message : "TERSIMPAN laporan harian " + hariIniWib();
+}
+const ALAT_LAPORAN = {
+  name: "simpan_laporan_harian",
+  description: "Simpan LAPORAN HARIAN resmi orang yang sedang bicara (hari ini). Isi dengan gabungan LENGKAP semua kegiatan hari ini dari obrolan, bukan hanya yang terakhir. Memanggil lagi akan menimpa versi sebelumnya, jadi selalu kirim versi lengkap.",
+  input_schema: { type: "object", properties: {
+    kegiatan: { type: "string", description: "Semua kegiatan hari ini, per poin, dengan nama creator/brand dan angka" },
+    hasil: { type: "string", description: "Hasil/kemajuan yang nyata (misal berapa creator membalas, masalah yang beres)" },
+    kendala: { type: "string" },
+    rencana_besok: { type: "string", description: "Rencana atau tindak lanjut yang dia sebut sendiri" },
+  }, required: ["kegiatan"] },
+};
+
 // ---------- Asisten proaktif (briefing pagi + pengingat siang), hanya untuk staff di app_config.aura_briefing ----------
 async function pakaiBriefing(staffId: string) {
   const { data } = await db.from("app_config").select("value").eq("key", "aura_briefing").maybeSingle();
@@ -198,7 +218,8 @@ async function bahanBriefing(staffId: string) {
     obrolan = (data || []).map((x) => String(x.isi || "").slice(0, 400));
     tugasLalu = (await db.from("aura_tugas").select("urut, judul, status, hasil, kendala, opsi, dilapor_at").eq("staff_id", staffId).eq("tanggal", tglLalu).order("urut")).data || [];
   }
-  return { hari_kerja_terakhir: tglLalu, yang_dia_ceritakan_ke_aura: obrolan, tugas_hari_itu: tugasLalu, tugas_hari_ini: await tugasHari(staffId), incaran_perlu_digerakkan: await incaranMendesak(staffId), hari_ini: hariIni };
+  const { data: lap } = await db.from("aura_laporan").select("tanggal, kegiatan, hasil, kendala, rencana").eq("staff_id", staffId).lt("tanggal", hariIni).order("tanggal", { ascending: false }).limit(1).maybeSingle();
+  return { laporan_harian_terakhir: lap || null, hari_kerja_terakhir: tglLalu, yang_dia_ceritakan_ke_aura: obrolan, tugas_hari_itu: tugasLalu, tugas_hari_ini: await tugasHari(staffId), incaran_perlu_digerakkan: await incaranMendesak(staffId), hari_ini: hariIni };
 }
 // pengingat tanpa AI: muncul sekali di slot 11.00 dan 14.00, hanya kalau memang ada yang mendesak
 const SLOT_PENGINGAT = [11, 14];
@@ -411,7 +432,7 @@ Deno.serve(async (req) => {
         const dinamisB = `Yang sedang bicara denganmu: ${staff.nama} (${staff.peran}). Sekarang ${w.hari} ${w.tanggal}, jam ${jam.jam} WIB.\n`
           + `BAHAN BRIEFING (dari data, jangan mengarang di luar ini): ${JSON.stringify(bahan).slice(0, 9000)}\n`
           + "TUGAS: kamu asisten pribadinya dan kamu yang MEMBUKA hari ini, tanpa ditanya. Buat briefing pagi singkat seperti asisten yang perhatian: "
-          + "1) sapa sesuai waktu; 2) ringkas apa yang dia kerjakan di hari kerja terakhir (dari yang dia ceritakan dan tugasnya), termasuk yang belum beres atau yang dia sendiri bilang mau dilakukan; "
+          + "1) sapa sesuai waktu; 2) ringkas apa yang dia kerjakan di hari kerja terakhir (utamakan laporan_harian_terakhir, lalu yang dia ceritakan dan tugasnya), termasuk yang belum beres dan rencana/tindak lanjut yang dia sendiri sebut (misal follow up creator setelah 2 hari: hitung apakah jatuhnya hari ini); "
           + "3) apa yang perlu dilakukan hari ini: tugas hari ini dan creator incaran yang perlu digerakkan (sebut @handle-nya); kalau tidak ada tugas resmi, usulkan 1-2 prioritas yang masuk akal dari kelanjutan kemarin; "
           + "4) tutup dengan SATU pertanyaan: mau mulai dari mana. Maksimal 6 kalimat, natural seperti ngobrol (jawaban bisa dibacakan), tanpa daftar dan simbol. Kalau bahannya kosong, sapa singkat dan tanya rencananya hari ini.";
         const hb = await tanya("(Aura membuka percakapan)", [], dinamisB, 800);
@@ -432,11 +453,18 @@ Deno.serve(async (req) => {
       const tgl = String(b.tanggal || hariIniWib()).slice(0, 10);
       const ambil = async (id: string) => (await db.from("aura_tugas").select("id, urut, judul, detail, data, status, hasil, kendala, opsi, dilapor_at").eq("staff_id", id).eq("tanggal", tgl).order("urut")).data || [];
       const kpi = async (id: string) => (await db.rpc("aura_kpi", { p_staff: id })).data;
-      const out: any = { tanggal: tgl, pimpinan: staff.pimpinan, saya: await ambil(staff.id), kpi: await kpi(staff.id) };
+      const laporan = async (id: string) => (await db.from("aura_laporan").select("kegiatan, hasil, kendala, rencana, diubah_at").eq("staff_id", id).eq("tanggal", tgl).maybeSingle()).data;
+      const out: any = { tanggal: tgl, pimpinan: staff.pimpinan, saya: await ambil(staff.id), kpi: await kpi(staff.id), laporan: await laporan(staff.id) };
       if (staff.pimpinan) {
-        const { data: org } = await db.from("aura_staff").select("staff_id, jalur, internal_staff!inner(nama, is_active)").eq("aktif_tugas", true);
+        // tim = yang punya tugas harian + yang menyetor laporan harian di tanggal itu
+        const { data: lapTgl } = await db.from("aura_laporan").select("staff_id").eq("tanggal", tgl);
+        const adaLap = new Set((lapTgl || []).map((x) => x.staff_id));
+        const { data: org } = await db.from("aura_staff").select("staff_id, jalur, aktif_tugas, internal_staff!inner(nama, is_active)");
         out.tim = [];
-        for (const o of (org || []) as any[]) if (o.internal_staff?.is_active) out.tim.push({ nama: o.internal_staff.nama, jalur: o.jalur, tugas: await ambil(o.staff_id), kpi: await kpi(o.staff_id) });
+        for (const o of (org || []) as any[]) {
+          if (!o.internal_staff?.is_active || o.staff_id === staff.id || !(o.aktif_tugas || adaLap.has(o.staff_id))) continue;
+          out.tim.push({ nama: o.internal_staff.nama, jalur: o.jalur, tugas: await ambil(o.staff_id), kpi: await kpi(o.staff_id), laporan: await laporan(o.staff_id) });
+        }
       }
       return balas(out);
     }
@@ -474,7 +502,7 @@ Deno.serve(async (req) => {
 
     if (b.aksi === "chat") {
       const adaLampiran = !!b.lampiran;
-      const pesan = String(b.pesan || "").trim().slice(0, 2000) || (adaLampiran ? "Tolong baca file ini lalu sampaikan poin pentingnya." : "");
+      const pesan = String(b.pesan || "").trim().slice(0, 4000) || (adaLampiran ? "Tolong baca file ini lalu sampaikan poin pentingnya." : "");
       if (!pesan) return balas({ galat: "KOSONG" }, 400);
       if (jam.tutup) return balas({ galat: "TUTUP", jam }, 403);
       const kq = await kuota(staff.id);
@@ -520,13 +548,18 @@ Deno.serve(async (req) => {
         + (lampiran ? `\nDia melampirkan file "${lampiran.nama}" (${lampiran.jenis}). Baca isinya dengan teliti dan jawab berdasarkan isi file itu. Kalau ada bagian yang tidak terbaca (gambar buram, tabel terpotong), katakan terus terang.` : "")
         + (b.suara ? "\nPesan ini diucapkan lewat suara dan jawabanmu akan DIBACAKAN: bicara natural seperti ngobrol dengan rekan kerja, panjang secukupnya sesuai kebutuhan pertanyaan (tidak perlu dipendek-pendekkan). Karena dibacakan, JANGAN pakai daftar bernomor, poin-poin, atau simbol; kalau ada beberapa poin, sampaikan sebagai kalimat mengalir (pertama..., lalu..., terakhir...). Angka rupiah ditulis seperti diucapkan (misal 2,5 miliar). Teks pesannya hasil pengenal suara dan bisa salah dengar: \"bagi\" bisa berarti \"pagi\"; \"Google\", \"Golden\", \"Gold in\" hampir selalu berarti \"Girlhood Den\"; \"Kimi\" berarti KIME. Tafsirkan maksud yang paling masuk akal dan JANGAN mempersoalkan atau menyebut salah dengarnya. Pakai \"aku\", bukan \"saya\". Kalau cocok, akhiri dengan satu pertanyaan supaya obrolan berlanjut." : "");
       const tg = await tugasHari(staff.id);
-      const ekstra: Ekstra = { alat: [...ALAT_RISET, ...(tg.length ? [ALAT_SETOR] : [])],
-        jalankan: (n, input) => n === "catat_setoran" ? catatSetoran(staff.id, input) : jalankanRiset(jwt, n, input) };
+      const ekstra: Ekstra = { alat: [...ALAT_RISET, ...(tg.length ? [ALAT_SETOR] : []), ...(staff.pimpinan ? [] : [ALAT_LAPORAN])],
+        jalankan: (n, input) => n === "catat_setoran" ? catatSetoran(staff.id, input) : n === "simpan_laporan_harian" ? simpanLaporan(staff.id, input) : jalankanRiset(jwt, n, input) };
+      const dinamisLaporan = staff.pimpinan ? "" : "\n\nLAPORAN HARIAN RESMI: kamu BISA menyimpannya lewat alat simpan_laporan_harian (jangan bilang kamu tidak bisa mencatat). "
+        + "Simpan atau perbarui laporan setiap kali dia minta merangkum kegiatannya, saat dia menceritakan kegiatan di jam 16.00\u201317.00, atau saat dia menambah/mengoreksi isi laporan. "
+        + "Isinya SELALU gabungan lengkap semua kegiatan hari ini dari seluruh obrolan hari ini (bukan hanya pesan terakhir), dengan nama creator/brand dan angka; tulis hanya yang benar-benar dia ceritakan atau terlihat di obrolan. "
+        + "Setelah tersimpan, bilang singkat bahwa laporan hari ini sudah tersimpan dan bisa dilihat pimpinan."
+        + "\nPESAN SUARA TERPOTONG: kalau pesannya jelas belum selesai (berhenti di tengah kalimat), jangan menebak panjang; jawab singkat apa yang sudah kamu tangkap lalu minta dia melanjutkan.";
       const dinamisTugas = tg.length ? `\n\nTUGAS HARIAN ${staff.nama} HARI INI (dari data, dikirim 08.00):\n${teksTugas(tg)}\n`
         + "SETORAN: kalau dia melaporkan hasil tugas (terutama 16.00–17.00), cocokkan dengan nomor tugasnya lalu panggil catat_setoran sekali per tugas. "
         + "Tugas yang belum selesai WAJIB disertai opsi solusi: kalau dia belum menyebut opsi, tanyakan dulu \"opsimu apa?\" sebelum mencatat (prinsip Bible: bawahan membawa opsi). "
         + "Setelah mencatat, sebut singkat apa yang tercatat lalu tanyakan tugas berikutnya yang belum disetor. Kalau semua sudah disetor, beri umpan balik jujur satu-dua kalimat soal kualitas setorannya." : "";
-      const hsl = await tanya(pesanBaru, riwayat, dinamis + dinamisTugas, 2000, ekstra);
+      const hsl = await tanya(pesanBaru, riwayat, dinamis + dinamisTugas + dinamisLaporan, 2000, ekstra);
       const { data: pAi, error: e2 } = await db.from("kantor_chat").insert({ staff_id: staff.id, agent: AGENT, peran: "assistant", isi: hsl.teks.slice(0, 12000), input_tokens: hsl.masuk, output_tokens: hsl.keluar })
         .select("id, peran, isi, created_at").single();
       if (e2) throw new Error("simpan jawaban gagal: " + e2.message);

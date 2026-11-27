@@ -234,8 +234,8 @@ body.mode-suara .orb-tombol .orb{--s:min(360px,72vw)}
 <script src="assets/aura/orb.js?v=202611191548"></script>
 <script src="assets/aura/scene.js?v=202611191548"></script>
 <script src="assets/aura/intro-suara.js?v=202611191548"></script>
-<script src="assets/aura/chat.js?v=202611270720"></script>
-<script src="assets/aura/telinga.js?v=202611191548"></script>
+<script src="assets/aura/chat.js?v=202611272030"></script>
+<script src="assets/aura/telinga.js?v=202611272030"></script>
 <script>
 const SUPABASE_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92ZndiamVvdHJoa3pqYXhwdXdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyODAsImV4cCI6MjEwMDQxNTI4MH0.bdnC6isw4c5qynm3xwqCEs8uvuabkKDKWbQel0R602E';
@@ -325,7 +325,7 @@ function bukaMenu(m){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.m === m)));
   document.querySelectorAll('.menu-isi').forEach(x => x.classList.toggle('hidden', x.id !== 'm-' + m));
   if (m === 'palette' && !$('f-palette').src) $('f-palette').src = 'assets/aura/palette.html?v=202611261200';
-  if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611261200'; // muat ulang tiap dibuka supaya status terbaru
+  if (m === 'tugas') $('f-tugas').src = 'assets/aura/tugas.html?v=202611272030'; // muat ulang tiap dibuka supaya status terbaru
   if (m === 'tes') $('f-tes').src = 'assets/aura/tes.html?v=202611261200';
   if (m === 'riset' && !$('f-riset').src) $('f-riset').src = 'assets/aura/riset.html?v=202611261200';
   if (m === 'ip' && !$('f-ip').src) $('f-ip').src = 'assets/aura/ip.html?v=202611261200';

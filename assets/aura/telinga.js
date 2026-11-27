@@ -11,7 +11,7 @@
   let tepukLalu = 0, jedaTepuk = 0, puncakDi = 0, dalamTepuk = false, jejak = [];
   // ucapan
   let rekam = null, potong = [], bicaraMulai = 0, terakhirBicara = 0, adaBicara = false, mulaiDengar = 0;
-  const DIAM_SELESAI = 1200, MAKS_UCAPAN = 30000, TANPA_UCAPAN = 8000;
+  const DIAM_SELESAI = 2600, MAKS_UCAPAN = 120000, TANPA_UCAPAN = 10000; // orang sering berhenti sebentar untuk berpikir di tengah kalimat
 
   function bunyiTing() {
     try {
