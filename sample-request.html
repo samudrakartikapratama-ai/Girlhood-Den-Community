@@ -191,7 +191,7 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
   .pf-feed-close{left:calc(50% - 232px)}
 }
 .pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:default;user-select:none;background:linear-gradient(160deg,var(--pink-pale),var(--pink-light));transition:box-shadow 260ms cubic-bezier(.23,1,.32,1)}
-.pf-video-card iframe.pf-auto{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;opacity:0;transition:opacity 220ms cubic-bezier(.23,1,.32,1)}
+.pf-video-card iframe.pf-auto{position:absolute;left:0;top:0;width:325px;height:578px;transform-origin:0 0;border:0;z-index:1;opacity:0;transition:opacity 220ms cubic-bezier(.23,1,.32,1)}
 .pf-video-card iframe.pf-auto.pf-main{opacity:1}
 .pf-video-card .pf-cadangan{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 8px 34px;text-align:center;color:#A30E3F}
 .pf-video-card .pf-cadangan b{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
@@ -3350,9 +3350,13 @@ let pfAutoTimer = null;
 let pfAutoScrollEl = null;
 let pfAutoScrollDebounce = null;
 let pfAutoState = { block: null, idx: -1 };
+// Player TikTok kadang tidak mau mulai (layar hitam). Kalau 2 video berturut-turut tidak main dalam 7 detik,
+// autoplay dimatikan untuk sesi ini supaya halaman tidak terus memuat player yang berat.
+let pfAutoGagal = 0, pfAutoMati = false, pfAutoCek = null;
 
 function pfStopAutoplay(){
   clearInterval(pfAutoTimer); pfAutoTimer = null;
+  clearTimeout(pfAutoCek);
   clearTimeout(pfAutoScrollDebounce);
   if(pfAutoScrollEl){ pfAutoScrollEl.removeEventListener('scroll', pfAutoOnScroll); pfAutoScrollEl = null; }
   pfClearAutoCard();
@@ -3402,6 +3406,15 @@ function pfAutoTick(){
   const card = cards[nextIdx];
   const frame = document.createElement('iframe');
   frame.className = 'pf-auto';
+  const skala = card.clientWidth / 325;
+  frame.style.transform = 'scale(' + skala + ')';
+  frame.style.top = ((card.clientHeight - 578 * skala) / 2) + 'px';
+  clearTimeout(pfAutoCek);
+  pfAutoCek = setTimeout(function(){
+    if(!frame.isConnected || frame.classList.contains('pf-main')) return;
+    pfAutoGagal++;
+    if(pfAutoGagal >= 2){ pfAutoMati = true; pfStopAutoplay(); }
+  }, 7000);
   frame.src = 'https://www.tiktok.com/player/v1/' + encodeURIComponent(card.getAttribute('data-vid'))
     + '?autoplay=1&muted=1&loop=1&controls=0&progress_bar=0&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0';
   frame.allow = 'autoplay; encrypted-media';
@@ -3420,7 +3433,7 @@ function pfAutoTick(){
 }
 
 function pfAutoRestart(){
-  if(!pfAutoTimer) return;
+  if(!pfAutoTimer || pfAutoMati) return;
   clearInterval(pfAutoTimer);
   pfAutoTick();
   if(pfAutoScrollEl) pfAutoTimer = setInterval(pfAutoTick, 10000);
@@ -3441,11 +3454,12 @@ window.addEventListener('message', function(e){
   if(e.origin !== 'https://www.tiktok.com') return;
   let d = e.data; if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(_e){ return; } }
   if(!d || d.type !== 'onStateChange' || d.value !== 1) return;
-  document.querySelectorAll('#playfield-videos iframe.pf-auto').forEach(function(f){ if(f.contentWindow === e.source) f.classList.add('pf-main'); });
+  document.querySelectorAll('#playfield-videos iframe.pf-auto').forEach(function(f){ if(f.contentWindow === e.source){ f.classList.add('pf-main'); pfAutoGagal = 0; } });
 });
 
 function pfStartAutoplay(){
   pfStopAutoplay();
+  if(pfAutoMati) return;
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   pfAutoScrollEl = document.getElementById('pf-showcase-scroll');
   if(!pfAutoScrollEl) return;
