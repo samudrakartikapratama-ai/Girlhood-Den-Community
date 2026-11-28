@@ -3378,7 +3378,7 @@ let pfLiveData = [];
 function pfLiveFoto(c, kecil){
   if(c.foto) return '<img src="' + escHtml(c.foto) + '" alt="" loading="lazy" onerror="this.remove()">';
   if(c.brand_logo) return '<img class="logo" src="' + escHtml(c.brand_logo) + '" alt="" loading="lazy" onerror="this.remove()">';
-  return kecil ? pfInitialsShort(c.creator_nama) : '';
+  return kecil ? escHtml(pfInitialsShort(c.creator_nama)) : '';
 }
 function pfLiveTombol(i, c, mini){
   const kelas = mini ? 'pf-lv-mini' : 'pf-lv-btn req';
@@ -3403,10 +3403,10 @@ function pfLiveHtml(live, menit, peringkat){
     const tombol = pfLiveTombol(i, c, false);
     return '<div class="pf-lv-card' + (c.milik_sendiri ? ' mine' : '') + '">'
       + '<div class="pf-lv-foto">' + pfLiveFoto(c, false) + '<span class="pf-lv-tag"><i></i>LIVE</span>' + (c.hk ? '<span class="pf-lv-hk">🏴‍☠️ HK</span>' : '') + '</div>'
-      + '<div class="pf-lv-body"><div class="pf-lv-who"><div class="pf-lv-av">' + pfInitialsShort(c.creator_nama) + '</div>'
+      + '<div class="pf-lv-body"><div class="pf-lv-who"><div class="pf-lv-av">' + escHtml(pfInitialsShort(c.creator_nama)) + '</div>'
       + '<div style="min-width:0"><div class="pf-lv-nm">' + escHtml(c.creator_nama || 'Creator') + '</div><div class="pf-lv-tr">' + escHtml(c.tier || '') + '</div></div></div>'
       + ((c.brand || namaProduk(c)) ? '<div class="pf-lv-pn">' + (c.brand ? '<b>' + escHtml(c.brand) + '</b>' : '') + escHtml(namaProduk(c)) + '</div>' : '')
-      + '<div class="pf-lv-meta">' + (c.pesanan ? '<strong>' + c.pesanan + ' pesanan</strong> · ' : '') + 'terakhir ' + lalu(c.terakhir) + '</div>'
+      + '<div class="pf-lv-meta">' + (c.pesanan ? '<strong>' + Number(c.pesanan) + ' pesanan</strong> · ' : '') + 'terakhir ' + lalu(c.terakhir) + '</div>'
       + (tombol ? '<div class="pf-lv-btns">' + tombol + '</div>' : '')
       + '</div></div>';
   }).join('');
@@ -3416,7 +3416,7 @@ function pfLiveHtml(live, menit, peringkat){
         return '<div class="pf-lv-ri"><span class="pf-lv-no">' + (j + 1) + '</span><div class="th">' + pfLiveFoto(c, true) + '</div>'
           + '<div class="pf-lv-tx"><div class="pf-lv-nm">' + escHtml(c.creator_nama || 'Creator') + (c.tier ? ' · ' + escHtml(c.tier) : '') + '</div>'
           + '<div class="sub">' + escHtml([c.brand, namaProduk(c)].filter(Boolean).join(' · ')) + '</div></div>'
-          + (c.pesanan ? '<span class="pf-lv-n">' + c.pesanan + '</span>' : '')
+          + (c.pesanan ? '<span class="pf-lv-n">' + Number(c.pesanan) + '</span>' : '')
           + pfLiveTombol(i, c, true) + '</div>';
       }).join('') + '</div>' : '';
   const jumlah = live.length ? live.length + ' creator lagi live sekarang' : 'Belum ada yang live sekarang';

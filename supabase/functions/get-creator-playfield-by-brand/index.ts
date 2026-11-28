@@ -69,17 +69,18 @@ async function produkHartaKarunAktif(): Promise<Set<string>> {
 }
 
 // Peran penonton dari token login (opsional). Tanpa login diperlakukan seperti creator.
-async function peranPenonton(req: Request): Promise<{ peran: "internal" | "brand" | "creator"; brandId: string | null; tampilUsername: boolean }> {
+// masuk = penonton login (username TikTok & tombol sampel hanya untuk yang login).
+async function peranPenonton(req: Request): Promise<{ peran: "internal" | "brand" | "creator"; brandId: string | null; tampilUsername: boolean; masuk: boolean }> {
   const token = (req.headers.get("Authorization") || "").replace("Bearer ", "").trim();
-  if (!token) return { peran: "creator", brandId: null, tampilUsername: false };
+  if (!token) return { peran: "creator", brandId: null, tampilUsername: false, masuk: false };
   const { data } = await supabaseAdmin.auth.getUser(token);
   const uid = data?.user?.id;
-  if (!uid) return { peran: "creator", brandId: null, tampilUsername: false };
+  if (!uid) return { peran: "creator", brandId: null, tampilUsername: false, masuk: false };
   const { data: staff } = await supabaseAdmin.from("internal_staff").select("id").eq("auth_user_id", uid).eq("is_active", true).maybeSingle();
-  if (staff) return { peran: "internal", brandId: null, tampilUsername: false };
+  if (staff) return { peran: "internal", brandId: null, tampilUsername: false, masuk: true };
   const { data: brand } = await supabaseAdmin.from("brands").select("id, tampil_username").eq("user_id", uid).maybeSingle();
-  if (brand) return { peran: "brand", brandId: brand.id, tampilUsername: !!brand.tampil_username };
-  return { peran: "creator", brandId: null, tampilUsername: false };
+  if (brand) return { peran: "brand", brandId: brand.id, tampilUsername: !!brand.tampil_username, masuk: true };
+  return { peran: "creator", brandId: null, tampilUsername: false, masuk: true };
 }
 
 // ===== Video 30 hari (tanpa aturan peran), disimpan di memori 5 menit =====
@@ -238,7 +239,7 @@ Deno.serve(async (req: Request) => {
     const offset = Math.max(0, Number(body.offset ?? url.searchParams.get("offset") ?? 0) || 0);
     const batas = Math.min(40, Math.max(1, Number(body.limit ?? url.searchParams.get("limit") ?? PER_BRAND) || PER_BRAND));
 
-    const [{ peran, brandId: brandSaya, tampilUsername }, isiCache] = await Promise.all([peranPenonton(req), dataCache()]);
+    const [{ peran, brandId: brandSaya, tampilUsername, masuk }, isiCache] = await Promise.all([peranPenonton(req), dataCache()]);
     const semuaBrand = isiCache.brands;
     const sembunyikan = (bid: string) => peran === "brand" && bid !== brandSaya;
 
@@ -272,9 +273,10 @@ Deno.serve(async (req: Request) => {
     const produkInfo: Record<string, InfoProduk> = { ...isiCache.produk };
     const sampul = isiCache.sampul || {};
     const tombolProduk = (info: InfoProduk | undefined, memberId?: string | null) => {
-      const cadangan = memberId ? sampul[memberId] || null : null;
+      // Sampul video creator bisa berisi produk brand lain, jadi tidak dipakai untuk penonton brand.
+      const cadangan = memberId && peran !== "brand" ? sampul[memberId] || null : null;
       if (!info) return { foto: cadangan, brand: null, brand_id: null, brand_logo: null, produk_utama: null, bp_id: null, sampel_brand: false };
-      const bolehSampel = peran === "creator" && info.bisa_sampel;
+      const bolehSampel = peran === "creator" && masuk && info.bisa_sampel;
       return {
         foto: info.foto || cadangan, brand: info.brand, brand_id: info.brand_id, brand_logo: info.brand_logo, produk_utama: pendek(info.nama_produk),
         bp_id: bolehSampel ? info.bp_id : null,
@@ -298,7 +300,7 @@ Deno.serve(async (req: Request) => {
         produk_utama: pendek(info?.nama_produk) || pendek(c.namaProduk[pidUtama]),
       };
       if (peran === "internal" || peran === "brand") item.pesanan = c.total;
-      if (peran !== "brand" || tampilUsername) item.username = c.b.username;
+      if ((peran !== "brand" && masuk) || tampilUsername) item.username = c.b.username;
       return item;
     });
 
@@ -352,7 +354,7 @@ Deno.serve(async (req: Request) => {
         const entri = Object.values(c.brands) as any[];
         const punyaSaya = peran === "brand" ? entri.find((e) => e.brand_id === brandSaya) : null;
         const item: any = { creator_nama: c.creator_nama, tier: c.tier, terakhir: c.terakhir, milik_sendiri: !!punyaSaya };
-        if (peran !== "brand") { Object.assign(item, tombolProduk(produkTeratas(entri), c.member_id)); item.username = c.username; }
+        if (peran !== "brand") { Object.assign(item, tombolProduk(produkTeratas(entri), c.member_id)); if (masuk) item.username = c.username; }
         if (peran === "brand") {
           if (punyaSaya) {
             Object.assign(item, tombolProduk(produkTeratas([punyaSaya]), c.member_id));
