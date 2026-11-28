@@ -190,8 +190,13 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
   .pf-progress-row{left:50%;right:auto;transform:translateX(-50%);width:396px}
   .pf-feed-close{left:calc(50% - 232px)}
 }
-.pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:default;user-select:none;background:#1a1a1a;transition:box-shadow 260ms cubic-bezier(.23,1,.32,1)}
-.pf-video-card iframe.pf-auto{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
+.pf-video-card{flex-shrink:0;width:118px;height:170px;border-radius:14px;overflow:hidden;position:relative;cursor:default;user-select:none;background:linear-gradient(160deg,var(--pink-pale),var(--pink-light));transition:box-shadow 260ms cubic-bezier(.23,1,.32,1)}
+.pf-video-card iframe.pf-auto{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;opacity:0;transition:opacity 220ms cubic-bezier(.23,1,.32,1)}
+.pf-video-card iframe.pf-auto.pf-main{opacity:1}
+.pf-video-card .pf-cadangan{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 8px 34px;text-align:center;color:#A30E3F}
+.pf-video-card .pf-cadangan b{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
+.pf-video-card .pf-cadangan span{font-size:10px;font-weight:700;line-height:1.3;opacity:.8;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pf-video-row .pf-more{flex:0 0 1px}
 .pf-video-card .pf-auto-block{position:absolute;inset:0;z-index:3}
 .pf-video-card .pf-vinfo{z-index:2}
 .pf-video-card.pf-auto-on{box-shadow:0 0 0 3px var(--pink)}
@@ -3241,7 +3246,8 @@ async function loadPlayfieldByBrand(){
     // Kirim identitas penonton: brand melihat produknya sendiri lengkap, brand lain disamarkan.
     let sesiPf = null;
     try { sesiPf = (await db.auth.getSession()).data.session; } catch(_e){}
-    const resp = await fetch('https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-by-brand', { headers: sesiPf ? { 'Authorization': 'Bearer ' + sesiPf.access_token } : {} });
+    pfSesiToken = sesiPf ? sesiPf.access_token : null;
+    const resp = await fetch(PF_URL, { headers: pfSesiToken ? { 'Authorization': 'Bearer ' + pfSesiToken } : {} });
     const json = await resp.json();
     const brands = json.brands || [];
     const live = json.live || [];
@@ -3255,23 +3261,62 @@ async function loadPlayfieldByBrand(){
         + '<div class="pf-brand-head">'
         +   '<div class="pf-brand-logo">' + (b.disamarkan ? '👥' : (b.logo_url ? '<img src="' + b.logo_url + '">' : pfInitialsShort(b.nama))) + '</div>'
         +   '<div class="pf-brand-name">' + escHtml(b.nama) + (b.milik_sendiri ? ' <span style="font-size:11px;font-weight:800;color:#A30E3F">· Brand kamu</span>' : '') + '</div>'
-        +   '<div class="pf-brand-count">' + b.videos.length + ' video · 30 hari</div>'
+        +   '<div class="pf-brand-count">' + (b.total || b.videos.length) + ' video · 30 hari</div>'
         + '</div>'
-        + '<div class="pf-video-row">'
-        +   b.videos.map(function(v, i){
-              return '<div class="pf-video-card"' + (v.video_id ? ' data-vid="' + escHtml(v.video_id) + '"' : '') + '>'
-                + (v.cover_image_url ? '<img src="' + v.cover_image_url + '" loading="lazy">' : '')
-                + '<div class="pf-vinfo"><div class="pf-vname">' + escHtml(v.creator_nama || 'Creator') + '</div>'
-                + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : (v.source === 'hk' ? '🏴‍☠️ HK' : '🤝 Campaign')) + '</div></div>'
-                + '</div>';
-            }).join('')
+        + '<div class="pf-video-row" data-brand="' + escHtml(b.brand_id) + '" data-loaded="' + b.videos.length + '" data-total="' + (b.total || b.videos.length) + '">'
+        +   b.videos.map(function(v){ return pfCardHtml(v, b); }).join('')
+        +   ((b.total || 0) > b.videos.length ? '<div class="pf-more"></div>' : '')
         + '</div>'
         + '</div>';
     }).join('');
+    pfPasangMuatLagi();
     pfStartAutoplay();
   }catch(e){
     wrap.innerHTML = '<div class="card-sub">Gagal memuat video.</div>';
   }
+}
+
+const PF_URL = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/functions/v1/get-creator-playfield-by-brand';
+let pfSesiToken = null;
+
+// Satu kartu video. Tanpa sampul (video dihapus/private) -> kartu cadangan berisi inisial creator + produk.
+function pfCardHtml(v, b){
+  const cadangan = '<div class="pf-cadangan"><b>' + pfInitialsShort(v.creator_nama || 'C') + '</b><span>' + escHtml(v.produk || b.nama || '') + '</span></div>';
+  return '<div class="pf-video-card"' + (v.video_id ? ' data-vid="' + escHtml(v.video_id) + '"' : '') + '>'
+    + cadangan
+    + (v.cover_image_url ? '<img src="' + escHtml(v.cover_image_url) + '" loading="lazy" decoding="async" style="position:absolute;inset:0" onerror="this.remove()">' : '')
+    + '<div class="pf-vinfo"><div class="pf-vname">' + escHtml(v.creator_nama || 'Creator') + '</div>'
+    + '<div class="pf-vsrc' + (v.source === 'self' ? ' self' : '') + '">' + (v.source === 'self' ? '📸 Self-report' : (v.source === 'hk' ? '🏴‍☠️ HK' : '🤝 Campaign')) + '</div></div>'
+    + '</div>';
+}
+
+// Video berikutnya tiap brand dimuat saat baris digeser sampai ujung.
+let pfMoreObs = null;
+function pfPasangMuatLagi(){
+  if(pfMoreObs) pfMoreObs.disconnect();
+  if(!('IntersectionObserver' in window)) return;
+  pfMoreObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting) pfMuatLagi(en.target.parentElement); });
+  }, { rootMargin: '0px 240px 0px 0px' });
+  document.querySelectorAll('#playfield-videos .pf-more').forEach(function(el){ pfMoreObs.observe(el); });
+}
+async function pfMuatLagi(row){
+  if(!row || row.dataset.busy === '1') return;
+  const sentinel = row.querySelector('.pf-more');
+  const loaded = Number(row.dataset.loaded || 0), total = Number(row.dataset.total || 0);
+  if(!sentinel || loaded >= total) { if(sentinel){ pfMoreObs && pfMoreObs.unobserve(sentinel); sentinel.remove(); } return; }
+  row.dataset.busy = '1';
+  try{
+    const resp = await fetch(PF_URL, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, pfSesiToken ? { 'Authorization': 'Bearer ' + pfSesiToken } : {}), body: JSON.stringify({ brand: row.dataset.brand, offset: loaded, limit: 8 }) });
+    const json = await resp.json();
+    const vids = json.videos || [];
+    const b = pfBrandsData.find(function(x){ return x.brand_id === row.dataset.brand; }) || { nama: '' };
+    sentinel.insertAdjacentHTML('beforebegin', vids.map(function(v){ return pfCardHtml(v, b); }).join(''));
+    if(b.videos) b.videos = b.videos.concat(vids);
+    row.dataset.loaded = String(loaded + vids.length);
+    if(!vids.length || loaded + vids.length >= total){ pfMoreObs && pfMoreObs.unobserve(sentinel); sentinel.remove(); }
+  }catch(_e){
+  }finally{ row.dataset.busy = '0'; }
 }
 
 // Bagian "Lagi live & laku": creator komunitas dengan pesanan LIVE lewat Saturnine dalam beberapa menit terakhir.
@@ -3360,6 +3405,7 @@ function pfAutoTick(){
   frame.src = 'https://www.tiktok.com/player/v1/' + encodeURIComponent(card.getAttribute('data-vid'))
     + '?autoplay=1&muted=1&loop=1&controls=0&progress_bar=0&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0';
   frame.allow = 'autoplay; encrypted-media';
+  frame.setAttribute('loading', 'lazy');
   frame.setAttribute('tabindex', '-1');
   frame.setAttribute('aria-hidden', 'true');
   const shield = document.createElement('div');
@@ -3389,6 +3435,14 @@ function pfAutoOnScroll(){
 }
 
 document.addEventListener('visibilitychange', pfAutoRestart);
+
+// Player TikTok mengirim kabar lewat postMessage. Selama belum main, sampul tetap terlihat (tanpa layar hitam).
+window.addEventListener('message', function(e){
+  if(e.origin !== 'https://www.tiktok.com') return;
+  let d = e.data; if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(_e){ return; } }
+  if(!d || d.type !== 'onStateChange' || d.value !== 1) return;
+  document.querySelectorAll('#playfield-videos iframe.pf-auto').forEach(function(f){ if(f.contentWindow === e.source) f.classList.add('pf-main'); });
+});
 
 function pfStartAutoplay(){
   pfStopAutoplay();
