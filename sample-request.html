@@ -3388,7 +3388,12 @@ function pfLiveHtml(live, menit, peringkat){
   live = live || []; peringkat = peringkat || [];
   if(!live.length && !peringkat.length) return '';
   const lalu = function(iso){ const m = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m + ' menit lalu'; };
-  const namaProduk = function(c){ return c.produk_utama || (c.produk && c.produk[0]) || ''; };
+  // Nama produk tanpa nama brand di depannya (brand sudah tampil sendiri).
+  const namaProduk = function(c){
+    let n = String(c.produk_utama || (c.produk && c.produk[0]) || '').trim();
+    if(c.brand && n.toLowerCase().indexOf(String(c.brand).toLowerCase() + ' ') === 0) n = n.slice(String(c.brand).length).replace(/^[\s\-–|:]+/, '');
+    return n;
+  };
   const kartu = live.map(function(c, i){
     const tombol = pfLiveTombol(i, c, false);
     return '<div class="pf-lv-card' + (c.milik_sendiri ? ' mine' : '') + '">'
