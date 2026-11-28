@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pratinjau Creator Playfield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+:root{--pink:#E8185A;--pink-light:#FFD6E7;--pink-pale:#FFF0F6;--ink:#2B1A22;--muted:#8A7380;--line:#F1DDE6}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:#FFF7FA;color:var(--ink);font:15px/1.5 Nunito,system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 40px}
+.catatan{background:#fff;border:1.5px dashed var(--pink-light);border-radius:14px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:16px}
+h1{font-family:'Baloo 2',sans-serif;font-size:26px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.brand{background:#fff;border-radius:20px;padding:14px 0 6px;margin-bottom:16px;box-shadow:0 1px 0 var(--line)}
+.kepala{display:flex;align-items:center;gap:10px;padding:0 16px 10px}
+.logo{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--pink-pale);border:1.5px solid var(--line)}
+.nama{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;flex:1}
+.jml{font-size:12px;color:var(--muted)}
+.baris{display:flex;gap:10px;overflow-x:auto;padding:0 16px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.kartu{flex:0 0 150px;scroll-snap-align:start;border-radius:16px;overflow:hidden;position:relative;aspect-ratio:9/16;background:var(--pink-pale)}
+.kartu img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s cubic-bezier(.22,1,.36,1)}
+.kartu img.siap{opacity:1}
+.kartu .bawah{position:absolute;left:0;right:0;bottom:0;padding:26px 8px 8px;background:linear-gradient(transparent,rgba(43,26,34,.78));color:#fff}
+.kartu .cr{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:#fff;color:var(--pink)}
+.lbl.self{color:#146B50}.lbl.hk{background:#26215C;color:#fff}
+.kartu iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+.putar{position:absolute;top:8px;right:8px;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--pink);color:#fff;z-index:2}
+.cadangan{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:100%;background:var(--pink-pale);border:1.5px dashed var(--pink-light);border-radius:16px;color:#A30E3F;text-align:center;padding:10px}
+.cadangan .ini{width:52px;height:52px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
+.cadangan p{margin:0;font-size:12px}
+@media (prefers-reduced-motion: reduce){.kartu img{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="catatan">Pratinjau tampilan baru Creator Playfield, pakai video asli 30 hari terakhir. Halaman ini hanya untuk dicek, belum dipasang di girlhoodden.com.</div>
+  <h1>🎮 Creator Playfield</h1>
+  <p class="sub">Video creator Girlhood Den yang disetujui 30 hari terakhir</p>
+  <div id="isi"></div>
+</div>
+<script>
+{
+const SB = 'https://ovfwbjeotrhkzjaxpuwq.supabase.co/storage/v1';
+const kecil = id => SB + '/render/image/public/vt-thumbs/preview/' + id + '.jpg?width=300&quality=70';
+const SUMBER = { campaign: ['🤝 Campaign', ''], self: ['📸 Self-report', 'self'], hk: ['🏴‍☠️ HK', 'hk'] };
+const DATA = [
+  { brand: 'Hanasui', logo: SB + '/object/public/brand-logos/Hanasui-1787808126252-ccmfqw.jpeg', total: 262, v: [
+    ['0be5ce51-2d39-4b30-8485-e1af074493d6','7712862902142651700','Abelinda','campaign'],
+    ['8e50a5db-bfdd-447d-8029-7ab720eafe1a','7712797073183116565','Silvia','campaign'],
+    ['3c7805be-cf22-4183-9c26-d32d5ed9d3ad','7712702172378451208','Nur','campaign'],
+    ['c6951693-fbac-4243-bea8-b63d92e89fca','7710529559904521493','Prita','campaign'],
+    ['c7f94cd0-c605-4495-999d-06f57247db2f','7712489006440664341','Indah','campaign'],
+    ['54ba5957-426d-418f-971e-797202927997','7712323365331012870','Fiki','campaign'],
+    ['f102dd28-7f4c-4c60-8e3f-585d9337140a','7712449608575667476','Dewi','campaign'],
+    ['aaff5495-bdc8-43d1-a5ca-c18e1039c184','7711846692668181767','Meli','campaign'] ] },
+  { brand: 'KYMM SKIN', logo: SB + '/object/public/brand-logos/KYMMSKIN-1787193486469-fod7x3.jpeg', total: 51, v: [
+    ['b6648458-cf19-40dc-82b1-ef56b7ba5dda','7712362555427015943','Tia','self'],
+    ['755adcdc-eca2-4358-8c06-69c5d8101837','7710779502304955668','Monica','campaign'],
+    ['94ec2d1a-a06d-488c-bb52-c40198fe181a','7708357901840174388','Ita','self'],
+    ['557c9c31-b703-4d6a-b69d-25adf82f1e98','7705591516961754375','Ridha','self'],
+    ['f15edc66-b483-4cb2-92a2-c02a00693990','7703083578908740885','Indah','campaign'],
+    ['1c43bd7a-92c5-4f0d-854f-edf5070a1b1f','7702493008444329237','Cici','campaign'],
+    ['3d325d99-dc3b-44de-a18c-3395e532c59e','7702320704695438613','Nadya','self'],
+    [null, null, 'Rina', 'campaign'] ] },
+  { brand: 'Kime', logo: SB + '/object/public/brand-logos/Kime-1788230859435-iq3xib.jpeg', total: 43, v: [
+    ['11bf9bae-7d58-4f19-8bbf-ebe653020692','7711716958840065301','Desika','self'],
+    ['72e1398b-1d19-4200-8e33-760e14dfd47a','7710896494743751943','Risa','campaign'],
+    ['53a3a9b0-54c3-427d-a7e0-89cd9ee7e125','7708798416473640212','Fiki','self'],
+    ['6684b252-3e0e-419a-a820-a0e7fb6e6a5b','7709029878389132564','Cici','self'],
+    ['845be398-89d7-4a75-b027-2b9933132336','7706740620512988436','Amnah','campaign'] ] },
+];
+const kartu = ([id, vid, nama, src]) => {
+  const [label, cls] = SUMBER[src];
+  if (!id) return `<div class="kartu"><div class="cadangan"><div class="ini">${nama.slice(0,2).toUpperCase()}</div><p><b>${nama}</b></p><p>Video sudah tidak tersedia</p></div></div>`;
+  return `<div class="kartu" data-vid="${vid}"><img loading="lazy" decoding="async" alt="Video ${nama}" src="${kecil(id)}" onload="this.classList.add('siap')"><div class="bawah"><div class="cr">${nama}</div><span class="lbl ${cls}">${label}</span></div></div>`;
+};
+document.getElementById('isi').innerHTML = DATA.map(b => `<section class="brand"><div class="kepala"><img class="logo" src="${b.logo}" alt=""><div class="nama">${b.brand}</div><div class="jml">${b.total} video · 30 hari</div></div><div class="baris">${b.v.map(kartu).join('')}</div></section>`).join('');
+
+// satu cuplikan video asli diputar (tanpa suara) di baris yang paling terlihat, ganti tiap 8 detik
+let aktif = null, idx = {};
+function bersihkan(){ if (aktif){ aktif.querySelector('iframe')?.remove(); aktif.querySelector('.putar')?.remove(); aktif = null; } }
+function putar(){
+  if (document.visibilityState !== 'visible') return bersihkan();
+  let terbaik = null, rasio = 0.5;
+  document.querySelectorAll('.brand').forEach(b => { const r = b.getBoundingClientRect(); const lihat = (Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)) / r.height; if (lihat > rasio){ rasio = lihat; terbaik = b; } });
+  bersihkan(); if (!terbaik) return;
+  const daftar = [...terbaik.querySelectorAll('.kartu[data-vid]')];
+  const k = terbaik.querySelector('.nama').textContent; idx[k] = ((idx[k] ?? -1) + 1) % daftar.length;
+  const c = daftar[idx[k]]; aktif = c;
+  c.insertAdjacentHTML('beforeend', '<span class="putar">▶ Diputar</span><iframe allow="autoplay; encrypted-media" loading="lazy" src="https://www.tiktok.com/player/v1/' + c.dataset.vid + '?autoplay=1&muted=1&controls=0&progress_bar=0&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0"></iframe>');
+}
+addEventListener('load', () => { setTimeout(putar, 600); setInterval(putar, 8000); });
+}
+</script>
+</body>
+</html>
