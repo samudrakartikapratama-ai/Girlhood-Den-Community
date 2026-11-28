@@ -207,28 +207,29 @@ body{font-family:'Segoe UI',Calibri,sans-serif;background:radial-gradient(ellips
 .pf-brand-name{font-size:13.5px;font-weight:800;color:var(--dark)}
 .pf-brand-count{font-size:11px;color:var(--gray-text);margin-left:auto}
 .pf-video-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
-.pf-lv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:12px;align-items:start;min-width:0}
-.pf-lv-grid.solo{grid-template-columns:minmax(0,1fr)}
-@media(max-width:860px){.pf-lv-grid{grid-template-columns:minmax(0,1fr)}}
-.pf-lv-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px;min-width:0}
-.pf-lv-card{flex:0 0 200px;background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden}
+.pf-lv-grid{display:flex;flex-direction:column;gap:12px;min-width:0}
+.pf-lv-wrap{position:relative;min-width:0}
+.pf-lv-wrap::after{content:"";position:absolute;top:0;right:0;bottom:8px;width:40px;background:linear-gradient(90deg,rgba(255,240,246,0),var(--pink-pale));pointer-events:none;opacity:0;transition:opacity 160ms cubic-bezier(.23,1,.32,1)}
+.pf-lv-wrap.lanjut::after{opacity:1}
+.pf-lv-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.pf-lv-card{flex:0 0 280px;scroll-snap-align:start;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
+@media(max-width:560px){.pf-lv-card{flex-basis:82%}}
 .pf-lv-card.mine{border-color:#F87171}
-.pf-lv-foto{position:relative;height:104px;background:linear-gradient(160deg,var(--pink-pale),var(--pink-light));display:flex;align-items:center;justify-content:center;color:#A30E3F;font-weight:800}
+.pf-lv-top{display:flex;gap:10px;min-width:0}
+.pf-lv-foto{position:relative;width:72px;height:72px;flex:0 0 72px;border-radius:10px;overflow:hidden;background:linear-gradient(160deg,var(--pink-pale),var(--pink-light));display:flex;align-items:center;justify-content:center;color:#A30E3F;font-weight:800;font-size:14px}
 .pf-lv-foto img{width:100%;height:100%;object-fit:cover;display:block}
-.pf-lv-foto img.logo{object-fit:contain;padding:18px;background:#fff}
-.pf-lv-tag{position:absolute;left:8px;top:8px;background:#DC2626;color:#fff;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;display:flex;align-items:center;gap:5px}
-.pf-lv-tag i{width:6px;height:6px;border-radius:50%;background:#fff}
-.pf-lv-hk{position:absolute;right:8px;top:8px;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:#26215C;color:#fff}
-.pf-lv-body{padding:9px 10px 10px}
-.pf-lv-who{display:flex;gap:8px;align-items:center}
-.pf-lv-av{width:32px;height:32px;border-radius:50%;background:#FDE2E7;color:#A30E3F;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 32px}
+.pf-lv-foto img.logo{object-fit:contain;padding:8px;background:#fff}
+.pf-lv-tag{position:absolute;left:4px;bottom:4px;background:#DC2626;color:#fff;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:999px;display:flex;align-items:center;gap:4px}
+.pf-lv-tag i{width:5px;height:5px;border-radius:50%;background:#fff}
+.pf-lv-info{min-width:0;flex:1}
+.pf-lv-hk{font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:#26215C;color:#fff;margin-left:4px}
 .pf-lv-nm{font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pf-lv-tr{font-size:11px;color:var(--gray-text)}
-.pf-lv-pn{font-size:11.5px;margin-top:7px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.pf-lv-pn b{display:block;font-size:11px;color:var(--gray-text)}
-.pf-lv-meta{font-size:11px;color:var(--gray-text);margin-top:5px}
+.pf-lv-pn{font-size:11.5px;margin-top:4px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pf-lv-pn b{font-weight:800;color:var(--gray-text)}
+.pf-lv-meta{font-size:11px;color:var(--gray-text)}
 .pf-lv-meta strong{color:#146B50}
-.pf-lv-btns{display:flex;gap:6px;margin-top:9px}
+.pf-lv-btns{display:flex;gap:6px;margin-top:auto}
 .pf-lv-btn{flex:1;border:0;border-radius:10px;font-size:11.5px;font-weight:800;padding:8px 6px;cursor:pointer;text-align:center;text-decoration:none;font-family:inherit;transition:transform 120ms cubic-bezier(.23,1,.32,1)}
 .pf-lv-btn:active{transform:scale(.96)}
 .pf-lv-btn.watch{background:var(--dark);color:#fff}
@@ -3322,6 +3323,7 @@ async function loadPlayfieldByBrand(){
         + '</div>';
     }).join('');
     pfPasangMuatLagi();
+    pfLiveFade(wrap.querySelector('.pf-lv-row'));
     pfStartAutoplay();
   }catch(e){
     wrap.innerHTML = '<div class="card-sub">Gagal memuat video.</div>';
@@ -3402,13 +3404,14 @@ function pfLiveHtml(live, menit, peringkat){
   const kartu = live.map(function(c, i){
     const tombol = pfLiveTombol(i, c, false);
     return '<div class="pf-lv-card' + (c.milik_sendiri ? ' mine' : '') + '">'
-      + '<div class="pf-lv-foto">' + pfLiveFoto(c, false) + '<span class="pf-lv-tag"><i></i>LIVE</span>' + (c.hk ? '<span class="pf-lv-hk">🏴‍☠️ HK</span>' : '') + '</div>'
-      + '<div class="pf-lv-body"><div class="pf-lv-who"><div class="pf-lv-av">' + escHtml(pfInitialsShort(c.creator_nama)) + '</div>'
-      + '<div style="min-width:0"><div class="pf-lv-nm">' + escHtml(c.creator_nama || 'Creator') + '</div><div class="pf-lv-tr">' + escHtml(c.tier || '') + '</div></div></div>'
-      + ((c.brand || namaProduk(c)) ? '<div class="pf-lv-pn">' + (c.brand ? '<b>' + escHtml(c.brand) + '</b>' : '') + escHtml(namaProduk(c)) + '</div>' : '')
-      + '<div class="pf-lv-meta">' + (c.pesanan ? '<strong>' + Number(c.pesanan) + ' pesanan</strong> · ' : '') + 'terakhir ' + lalu(c.terakhir) + '</div>'
+      + '<div class="pf-lv-top"><div class="pf-lv-foto">' + pfLiveFoto(c, true) + '<span class="pf-lv-tag"><i></i>LIVE</span></div>'
+      + '<div class="pf-lv-info"><div class="pf-lv-nm">' + escHtml(c.creator_nama || 'Creator') + '</div>'
+      + '<div class="pf-lv-tr">' + escHtml([c.tier, 'terakhir ' + lalu(c.terakhir)].filter(Boolean).join(' · ')) + (c.hk ? '<span class="pf-lv-hk">HK</span>' : '') + '</div>'
+      + ((c.brand || namaProduk(c)) ? '<div class="pf-lv-pn">' + (c.brand ? '<b>' + escHtml(c.brand) + '</b> ' : '') + escHtml(namaProduk(c)) + '</div>' : '')
+      + '</div></div>'
+      + (c.pesanan ? '<div class="pf-lv-meta"><strong>' + Number(c.pesanan) + ' pesanan</strong> dari live ini</div>' : '')
       + (tombol ? '<div class="pf-lv-btns">' + tombol + '</div>' : '')
-      + '</div></div>';
+      + '</div>';
   }).join('');
   const rank = peringkat.length ? '<div class="pf-lv-rank"><h4>🏆 Terlaku minggu ini <span>pesanan live 7 hari</span></h4>'
     + peringkat.map(function(c, j){
@@ -3423,10 +3426,16 @@ function pfLiveHtml(live, menit, peringkat){
   return '<div class="pf-brand-block" style="background:var(--pink-pale);border-radius:16px;padding:12px">'
     + '<div class="pf-brand-head"><div class="pf-brand-logo" style="background:#FEE2E2;border:0">' + (live.length ? '<span class="pf-lv-dot"></span>' : '🔴') + '</div>'
     + '<div class="pf-brand-name">Lagi live &amp; laku</div><div class="pf-brand-count">' + jumlah + '</div></div>'
-    + '<div class="pf-lv-grid' + (live.length && rank ? '' : ' solo') + '">'
-    + (live.length ? '<div class="pf-lv-row">' + kartu + '</div>' : '')
+    + '<div class="pf-lv-grid">'
+    + (live.length ? '<div class="pf-lv-wrap"><div class="pf-lv-row" onscroll="pfLiveFade(this)">' + kartu + '</div></div>' : '')
     + rank
     + '</div></div>';
+}
+
+// Bayangan di ujung kanan hanya muncul kalau masih ada kartu live yang belum terlihat.
+function pfLiveFade(row){
+  if(!row || !row.parentElement) return;
+  row.parentElement.classList.toggle('lanjut', row.scrollLeft + row.clientWidth < row.scrollWidth - 4);
 }
 
 // Ajukan sampel dari kartu live: buka Request Sample di brand itu, lalu sorot produknya.
